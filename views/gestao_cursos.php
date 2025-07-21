@@ -1,13 +1,5 @@
-<?php
-session_start();
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header("Location: index.php");
-    exit();
-}
-?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,11 +7,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <link rel="stylesheet" href="../css/style_turmas.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Select2 CSS (Bootstrap 5 Theme) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" />
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-
     <style>
         .modal {
             display: none;
@@ -100,46 +90,44 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 </head>
 
 <body>
-    <div class="dashboard-container">
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
-                <h3>Menu Principal</h3>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>
-                    <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
-                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
-                            UCs</a></li>
-                    <li><a href="calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-                </ul>
-            </nav>
-        </aside>
-        <main class="main-content">
-            <section class="table-section">
-                <header class="main-header">
-                    <h1>Gestão de Cursos</h1>
-                    <button class="btn btn-primary" onclick="openAddCursoModal()">
-                        <i class="fas fa-plus-circle"></i> Adicionar Novo Curso
-                    </button>
-                </header>
-                <h2>Cursos Cadastrados</h2>
-                <div class="filter-section" style="margin-bottom:10px;">
-                    <div class="filter-group">
-                        <label for="searchCurso">Buscar Curso:</label>
-                        <input type="text" id="searchCurso" placeholder="Digite para filtrar cursos..."
-                            class="search-input">
-                    </div>
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
+            <h3>Menu Principal</h3>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>
+                <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+                <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+                <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
+                <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+                <li><a href="gestao_unidades_curriculares.php" ><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+                <li><a href="calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
+                <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+            </ul>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
+        <header class="main-header">
+            <h1>Gestão de Cursos</h1>
+             <button class="btn btn-primary" onclick="openAddCursoModal()">
+                            <i class="fas fa-plus-circle"></i> Adicionar Novo Curso
+                        </button>
+        </header>
+        <section class="table-section">
+            <h2>Cursos Cadastrados</h2>
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label for="searchUc">Buscar Curso:</label>
+                    <input type="text" id="searchUc" placeholder="Digite para filtrar..." class="search-input">
                 </div>
-                <div class="table-responsive">
+            </div>
+            <div class="table-responsive">
                     <table class="data-table" id="cursosTable">
                         <thead>
                             <tr>
@@ -170,7 +158,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         <div id="detalheCursoConteudo"></div>
                     </div>
                 </div>
-                <!-- Modal de Adicionar Novo Curso (AGORA INICIA ESCONDIDO) -->
+                <!-- Modal de Adicionar Novo Curso -->
                 <div id="addCursoModal" class="modal">
                     <div class="modal-content">
                         <span class="close-button" onclick="closeModal('addCursoModal')">×</span>
@@ -178,7 +166,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         <form id="cursoForm" action="processa_curso.php" method="POST">
                             <input type="hidden" id="cursoId" name="id" value="">
                             <input type="hidden" id="action" name="action" value="add">
-
                             <div class="form-group">
                                 <label for="nomeCurso">Nome do Curso:</label>
                                 <input type="text" id="nomeCurso" name="nome_curso" required="">
@@ -240,14 +227,12 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 <label for="instituicaoId">Instituição:</label>
                                 <select id="instituicaoId" name="instituicao_id" required>
                                     <option value="">Selecione</option>
-                                    <!-- Opções carregadas via JS -->
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="ucsSelect">Unidades Curriculares:</label>
                                 <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;"
                                     required>
-                                    <!-- Opções via JS -->
                                 </select>
                             </div>
                             <div class="form-group" id="ucFormsSection" style="display:none;">
@@ -260,7 +245,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         </form>
                     </div>
                 </div>
-
                 <div class="modal" id="modalUcConfig">
                     <div class="modal-content" style="min-width:320px;max-width:95vw;">
                         <span class="modal-close" onclick="closeUcConfigModal()">&times;</span>
@@ -300,14 +284,12 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         </form>
                     </div>
                 </div>
-
                 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
                 <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
                 <script>
                     let instituicoesCache = null;
                     let ucsCache = null;
-                    let cursosCache = [];
-                    let cursoEditId = null;
+                    let cursosDataTable = [];
                     let ucDataMap = {};
                     let ucConfigs = {};
 
@@ -317,19 +299,16 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         instituicoesCache = await resp.json();
                         return instituicoesCache;
                     }
-
                     async function fetchUCs() {
                         if (ucsCache) return ucsCache;
                         const resp = await fetch('http://localhost:8000/api/unidades_curriculares');
                         ucsCache = await resp.json();
                         return ucsCache;
                     }
-
                     function getNomeInstituicao(id, lista) {
                         const inst = lista.find(i => i._id === id || i.id === id);
                         return inst ? (inst.razao_social || inst.nome || id) : id;
                     }
-
                     function renderTurnos(turnos) {
                         if (!turnos) return '-';
                         if (Array.isArray(turnos)) return turnos.join(', ');
@@ -338,11 +317,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             .map(([k, _]) => k.charAt(0).toUpperCase() + k.slice(1))
                             .join(', ');
                     }
-
                     function renderUCTable(ucs = []) {
                         if (!Array.isArray(ucs) || ucs.length === 0) return "-";
-                        let html = `
-    <table class="uc-table">
+                        let html = `<table class="uc-table">
         <thead>
             <tr>
                 <th>#</th>
@@ -352,11 +329,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 <th>EAD</th>
             </tr>
         </thead>
-        <tbody>
-    `;
+        <tbody>`;
                         ucs.forEach((uc, idx) => {
-                            html += `
-        <tr>
+                            html += `<tr>
             <td>${idx + 1}</td>
             <td>${uc.unidade_curricular || '-'}</td>
             <td>${uc.carga_horaria_total ?? '-'}</td>
@@ -370,13 +345,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 Aulas: ${uc.ead?.quantidade_aulas_45min ?? '-'}<br>
                 Dias: ${uc.ead?.dias_letivos ?? '-'}
             </td>
-        </tr>
-        `;
+        </tr>`;
                         });
                         html += `</tbody></table>`;
                         return html;
                     }
-
                     async function preencherInstituicoes() {
                         const select = document.getElementById('instituicaoId');
                         if (!select) return;
@@ -386,8 +359,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             select.innerHTML += `<option value="${inst._id || inst.id}">${inst.razao_social || inst.nome || '(sem nome)'}</option>`;
                         });
                     }
-
-                    // Preenche as opções de UC no select2 ao abrir o modal de adicionar curso
                     async function preencherUCs() {
                         const select = $('#ucsSelect');
                         const ucs = await fetchUCs();
@@ -400,18 +371,14 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         });
                         select.trigger('change');
                     }
-
                     function resetUcConfigs() {
                         ucConfigs = {};
                         $('#ucConfigForms').html('');
                         $('#ucFormsSection').hide();
                     }
-
-                    // Modal para configuração de UC individual
                     function showUcConfigModal(ucId, ucName) {
                         $('#ucConfigId').val(ucId);
                         $('#ucConfigName').text(ucName);
-                        // Preenche se já tiver config
                         if (ucConfigs[ucId]) {
                             $('#ch_total').val(ucConfigs[ucId].carga_horaria_total);
                             $('#presencial_ch').val(ucConfigs[ucId].presencial.carga_horaria);
@@ -425,12 +392,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         }
                         $('#modalUcConfig').addClass('show');
                     }
-
                     function closeUcConfigModal() {
                         $('#modalUcConfig').removeClass('show');
                     }
-
-                    // Após salvar cada configuração de UC
                     $('#ucConfigForm').on('submit', function (e) {
                         e.preventDefault();
                         const ucId = $('#ucConfigId').val();
@@ -453,8 +417,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         closeUcConfigModal();
                         checkUcConfigsRequired();
                     });
-
-                    // Checa se todas as UCs selecionadas já estão configuradas
                     function checkUcConfigsRequired() {
                         let allConfigured = true;
                         $('#ucConfigForms').children().each(function () {
@@ -468,15 +430,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             $('#ucFormsSection').show();
                         }
                     }
-
-                    // Dispara sempre que a seleção de UCs mudar
                     $('#ucsSelect').on('change', function () {
                         const selected = $(this).val() || [];
-                        // Remove configs não mais selecionadas
                         Object.keys(ucConfigs).forEach(k => {
                             if (!selected.includes(k)) delete ucConfigs[k];
                         });
-
                         $('#ucConfigForms').html('');
                         selected.forEach(id => {
                             const name = ucDataMap[id] || id;
@@ -491,19 +449,14 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     </div>`
                             );
                         });
-
-                        // Mostra o bloco se tiver UC selecionada
                         if (selected.length > 0) {
                             $('#ucFormsSection').show();
-                            // Se alguma UC não configurada, já força abrir a config
                             let nextPending = selected.find(id => !ucConfigs[id]);
                             if (nextPending) showUcConfigModal(nextPending, ucDataMap[nextPending]);
                         } else {
                             $('#ucFormsSection').hide();
                         }
                     });
-
-                    // --- Ao abrir o modal de adicionar curso
                     function openAddCursoModal() {
                         preencherInstituicoes();
                         preencherUCs();
@@ -513,12 +466,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     function closeModal(modalId) {
                         $('#' + modalId).removeClass('show');
                     }
-
-                    // --- Listar cursos cadastrados ---
-                    async function carregarCursos() {
-                        const [instituicoes, ucs] = await Promise.all([fetchInstituicoes(), fetchUCs()]);
-                        const resp = await fetch('http://localhost:8000/api/cursos');
-                        const cursos = await resp.json();
+                    // Função para renderizar tabela
+                    function renderCursosTable(cursos, instituicoes) {
                         const tbody = document.querySelector('#cursosTable tbody');
                         tbody.innerHTML = '';
                         cursos.forEach(curso => {
@@ -551,11 +500,19 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                     !e.target.closest('.fa-edit') &&
                                     !e.target.closest('.fa-trash-alt')
                                 ) {
-                                    mostrarDetalheCurso(curso, instituicoes, ucs);
+                                    mostrarDetalheCurso(curso, instituicoes, ucsCache);
                                 }
                             });
                             tbody.appendChild(tr);
                         });
+                    }
+                    // Listar cursos cadastrados
+                    async function carregarCursos() {
+                        const [instituicoes, ucs] = await Promise.all([fetchInstituicoes(), fetchUCs()]);
+                        const resp = await fetch('http://localhost:8000/api/cursos');
+                        const cursos = await resp.json();
+                        cursosDataTable = cursos; // salva para filtrar depois
+                        renderCursosTable(cursos, instituicoes);
                     }
                     function editarCurso(event, cursoId) {
                         event.stopPropagation();
@@ -590,14 +547,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     function fecharModalDetalhe() {
                         document.getElementById('modalDetalheCurso').classList.remove('show');
                     }
-                    document.addEventListener('DOMContentLoaded', carregarCursos);
                     window.onclick = function (e) {
                         if (e.target.classList.contains('modal') && e.target.id === "modalDetalheCurso") fecharModalDetalhe();
                         if (e.target.classList.contains('modal') && e.target.id === "addCursoModal") closeModal('addCursoModal');
                         if (e.target.classList.contains('modal') && e.target.id === "modalUcConfig") closeUcConfigModal();
                     }
-
-                    // --- Select2 ---
                     $(document).ready(function () {
                         $('#turnosSelect').select2({
                             theme: 'bootstrap-5',
@@ -611,13 +565,25 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             placeholder: 'Selecione as UCs...',
                             closeOnSelect: false
                         });
+                        // Filtro dinâmico
+                        $('#searchCurso').on('input', function () {
+                            const termo = this.value.toLowerCase();
+                            const instituicoes = instituicoesCache || [];
+                            const cursosFiltrados = cursosDataTable.filter(curso => {
+                                return Object.values({
+                                    ...curso,
+                                    instituicao: getNomeInstituicao(curso.instituicao_id, instituicoes)
+                                }).some(val =>
+                                    String(val).toLowerCase().includes(termo)
+                                );
+                            });
+                            renderCursosTable(cursosFiltrados, instituicoes);
+                        });
+                        carregarCursos();
                     });
-
-                    // ---- Salvar curso via AJAX com as UCs completas ----
+                    // Salvar curso via AJAX com as UCs completas
                     $('#cursoForm').on('submit', function (e) {
                         e.preventDefault();
-
-                        // Validação das UCs:
                         const selectedUcs = $('#ucsSelect').val() || [];
                         if (selectedUcs.length === 0) {
                             alert('Selecione ao menos uma Unidade Curricular.');
@@ -629,14 +595,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 return false;
                             }
                         }
-
-                        // Prepara o array de UCs configuradas
                         const ordem_ucs = selectedUcs.map(ucId => ucConfigs[ucId]);
-
-                        // Turnos em array
                         const turnos = $('#turnosSelect').val() || [];
-
-                        // Prepara o payload
                         const data = {
                             nome: $('#nomeCurso').val(),
                             codigo_matriz: $('#codigoMatriz').val(),
@@ -651,8 +611,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             instituicao_id: $('#instituicaoId').val(),
                             ordem_ucs: ordem_ucs
                         };
-
-                        // AJAX POST para processa_curso.php
                         $.ajax({
                             url: 'processa_curso.php',
                             type: 'POST',
@@ -668,7 +626,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             }
                         });
                     });
-                    
                 </script>
 </body>
 
