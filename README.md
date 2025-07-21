@@ -165,9 +165,7 @@ views/     # Telas (frontend) do sistema
 
 ### **Contato**
 
-Dúvidas? Sugestões? Fale comigo!
-
-**Autor:** Lorrany Marim
+Lorrany Marim
 
 **E-mail:** [lorranybatistaamorim@gmail.com](mailto:lorranybatistaamorim@gmail.com)
 
