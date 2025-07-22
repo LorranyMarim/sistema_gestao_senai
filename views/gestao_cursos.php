@@ -11,84 +11,27 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     <style>
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.3);
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-        }
-
-        .modal-content {
-            background: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            min-width: 350px;
-            max-width: 90vw;
-            position: relative;
-        }
-
-        .show {
-            display: flex !important;
-        }
-
-        .btn {
-            margin: 2px;
-        }
-
-        .modal-close,
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 30px;
-            font-size: 2em;
-            cursor: pointer;
-        }
-
-        .popup-field {
-            margin-bottom: 12px;
-        }
-
-        .popup-label {
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        .uc-list-detail {
-            margin-left: 18px;
-            margin-bottom: 12px;
-            border-left: 2px solid #e5e7eb;
-            padding-left: 10px;
-        }
-
-        .uc-header {
-            font-weight: bold;
-            color: #3b82f6;
-        }
-
-        .uc-table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 8px;
-        }
-
-        .uc-table th,
-        .uc-table td {
-            border: 1px solid #ddd;
-            padding: 3px 6px;
-        }
-
-        .uc-table th {
-            background: #f3f4f6;
-        }
+        /* ... (Mantenha os estilos que já existem no seu código original, pode copiar os do seu arquivo) ... */
+        .modal { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); align-items: center; justify-content: center; z-index: 999; }
+        .modal-content { background: #fff; border-radius: 10px; padding: 30px; min-width: 350px; max-width: 90vw; position: relative; }
+        .show { display: flex !important; }
+        .btn { margin: 2px; }
+        .modal-close, .close-button { position: absolute; top: 15px; right: 30px; font-size: 2em; cursor: pointer; }
+        .popup-field { margin-bottom: 12px; }
+        .popup-label { font-weight: bold; margin-right: 8px; }
+        .uc-list-detail { margin-left: 18px; margin-bottom: 12px; border-left: 2px solid #e5e7eb; padding-left: 10px; }
+        .uc-header { font-weight: bold; color: #3b82f6; }
+        .uc-table { border-collapse: collapse; width: 100%; margin-bottom: 8px; }
+        .uc-table th, .uc-table td { border: 1px solid #ddd; padding: 3px 6px; }
+        .uc-table th { background: #f3f4f6; }
+        /* Accordion modal styles */
+        .accordion { width:100%; }
+        .accordion-item { background: #f9f9f9; border-radius: 6px; margin-bottom: 8px; }
+        .accordion-header button { width: 100%; text-align: left; border: none; background: none; outline: none; padding: 14px; font-size: 1.1em; }
+        .accordion-collapse { padding: 0 18px 12px 18px; display: none; }
+        .accordion-collapse.active { display: block; }
     </style>
 </head>
-
 <body>
 <div class="dashboard-container">
     <aside class="sidebar">
@@ -116,517 +59,531 @@
         <header class="main-header">
             <h1>Gestão de Cursos</h1>
              <button class="btn btn-primary" onclick="openAddCursoModal()">
-                            <i class="fas fa-plus-circle"></i> Adicionar Novo Curso
-                        </button>
+                <i class="fas fa-plus-circle"></i> Adicionar Novo Curso
+             </button>
         </header>
         <section class="table-section">
             <h2>Cursos Cadastrados</h2>
             <div class="filter-section">
                 <div class="filter-group">
-                    <label for="searchUc">Buscar Curso:</label>
-                    <input type="text" id="searchUc" placeholder="Digite para filtrar..." class="search-input">
+                    <label for="searchCurso">Buscar Curso:</label>
+                    <input type="text" id="searchCurso" placeholder="Digite para filtrar..." class="search-input">
                 </div>
             </div>
             <div class="table-responsive">
-                    <table class="data-table" id="cursosTable">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Tipo</th>
-                                <th>Turnos</th>
-                                <th>Nível do Curso</th>
-                                <th>Carga Horária</th>
-                                <th>Área</th>
-                                <th>CBO</th>
-                                <th>Código Matriz</th>
-                                <th>Eixo Tecnológico</th>
-                                <th>Nível Qualificação</th>
-                                <th>Instituição</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Preenchido por JS -->
-                        </tbody>
-                    </table>
+                <table class="data-table" id="cursosTable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Turnos</th>
+                            <th>Nível do Curso</th>
+                            <th>Carga Horária</th>
+                            <th>Área</th>
+                            <th>CBO</th>
+                            <th>Código Matriz</th>
+                            <th>Eixo Tecnológico</th>
+                            <th>Nível Qualificação</th>
+                            <th>Instituição</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Preenchido por JS -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Modal de Detalhe do Curso -->
+            <div class="modal" id="modalDetalheCurso">
+                <div class="modal-content" style="min-width:400px;max-width:90vw;">
+                    <span class="modal-close" onclick="fecharModalDetalhe()">&times;</span>
+                    <h2>Detalhes do Curso</h2>
+                    <div id="detalheCursoConteudo"></div>
                 </div>
-                <!-- Modal de Detalhe do Curso -->
-                <div class="modal" id="modalDetalheCurso">
-                    <div class="modal-content" style="min-width:400px;max-width:90vw;">
-                        <span class="modal-close" onclick="fecharModalDetalhe()">&times;</span>
-                        <h2>Detalhes do Curso</h2>
-                        <div id="detalheCursoConteudo"></div>
+            </div>
+            <!-- Modal de Adicionar Novo Curso -->
+            <div id="addCursoModal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button" onclick="closeModal('addCursoModal')">×</span>
+                    <h2><span id="modalTitle">Adicionar Novo Curso</span></h2>
+                    <form id="cursoForm">
+                        <input type="hidden" id="cursoId" name="id" value="">
+                        <input type="hidden" id="action" name="action" value="add">
+                        <div class="form-group">
+                            <label for="nomeCurso">Nome do Curso:</label>
+                            <input type="text" id="nomeCurso" name="nome_curso" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="codigoMatriz">Código Matriz:</label>
+                            <input type="text" id="codigoMatriz" name="codigo_matriz" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoCurso">Tipo:</label>
+                            <select id="tipoCurso" name="tipoCurso" required="">
+                                <option value="">Selecione</option>
+                                <option value="Presencial">Presencial</option>
+                                <option value="EAD">EAD</option>
+                                <option value="Híbrido">Híbrido</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="nivelCurso">Nível do Curso:</label>
+                            <select id="nivelCurso" name="nivel_curso" required>
+                                <option value="">Selecione</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Aprendizagem">Aprendizagem</option>
+                                <option value="Superior">Superior</option>
+                                <option value="Especialização">Especialização</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="turnosSelect">Turnos:</label>
+                            <select class="form-select" id="turnosSelect" name="turnos[]"
+                                data-placeholder="Selecione os turnos" multiple required style="width:100%;">
+                                <option value="Manhã">Manhã</option>
+                                <option value="Tarde">Tarde</option>
+                                <option value="Noite">Noite</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cargaHoraria">Carga Horária (h):</label>
+                            <input type="number" id="cargaHoraria" name="carga_horaria" required="" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="cbo">CBO:</label>
+                            <input type="text" id="cbo" name="cbo" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="area">Área:</label>
+                            <input type="text" id="area" name="area" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="eixoTecnologico">Eixo Tecnologico:</label>
+                            <input type="text" id="eixoTecnologico" name="eixo_tecnologico" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="nivelQualificacao">Nível de Qualificação</label>
+                            <input type="number" id="nivelQualificacao" name="nivel_qualificacao" required="" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="instituicaoId">Instituição:</label>
+                            <select id="instituicaoId" name="instituicao_id" required>
+                                <option value="">Selecione</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ucsSelect">Unidades Curriculares:</label>
+                            <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;" required>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar Curso</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addCursoModal')">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Modal UC Config em lote -->
+            <div class="modal" id="modalUcsConfig" style="display:none;">
+                <div class="modal-content" style="min-width:420px;max-width:95vw;">
+                    <span class="modal-close" onclick="closeModalUcsConfig()">&times;</span>
+                    <h3>Configurar Dados das Unidades Curriculares</h3>
+                    <div id="ucsAccordion"></div>
+                    <div style="text-align:right;margin-top:18px;">
+                        <button class="btn btn-primary" id="saveAllUcsBtn">Salvar</button>
+                        <button class="btn btn-secondary" onclick="closeModalUcsConfig()">Cancelar</button>
                     </div>
                 </div>
-                <!-- Modal de Adicionar Novo Curso -->
-                <div id="addCursoModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close-button" onclick="closeModal('addCursoModal')">×</span>
-                        <h2><span id="modalTitle">Adicionar Novo Curso</span></h2>
-                        <form id="cursoForm" action="processa_curso.php" method="POST">
-                            <input type="hidden" id="cursoId" name="id" value="">
-                            <input type="hidden" id="action" name="action" value="add">
-                            <div class="form-group">
-                                <label for="nomeCurso">Nome do Curso:</label>
-                                <input type="text" id="nomeCurso" name="nome_curso" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="codigoMatriz">Código Matriz:</label>
-                                <input type="text" id="codigoMatriz" name="codigo_matriz" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="tipoCurso">Tipo:</label>
-                                <select id="tipoCurso" name="tipoCurso" required="">
-                                    <option value="">Selecione</option>
-                                    <option value="Presencial">Presencial</option>
-                                    <option value="EAD">EAD</option>
-                                    <option value="Híbrido">Híbrido</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="nivelCurso">Nível do Curso:</label>
-                                <select id="nivelCurso" name="nivel_curso" required>
-                                    <option value="">Selecione</option>
-                                    <option value="Técnico">Técnico</option>
-                                    <option value="Aprendizagem">Aprendizagem</option>
-                                    <option value="Superior">Superior</option>
-                                    <option value="Especialização">Especialização</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="turnosSelect">Turnos:</label>
-                                <select class="form-select" id="turnosSelect" name="turnos[]"
-                                    data-placeholder="Selecione os turnos" multiple required style="width:100%;">
-                                    <option value="Manhã">Manhã</option>
-                                    <option value="Tarde">Tarde</option>
-                                    <option value="Noite">Noite</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="cargaHoraria">Carga Horária (h):</label>
-                                <input type="number" id="cargaHoraria" name="carga_horaria" required="" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label for="cbo">CBO:</label>
-                                <input type="text" id="cbo" name="cbo" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="area">Área:</label>
-                                <input type="text" id="area" name="area" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="eixoTecnologico">Eixo Tecnologico:</label>
-                                <input type="text" id="eixoTecnologico" name="eixo_tecnologico" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="nivelQualificacao">Nível de Qualificação</label>
-                                <input type="number" id="nivelQualificacao" name="nivel_qualificacao" required=""
-                                    min="1">
-                            </div>
-                            <div class="form-group">
-                                <label for="instituicaoId">Instituição:</label>
-                                <select id="instituicaoId" name="instituicao_id" required>
-                                    <option value="">Selecione</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="ucsSelect">Unidades Curriculares:</label>
-                                <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;"
-                                    required>
-                                </select>
-                            </div>
-                            <div class="form-group" id="ucFormsSection" style="display:none;">
-                                <h4>Configurar Dados das Unidades Curriculares Selecionadas</h4>
-                                <div id="ucConfigForms"></div>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Salvar Curso</button>
-                            <button type="button" class="btn btn-secondary"
-                                onclick="closeModal('addCursoModal')">Cancelar</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="modal" id="modalUcConfig">
-                    <div class="modal-content" style="min-width:320px;max-width:95vw;">
-                        <span class="modal-close" onclick="closeUcConfigModal()">&times;</span>
-                        <h3>Configurar Unidade Curricular</h3>
-                        <form id="ucConfigForm">
-                            <input type="hidden" id="ucConfigId">
-                            <div class="form-group"><label>UC: <span id="ucConfigName"></span></label></div>
-                            <div class="form-group">
-                                <label for="ch_total">Carga Horária Total:</label>
-                                <input type="number" id="ch_total" name="carga_horaria_total" min="1" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="presencial_ch">Presencial - CH:</label>
-                                <input type="number" id="presencial_ch" name="presencial_ch" min="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="presencial_aulas">Presencial - Aulas 45min:</label>
-                                <input type="number" id="presencial_aulas" name="presencial_aulas" min="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="presencial_dias">Presencial - Dias Letivos:</label>
-                                <input type="number" id="presencial_dias" name="presencial_dias" min="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="ead_ch">EAD - CH:</label>
-                                <input type="number" id="ead_ch" name="ead_ch" min="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="ead_aulas">EAD - Aulas 45min:</label>
-                                <input type="number" id="ead_aulas" name="ead_aulas" min="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="ead_dias">EAD - Dias Letivos:</label>
-                                <input type="number" id="ead_dias" name="ead_dias" min="0" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Salvar UC</button>
-                        </form>
-                    </div>
-                </div>
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
-                <script>
-                    let instituicoesCache = null;
-                    let ucsCache = null;
-                    let cursosDataTable = [];
-                    let ucDataMap = {};
-                    let ucConfigs = {};
+            </div>
+        </section>
+    </main>
+</div>
 
-                    async function fetchInstituicoes() {
-                        if (instituicoesCache) return instituicoesCache;
-                        const resp = await fetch('http://localhost:8000/api/instituicoes');
-                        instituicoesCache = await resp.json();
-                        return instituicoesCache;
-                    }
-                    async function fetchUCs() {
-                        if (ucsCache) return ucsCache;
-                        const resp = await fetch('http://localhost:8000/api/unidades_curriculares');
-                        ucsCache = await resp.json();
-                        return ucsCache;
-                    }
-                    function getNomeInstituicao(id, lista) {
-                        const inst = lista.find(i => i._id === id || i.id === id);
-                        return inst ? (inst.razao_social || inst.nome || id) : id;
-                    }
-                    function renderTurnos(turnos) {
-                        if (!turnos) return '-';
-                        if (Array.isArray(turnos)) return turnos.join(', ');
-                        return Object.entries(turnos)
-                            .filter(([_, v]) => v)
-                            .map(([k, _]) => k.charAt(0).toUpperCase() + k.slice(1))
-                            .join(', ');
-                    }
-                    function renderUCTable(ucs = []) {
-                        if (!Array.isArray(ucs) || ucs.length === 0) return "-";
-                        let html = `<table class="uc-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>UC</th>
-                <th>C.H. Total</th>
-                <th>Presencial</th>
-                <th>EAD</th>
-            </tr>
-        </thead>
-        <tbody>`;
-                        ucs.forEach((uc, idx) => {
-                            html += `<tr>
-            <td>${idx + 1}</td>
-            <td>${uc.unidade_curricular || '-'}</td>
-            <td>${uc.carga_horaria_total ?? '-'}</td>
-            <td>
-                CH: ${uc.presencial?.carga_horaria ?? '-'}<br>
-                Aulas: ${uc.presencial?.quantidade_aulas_45min ?? '-'}<br>
-                Dias: ${uc.presencial?.dias_letivos ?? '-'}
-            </td>
-            <td>
-                CH: ${uc.ead?.carga_horaria ?? '-'}<br>
-                Aulas: ${uc.ead?.quantidade_aulas_45min ?? '-'}<br>
-                Dias: ${uc.ead?.dias_letivos ?? '-'}
-            </td>
-        </tr>`;
-                        });
-                        html += `</tbody></table>`;
-                        return html;
-                    }
-                    async function preencherInstituicoes() {
-                        const select = document.getElementById('instituicaoId');
-                        if (!select) return;
-                        const instituicoes = await fetchInstituicoes();
-                        select.innerHTML = '<option value="">Selecione</option>';
-                        instituicoes.forEach(inst => {
-                            select.innerHTML += `<option value="${inst._id || inst.id}">${inst.razao_social || inst.nome || '(sem nome)'}</option>`;
-                        });
-                    }
-                    async function preencherUCs() {
-                        const select = $('#ucsSelect');
-                        const ucs = await fetchUCs();
-                        select.empty();
-                        ucDataMap = {};
-                        ucs.forEach(uc => {
-                            const id = uc._id || uc.id || uc.codigo || uc.descricao;
-                            ucDataMap[id] = uc.descricao;
-                            select.append(`<option value="${id}">${uc.descricao}</option>`);
-                        });
-                        select.trigger('change');
-                    }
-                    function resetUcConfigs() {
-                        ucConfigs = {};
-                        $('#ucConfigForms').html('');
-                        $('#ucFormsSection').hide();
-                    }
-                    function showUcConfigModal(ucId, ucName) {
-                        $('#ucConfigId').val(ucId);
-                        $('#ucConfigName').text(ucName);
-                        if (ucConfigs[ucId]) {
-                            $('#ch_total').val(ucConfigs[ucId].carga_horaria_total);
-                            $('#presencial_ch').val(ucConfigs[ucId].presencial.carga_horaria);
-                            $('#presencial_aulas').val(ucConfigs[ucId].presencial.quantidade_aulas_45min);
-                            $('#presencial_dias').val(ucConfigs[ucId].presencial.dias_letivos);
-                            $('#ead_ch').val(ucConfigs[ucId].ead.carga_horaria);
-                            $('#ead_aulas').val(ucConfigs[ucId].ead.quantidade_aulas_45min);
-                            $('#ead_dias').val(ucConfigs[ucId].ead.dias_letivos);
-                        } else {
-                            $('#ucConfigForm')[0].reset();
-                        }
-                        $('#modalUcConfig').addClass('show');
-                    }
-                    function closeUcConfigModal() {
-                        $('#modalUcConfig').removeClass('show');
-                    }
-                    $('#ucConfigForm').on('submit', function (e) {
-                        e.preventDefault();
-                        const ucId = $('#ucConfigId').val();
-                        ucConfigs[ucId] = {
-                            id: ucId,
-                            unidade_curricular: ucDataMap[ucId],
-                            carga_horaria_total: parseInt($('#ch_total').val(), 10),
-                            presencial: {
-                                carga_horaria: parseInt($('#presencial_ch').val(), 10),
-                                quantidade_aulas_45min: parseInt($('#presencial_aulas').val(), 10),
-                                dias_letivos: parseInt($('#presencial_dias').val(), 10)
-                            },
-                            ead: {
-                                carga_horaria: parseInt($('#ead_ch').val(), 10),
-                                quantidade_aulas_45min: parseInt($('#ead_aulas').val(), 10),
-                                dias_letivos: parseInt($('#ead_dias').val(), 10)
-                            }
-                        };
-                        $('#ucConfigForms').find(`[data-ucid="${ucId}"]`).removeClass('pending').addClass('configured');
-                        closeUcConfigModal();
-                        checkUcConfigsRequired();
-                    });
-                    function checkUcConfigsRequired() {
-                        let allConfigured = true;
-                        $('#ucConfigForms').children().each(function () {
-                            if (!$(this).hasClass('configured')) {
-                                allConfigured = false;
-                            }
-                        });
-                        if (allConfigured) {
-                            $('#ucFormsSection').hide();
-                        } else {
-                            $('#ucFormsSection').show();
-                        }
-                    }
-                    $('#ucsSelect').on('change', function () {
-                        const selected = $(this).val() || [];
-                        Object.keys(ucConfigs).forEach(k => {
-                            if (!selected.includes(k)) delete ucConfigs[k];
-                        });
-                        $('#ucConfigForms').html('');
-                        selected.forEach(id => {
-                            const name = ucDataMap[id] || id;
-                            const status = ucConfigs[id] ? 'configured' : 'pending';
-                            $('#ucConfigForms').append(
-                                `<div class="uc-config-row ${status}" data-ucid="${id}" style="margin-bottom:10px;">
-                        <strong>${name}</strong>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="showUcConfigModal('${id}', '${name}')">
-                            ${ucConfigs[id] ? 'Editar Dados' : 'Configurar Dados'}
-                        </button>
-                        ${status === 'pending' ? '<span style="color:#c00;margin-left:10px;">(Pendente)</span>' : '<span style="color:green;margin-left:10px;">(OK)</span>'}
-                    </div>`
-                            );
-                        });
-                        if (selected.length > 0) {
-                            $('#ucFormsSection').show();
-                            let nextPending = selected.find(id => !ucConfigs[id]);
-                            if (nextPending) showUcConfigModal(nextPending, ucDataMap[nextPending]);
-                        } else {
-                            $('#ucFormsSection').hide();
-                        }
-                    });
-                    function openAddCursoModal() {
-                        preencherInstituicoes();
-                        preencherUCs();
-                        resetUcConfigs();
-                        $('#addCursoModal').addClass('show');
-                    }
-                    function closeModal(modalId) {
-                        $('#' + modalId).removeClass('show');
-                    }
-                    // Função para renderizar tabela
-                    function renderCursosTable(cursos, instituicoes) {
-                        const tbody = document.querySelector('#cursosTable tbody');
-                        tbody.innerHTML = '';
-                        cursos.forEach(curso => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-            <td>${curso.nome || ''}</td>
-            <td>${curso.tipo || ''}</td>
-            <td>${renderTurnos(curso.turnos)}</td>
-            <td>${curso.nivel_curso || ''}</td>
-            <td>${curso.carga_horaria || ''}</td>
-            <td>${curso.area || ''}</td>
-            <td>${curso.cbo || ''}</td>
-            <td>${curso.codigo_matriz || ''}</td>
-            <td>${curso.eixo_tecnologico || ''}</td>
-            <td>${curso.nivel_qualificacao || ''}</td>
-            <td>${getNomeInstituicao(curso.instituicao_id, instituicoes)}</td>
-            <td>
-                <button class="btn btn-edit" title="Editar" onclick="editarCurso(event, '${curso._id}')">
-                    <i class="fas fa-edit"></i>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
+<script>
+let instituicoesCache = null;
+let ucsCache = null;
+let cursosDataTable = [];
+let ucDataMap = {};
+
+// Busca Instituições
+async function fetchInstituicoes() {
+    if (instituicoesCache) return instituicoesCache;
+    const resp = await fetch('http://localhost:8000/api/instituicoes');
+    instituicoesCache = await resp.json();
+    return instituicoesCache;
+}
+async function fetchUCs() {
+    if (ucsCache) return ucsCache;
+    const resp = await fetch('http://localhost:8000/api/unidades_curriculares');
+    ucsCache = await resp.json();
+    return ucsCache;
+}
+function getNomeInstituicao(id, lista) {
+    const inst = lista.find(i => i._id === id || i.id === id);
+    return inst ? (inst.razao_social || inst.nome || id) : id;
+}
+function renderTurnos(turnos) {
+    if (!turnos) return '-';
+    if (Array.isArray(turnos)) return turnos.join(', ');
+    return Object.entries(turnos)
+        .filter(([_, v]) => v)
+        .map(([k, _]) => k.charAt(0).toUpperCase() + k.slice(1))
+        .join(', ');
+}
+function renderUCTable(ucs = []) {
+    if (!Array.isArray(ucs) || ucs.length === 0) return "-";
+    let html = `<table class="uc-table">
+<thead>
+    <tr>
+        <th>#</th>
+        <th>UC</th>
+        <th>C.H. Total</th>
+        <th>Presencial</th>
+        <th>EAD</th>
+    </tr>
+</thead>
+<tbody>`;
+    ucs.forEach((uc, idx) => {
+        html += `<tr>
+<td>${idx + 1}</td>
+<td>${uc.unidade_curricular || '-'}</td>
+<td>${uc.carga_horaria_total ?? '-'}</td>
+<td>
+    CH: ${uc.presencial?.carga_horaria ?? '-'}<br>
+    Aulas: ${uc.presencial?.quantidade_aulas_45min ?? '-'}<br>
+    Dias: ${uc.presencial?.dias_letivos ?? '-'}
+</td>
+<td>
+    CH: ${uc.ead?.carga_horaria ?? '-'}<br>
+    Aulas: ${uc.ead?.quantidade_aulas_45min ?? '-'}<br>
+    Dias: ${uc.ead?.dias_letivos ?? '-'}
+</td>
+</tr>`;
+    });
+    html += `</tbody></table>`;
+    return html;
+}
+async function preencherInstituicoes() {
+    const select = document.getElementById('instituicaoId');
+    if (!select) return;
+    const instituicoes = await fetchInstituicoes();
+    select.innerHTML = '<option value="">Selecione</option>';
+    instituicoes.forEach(inst => {
+        select.innerHTML += `<option value="${inst._id || inst.id}">${inst.razao_social || inst.nome || '(sem nome)'}</option>`;
+    });
+}
+async function preencherUCs() {
+    const select = $('#ucsSelect');
+    const ucs = await fetchUCs();
+    select.empty();
+    ucDataMap = {};
+    ucs.forEach(uc => {
+        const id = uc._id || uc.id || uc.codigo || uc.descricao;
+        ucDataMap[id] = uc.descricao;
+        select.append(`<option value="${id}">${uc.descricao}</option>`);
+    });
+    select.trigger('change');
+}
+function openAddCursoModal() {
+    preencherInstituicoes();
+    preencherUCs();
+    $('#addCursoModal').addClass('show');
+}
+function closeModal(modalId) {
+    $('#' + modalId).removeClass('show');
+}
+function renderCursosTable(cursos, instituicoes) {
+    const tbody = document.querySelector('#cursosTable tbody');
+    tbody.innerHTML = '';
+    cursos.forEach(curso => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+<td>${curso.nome || ''}</td>
+<td>${curso.tipo || ''}</td>
+<td>${renderTurnos(curso.turnos)}</td>
+<td>${curso.nivel_curso || ''}</td>
+<td>${curso.carga_horaria || ''}</td>
+<td>${curso.area || ''}</td>
+<td>${curso.cbo || ''}</td>
+<td>${curso.codigo_matriz || ''}</td>
+<td>${curso.eixo_tecnologico || ''}</td>
+<td>${curso.nivel_qualificacao || ''}</td>
+<td>${getNomeInstituicao(curso.instituicao_id, instituicoes)}</td>
+<td>
+    <button class="btn btn-edit" title="Editar" onclick="editarCurso(event, '${curso._id}')">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="btn btn-delete" title="Excluir" onclick="excluirCurso(event, '${curso._id}', '${curso.nome}')">
+        <i class="fas fa-trash-alt"></i>
+    </button>
+</td>
+`;
+        tr.addEventListener('click', function (e) {
+            if (
+                !e.target.closest('.btn-edit') &&
+                !e.target.closest('.btn-delete') &&
+                !e.target.closest('.fa-edit') &&
+                !e.target.closest('.fa-trash-alt')
+            ) {
+                mostrarDetalheCurso(curso, instituicoes, ucsCache);
+            }
+        });
+        tbody.appendChild(tr);
+    });
+}
+async function carregarCursos() {
+    const [instituicoes, ucs] = await Promise.all([fetchInstituicoes(), fetchUCs()]);
+    const resp = await fetch('http://localhost:8000/api/cursos');
+    const cursos = await resp.json();
+    cursosDataTable = cursos; // salva para filtrar depois
+    renderCursosTable(cursos, instituicoes);
+}
+function editarCurso(event, cursoId) {
+    event.stopPropagation();
+    alert("Editar curso ID: " + cursoId);
+}
+function excluirCurso(event, cursoId, nome) {
+    event.stopPropagation();
+    if (confirm("Deseja realmente excluir o curso \"" + nome + "\"?")) {
+        alert("Curso excluído (simulação): " + nome + " (ID: " + cursoId + ")");
+    }
+}
+function mostrarDetalheCurso(curso, instituicoes, ucs) {
+    const nomeInstituicao = getNomeInstituicao(curso.instituicao_id, instituicoes);
+    document.getElementById('detalheCursoConteudo').innerHTML = `
+<div class="popup-field"><span class="popup-label">ID:</span> ${curso._id}</div>
+<div class="popup-field"><span class="popup-label">Nome:</span> ${curso.nome || ''}</div>
+<div class="popup-field"><span class="popup-label">Tipo:</span> ${curso.tipo || ''}</div>
+<div class="popup-field"><span class="popup-label">Turnos:</span> ${renderTurnos(curso.turnos)}</div>
+<div class="popup-field"><span class="popup-label">Nível do Curso:</span> ${curso.nivel_curso || ''}</div>
+<div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria || ''}</div>
+<div class="popup-field"><span class="popup-label">Área:</span> ${curso.area || ''}</div>
+<div class="popup-field"><span class="popup-label">CBO:</span> ${curso.cbo || ''}</div>
+<div class="popup-field"><span class="popup-label">Código Matriz:</span> ${curso.codigo_matriz || ''}</div>
+<div class="popup-field"><span class="popup-label">Eixo Tecnológico:</span> ${curso.eixo_tecnologico || ''}</div>
+<div class="popup-field"><span class="popup-label">Nível Qualificação:</span> ${curso.nivel_qualificacao || ''}</div>
+<div class="popup-field"><span class="popup-label">Instituição:</span> ${nomeInstituicao}</div>
+<div class="popup-field"><span class="popup-label">Unidades Curriculares do Curso:</span></div>
+<div style="max-height:350px;overflow:auto;">${renderUCTable(curso.ordem_ucs)}</div>
+`;
+    document.getElementById('modalDetalheCurso').classList.add('show');
+}
+function fecharModalDetalhe() {
+    document.getElementById('modalDetalheCurso').classList.remove('show');
+}
+window.onclick = function (e) {
+    if (e.target.classList.contains('modal') && e.target.id === "modalDetalheCurso") fecharModalDetalhe();
+    if (e.target.classList.contains('modal') && e.target.id === "addCursoModal") closeModal('addCursoModal');
+    if (e.target.classList.contains('modal') && e.target.id === "modalUcsConfig") closeModalUcsConfig();
+}
+$(document).ready(function () {
+    $('#turnosSelect').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: $('#turnosSelect').data('placeholder'),
+        closeOnSelect: false
+    });
+    $('#ucsSelect').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Selecione as UCs...',
+        closeOnSelect: false
+    });
+    // Filtro dinâmico
+    $('#searchCurso').on('input', function () {
+        const termo = this.value.toLowerCase();
+        const instituicoes = instituicoesCache || [];
+        const cursosFiltrados = cursosDataTable.filter(curso => {
+            return Object.values({
+                ...curso,
+                instituicao: getNomeInstituicao(curso.instituicao_id, instituicoes)
+            }).some(val =>
+                String(val).toLowerCase().includes(termo)
+            );
+        });
+        renderCursosTable(cursosFiltrados, instituicoes);
+    });
+    carregarCursos();
+});
+
+// ###### NOVO FLUXO DE CADASTRO COM MODAL UCS CONFIG ######
+let cursoDataTemp = null;
+
+// SUBSTITUI O ENVIO DIRETO PARA O BACKEND
+$('#cursoForm').on('submit', function (e) {
+    e.preventDefault();
+    const selectedUcs = $('#ucsSelect').val() || [];
+    if (selectedUcs.length === 0) {
+        alert('Selecione ao menos uma Unidade Curricular.');
+        return false;
+    }
+    // Monta os dados do curso (exceto as UCs detalhadas)
+    cursoDataTemp = {
+        nome: $('#nomeCurso').val(),
+        codigo_matriz: $('#codigoMatriz').val(),
+        tipo: $('#tipoCurso').val(),
+        nivel_curso: $('#nivelCurso').val(),
+        turnos: $('#turnosSelect').val() || [],
+        carga_horaria: parseInt($('#cargaHoraria').val(), 10),
+        cbo: $('#cbo').val(),
+        area: $('#area').val(),
+        eixo_tecnologico: $('#eixoTecnologico').val(),
+        nivel_qualificacao: parseInt($('#nivelQualificacao').val(), 10),
+        instituicao_id: $('#instituicaoId').val(),
+        // ordem_ucs virá depois!
+    };
+    // Lista das UCs selecionadas, com nome e id
+    const ucsSelecionadas = selectedUcs.map(id => ({
+        id: id,
+        descricao: ucDataMap[id] || id
+    }));
+    // Fecha o modal de curso e abre o de configuração das UCs
+    closeModal('addCursoModal');
+    openModalUcsConfig(ucsSelecionadas, cursoDataTemp);
+});
+
+// MODAL UCS CONFIG - reutilizado
+function openModalUcsConfig(ucsData, cursoData) {
+    window._cursoDataToSave = cursoData;
+    let html = `<div class="accordion" id="accordionUcModal">`;
+    ucsData.forEach((uc, idx) => {
+        html += `
+        <div class="accordion-item border border-gray-300 rounded mb-2" style="background:#f9f9f9">
+            <h2 class="accordion-header" id="heading${uc.id}">
+                <button class="accordion-button flex justify-between items-center w-full py-3 px-4 text-left font-medium"
+                    type="button"
+                    onclick="toggleAccordion('${uc.id}')"
+                    style="background: none; border: none; width:100%; outline:none;">
+                    <span>${uc.descricao}</span>
+                    <i class="fas fa-chevron-down ml-2"></i>
                 </button>
-                <button class="btn btn-delete" title="Excluir" onclick="excluirCurso(event, '${curso._id}', '${curso.nome}')">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        `;
-                            tr.addEventListener('click', function (e) {
-                                if (
-                                    !e.target.closest('.btn-edit') &&
-                                    !e.target.closest('.btn-delete') &&
-                                    !e.target.closest('.fa-edit') &&
-                                    !e.target.closest('.fa-trash-alt')
-                                ) {
-                                    mostrarDetalheCurso(curso, instituicoes, ucsCache);
-                                }
-                            });
-                            tbody.appendChild(tr);
-                        });
-                    }
-                    // Listar cursos cadastrados
-                    async function carregarCursos() {
-                        const [instituicoes, ucs] = await Promise.all([fetchInstituicoes(), fetchUCs()]);
-                        const resp = await fetch('http://localhost:8000/api/cursos');
-                        const cursos = await resp.json();
-                        cursosDataTable = cursos; // salva para filtrar depois
-                        renderCursosTable(cursos, instituicoes);
-                    }
-                    function editarCurso(event, cursoId) {
-                        event.stopPropagation();
-                        alert("Editar curso ID: " + cursoId);
-                    }
-                    function excluirCurso(event, cursoId, nome) {
-                        event.stopPropagation();
-                        if (confirm("Deseja realmente excluir o curso \"" + nome + "\"?")) {
-                            alert("Curso excluído (simulação): " + nome + " (ID: " + cursoId + ")");
-                        }
-                    }
-                    function mostrarDetalheCurso(curso, instituicoes, ucs) {
-                        const nomeInstituicao = getNomeInstituicao(curso.instituicao_id, instituicoes);
-                        document.getElementById('detalheCursoConteudo').innerHTML = `
-        <div class="popup-field"><span class="popup-label">ID:</span> ${curso._id}</div>
-        <div class="popup-field"><span class="popup-label">Nome:</span> ${curso.nome || ''}</div>
-        <div class="popup-field"><span class="popup-label">Tipo:</span> ${curso.tipo || ''}</div>
-        <div class="popup-field"><span class="popup-label">Turnos:</span> ${renderTurnos(curso.turnos)}</div>
-        <div class="popup-field"><span class="popup-label">Nível do Curso:</span> ${curso.nivel_curso || ''}</div>
-        <div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria || ''}</div>
-        <div class="popup-field"><span class="popup-label">Área:</span> ${curso.area || ''}</div>
-        <div class="popup-field"><span class="popup-label">CBO:</span> ${curso.cbo || ''}</div>
-        <div class="popup-field"><span class="popup-label">Código Matriz:</span> ${curso.codigo_matriz || ''}</div>
-        <div class="popup-field"><span class="popup-label">Eixo Tecnológico:</span> ${curso.eixo_tecnologico || ''}</div>
-        <div class="popup-field"><span class="popup-label">Nível Qualificação:</span> ${curso.nivel_qualificacao || ''}</div>
-        <div class="popup-field"><span class="popup-label">Instituição:</span> ${nomeInstituicao}</div>
-        <div class="popup-field"><span class="popup-label">Unidades Curriculares do Curso:</span></div>
-        <div style="max-height:350px;overflow:auto;">${renderUCTable(curso.ordem_ucs)}</div>
-    `;
-                        document.getElementById('modalDetalheCurso').classList.add('show');
-                    }
-                    function fecharModalDetalhe() {
-                        document.getElementById('modalDetalheCurso').classList.remove('show');
-                    }
-                    window.onclick = function (e) {
-                        if (e.target.classList.contains('modal') && e.target.id === "modalDetalheCurso") fecharModalDetalhe();
-                        if (e.target.classList.contains('modal') && e.target.id === "addCursoModal") closeModal('addCursoModal');
-                        if (e.target.classList.contains('modal') && e.target.id === "modalUcConfig") closeUcConfigModal();
-                    }
-                    $(document).ready(function () {
-                        $('#turnosSelect').select2({
-                            theme: 'bootstrap-5',
-                            width: '100%',
-                            placeholder: $('#turnosSelect').data('placeholder'),
-                            closeOnSelect: false
-                        });
-                        $('#ucsSelect').select2({
-                            theme: 'bootstrap-5',
-                            width: '100%',
-                            placeholder: 'Selecione as UCs...',
-                            closeOnSelect: false
-                        });
-                        // Filtro dinâmico
-                        $('#searchCurso').on('input', function () {
-                            const termo = this.value.toLowerCase();
-                            const instituicoes = instituicoesCache || [];
-                            const cursosFiltrados = cursosDataTable.filter(curso => {
-                                return Object.values({
-                                    ...curso,
-                                    instituicao: getNomeInstituicao(curso.instituicao_id, instituicoes)
-                                }).some(val =>
-                                    String(val).toLowerCase().includes(termo)
-                                );
-                            });
-                            renderCursosTable(cursosFiltrados, instituicoes);
-                        });
-                        carregarCursos();
-                    });
-                    // Salvar curso via AJAX com as UCs completas
-                    $('#cursoForm').on('submit', function (e) {
-                        e.preventDefault();
-                        const selectedUcs = $('#ucsSelect').val() || [];
-                        if (selectedUcs.length === 0) {
-                            alert('Selecione ao menos uma Unidade Curricular.');
-                            return false;
-                        }
-                        for (let ucId of selectedUcs) {
-                            if (!ucConfigs[ucId]) {
-                                alert(`Configure todos os dados da UC "${ucDataMap[ucId]}" antes de salvar o curso.`);
-                                return false;
-                            }
-                        }
-                        const ordem_ucs = selectedUcs.map(ucId => ucConfigs[ucId]);
-                        const turnos = $('#turnosSelect').val() || [];
-                        const data = {
-                            nome: $('#nomeCurso').val(),
-                            codigo_matriz: $('#codigoMatriz').val(),
-                            tipo: $('#tipoCurso').val(),
-                            nivel_curso: $('#nivelCurso').val(),
-                            turnos: turnos,
-                            carga_horaria: parseInt($('#cargaHoraria').val(), 10),
-                            cbo: $('#cbo').val(),
-                            area: $('#area').val(),
-                            eixo_tecnologico: $('#eixoTecnologico').val(),
-                            nivel_qualificacao: parseInt($('#nivelQualificacao').val(), 10),
-                            instituicao_id: $('#instituicaoId').val(),
-                            ordem_ucs: ordem_ucs
-                        };
-                        $.ajax({
-                            url: 'processa_curso.php',
-                            type: 'POST',
-                            data: JSON.stringify(data),
-                            contentType: "application/json",
-                            success: function (resp) {
-                                alert('Curso cadastrado com sucesso!');
-                                closeModal('addCursoModal');
-                                carregarCursos();
-                            },
-                            error: function (xhr) {
-                                alert('Erro ao salvar curso: ' + (xhr.responseText || ''));
-                            }
-                        });
-                    });
-                </script>
+            </h2>
+            <div id="collapse${uc.id}" class="accordion-collapse" data-ucid="${uc.id}" style="display:${idx===0?'block':'none'};">
+                <div class="accordion-body px-4 py-3">
+                    <form class="uc-form-config" data-ucid="${uc.id}">
+                        <div class="form-group">
+                            <label>ID da UC:</label>
+                            <input type="text" value="${uc.id}" readonly class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Nome da UC:</label>
+                            <input type="text" value="${uc.descricao}" readonly class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Carga Horária Total:</label>
+                            <input type="number" min="1" class="form-control ch_total" name="carga_horaria_total" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Presencial - CH:</label>
+                            <input type="number" min="0" class="form-control presencial_ch" name="presencial_ch" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Presencial - Aulas 45min:</label>
+                            <input type="number" min="0" class="form-control presencial_aulas" name="presencial_aulas" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Presencial - Dias Letivos:</label>
+                            <input type="number" min="0" class="form-control presencial_dias" name="presencial_dias" required />
+                        </div>
+                        <div class="form-group">
+                            <label>EAD - CH:</label>
+                            <input type="number" min="0" class="form-control ead_ch" name="ead_ch" required />
+                        </div>
+                        <div class="form-group">
+                            <label>EAD - Aulas 45min:</label>
+                            <input type="number" min="0" class="form-control ead_aulas" name="ead_aulas" required />
+                        </div>
+                        <div class="form-group">
+                            <label>EAD - Dias Letivos:</label>
+                            <input type="number" min="0" class="form-control ead_dias" name="ead_dias" required />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    document.getElementById('ucsAccordion').innerHTML = html;
+    document.getElementById('modalUcsConfig').classList.add('show');
+    document.getElementById('modalUcsConfig').style.display = "flex";
+}
+function closeModalUcsConfig() {
+    document.getElementById('modalUcsConfig').classList.remove('show');
+    document.getElementById('modalUcsConfig').style.display = "none";
+    document.getElementById('ucsAccordion').innerHTML = "";
+    window._cursoDataToSave = null;
+}
+function toggleAccordion(id) {
+    const allCollapses = document.querySelectorAll('.accordion-collapse');
+    allCollapses.forEach(el => {
+        el.style.display = (el.id === 'collapse'+id)
+            ? (el.style.display === 'block' ? 'none' : 'block')
+            : 'none';
+    });
+}
+// Salvar curso com UCs detalhadas (fluxo final!)
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'saveAllUcsBtn') {
+        let allForms = document.querySelectorAll('.uc-form-config');
+        let ucsToSave = [];
+        let erro = false;
+        allForms.forEach(form => {
+            let id = form.getAttribute('data-ucid');
+            // Lê todos os campos obrigatórios
+            let ch_total = form.querySelector('.ch_total').value;
+            let presencial_ch = form.querySelector('.presencial_ch').value;
+            let presencial_aulas = form.querySelector('.presencial_aulas').value;
+            let presencial_dias = form.querySelector('.presencial_dias').value;
+            let ead_ch = form.querySelector('.ead_ch').value;
+            let ead_aulas = form.querySelector('.ead_aulas').value;
+            let ead_dias = form.querySelector('.ead_dias').value;
+            if (
+                ch_total === "" || presencial_ch === "" || presencial_aulas === "" ||
+                presencial_dias === "" || ead_ch === "" || ead_aulas === "" || ead_dias === ""
+            ) {
+                erro = true;
+            }
+            let values = {
+                id: id,
+                unidade_curricular: form.querySelectorAll('input[readonly]')[1].value,
+                carga_horaria_total: parseInt(ch_total, 10),
+                presencial: {
+                    carga_horaria: parseInt(presencial_ch, 10),
+                    quantidade_aulas_45min: parseInt(presencial_aulas, 10),
+                    dias_letivos: parseInt(presencial_dias, 10)
+                },
+                ead: {
+                    carga_horaria: parseInt(ead_ch, 10),
+                    quantidade_aulas_45min: parseInt(ead_aulas, 10),
+                    dias_letivos: parseInt(ead_dias, 10)
+                }
+            };
+            ucsToSave.push(values);
+        });
+        if (erro) {
+            alert('Preencha todos os campos obrigatórios de todas as UCs!');
+            return;
+        }
+        // Envia o curso completo com UCs
+        let dataFinal = Object.assign({}, window._cursoDataToSave, {ordem_ucs: ucsToSave});
+        fetch('processa_curso.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(dataFinal)
+        }).then(resp => {
+            if (resp.ok) {
+                alert('Curso cadastrado com sucesso!');
+                closeModalUcsConfig();
+                closeModal('addCursoModal');
+                window.location = 'gestao_cursos.php';
+            } else {
+                resp.text().then(txt => alert('Erro ao salvar curso: ' + txt));
+            }
+        }).catch(() => {
+            alert('Erro ao conectar com o servidor.');
+        });
+    }
+});
+</script>
 </body>
-
 </html>
