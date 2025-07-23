@@ -15,7 +15,7 @@ body {
 .dashboard-container {
     display: flex;
     width: 100%;
-    
+
 }
 
 /* --- Estilos para o Login (manter caso haja uma página de login separada) --- */
@@ -412,7 +412,17 @@ button[type="submit"]:hover {
 }
 
 .btn-edit:hover {
-    background-color: #218838;
+    background-color: #13441e;
+}
+
+.btn-view {
+    background-color: #ffb300;
+    /* Verde para editar (alterado de amarelo para maior contraste com o tema SENAI) */
+    color: white;
+}
+
+.btn-view:hover {
+    background-color: #8a6100;
 }
 
 .btn-delete {
@@ -422,7 +432,7 @@ button[type="submit"]:hover {
 }
 
 .btn-delete:hover {
-    background-color: #c82333;
+    background-color: #480b11;
 }
 
 
@@ -778,14 +788,20 @@ button[type="submit"]:hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-     /* Adicionado para fixar o cabeçalho do calendário */
+    /* Adicionado para fixar o cabeçalho do calendário */
     position: sticky;
-    top: 0; /* Ajuste conforme a altura do seu main-header se ele também for sticky */
-    background-color: #ffffff; /* Garante que o fundo não seja transparente ao rolar */
-    z-index: 100; /* Garante que fique acima de outros elementos ao rolar */
-    padding-top: 1.5rem; /* Para manter o espaçamento superior ao fixar */
-    padding-bottom: 1.5rem; /* Para manter o espaçamento inferior ao fixar */
-    border-bottom: 1px solid #e5e7eb; /* Uma linha para separar o cabeçalho fixo */
+    top: 0;
+    /* Ajuste conforme a altura do seu main-header se ele também for sticky */
+    background-color: #ffffff;
+    /* Garante que o fundo não seja transparente ao rolar */
+    z-index: 100;
+    /* Garante que fique acima de outros elementos ao rolar */
+    padding-top: 1.5rem;
+    /* Para manter o espaçamento superior ao fixar */
+    padding-bottom: 1.5rem;
+    /* Para manter o espaçamento inferior ao fixar */
+    border-bottom: 1px solid #e5e7eb;
+    /* Uma linha para separar o cabeçalho fixo */
 }
 
 .month-year-controls {
@@ -941,7 +957,7 @@ button[type="submit"]:hover {
     border-radius: 0.75rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     margin-top: 1.5rem;
-    
+
 }
 
 .instructor-calendar-section h2 {
@@ -1860,6 +1876,7 @@ body.modal-open {
     font-weight: bold;
     color: #333;
 }
+
 /* Estilos para o Modal de Detalhes do Instrutor */
 .detalhes-instrutor-container p {
     margin-bottom: 8px;
@@ -2173,8 +2190,10 @@ body.modal-open {
     }
 
     .data-table .actions .btn-edit,
-    .data-table .actions .btn-delete {
+    .data-table .actions .btn-delete,
+    .data-table .actions .btn-view {
         display: none;
+        justify-content: space-between;
 
     }
 }
@@ -2186,4 +2205,110 @@ body.modal-open {
         background-color: #007bff;
         color: white;
     }
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.3);
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    min-width: 350px;
+    max-width: 90vw;
+    position: relative;
+}
+
+.show {
+    display: flex !important;
+}
+
+.btn {
+    margin: 2px;
+}
+
+.modal-close,
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 30px;
+    font-size: 2em;
+    cursor: pointer;
+}
+
+.popup-field {
+    margin-bottom: 12px;
+}
+
+.popup-label {
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.uc-list-detail {
+    margin-left: 18px;
+    margin-bottom: 12px;
+    border-left: 2px solid #e5e7eb;
+    padding-left: 10px;
+}
+
+.uc-header {
+    font-weight: bold;
+    color: #3b82f6;
+}
+
+.uc-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.uc-table th,
+.uc-table td {
+    border: 1px solid #ddd;
+    padding: 3px 6px;
+}
+
+.uc-table th {
+    background: #f3f4f6;
+}
+
+/* Accordion modal styles */
+.accordion {
+    width: 100%;
+}
+
+.accordion-item {
+    background: #f9f9f9;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.accordion-header button {
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    outline: none;
+    padding: 14px;
+    font-size: 1.1em;
+}
+
+.accordion-collapse {
+    padding: 0 18px 12px 18px;
+    display: none;
+}
+
+.accordion-collapse.active {
+    display: block;
 }

@@ -7,7 +7,7 @@ ARQUIVO_GERAL = "relatorio_geral_professores.xlsx"
 
 def get_mongo_db():
     client = MongoClient("mongodb://localhost:27017/")
-    return client["alocacao_senai"]
+    return client["senai_betim_bd"]
 
 db = get_mongo_db()
 

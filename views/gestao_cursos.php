@@ -11,114 +11,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" />
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <style>
-        /* ... (Mantenha os estilos que já existem no seu código original, pode copiar os do seu arquivo) ... */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.3);
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-        }
-
-        .modal-content {
-            background: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            min-width: 350px;
-            max-width: 90vw;
-            position: relative;
-        }
-
-        .show {
-            display: flex !important;
-        }
-
-        .btn {
-            margin: 2px;
-        }
-
-        .modal-close,
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 30px;
-            font-size: 2em;
-            cursor: pointer;
-        }
-
-        .popup-field {
-            margin-bottom: 12px;
-        }
-
-        .popup-label {
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        .uc-list-detail {
-            margin-left: 18px;
-            margin-bottom: 12px;
-            border-left: 2px solid #e5e7eb;
-            padding-left: 10px;
-        }
-
-        .uc-header {
-            font-weight: bold;
-            color: #3b82f6;
-        }
-
-        .uc-table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 8px;
-        }
-
-        .uc-table th,
-        .uc-table td {
-            border: 1px solid #ddd;
-            padding: 3px 6px;
-        }
-
-        .uc-table th {
-            background: #f3f4f6;
-        }
-
-        /* Accordion modal styles */
-        .accordion {
-            width: 100%;
-        }
-
-        .accordion-item {
-            background: #f9f9f9;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .accordion-header button {
-            width: 100%;
-            text-align: left;
-            border: none;
-            background: none;
-            outline: none;
-            padding: 14px;
-            font-size: 1.1em;
-        }
-
-        .accordion-collapse {
-            padding: 0 18px 12px 18px;
-            display: none;
-        }
-
-        .accordion-collapse.active {
-            display: block;
-        }
-    </style>
 </head>
 
 <body>
@@ -145,6 +37,7 @@
                 </ul>
             </nav>
         </aside>
+
         <main class="main-content">
             <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
             <header class="main-header">
@@ -170,17 +63,11 @@
                                 <th>Turnos</th>
                                 <th>Nível do Curso</th>
                                 <th>Carga Horária</th>
-                                <th>Área</th>
-                                <th>CBO</th>
                                 <th>Código Matriz</th>
-                                <th>Eixo Tecnológico</th>
-                                <th>Nível Qualificação</th>
-                                <th>Instituição</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Preenchido por JS -->
                         </tbody>
                     </table>
                 </div>
@@ -404,15 +291,13 @@
 <td>${renderTurnos(curso.turnos)}</td>
 <td>${curso.nivel_curso || ''}</td>
 <td>${curso.carga_horaria || ''}</td>
-<td>${curso.area || ''}</td>
-<td>${curso.cbo || ''}</td>
+
 <td>${curso.codigo_matriz || ''}</td>
-<td>${curso.eixo_tecnologico || ''}</td>
-<td>${curso.nivel_qualificacao || ''}</td>
-<td>${getNomeInstituicao(curso.instituicao_id, instituicoes)}</td>
+
 <td>
-   <button class="btn btn-icon btn-edit" data-id="${curso._id}" title="Editar"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-icon btn-delete" data-id="${curso._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+    <button class="btn btn-icon btn-view" data-id="${curso._id}" title="Visualizar"><i class="far fa-file-alt"></i><button>            
+    <button class="btn btn-icon btn-edit" data-id="${curso._id}" title="Editar"><i class="fas fa-edit"></i></button>
+    <button class="btn btn-icon btn-delete" data-id="${curso._id}" title="Excluir"><i class="fas fa-trash-alt"></i><button>
 </td>
 `;
                 tr.addEventListener('click', function (e) {
@@ -705,21 +590,11 @@
         <div class="form-group"><label>Carga Horária:</label>
             <input type="number" id="editCargaHoraria" value="${curso.carga_horaria || ''}" class="form-control">
         </div>
-        <div class="form-group"><label>Área:</label>
-            <input type="text" id="editArea" value="${curso.area || ''}" class="form-control">
-        </div>
-        <div class="form-group"><label>CBO:</label>
-            <input type="text" id="editCbo" value="${curso.cbo || ''}" class="form-control">
-        </div>
+      
         <div class="form-group"><label>Código Matriz:</label>
             <input type="text" id="editCodigoMatriz" value="${curso.codigo_matriz || ''}" class="form-control">
         </div>
-        <div class="form-group"><label>Eixo Tecnológico:</label>
-            <input type="text" id="editEixoTec" value="${curso.eixo_tecnologico || ''}" class="form-control">
-        </div>
-        <div class="form-group"><label>Nível Qualificação:</label>
-            <input type="number" id="editNivelQualificacao" value="${curso.nivel_qualificacao || ''}" class="form-control">
-        </div>
+       
         <div class="form-group"><label>Instituição:</label>
             <select id="editInstituicao" class="form-control">
                 ${instituicoes.map(inst => `<option value="${inst._id}" ${curso.instituicao_id == inst._id ? 'selected' : ''}>${inst.razao_social || inst.nome}</option>`).join('')}

@@ -7,7 +7,7 @@ router = APIRouter(prefix="/api/alocacao", tags=["Alocação"])
 
 def get_mongo_db():
     client = MongoClient("mongodb://localhost:27017/")
-    return client["alocacao_senai"]
+    return client["senai_betim_bd"]
 
 # Utilidade para converter _id para string
 def get_str_id(obj):

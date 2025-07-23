@@ -259,9 +259,10 @@
     ucForm.onsubmit = async function (e) {
         e.preventDefault();
         const data = {
+            instituicao_id: selectInstituicao.value
             descricao: descricaoUcInput.value.trim(),
             sala_ideal: salaIdealInput.value.trim(),
-            instituicao_id: selectInstituicao.value
+            
         };
         let method, url;
         if (ucEditId) {
