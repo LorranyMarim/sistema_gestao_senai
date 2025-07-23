@@ -411,12 +411,8 @@
 <td>${curso.nivel_qualificacao || ''}</td>
 <td>${getNomeInstituicao(curso.instituicao_id, instituicoes)}</td>
 <td>
-    <button class="btn btn-edit" title="Editar" onclick="editarCurso(event, '${curso._id}')">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="btn btn-delete" title="Excluir" onclick="excluirCurso(event, '${curso._id}', '${curso.nome}')">
-        <i class="fas fa-trash-alt"></i>
-    </button>
+   <button class="btn btn-icon btn-edit" data-id="${curso._id}" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-icon btn-delete" data-id="${curso._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
 </td>
 `;
                 tr.addEventListener('click', function (e) {
@@ -683,13 +679,13 @@
             }
         });
         let cursoIdEmEdicao = null;
-let cursoOrdemUcsEmEdicao = null;
+        let cursoOrdemUcsEmEdicao = null;
 
-// Atualize esta função para montar o modal em modo edição:
-function mostrarDetalheCurso(curso, instituicoes, ucs) {
-    cursoIdEmEdicao = curso._id;
-    cursoOrdemUcsEmEdicao = curso.ordem_ucs || [];
-    let html = `
+        // Atualize esta função para montar o modal em modo edição:
+        function mostrarDetalheCurso(curso, instituicoes, ucs) {
+            cursoIdEmEdicao = curso._id;
+            cursoOrdemUcsEmEdicao = curso.ordem_ucs || [];
+            let html = `
         <div class="form-group"><label>Nome:</label>
             <input type="text" id="editNome" value="${curso.nome || ''}" class="form-control" required></div>
         <div class="form-group"><label>Tipo:</label>
@@ -701,9 +697,9 @@ function mostrarDetalheCurso(curso, instituicoes, ucs) {
         </div>
         <div class="form-group"><label>Turnos:</label>
             <select id="editTurnos" class="form-control" multiple>
-                <option value="Manhã" ${(curso.turnos||[]).includes('Manhã') ? 'selected' : ''}>Manhã</option>
-                <option value="Tarde" ${(curso.turnos||[]).includes('Tarde') ? 'selected' : ''}>Tarde</option>
-                <option value="Noite" ${(curso.turnos||[]).includes('Noite') ? 'selected' : ''}>Noite</option>
+                <option value="Manhã" ${(curso.turnos || []).includes('Manhã') ? 'selected' : ''}>Manhã</option>
+                <option value="Tarde" ${(curso.turnos || []).includes('Tarde') ? 'selected' : ''}>Tarde</option>
+                <option value="Noite" ${(curso.turnos || []).includes('Noite') ? 'selected' : ''}>Noite</option>
             </select>
         </div>
         <div class="form-group"><label>Carga Horária:</label>
@@ -732,84 +728,84 @@ function mostrarDetalheCurso(curso, instituicoes, ucs) {
         <div class="form-group"><label>Unidades Curriculares:</label>
             <select id="editUcs" class="form-control" multiple>
                 ${ucs.map(uc => {
-                    let selecionada = (cursoOrdemUcsEmEdicao||[]).some(selUc => String(selUc.id) === String(uc._id));
-                    return `<option value="${uc._id}" ${selecionada ? 'selected' : ''}>${uc.descricao}</option>`;
-                }).join('')}
+                let selecionada = (cursoOrdemUcsEmEdicao || []).some(selUc => String(selUc.id) === String(uc._id));
+                return `<option value="${uc._id}" ${selecionada ? 'selected' : ''}>${uc.descricao}</option>`;
+            }).join('')}
             </select>
         </div>
         <div id="editUCsExtra"></div>
     `;
-    document.getElementById('detalheCursoConteudo').innerHTML = html;
-    document.getElementById('modalDetalheCurso').classList.add('show');
-    // Limpa e aplica select2 só uma vez para evitar bug!
-    if ($.fn.select2) {
-        $('#editTurnos').select2({theme: 'bootstrap-5', width: '100%', closeOnSelect: false, dropdownParent: $('#modalDetalheCurso')});
-        $('#editUcs').select2({theme: 'bootstrap-5', width: '100%', closeOnSelect: false, dropdownParent: $('#modalDetalheCurso')});
-    }
-}
+            document.getElementById('detalheCursoConteudo').innerHTML = html;
+            document.getElementById('modalDetalheCurso').classList.add('show');
+            // Limpa e aplica select2 só uma vez para evitar bug!
+            if ($.fn.select2) {
+                $('#editTurnos').select2({ theme: 'bootstrap-5', width: '100%', closeOnSelect: false, dropdownParent: $('#modalDetalheCurso') });
+                $('#editUcs').select2({ theme: 'bootstrap-5', width: '100%', closeOnSelect: false, dropdownParent: $('#modalDetalheCurso') });
+            }
+        }
 
 
-document.getElementById('editCursoForm').onsubmit = function(e) {
-    e.preventDefault();
-    let ucsSelecionadas = $('#editUcs').val() || [];
-    let ordem_ucs = (cursoOrdemUcsEmEdicao||[]).filter(uc => ucsSelecionadas.includes(String(uc.id)));
-    // Adiciona novas UCs sem detalhes, se houver
-    ucsSelecionadas.forEach(id => {
-        if (!ordem_ucs.some(uc => String(uc.id) === String(id))) {
-            let nome = $('#editUcs option[value="'+id+'"]').text();
-            ordem_ucs.push({
-                id,
-                unidade_curricular: nome,
-                carga_horaria_total: null, presencial: {}, ead: {}
+        document.getElementById('editCursoForm').onsubmit = function (e) {
+            e.preventDefault();
+            let ucsSelecionadas = $('#editUcs').val() || [];
+            let ordem_ucs = (cursoOrdemUcsEmEdicao || []).filter(uc => ucsSelecionadas.includes(String(uc.id)));
+            // Adiciona novas UCs sem detalhes, se houver
+            ucsSelecionadas.forEach(id => {
+                if (!ordem_ucs.some(uc => String(uc.id) === String(id))) {
+                    let nome = $('#editUcs option[value="' + id + '"]').text();
+                    ordem_ucs.push({
+                        id,
+                        unidade_curricular: nome,
+                        carga_horaria_total: null, presencial: {}, ead: {}
+                    });
+                }
             });
-        }
-    });
-    let dataEditada = {
-        nome: $('#editNome').val(),
-        tipo: $('#editTipo').val(),
-        turnos: $('#editTurnos').val() || [],
-        carga_horaria: parseInt($('#editCargaHoraria').val(), 10),
-        area: $('#editArea').val(),
-        cbo: $('#editCbo').val(),
-        codigo_matriz: $('#editCodigoMatriz').val(),
-        eixo_tecnologico: $('#editEixoTec').val(),
-        nivel_qualificacao: parseInt($('#editNivelQualificacao').val(), 10),
-        instituicao_id: $('#editInstituicao').val(),
-        ordem_ucs: ordem_ucs
-    };
-    fetch(`http://localhost:8000/api/cursos/${cursoIdEmEdicao}`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(dataEditada)
-    }).then(resp => {
-        if (resp.ok) {
-            alert('Curso atualizado com sucesso!');
-            fecharModalDetalhe();
-            carregarCursos();
-        } else {
-            resp.text().then(txt => alert('Erro ao atualizar curso: ' + txt));
-        }
-    });
-};
+            let dataEditada = {
+                nome: $('#editNome').val(),
+                tipo: $('#editTipo').val(),
+                turnos: $('#editTurnos').val() || [],
+                carga_horaria: parseInt($('#editCargaHoraria').val(), 10),
+                area: $('#editArea').val(),
+                cbo: $('#editCbo').val(),
+                codigo_matriz: $('#editCodigoMatriz').val(),
+                eixo_tecnologico: $('#editEixoTec').val(),
+                nivel_qualificacao: parseInt($('#editNivelQualificacao').val(), 10),
+                instituicao_id: $('#editInstituicao').val(),
+                ordem_ucs: ordem_ucs
+            };
+            fetch(`http://localhost:8000/api/cursos/${cursoIdEmEdicao}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataEditada)
+            }).then(resp => {
+                if (resp.ok) {
+                    alert('Curso atualizado com sucesso!');
+                    fecharModalDetalhe();
+                    carregarCursos();
+                } else {
+                    resp.text().then(txt => alert('Erro ao atualizar curso: ' + txt));
+                }
+            });
+        };
 
 
-// Excluir curso
-document.addEventListener('click', function(e) {
-    if (e.target && e.target.id === 'excluirCursoBtn') {
-        if (!confirm("Deseja realmente excluir este curso?")) return;
-        fetch(`http://localhost:8000/api/cursos/${cursoIdEmEdicao}`, {
-            method: 'DELETE'
-        }).then(resp => {
-            if (resp.ok) {
-                alert('Curso excluído com sucesso!');
-                fecharModalDetalhe();
-                carregarCursos();
-            } else {
-                resp.text().then(txt => alert('Erro ao excluir curso: ' + txt));
+        // Excluir curso
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.id === 'excluirCursoBtn') {
+                if (!confirm("Deseja realmente excluir este curso?")) return;
+                fetch(`http://localhost:8000/api/cursos/${cursoIdEmEdicao}`, {
+                    method: 'DELETE'
+                }).then(resp => {
+                    if (resp.ok) {
+                        alert('Curso excluído com sucesso!');
+                        fecharModalDetalhe();
+                        carregarCursos();
+                    } else {
+                        resp.text().then(txt => alert('Erro ao excluir curso: ' + txt));
+                    }
+                });
             }
         });
-    }
-});
 
 
     </script>
