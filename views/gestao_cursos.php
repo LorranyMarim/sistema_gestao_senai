@@ -58,12 +58,11 @@
                     <table class="data-table" id="cursosTable">
                         <thead>
                             <tr>
-                                <th>Nome</th>
+                                <th>Descrição</th>
                                 <th>Tipo</th>
-                                <th>Turnos</th>
+                                <th>Convênio</th>
                                 <th>Nível do Curso</th>
                                 <th>Carga Horária</th>
-                                <th>Código Matriz</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -95,12 +94,8 @@
                             <input type="hidden" id="cursoId" name="id" value="">
                             <input type="hidden" id="action" name="action" value="add">
                             <div class="form-group">
-                                <label for="nomeCurso">Nome do Curso:</label>
-                                <input type="text" id="nomeCurso" name="nome_curso" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="codigoMatriz">Código Matriz:</label>
-                                <input type="text" id="codigoMatriz" name="codigo_matriz" required="">
+                                <label for="descCurso">Descrição:</label>
+                                <input type="text" id="descCurso" name="desc_curso" required="">
                             </div>
                             <div class="form-group">
                                 <label for="tipoCurso">Tipo:</label>
@@ -108,7 +103,6 @@
                                     <option value="">Selecione</option>
                                     <option value="Presencial">Presencial</option>
                                     <option value="EAD">EAD</option>
-                                    <option value="Híbrido">Híbrido</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -117,39 +111,18 @@
                                     <option value="">Selecione</option>
                                     <option value="Técnico">Técnico</option>
                                     <option value="Aprendizagem">Aprendizagem</option>
-                                    <option value="Superior">Superior</option>
-                                    <option value="Especialização">Especialização</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="turnosSelect">Turnos:</label>
-                                <select class="form-select" id="turnosSelect" name="turnos[]"
-                                    data-placeholder="Selecione os turnos" multiple required style="width:100%;">
-                                    <option value="Manhã">Manhã</option>
-                                    <option value="Tarde">Tarde</option>
-                                    <option value="Noite">Noite</option>
+                                <label for="convenioSelect">Convênio:</label>
+                                <select class="form-select" id="convenioSelect" name="convenio[]"
+                                    data-placeholder="Selecione o convênio" multiple required style="width:100%;">
+                                    <option value="Teste">Teste</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="cargaHoraria">Carga Horária (h):</label>
                                 <input type="number" id="cargaHoraria" name="carga_horaria" required="" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label for="cbo">CBO:</label>
-                                <input type="text" id="cbo" name="cbo" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="area">Área:</label>
-                                <input type="text" id="area" name="area" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="eixoTecnologico">Eixo Tecnologico:</label>
-                                <input type="text" id="eixoTecnologico" name="eixo_tecnologico" required="">
-                            </div>
-                            <div class="form-group">
-                                <label for="nivelQualificacao">Nível de Qualificação</label>
-                                <input type="number" id="nivelQualificacao" name="nivel_qualificacao" required=""
-                                    min="1">
                             </div>
                             <div class="form-group">
                                 <label for="instituicaoId">Instituição:</label>
@@ -237,12 +210,12 @@
 <td>${uc.unidade_curricular || '-'}</td>
 <td>${uc.carga_horaria_total ?? '-'}</td>
 <td>
-    CH: ${uc.presencial?.carga_horaria ?? '-'}<br>
+    C.H.: ${uc.presencial?.carga_horaria ?? '-'}<br>
     Aulas: ${uc.presencial?.quantidade_aulas_45min ?? '-'}<br>
     Dias: ${uc.presencial?.dias_letivos ?? '-'}
 </td>
 <td>
-    CH: ${uc.ead?.carga_horaria ?? '-'}<br>
+    C.H.: ${uc.ead?.carga_horaria ?? '-'}<br>
     Aulas: ${uc.ead?.quantidade_aulas_45min ?? '-'}<br>
     Dias: ${uc.ead?.dias_letivos ?? '-'}
 </td>
@@ -288,11 +261,9 @@
                 tr.innerHTML = `
 <td>${curso.nome || ''}</td>
 <td>${curso.tipo || ''}</td>
-<td>${renderTurnos(curso.turnos)}</td>
 <td>${curso.nivel_curso || ''}</td>
 <td>${curso.carga_horaria || ''}</td>
 
-<td>${curso.codigo_matriz || ''}</td>
 
 <td>
     <button class="btn btn-icon btn-view" data-id="${curso._id}" title="Visualizar"><i class="far fa-file-alt"></i><button>            

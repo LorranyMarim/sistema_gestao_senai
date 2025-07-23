@@ -1,12 +1,13 @@
 <?php
 session_start();
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header("Location: index.php");
-    exit();
+  header("Location: index.php");
+  exit();
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <title>Gestão de Alocação - SENAI</title>
@@ -15,43 +16,71 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../css/style_turmas.css">
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <!-- Select2 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
-        rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
     .modal {
       display: none;
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.2);
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.2);
       z-index: 1000;
       align-items: center;
       justify-content: center;
     }
-    .modal.show { display: flex!important; }
+
+    .modal.show {
+      display: flex !important;
+    }
+
     .modal-content {
+      display: flex;
       background: #fff;
       border-radius: 10px;
       min-width: 350px;
       max-width: 90vw;
       padding: 30px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
       position: relative;
     }
+
     .close-button {
       position: absolute;
-      top: 10px; right: 10px;
+      top: 10px;
+      right: 10px;
       font-size: 1.5rem;
       cursor: pointer;
     }
-    .form-group { margin-bottom: 1rem; }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal.show {
+      display: flex !important;
+    }
   </style>
 </head>
+
 <body>
   <div class="dashboard-container">
     <aside class="sidebar">
@@ -90,7 +119,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
           <div class="filter-group">
             <label for="searchAlocacao" class="mr-2">Buscar:</label>
             <input type="text" id="searchAlocacao" placeholder="Digite para filtrar..."
-                   class="search-input border rounded px-2 py-1">
+              class="search-input border rounded px-2 py-1">
           </div>
         </div>
         <div class="table-responsive overflow-auto">
@@ -140,12 +169,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
   <!-- Dependências JS -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script
-    src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js">
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js">
   </script>
 
   <script>
-    $(function() {
+    $(function () {
       // inicializa Select2
       $('#selectTurma').select2({ placeholder: 'Selecione Turmas' });
       $('#selectTurno').select2({ placeholder: 'Selecione Turnos' }).prop('disabled', true);
@@ -159,7 +187,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
           let id = t._id.$oid || t._id;
           turmaData[id] = t;
         });
-        let opts = data.map(t => ({ id: t._id.$oid||t._id, text: t.nome }));
+        let opts = data.map(t => ({ id: t._id.$oid || t._id, text: t.nome }));
         $('#selectTurma').empty().select2({ data: opts, placeholder: 'Selecione Turmas' });
       });
 
@@ -172,44 +200,44 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
       });
 
       // ao mudar Turma → popula Turnos
-      $('#selectTurma').on('change', function() {
-        let sel = $(this).val()||[], turnos = {};
+      $('#selectTurma').on('change', function () {
+        let sel = $(this).val() || [], turnos = {};
         sel.forEach(id => {
           let t = turmaData[id];
-          if(t.turnos.manha) turnos.manha = 'Manhã';
-          if(t.turnos.tarde) turnos.tarde = 'Tarde';
-          if(t.turnos.noite) turnos.noite = 'Noite';
+          if (t.turnos.manha) turnos.manha = 'Manhã';
+          if (t.turnos.tarde) turnos.tarde = 'Tarde';
+          if (t.turnos.noite) turnos.noite = 'Noite';
         });
-        let opts = Object.keys(turnos).map(k=>({ id: k, text: turnos[k] }));
+        let opts = Object.keys(turnos).map(k => ({ id: k, text: turnos[k] }));
         $('#selectTurno')
           .empty()
           .select2({ data: opts, placeholder: 'Selecione Turnos' })
-          .prop('disabled', opts.length===0);
+          .prop('disabled', opts.length === 0);
         $('#selectInstrutor').empty().prop('disabled', true);
       });
 
       // ao mudar Turno → popula Instrutores
-      $('#selectTurno').on('change', function() {
-        let sel = $(this).val()||[], arr = [];
+      $('#selectTurno').on('change', function () {
+        let sel = $(this).val() || [], arr = [];
         sel.forEach(turno => {
           $.each(instrutorData, (id, ins) => {
-            if(ins.turnos[turno]) arr.push({ id, text: ins.nome });
+            if (ins.turnos[turno]) arr.push({ id, text: ins.nome });
           });
         });
         // remove duplicatas
-        let unique = arr.filter((v,i,a)=>a.findIndex(t=>t.id===v.id)===i);
+        let unique = arr.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
         $('#selectInstrutor')
           .empty()
           .select2({ data: unique, placeholder: 'Selecione Instrutores' })
-          .prop('disabled', unique.length===0);
+          .prop('disabled', unique.length === 0);
       });
 
       // abrir/fechar modal
-      $('#btnOpenModal').click(()=>$('#modalGerarAlocacao').addClass('show'));
-      $('.close-button, #cancelBtn').click(()=>$('#modalGerarAlocacao').removeClass('show'));
+      $('#btnOpenModal').click(() => $('#modalGerarAlocacao').addClass('show'));
+      $('.close-button, #cancelBtn').click(() => $('#modalGerarAlocacao').removeClass('show'));
 
       // submit
-      $('#formGerarAlocacao').on('submit', function(e) {
+      $('#formGerarAlocacao').on('submit', function (e) {
         e.preventDefault();
         // TODO: AJAX para processa_alocacao.php
         console.log($(this).serialize());
@@ -218,4 +246,5 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     });
   </script>
 </body>
+
 </html>

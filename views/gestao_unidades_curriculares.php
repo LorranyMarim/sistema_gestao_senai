@@ -81,9 +81,9 @@
                     <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Descrição da UC</th>
-                        <th>Sala Ideal</th>
                         <th>Instituição</th>
+                        <th>Descrição da Unidade Curricular</th>
+                        <th>Sala Ideal</th>
                         <th class="actions">Ações</th>
                     </tr>
                     </thead>
@@ -101,6 +101,12 @@
         <h2 id="modalTitleUc">Adicionar Nova Unidade Curricular</h2>
         <form id="ucForm">
             <input type="hidden" id="ucId">
+             <div class="form-group">
+                <label for="instituicaoUc">Instituição:</label>
+                <select id="instituicaoUc" required>
+                    <option value="">Selecione a instituição</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label for="descricaoUc">Descrição da UC:</label>
                 <input type="text" id="descricaoUc" required>
@@ -109,12 +115,7 @@
                 <label for="salaIdeal">Sala Ideal:</label>
                 <input type="text" id="salaIdeal" required>
             </div>
-            <div class="form-group">
-                <label for="instituicaoUc">Instituição:</label>
-                <select id="instituicaoUc" required>
-                    <option value="">Selecione a instituição</option>
-                </select>
-            </div>
+           
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar UC</button>
             <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
         </form>
@@ -228,9 +229,10 @@
             tbody.innerHTML += `
             <tr>
                 <td>${uc._id}</td>
+                <td>${inst ? inst.razao_social : ''}</td>
                 <td>${uc.descricao ?? ''}</td>
                 <td>${uc.sala_ideal ?? ''}</td>
-                <td>${inst ? inst.razao_social : ''}</td>
+                
                 <td>
                     <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
@@ -259,10 +261,9 @@
     ucForm.onsubmit = async function (e) {
         e.preventDefault();
         const data = {
-            instituicao_id: selectInstituicao.value
             descricao: descricaoUcInput.value.trim(),
             sala_ideal: salaIdealInput.value.trim(),
-            
+            instituicao_id: selectInstituicao.value
         };
         let method, url;
         if (ucEditId) {
