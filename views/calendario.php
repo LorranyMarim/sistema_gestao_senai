@@ -7,11 +7,14 @@
     <title>Calendário - SENAI</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style_turmas.css">
+    <link rel="stylesheet" href="../css/style_turmas.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
     <style>
-       
+
     </style>
 </head>
 
@@ -19,7 +22,7 @@
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="logo.png" alt="Logo SENAI" class="sidebar-logo">
+                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
             <nav class="sidebar-nav">
@@ -27,10 +30,12 @@
                     <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
                     <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
+                            UCs</a></li>
                     <li><a href="calendario.php" class="active"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -45,57 +50,72 @@
                 <h1>Calendário Geral</h1>
             </header>
 
-            <!-- Calendário Principal de Aulas e Feriados -->
-            <section class="instructor-calendar-section">
-                <div class="calendar-header">
-                    <div class="month-year-controls">
-                        <button id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
-                        <div class="month-year-selects">
-                            <select id="monthSelect"></select>
-                            <select id="yearSelect"></select>
-                        </div>
-                        <button id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
-                    </div>
+            <div id="calendar">
 
-                    <div class="calendar-filters">
-                        <div class="filter-group">
-                            <label for="areaFilter">Filtrar por Área:</label>
-                            <select id="areaFilter">
-                                <option value="all">Todas as Áreas</option>
-                                <option value="Tecnologia da Informação">Tecnologia da Informação</option>
-                                <option value="Eletroeletrônica">Eletroeletrônica</option>
-                                <option value="Mecânica">Mecânica</option>
-                                <option value="Gestão">Gestão</option>
-                            </select>
-                        </div>
+                <section class="instructor-calendar-section flex gap-6">
+                    <!-- Painel Esquerdo -->
+                    <div class="w-1/2 space-y-6">
+                        <div class="calendar-header space-y-4">
+                            <div class="month-year-controls flex items-center gap-2">
+                                <button id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
+                                <div class="month-year-selects flex gap-2">
+                                    <select id="monthSelect"></select>
+                                    <select id="yearSelect"></select>
+                                </div>
+                                <button id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
+                            </div>
 
-                        <div class="filter-group">
-                            <label for="turnoFilter">Filtrar por Turno:</label>
-                            <select id="turnoFilter">
-                                <option value="all">Todos os Turnos</option>
-                                <option value="Manhã">Manhã</option>
-                                <option value="Tarde">Tarde</option>
-                                <option value="Noite">Noite</option>
-                            </select>
-                        </div>
+                            <div class="calendar-filters space-y-3">
+                                <div class="filter-group">
+                                    <label for="areaFilter" class="block text-sm font-medium">Filtrar por Área:</label>
+                                    <select id="areaFilter" class="w-full border rounded">
+                                        <option value="all">Todas as Áreas</option>
+                                        <option value="Tecnologia da Informação">Tecnologia da Informação</option>
+                                        <option value="Eletroeletrônica">Eletroeletrônica</option>
+                                        <option value="Mecânica">Mecânica</option>
+                                        <option value="Gestão">Gestão</option>
+                                    </select>
+                                </div>
 
-                        <div class="filter-group">
-                            <label for="instrutorFilter">Filtrar por Instrutor:</label>
-                            <select id="instrutorFilter">
-                                <option value="all">Todos os Instrutores</option>
-                            </select>
+                                <div class="filter-group">
+                                    <label for="turnoFilter" class="block text-sm font-medium">Filtrar por
+                                        Turno:</label>
+                                    <select id="turnoFilter" class="w-full border rounded">
+                                        <option value="all">Todos os Turnos</option>
+                                        <option value="Manhã">Manhã</option>
+                                        <option value="Tarde">Tarde</option>
+                                        <option value="Noite">Noite</option>
+                                    </select>
+                                </div>
+
+                                <div class="filter-group">
+                                    <label for="instrutorFilter" class="block text-sm font-medium">Filtrar por
+                                        Instrutor:</label>
+                                    <select id="instrutorFilter" class="w-full border rounded">
+                                        <option value="all">Todos os Instrutores</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="calendar-search">
+                                <input type="text" id="searchFilter"
+                                    placeholder="Buscar por instrutor, curso, UC ou sala..."
+                                    class="w-full border rounded p-2">
+                            </div>
+
+                            <div class="btn-group flex gap-2">
+                                <button class="btn btn-secondary" id="printBtn"><i class="fas fa-print"></i>
+                                    Imprimir</button>
+                                <button class="btn btn-primary" id="addFeriadoBtn"><i class="fas fa-plus-circle"></i>
+                                    Feriado</button>
+                                <button class="btn btn-primary" id="addAulaBtn"><i class="fas fa-plus-circle"></i>
+                                    Aula</button>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="calendar-search">
-                        <input type="text" id="searchFilter" placeholder="Buscar por instrutor, curso, UC ou sala...">
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-secondary" id="printBtn"><i class="fas fa-print"></i> Imprimir</button>
-                        <button class="btn btn-primary" id="addFeriadoBtn"><i class="fas fa-plus-circle"></i> Feriado</button>
-                        <button class="btn btn-primary" id="addAulaBtn"><i class="fas fa-plus-circle"></i> Aula</button>
-                    </div>
-                </div>
+            </div>
+            <!-- Painel Direito: Calendário -->
+            <div class="w-1/2">
                 <div class="calendar-grid">
                     <div class="day-name">Dom</div>
                     <div class="day-name">Seg</div>
@@ -104,30 +124,31 @@
                     <div class="day-name">Qui</div>
                     <div class="day-name">Sex</div>
                     <div class="day-name">Sáb</div>
-                    <!-- Dias do calendário principal serão gerados aqui -->
+                    <!-- Dias do calendário serão gerados aqui -->
                 </div>
+            </div>
             </section>
 
             <!-- Novo Calendário de Disponibilidade de Instrutores -->
-<section class="instructor-calendar-section">
-    <h2>Disponibilidade de Instrutores</h2>
-    
-    <!-- Adicione este container para o gráfico -->
-    <div class="chart-container mb-6" style="position: relative; height:300px; width:100%">
-        <canvas id="instructorsPieChart"></canvas>
-    </div>
-    
-    <div class="calendar-grid instructor-calendar-grid">
-        <div class="day-name">Dom</div>
-        <div class="day-name">Seg</div>
-        <div class="day-name">Ter</div>
-        <div class="day-name">Qua</div>
-        <div class="day-name">Qui</div>
-        <div class="day-name">Sex</div>
-        <div class="day-name">Sáb</div>
-        <!-- Dias do calendário de instrutores serão gerados aqui -->
-    </div>
-</section>
+            <section class="instructor-calendar-section">
+                <h2>Disponibilidade de Instrutores</h2>
+
+                <!-- Adicione este container para o gráfico -->
+                <div class="chart-container mb-6" style="position: relative; height:300px; width:100%">
+                    <canvas id="instructorsPieChart"></canvas>
+                </div>
+
+                <div class="calendar-grid instructor-calendar-grid">
+                    <div class="day-name">Dom</div>
+                    <div class="day-name">Seg</div>
+                    <div class="day-name">Ter</div>
+                    <div class="day-name">Qua</div>
+                    <div class="day-name">Qui</div>
+                    <div class="day-name">Sex</div>
+                    <div class="day-name">Sáb</div>
+                    <!-- Dias do calendário de instrutores serão gerados aqui -->
+                </div>
+            </section>
 
         </main>
     </div>
@@ -148,7 +169,8 @@
                 </div>
                 <div class="btn-modal-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
-                    <button type="button" class="btn btn-secondary" id="cancelFeriadoBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelFeriadoBtn"><i
+                            class="fas fa-times-circle"></i> Cancelar</button>
                 </div>
             </form>
         </div>
@@ -199,7 +221,8 @@
                 </div>
                 <div class="btn-modal-actions">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
-                    <button type="button" class="btn btn-secondary" id="cancelAulaBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelAulaBtn"><i
+                            class="fas fa-times-circle"></i> Cancelar</button>
                 </div>
             </form>
         </div>
@@ -264,49 +287,49 @@
         const dailyInstructorDetailsList = document.getElementById('dailyInstructorDetailsList');
 
         let feriadosData = [{
-                date: '2025-01-01',
-                description: 'Confraternização Universal'
-            },
-            {
-                date: '2025-04-18',
-                description: 'Paixão de Cristo'
-            },
-            {
-                date: '2025-04-21',
-                description: 'Tiradentes'
-            },
-            {
-                date: '2025-05-01',
-                description: 'Dia do Trabalho'
-            },
-            {
-                date: '2025-07-16',
-                description: 'Nossa Senhora do Carmo (Betim)'
-            },
-            {
-                date: '2025-09-07',
-                description: 'Independência do Brasil'
-            },
-            {
-                date: '2025-10-12',
-                description: 'Nossa Senhora Aparecida'
-            },
-            {
-                date: '2025-11-02',
-                description: 'Finados'
-            },
-            {
-                date: '2025-11-15',
-                description: 'Proclamação da República'
-            },
-            {
-                date: '2025-11-20',
-                description: 'Dia da Consciência Negra'
-            },
-            {
-                date: '2025-12-25',
-                description: 'Natal'
-            }
+            date: '2025-01-01',
+            description: 'Confraternização Universal'
+        },
+        {
+            date: '2025-04-18',
+            description: 'Paixão de Cristo'
+        },
+        {
+            date: '2025-04-21',
+            description: 'Tiradentes'
+        },
+        {
+            date: '2025-05-01',
+            description: 'Dia do Trabalho'
+        },
+        {
+            date: '2025-07-16',
+            description: 'Nossa Senhora do Carmo (Betim)'
+        },
+        {
+            date: '2025-09-07',
+            description: 'Independência do Brasil'
+        },
+        {
+            date: '2025-10-12',
+            description: 'Nossa Senhora Aparecida'
+        },
+        {
+            date: '2025-11-02',
+            description: 'Finados'
+        },
+        {
+            date: '2025-11-15',
+            description: 'Proclamação da República'
+        },
+        {
+            date: '2025-11-20',
+            description: 'Dia da Consciência Negra'
+        },
+        {
+            date: '2025-12-25',
+            description: 'Natal'
+        }
         ];
 
         let aulasData = []; // Será preenchido via fetch
@@ -453,10 +476,10 @@
         }
 
         // --- Lógica do Novo Calendário de Disponibilidade de Instrutores ---
-let instructorsPieChart = null;
+        let instructorsPieChart = null;
 
-function renderInstructorAvailabilityCalendar() {
-    instructorCalendarGrid.innerHTML = `
+        function renderInstructorAvailabilityCalendar() {
+            instructorCalendarGrid.innerHTML = `
         <div class="day-name">Dom</div>
         <div class="day-name">Seg</div>
         <div class="day-name">Ter</div>
@@ -466,121 +489,121 @@ function renderInstructorAvailabilityCalendar() {
         <div class="day-name">Sáb</div>
     `;
 
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    const numEmptyDays = firstDay.getDay();
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const numEmptyDays = firstDay.getDay();
 
-    for (let i = 0; i < numEmptyDays; i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.classList.add('empty-day', 'instructor-day');
-        instructorCalendarGrid.appendChild(emptyDay);
-    }
+            for (let i = 0; i < numEmptyDays; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('empty-day', 'instructor-day');
+                instructorCalendarGrid.appendChild(emptyDay);
+            }
 
-    // Variáveis para estatísticas mensais
-    let totalFreeDays = 0;
-    let totalOccupiedDays = 0;
-    let totalConflictDays = 0;
+            // Variáveis para estatísticas mensais
+            let totalFreeDays = 0;
+            let totalOccupiedDays = 0;
+            let totalConflictDays = 0;
 
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-        const day = document.createElement('div');
-        day.classList.add('day', 'instructor-day');
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const day = document.createElement('div');
+                day.classList.add('day', 'instructor-day');
 
-        const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        day.dataset.date = dateString;
+                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                day.dataset.date = dateString;
 
-        let dayContent = `<span class="day-number">${i}</span>`;
+                let dayContent = `<span class="day-number">${i}</span>`;
 
-        const dayStatus = getInstructorDailySummary(dateString);
+                const dayStatus = getInstructorDailySummary(dateString);
 
-        let statusClass = 'free';
-        let statusText = 'Livre';
+                let statusClass = 'free';
+                let statusText = 'Livre';
 
-        if (dayStatus.conflictCount > 0) {
-            statusClass = 'conflict';
-            statusText = `Conflito (${dayStatus.conflictCount})`;
-            totalConflictDays++;
-        } else if (dayStatus.occupiedCount > 0) {
-            statusClass = 'occupied';
-            statusText = `Ocupado (${dayStatus.occupiedCount})`;
-            totalOccupiedDays++;
-        } else {
-            totalFreeDays++;
+                if (dayStatus.conflictCount > 0) {
+                    statusClass = 'conflict';
+                    statusText = `Conflito (${dayStatus.conflictCount})`;
+                    totalConflictDays++;
+                } else if (dayStatus.occupiedCount > 0) {
+                    statusClass = 'occupied';
+                    statusText = `Ocupado (${dayStatus.occupiedCount})`;
+                    totalOccupiedDays++;
+                } else {
+                    totalFreeDays++;
+                }
+
+                day.classList.add(statusClass);
+                dayContent += `<span class="instructor-day-summary">${statusText}</span>`;
+
+                const dayDate = new Date(currentYear, currentMonth, i);
+                const isToday = dayDate.toDateString() === today.toDateString();
+                if (isToday) {
+                    day.classList.add('today');
+                }
+
+                day.innerHTML = dayContent;
+                day.addEventListener('click', () => openDailyInstructorDetailsModal(dateString));
+                instructorCalendarGrid.appendChild(day);
+            }
+
+            // Atualiza ou cria o gráfico de pizza
+            updateInstructorsPieChart(totalFreeDays, totalOccupiedDays, totalConflictDays);
         }
 
-        day.classList.add(statusClass);
-        dayContent += `<span class="instructor-day-summary">${statusText}</span>`;
+        function updateInstructorsPieChart(free, occupied, conflict) {
+            const ctx = document.getElementById('instructorsPieChart').getContext('2d');
 
-        const dayDate = new Date(currentYear, currentMonth, i);
-        const isToday = dayDate.toDateString() === today.toDateString();
-        if (isToday) {
-            day.classList.add('today');
-        }
+            // Destrói o gráfico anterior se existir
+            if (instructorsPieChart) {
+                instructorsPieChart.destroy();
+            }
 
-        day.innerHTML = dayContent;
-        day.addEventListener('click', () => openDailyInstructorDetailsModal(dateString));
-        instructorCalendarGrid.appendChild(day);
-    }
-
-    // Atualiza ou cria o gráfico de pizza
-    updateInstructorsPieChart(totalFreeDays, totalOccupiedDays, totalConflictDays);
-}
-
-function updateInstructorsPieChart(free, occupied, conflict) {
-    const ctx = document.getElementById('instructorsPieChart').getContext('2d');
-    
-    // Destrói o gráfico anterior se existir
-    if (instructorsPieChart) {
-        instructorsPieChart.destroy();
-    }
-    
-    instructorsPieChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: ['Instrutores Livres', 'Instrutores Ocupados', 'Conflitos de Agenda'],
-            datasets: [{
-                data: [free, occupied, conflict],
-                backgroundColor: [
-                    '#4CAF50', // Verde para livres
-                    '#FFC107', // Amarelo para ocupados
-                    '#F44336'  // Vermelho para conflitos
-                ],
-                borderColor: '#fff',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: `Distribuição de Instrutores - ${monthNames[currentMonth]} ${currentYear}`,
-                    font: {
-                        size: 16
-                    }
+            instructorsPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Instrutores Livres', 'Instrutores Ocupados', 'Conflitos de Agenda'],
+                    datasets: [{
+                        data: [free, occupied, conflict],
+                        backgroundColor: [
+                            '#4CAF50', // Verde para livres
+                            '#FFC107', // Amarelo para ocupados
+                            '#F44336'  // Vermelho para conflitos
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
                 },
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        boxWidth: 12,
-                        padding: 20
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}: ${value} (${percentage}%)`;
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Distribuição de Instrutores - ${monthNames[currentMonth]} ${currentYear}`,
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
                         }
                     }
                 }
-            }
+            });
         }
-    });
-}
 
         function getInstructorDailySummary(dateString) {
             let conflictCount = 0;
@@ -610,118 +633,118 @@ function updateInstructorsPieChart(free, occupied, conflict) {
         }
 
         function openDailyInstructorDetailsModal(dateString) {
-    dailyInstructorDetailsDate.textContent = formatDisplayDate(dateString);
-    dailyInstructorDetailsList.innerHTML = '';
+            dailyInstructorDetailsDate.textContent = formatDisplayDate(dateString);
+            dailyInstructorDetailsList.innerHTML = '';
 
-    const instructorDetailsForDay = [];
-    let freeCount = 0;
-    let occupiedCount = 0;
-    let conflictCount = 0;
+            const instructorDetailsForDay = [];
+            let freeCount = 0;
+            let occupiedCount = 0;
+            let conflictCount = 0;
 
-    allInstrutoresNames.forEach(instrutorName => {
-        const classesForInstructorOnDay = aulasData.filter(aula =>
-            aula.date === dateString && aula.instrutor === instrutorName
-        );
+            allInstrutoresNames.forEach(instrutorName => {
+                const classesForInstructorOnDay = aulasData.filter(aula =>
+                    aula.date === dateString && aula.instrutor === instrutorName
+                );
 
-        let status = 'Livre';
-        let statusClass = 'free-text';
-        let classesInfo = [];
+                let status = 'Livre';
+                let statusClass = 'free-text';
+                let classesInfo = [];
 
-        if (classesForInstructorOnDay.length > 1) {
-            status = 'Conflito';
-            statusClass = 'conflict-text';
-            conflictCount++;
-            classesForInstructorOnDay.forEach(aula => {
-                classesInfo.push(`${aula.uc} (${aula.codigoTurma}) - Sala: ${aula.sala} - Turno: ${aula.turno}`);
+                if (classesForInstructorOnDay.length > 1) {
+                    status = 'Conflito';
+                    statusClass = 'conflict-text';
+                    conflictCount++;
+                    classesForInstructorOnDay.forEach(aula => {
+                        classesInfo.push(`${aula.uc} (${aula.codigoTurma}) - Sala: ${aula.sala} - Turno: ${aula.turno}`);
+                    });
+                } else if (classesForInstructorOnDay.length === 1) {
+                    status = 'Ocupado';
+                    statusClass = 'occupied-text';
+                    occupiedCount++;
+                    const aula = classesForInstructorOnDay[0];
+                    classesInfo.push(`${aula.uc} (${aula.codigoTurma}) - Sala: ${aula.sala} - Turno: ${aula.turno}`);
+                } else {
+                    freeCount++;
+                }
+
+                instructorDetailsForDay.push({
+                    name: instrutorName,
+                    status: status,
+                    statusClass: statusClass,
+                    classes: classesInfo
+                });
             });
-        } else if (classesForInstructorOnDay.length === 1) {
-            status = 'Ocupado';
-            statusClass = 'occupied-text';
-            occupiedCount++;
-            const aula = classesForInstructorOnDay[0];
-            classesInfo.push(`${aula.uc} (${aula.codigoTurma}) - Sala: ${aula.sala} - Turno: ${aula.turno}`);
-        } else {
-            freeCount++;
-        }
 
-        instructorDetailsForDay.push({
-            name: instrutorName,
-            status: status,
-            statusClass: statusClass,
-            classes: classesInfo
-        });
-    });
+            // Ordena os instrutores: Conflito (vermelho), Ocupado (amarelo), Livre (verde)
+            instructorDetailsForDay.sort((a, b) => {
+                const order = { 'Conflito': 1, 'Ocupado': 2, 'Livre': 3 };
+                return order[a.status] - order[b.status];
+            });
 
-    // Ordena os instrutores: Conflito (vermelho), Ocupado (amarelo), Livre (verde)
-    instructorDetailsForDay.sort((a, b) => {
-        const order = { 'Conflito': 1, 'Ocupado': 2, 'Livre': 3 };
-        return order[a.status] - order[b.status];
-    });
-
-    // Adiciona o gráfico de pizza diário
-    const chartHtml = `
+            // Adiciona o gráfico de pizza diário
+            const chartHtml = `
         <div class="chart-container" style="height: 250px; margin-bottom: 20px;">
             <canvas id="dailyInstructorsPieChart"></canvas>
         </div>
     `;
-    dailyInstructorDetailsList.insertAdjacentHTML('beforeend', chartHtml);
+            dailyInstructorDetailsList.insertAdjacentHTML('beforeend', chartHtml);
 
-    // Cria o gráfico de pizza diário
-    const dailyCtx = document.getElementById('dailyInstructorsPieChart').getContext('2d');
-    new Chart(dailyCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Livre', 'Ocupado', 'Conflito'],
-            datasets: [{
-                data: [freeCount, occupiedCount, conflictCount],
-                backgroundColor: [
-                    '#4CAF50', // Verde
-                    '#FFC107', // Amarelo
-                    '#F44336'  // Vermelho
-                ],
-                borderColor: '#fff',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: `Status dos Instrutores - ${formatDisplayDate(dateString)}`,
-                    font: {
-                        size: 14
+            // Cria o gráfico de pizza diário
+            const dailyCtx = document.getElementById('dailyInstructorsPieChart').getContext('2d');
+            new Chart(dailyCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Livre', 'Ocupado', 'Conflito'],
+                    datasets: [{
+                        data: [freeCount, occupiedCount, conflictCount],
+                        backgroundColor: [
+                            '#4CAF50', // Verde
+                            '#FFC107', // Amarelo
+                            '#F44336'  // Vermelho
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Status dos Instrutores - ${formatDisplayDate(dateString)}`,
+                            font: {
+                                size: 14
+                            }
+                        }
                     }
                 }
-            }
-        }
-    });
+            });
 
-    // Adiciona a lista de instrutores
-    if (instructorDetailsForDay.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = 'Nenhum instrutor cadastrado no sistema.';
-        dailyInstructorDetailsList.appendChild(li);
-    } else {
-        instructorDetailsForDay.forEach(item => {
-            const li = document.createElement('li');
-            li.innerHTML = `<strong>${item.name}:</strong> <span class="status-text ${item.statusClass}">${item.status}</span>`;
-            if (item.classes.length > 0) {
-                item.classes.forEach(info => {
-                    const span = document.createElement('span');
-                    span.classList.add('class-info');
-                    span.textContent = info;
-                    li.appendChild(span);
+            // Adiciona a lista de instrutores
+            if (instructorDetailsForDay.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Nenhum instrutor cadastrado no sistema.';
+                dailyInstructorDetailsList.appendChild(li);
+            } else {
+                instructorDetailsForDay.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${item.name}:</strong> <span class="status-text ${item.statusClass}">${item.status}</span>`;
+                    if (item.classes.length > 0) {
+                        item.classes.forEach(info => {
+                            const span = document.createElement('span');
+                            span.classList.add('class-info');
+                            span.textContent = info;
+                            li.appendChild(span);
+                        });
+                    }
+                    dailyInstructorDetailsList.appendChild(li);
                 });
             }
-            dailyInstructorDetailsList.appendChild(li);
-        });
-    }
 
-    dailyInstructorDetailsModal.style.display = 'flex';
-    document.body.classList.add('modal-open');
-}
+            dailyInstructorDetailsModal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+        }
 
         function closeDailyInstructorDetailsModal() {
             dailyInstructorDetailsModal.style.display = 'none';
@@ -897,6 +920,26 @@ function updateInstructorsPieChart(free, occupied, conflict) {
             }
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let calendarEl = document.getElementById('calendar');
+    let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        events: [
+            { title: 'Reunião', start: '2025-07-25' },
+            { title: 'Aula', start: '2025-07-26T10:00:00', end: '2025-07-26T12:00:00' }
+        ]
+    });
+    calendar.render();
+});
+</script>
+
 </body>
 
 </html>

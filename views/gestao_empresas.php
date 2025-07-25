@@ -1,49 +1,5 @@
 <?php
-// Simulação de dados de empresas (em um ambiente real, viriam de um banco de dados)
-$empresas = [
-    [
-        'id' => 1,
-        'nome' => 'ACME Soluções Industriais Ltda.',
-        'cnpj_matriz' => '00.000.000/0001-01',
-        'cnpj_filial' => 'N/A',
-        'endereco' => 'Rua das Indústrias, 123 - Distrito Industrial',
-        'responsavel_nome' => 'Rodrigo Azevedo',
-        'responsavel_telefone' => '(31) 99888-7777',
-        'responsavel_email' => 'rodrigo.a@acme.com.br'
-    ],
-    [
-        'id' => 2,
-        'nome' => 'TechCorp Sistemas S.A.',
-        'cnpj_matriz' => '01.111.111/0001-11',
-        'cnpj_filial' => '01.111.111/0002-22',
-        'endereco' => 'Avenida dos Inovadores, 456 - Centro',
-        'responsavel_nome' => 'Fernanda Costa',
-        'responsavel_telefone' => '(31) 99777-6666',
-        'responsavel_email' => 'fernanda.c@techcorp.com.br'
-    ],
-    [
-        'id' => 3,
-        'nome' => 'Metalúrgica Brasil Ltda.',
-        'cnpj_matriz' => '02.222.222/0001-22',
-        'cnpj_filial' => 'N/A',
-        'endereco' => 'Rua da Usinagem, 789 - Parque Fabril',
-        'responsavel_nome' => 'Gustavo Lima',
-        'responsavel_telefone' => '(31) 99666-5555',
-        'responsavel_email' => 'gustavo.l@metalurgica.com.br'
-    ],
-    [
-        'id' => 4,
-        'nome' => 'Logística Rápida S/A',
-        'cnpj_matriz' => '03.333.333/0001-33',
-        'cnpj_filial' => '03.333.333/0002-44',
-        'endereco' => 'Rodovia da Entrega, 101 - Polo Logístico',
-        'responsavel_nome' => 'Juliana Souza',
-        'responsavel_telefone' => '(31) 99555-4444',
-        'responsavel_email' => 'juliana.s@logistica.com.br'
-    ]
-];
 
-// Função para buscar o próximo ID disponível (simulação)
 function getNextId($data)
 {
     return !empty($data) ? max(array_column($data, 'id')) + 1 : 1;
@@ -58,7 +14,7 @@ function getNextId($data)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Empresas - SENAI</title>
-    <link rel="stylesheet" href="style_turmas.css">
+    <link rel="stylesheet" href="../css/style_turmas.css">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -69,7 +25,7 @@ function getNextId($data)
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="logo.png" alt="Logo SENAI" class="sidebar-logo">
+                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
             <nav class="sidebar-nav">

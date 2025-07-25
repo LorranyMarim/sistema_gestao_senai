@@ -57,7 +57,7 @@
                 <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
                 <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                 <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-                <li><a href="calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
+                <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                 <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
             </ul>
         </nav>

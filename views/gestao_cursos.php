@@ -16,7 +16,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 </head>
 
 <body>
@@ -32,11 +33,13 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     <li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>
                     <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
                     <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-                    <li><a href="calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
+                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
+                            UCs</a></li>
+                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
             </nav>
@@ -124,14 +127,21 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             </div>
                             <div class="form-group">
                                 <label for="convenioSelect">Convênio:</label>
-                                <select id="convenioSelect" name="convenio" required></select>
+                                <select id="convenioSelect" name="convenio" required>
+                                    <option value="">Selecione</option>
+                                    <option value="Convênio 1">Convênio 1</option>
+                                    <option value="Convênio 2">Convênio 2</option>
+                                    <option value="Teste">Teste</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="ucsSelect">Unidades Curriculares:</label>
-                                <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;" required></select>
+                                <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;"
+                                    required></select>
                             </div>
                             <button type="submit" class="btn btn-primary">Salvar Curso</button>
-                            <button type="button" class="btn btn-secondary" onclick="fecharModal('modalCurso')">Cancelar</button>
+                            <button type="button" class="btn btn-secondary"
+                                onclick="fecharModal('modalCurso')">Cancelar</button>
                         </form>
                     </div>
                 </div>
@@ -266,7 +276,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
             preencherSelectInstituicao(edit ? cursoEditando.instituicao_id : "");
             preencherSelectUCs(edit && cursoEditando.ordem_ucs ? cursoEditando.ordem_ucs.map(u => u.id) : []);
-            preencherSelectConvenios(edit && cursoEditando.convenio ? cursoEditando.convenio : []);
+            // CONVENIO agora é select simples:
+            $('#convenioSelect').val(edit && cursoEditando.convenio ? cursoEditando.convenio : "");
             $('#nivelCurso').val(edit ? cursoEditando.nivel_curso : "");
             $('#tipoCurso').val(edit ? cursoEditando.tipo : "");
             $('#cargaHoraria').val(edit ? cursoEditando.carga_horaria : "");
@@ -275,6 +286,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             $('#modalCursoTitulo').text(edit ? "Editar Curso" : "Adicionar Novo Curso");
             $('#modalCurso').addClass('show');
         }
+
         function fecharModal(modalId) {
             $('#' + modalId).removeClass('show');
             if (modalId === 'modalUcsConfig') {
@@ -313,26 +325,26 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 const ucDesc = ucDataMap[id] || id;
                 const detalhes = dadosExistentes.find(u => String(u.id) === String(id)) || {};
                 html += `
-                <div class="accordion-item border border-gray-300 rounded mb-2" style="background:#f9f9f9">
-                    <div class="accordion-header" id="heading${id}">
-                        <button class="accordion-button flex justify-between items-center w-full py-3 px-4 text-left font-medium"
-                            type="button" onclick="toggleAccordion('${id}')"
-                            style="background: none; border: none; width:100%; outline:none;">
-                            <span>${ucDesc}</span>
-                            <i class="fas fa-chevron-down ml-2"></i>
-                        </button>
-                    </div>
-                    <div id="collapse${id}" class="accordion-collapse" data-ucid="${id}" style="display:${idx === 0 ? 'block' : 'none'};">
-                        <div class="accordion-body px-4 py-3">
-                            <form class="uc-form-config" data-ucid="${id}">
-                                <div class="form-group">
-                                    <label>ID da UC:</label>
-                                    <input type="text" value="${id}" readonly class="form-control" disabled/>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nome da UC:</label>
-                                    <input type="text" value="${ucDesc}" readonly class="form-control disabled" />
-                                </div>
+        <div class="accordion-item border border-gray-300 rounded mb-2" style="background:#f9f9f9">
+            <div class="accordion-header" id="heading${id}">
+                <button class="accordion-button flex justify-between items-center w-full py-3 px-4 text-left font-medium"
+                    type="button" onclick="toggleAccordion('${id}')"
+                    style="background: none; border: none; width:100%; outline:none;">
+                    <span>${ucDesc}</span>
+                    <i class="fas fa-chevron-down ml-2"></i>
+                </button>
+            </div>
+            <div id="collapse${id}" class="accordion-collapse" data-ucid="${id}" style="display:${idx === 0 ? 'block' : 'none'};">
+                <div class="accordion-body px-4 py-3">
+                    <form class="uc-form-config" data-ucid="${id}">
+                        <div class="form-group">
+                            <label>ID da UC:</label>
+                            <input type="text" value="${id}" readonly disabled class="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Nome da UC:</label>
+                            <input type="text" value="${ucDesc}" readonly disabled class="form-control"/>
+                        </div>
                                 <div class="form-group">
                                     <label>Carga Horária de Aulas Presenciais:</label>
                                     <input type="number" min="0" class="form-control presencial_ch" name="presencial_ch" required value="${detalhes.presencial?.carga_horaria || 0}"/>
@@ -508,4 +520,5 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         }
     </script>
 </body>
+
 </html>
