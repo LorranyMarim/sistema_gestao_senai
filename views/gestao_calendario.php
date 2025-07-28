@@ -144,7 +144,7 @@
             <thead>
               <tr>
                 <th>Descrição</th>
-                <th>Convênio</th>
+                <th>Empresa/Parceiro</th>
                 <th>Data Inicial</th>
                 <th>Data Final</th>
                 <th class="actions">Ações</th>

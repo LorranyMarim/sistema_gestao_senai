@@ -5,7 +5,7 @@ from rotas_curso import router as curso_router
 from rotas_instituicao import router as instituicao_router
 from rotas_uc import router as uc_router
 from rotas_alocacao import router as alocacao_router
-from rotas_convenio import router as convenio_router
+from rotas_empresa import router as empresa_router
 
 
 app = FastAPI()
@@ -23,7 +23,7 @@ app.include_router(curso_router)
 app.include_router(instituicao_router)
 app.include_router(uc_router)
 app.include_router(alocacao_router)
-app.include_router(convenio_router)
+app.include_router(empresa_router)
 
 @app.get("/")
 def status():

@@ -48,7 +48,7 @@ views/     # Telas (frontend) do sistema
 
 ### **1. Importando o banco de dados MongoDB**
 
-1. **Baixe os arquivos `.json`** de todas as coleções (`usuario`, `unidade_curricular`, `turma`, `instrutor`, `instituicao`, `curso`, `convenio`, `calendario_academico`). 
+1. **Baixe os arquivos `.json`** de todas as coleções (`usuario`, `unidade_curricular`, `turma`, `instrutor`, `instituicao`, `curso`, `empresa`, `calendario_academico`). 
     
     [Compact Files](https://drive.google.com/file/d/1RQeTc_9Ux6W5YoK9ws-AdZ2rU3zGVSzb/view?usp=sharing)
     
@@ -68,7 +68,7 @@ views/     # Telas (frontend) do sistema
         "instrutor": "alocacao_senai.instrutor.json",
         "instituicao": "alocacao_senai.instituicao.json",
         "curso": "alocacao_senai.curso.json",
-        "convenio": "alocacao_senai.convenio.json",
+        "empresa": "alocacao_senai.empresa.json",
         "calendario_academico": "alocacao_senai.calendario_academico.json",
     }
     

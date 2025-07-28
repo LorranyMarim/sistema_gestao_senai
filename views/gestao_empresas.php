@@ -33,10 +33,13 @@ function getNextId($data)
                     <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
                     <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
-                    <li><a href="gestao_empresas.php" class="active"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+                    <li><a href="gestao_empresas.php" class="active"><i class="fas fa-building"></i> Gestão de
+                            Empresas</a></li>
+                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
+                            UCs</a></li>
                     <li><a href="calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -49,7 +52,8 @@ function getNextId($data)
             </button>
             <header class="main-header">
                 <h1>Gestão de Empresas</h1>
-                <button class="btn btn-primary" id="addEmpresaBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova Empresa</button>
+                <button class="btn btn-primary" id="addEmpresaBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova
+                    Empresa</button>
             </header>
 
             <section class="table-section">
@@ -76,7 +80,7 @@ function getNextId($data)
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($empresas as $empresa) : ?>
+                            <?php foreach ($empresas as $empresa): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($empresa['id']); ?></td>
                                     <td><?php echo htmlspecialchars($empresa['nome']); ?></td>
@@ -87,8 +91,11 @@ function getNextId($data)
                                     <td><?php echo htmlspecialchars($empresa['responsavel_telefone']); ?></td>
                                     <td><?php echo htmlspecialchars($empresa['responsavel_email']); ?></td>
                                     <td class="actions">
-                                        <button class="btn btn-icon btn-edit" title="Editar" data-id="<?php echo $empresa['id']; ?>"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-icon btn-delete" title="Excluir" data-id="<?php echo $empresa['id']; ?>"><i class="fas fa-trash-alt"></i></button>
+                                        <button class="btn btn-icon btn-edit" title="Editar"
+                                            data-id="<?php echo $empresa['id']; ?>"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-icon btn-delete" title="Excluir"
+                                            data-id="<?php echo $empresa['id']; ?>"><i
+                                                class="fas fa-trash-alt"></i></button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -133,18 +140,25 @@ function getNextId($data)
                     <label for="responsavelEmail">Email do Responsável:</label>
                     <input type="email" id="responsavelEmail" required>
                 </div>
+                <div class="form-group">
+                    <label for="instituicaoId">Instituição:</label>
+                    <select id="instituicaoId" required>
+                        <option value="">Selecione</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar Empresa</button>
-                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i>
+                    Cancelar</button>
             </form>
         </div>
     </div>
 
     <script>
-        // Simulação dos dados e do próximo ID
-        let empresasData = <?php echo json_encode($empresas); ?>;
-        let nextEmpresaId = <?php echo getNextId($empresas); ?>;
+        const API_EMPRESA = 'processa_empresa.php';
+        let empresasData = [];
+        let instituicoesMap = {};
 
-        // Referências aos elementos do DOM
+        // Elementos
         const empresaModal = document.getElementById('empresaModal');
         const addEmpresaBtn = document.getElementById('addEmpresaBtn');
         const closeBtn = empresaModal.querySelector('.close-button');
@@ -154,7 +168,6 @@ function getNextId($data)
         const dataTableBody = document.querySelector('.data-table tbody');
         const searchEmpresaInput = document.getElementById('searchEmpresa');
 
-        // Campos do formulário
         const empresaIdInput = document.getElementById('empresaId');
         const nomeEmpresaInput = document.getElementById('nomeEmpresa');
         const cnpjMatrizInput = document.getElementById('cnpjMatriz');
@@ -163,13 +176,12 @@ function getNextId($data)
         const responsavelNomeInput = document.getElementById('responsavelNome');
         const responsavelTelefoneInput = document.getElementById('responsavelTelefone');
         const responsavelEmailInput = document.getElementById('responsavelEmail');
+        const instituicaoSelect = document.getElementById('instituicaoId');
 
-        // --- Funções do Modal ---
         function openModal() {
             empresaModal.style.display = 'flex';
             document.body.classList.add('modal-open');
         }
-
         function closeModal() {
             empresaModal.style.display = 'none';
             document.body.classList.remove('modal-open');
@@ -178,13 +190,29 @@ function getNextId($data)
             empresaIdInput.value = '';
         }
 
-        // --- Funções de CRUD (Simulação) ---
+        async function carregarInstituicoes() {
+            instituicaoSelect.innerHTML = `<option value="">Selecione</option>`;
+            const resp = await fetch(API_EMPRESA + '?action=instituicoes');
+            const lista = await resp.json();
+            instituicoesMap = {};
+            lista.forEach(inst => {
+                instituicoesMap[inst._id] = inst.razao_social;
+                instituicaoSelect.innerHTML += `<option value="${inst._id}">${inst.razao_social}</option>`;
+            });
+        }
+
+        async function carregarEmpresas() {
+            const resp = await fetch(API_EMPRESA);
+            empresasData = await resp.json();
+            updateTableDisplay();
+        }
+
         function updateTableDisplay() {
             dataTableBody.innerHTML = '';
-            const searchTerm = searchEmpresaInput.value.toLowerCase();
+            const searchTerm = (searchEmpresaInput.value || '').toLowerCase();
 
             const filteredEmpresas = empresasData.filter(empresa => {
-                const searchString = `${empresa.nome} ${empresa.cnpj_matriz} ${empresa.cnpj_filial} ${empresa.responsavel_nome} ${empresa.responsavel_email}`.toLowerCase();
+                const searchString = `${empresa.razao_social || ''} ${empresa.cnpj_matriz || ''} ${empresa.cnpj_filial || ''} ${empresa.responsavel_nome || ''} ${empresa.responsavel_email || ''}`.toLowerCase();
                 return searchString.includes(searchTerm);
             });
 
@@ -197,19 +225,19 @@ function getNextId($data)
             filteredEmpresas.forEach(empresa => {
                 const row = dataTableBody.insertRow();
                 row.innerHTML = `
-                    <td>${empresa.id}</td>
-                    <td>${empresa.nome}</td>
-                    <td>${empresa.cnpj_matriz}</td>
-                    <td>${empresa.cnpj_filial}</td>
-                    <td>${empresa.endereco}</td>
-                    <td>${empresa.responsavel_nome}</td>
-                    <td>${empresa.responsavel_telefone}</td>
-                    <td>${empresa.responsavel_email}</td>
-                    <td class="actions">
-                        <button class="btn btn-icon btn-edit" title="Editar" data-id="${empresa.id}"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-icon btn-delete" title="Excluir" data-id="${empresa.id}"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                `;
+            <td>${empresa._id}</td>
+            <td>${empresa.razao_social || ''}</td>
+            <td>${empresa.cnpj_matriz || ''}</td>
+            <td>${empresa.cnpj_filial || ''}</td>
+            <td>${empresa.endereco || ''}</td>
+            <td>${empresa.responsavel_nome || ''}</td>
+            <td>${empresa.responsavel_telefone || ''}</td>
+            <td>${empresa.responsavel_email || ''}</td>
+            <td class="actions">
+                <button class="btn btn-icon btn-edit" title="Editar" data-id="${empresa._id}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-icon btn-delete" title="Excluir" data-id="${empresa._id}"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        `;
             });
             attachTableActionListeners();
         }
@@ -223,90 +251,85 @@ function getNextId($data)
             });
         }
 
-        function openEditModal(id) {
-            const empresa = empresasData.find(e => e.id == id);
+        async function openEditModal(id) {
+            const empresa = empresasData.find(e => e._id == id);
             if (empresa) {
                 modalTitle.textContent = "Editar Empresa";
-                empresaIdInput.value = empresa.id;
-                nomeEmpresaInput.value = empresa.nome;
-                cnpjMatrizInput.value = empresa.cnpj_matriz;
-                cnpjFilialInput.value = empresa.cnpj_filial;
-                enderecoEmpresaInput.value = empresa.endereco;
-                responsavelNomeInput.value = empresa.responsavel_nome;
-                responsavelTelefoneInput.value = empresa.responsavel_telefone;
-                responsavelEmailInput.value = empresa.responsavel_email;
+                empresaIdInput.value = empresa._id;
+                nomeEmpresaInput.value = empresa.razao_social || '';
+                cnpjMatrizInput.value = empresa.cnpj_matriz || '';
+                cnpjFilialInput.value = empresa.cnpj_filial || '';
+                enderecoEmpresaInput.value = empresa.endereco || '';
+                responsavelNomeInput.value = empresa.responsavel_nome || '';
+                responsavelTelefoneInput.value = empresa.responsavel_telefone || '';
+                responsavelEmailInput.value = empresa.responsavel_email || '';
+                await carregarInstituicoes();
+                instituicaoSelect.value = empresa.instituicao_id || '';
                 openModal();
             }
         }
 
-        function deleteEmpresa(id) {
-            if (confirm(`Tem certeza que deseja excluir a empresa "${empresasData.find(e => e.id == id)?.nome}"?`)) {
-                empresasData = empresasData.filter(e => e.id != id);
-                updateTableDisplay();
+        async function deleteEmpresa(id) {
+            if (confirm(`Tem certeza que deseja excluir a empresa?`)) {
+                await fetch(API_EMPRESA + '?id=' + id, { method: 'DELETE' });
+                carregarEmpresas();
             }
         }
 
         // --- Event Listeners ---
-        addEmpresaBtn.onclick = openModal;
+        addEmpresaBtn.onclick = async function () {
+            modalTitle.textContent = "Adicionar Nova Empresa";
+            empresaForm.reset();
+            empresaIdInput.value = '';
+            await carregarInstituicoes();
+            openModal();
+        };
         closeBtn.onclick = closeModal;
         cancelBtn.onclick = closeModal;
         searchEmpresaInput.oninput = updateTableDisplay;
 
-        empresaForm.onsubmit = (event) => {
+        empresaForm.onsubmit = async function (event) {
             event.preventDefault();
             const id = empresaIdInput.value;
-            const newEmpresa = {
-                id: id ? parseInt(id) : nextEmpresaId++,
-                nome: nomeEmpresaInput.value,
+            const payload = {
+                razao_social: nomeEmpresaInput.value,
                 cnpj_matriz: cnpjMatrizInput.value,
                 cnpj_filial: cnpjFilialInput.value,
                 endereco: enderecoEmpresaInput.value,
                 responsavel_nome: responsavelNomeInput.value,
                 responsavel_telefone: responsavelTelefoneInput.value,
                 responsavel_email: responsavelEmailInput.value,
+                instituicao_id: instituicaoSelect.value
             };
 
             if (id) {
-                const index = empresasData.findIndex(e => e.id == id);
-                if (index !== -1) {
-                    empresasData[index] = newEmpresa;
-                }
+                await fetch(API_EMPRESA + '?id=' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
             } else {
-                empresasData.push(newEmpresa);
+                await fetch(API_EMPRESA, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
             }
-            updateTableDisplay();
             closeModal();
+            carregarEmpresas();
         };
 
         window.onclick = (event) => {
-            if (event.target == empresaModal) {
-                closeModal();
-            }
+            if (event.target == empresaModal) closeModal();
         };
 
-        // Carrega a tabela na inicialização
-        document.addEventListener('DOMContentLoaded', updateTableDisplay);
-    </script>
-    <script>
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        const dashboardContainer = document.querySelector('.dashboard-container');
-
-        // Função para abrir/fechar o menu
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            dashboardContainer.classList.toggle('sidebar-active');
-        });
-
-        // Função para fechar o menu ao clicar fora dele
-        dashboardContainer.addEventListener('click', (event) => {
-            // Verifica se o clique foi fora da sidebar e do botão de toggle
-            if (dashboardContainer.classList.contains('sidebar-active') && !sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
-                sidebar.classList.remove('active');
-                dashboardContainer.classList.remove('sidebar-active');
-            }
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async function () {
+            await carregarInstituicoes();
+            await carregarEmpresas();
         });
     </script>
+
 </body>
 
 </html>

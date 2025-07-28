@@ -67,8 +67,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             <tr>
                                 <th>Nome</th>
                                 <th>Tipo</th>
-                                <th>Convênio</th>
-                                <th>Nível do Curso</th>
+                                <th>Empresa</th>
+                                <th>Modalidade</th>
                                 <th>Carga Horária</th>
                                 <th>Ações</th>
                             </tr>
@@ -106,11 +106,13 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 <input type="text" id="nomeCurso" name="nome" required>
                             </div>
                             <div class="form-group">
-                                <label for="nivelCurso">Nível do Curso:</label>
+                                <label for="nivelCurso">Modalidade:</label>
                                 <select id="nivelCurso" name="nivel_curso" required>
                                     <option value="">Selecione</option>
                                     <option value="Técnico">Técnico</option>
-                                    <option value="Aprendizagem">Aprendizagem</option>
+                                    <option value="Aprendizagem">Aperfeiçoamento</option>
+                                    <option value="Aprendizagem">Qualificação</option>
+                                    <option value="Aprendizagem">Especialização</option>                               
                                 </select>
                             </div>
                             <div class="form-group">
@@ -119,6 +121,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                     <option value="">Selecione</option>
                                     <option value="Presencial">Presencial</option>
                                     <option value="EAD">EAD</option>
+                                    <option value="Aprendizagem">Semipresencial</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -126,11 +129,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 <input type="number" id="cargaHoraria" name="carga_horaria" required min="1">
                             </div>
                             <div class="form-group">
-                                <label for="convenioSelect">Convênio:</label>
-                                <select id="convenioSelect" name="convenio" required>
+                                <label for="convenioSelect">Empresa:</label>
+                                <select id="convenioSelect" name="empresa" required>
                                     <option value="">Selecione</option>
-                                    <option value="Convênio 1">Convênio 1</option>
-                                    <option value="Convênio 2">Convênio 2</option>
+                                    <option value="Empresa 1">Empresa 1</option>
+                                    <option value="Empresa 2">Empresa 2</option>
                                     <option value="Teste">Teste</option>
                                 </select>
                             </div>
@@ -138,6 +141,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 <label for="ucsSelect">Unidades Curriculares:</label>
                                 <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;"
                                     required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="observacao">Observação:</label>
+                                <input type="text" id="observacao" name="observacao">
                             </div>
                             <button type="submit" class="btn btn-primary">Salvar Curso</button>
                             <button type="button" class="btn btn-secondary"
@@ -235,9 +242,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         }
         function preencherSelectConvenios(selected = []) {
             const select = $('#convenioSelect');
-            const convenios = ['Convênio 1', 'Convênio 2', 'Teste'];
+            const empresas = ['Empresa 1', 'Empresa 2', 'Teste'];
             select.empty();
-            convenios.forEach(cv => select.append(`<option value="${cv}">${cv}</option>`));
+            empresas.forEach(cv => select.append(`<option value="${cv}">${cv}</option>`));
             select.val(selected).trigger('change');
         }
 
@@ -249,7 +256,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 tbody.append(`<tr>
                     <td>${curso.nome || ''}</td>
                     <td>${curso.tipo || ''}</td>
-                    <td>${(Array.isArray(curso.convenio) ? curso.convenio.join(', ') : curso.convenio || '')}</td>
+                    <td>${(Array.isArray(curso.empresa) ? curso.empresa.join(', ') : curso.empresa || '')}</td>
                     <td>${curso.nivel_curso || ''}</td>
                     <td>${curso.carga_horaria || ''}</td>
                     <td>
@@ -276,8 +283,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
             preencherSelectInstituicao(edit ? cursoEditando.instituicao_id : "");
             preencherSelectUCs(edit && cursoEditando.ordem_ucs ? cursoEditando.ordem_ucs.map(u => u.id) : []);
-            // CONVENIO agora é select simples:
-            $('#convenioSelect').val(edit && cursoEditando.convenio ? cursoEditando.convenio : "");
+            // empresa agora é select simples:
+            $('#convenioSelect').val(edit && cursoEditando.empresa ? cursoEditando.empresa : "");
             $('#nivelCurso').val(edit ? cursoEditando.nivel_curso : "");
             $('#tipoCurso').val(edit ? cursoEditando.tipo : "");
             $('#cargaHoraria').val(edit ? cursoEditando.carga_horaria : "");
@@ -308,7 +315,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 tipo: $('#tipoCurso').val(),
                 nivel_curso: $('#nivelCurso').val(),
                 carga_horaria: parseInt($('#cargaHoraria').val(), 10),
-                convenio: $('#convenioSelect').val(),
+                empresa: $('#convenioSelect').val(),
                 instituicao_id: $('#instituicaoId').val(),
                 ordem_ucs: selectedUcs.map(id => ({ id, descricao: ucDataMap[id] }))
             };
@@ -455,9 +462,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <div class="popup-field"><span class="popup-label">ID:</span> ${curso._id}</div>
             <div class="popup-field"><span class="popup-label">Nome:</span> ${curso.nome || ''}</div>
             <div class="popup-field"><span class="popup-label">Tipo:</span> ${curso.tipo || ''}</div>
-            <div class="popup-field"><span class="popup-label">Nível do Curso:</span> ${curso.nivel_curso || ''}</div>
+            <div class="popup-field"><span class="popup-label">Modalidade:</span> ${curso.nivel_curso || ''}</div>
             <div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria || ''}</div>
-            <div class="popup-field"><span class="popup-label">Convênio:</span> ${(Array.isArray(curso.convenio) ? curso.convenio.join(', ') : curso.convenio || '')}</div>
+            <div class="popup-field"><span class="popup-label">Empresa:</span> ${(Array.isArray(curso.empresa) ? curso.empresa.join(', ') : curso.empresa || '')}</div>
             <div class="popup-field"><span class="popup-label">Instituição:</span> ${nomeInstituicao}</div>
             <div class="popup-field"><span class="popup-label">Unidades Curriculares do Curso:</span></div>
             <div style="max-height:350px;overflow:auto;">${renderUCTable(curso.ordem_ucs)}</div>
