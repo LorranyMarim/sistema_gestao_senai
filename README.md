@@ -2,6 +2,7 @@
 # Sistema de Gestão SENAI
 
 ## Descrição
+
 Este projeto é um **sistema de gestão acadêmica** que integra **FastAPI** (Python) e **PHP** para o gerenciamento da coordenação de cursos do Senai em Betim.
 Ele utiliza **MongoDB Atlas** como banco de dados na nuvem, garantindo escalabilidade e segurança.
 
@@ -33,6 +34,7 @@ Ele utiliza **MongoDB Atlas** como banco de dados na nuvem, garantindo escalabil
 ---
 
 ## Requisitos
+
 - **XAMPP**
 - **Python 3.10+**
 - **PHP 8.0+**
@@ -74,6 +76,7 @@ python-dotenv
 # Execução do Projeto:
 
 ## Observação: Banco de Dados
+
 O sistema usa **MongoDB Atlas**.  
 No arquivo `api/db.py` a URL padrão já está configurada.
 A base de dados se chama "senai_sistema_gestao". Para acessa-la peça o login e senha do criador do cluster (Lorrany Marim).
