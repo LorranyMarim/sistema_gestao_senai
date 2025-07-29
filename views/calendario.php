@@ -1,3 +1,60 @@
+<?php
+// --- DADOS SIMULADOS ---
+// Em um ambiente real, estes dados viriam do banco de dados.
+
+// Simulação de eventos para o FullCalendar
+$eventos_calendario = [
+    [
+        'title' => 'Manutenção Preventiva - Lab 01',
+        'start' => date('Y-m-d') . 'T08:00:00', // Hoje, às 8h
+        'end' => date('Y-m-d') . 'T11:45:00',   // Hoje, às 11:45h
+        'backgroundColor' => '#007BFF', // Azul
+        'borderColor' => '#0056b3'
+    ],
+    [
+        'title' => 'Palestra de Segurança',
+        'start' => date('Y-m-') . '15', // Dia 15 do mês atual
+        'allDay' => true,
+        'backgroundColor' => '#28a745', // Verde
+        'borderColor' => '#1e7e34'
+    ],
+    [
+        'title' => 'Reunião Pedagógica',
+        'start' => date('Y-m-', strtotime('+1 month')) . '05', // Dia 05 do próximo mês
+        'backgroundColor' => '#ffc107', // Amarelo
+        'borderColor' => '#d39e00',
+        'textColor' => '#212529'
+    ]
+];
+
+// Simulação da lista de calendários já cadastrados (para a tabela e o select do modal)
+$calendarios_cadastrados = [
+    [
+        'id' => 1,
+        'codigo' => 'CAL-2025-GERAL',
+        'descricao' => 'Calendário Acadêmico Geral 2025',
+        'empresa_parceiro' => 'SENAI',
+        'data_inicial' => '2025-01-01',
+        'data_final' => '2025-12-31'
+    ],
+    [
+        'id' => 2,
+        'codigo' => 'CAL-2025-FERIAS',
+        'descricao' => 'Calendário de Férias e Recessos',
+        'empresa_parceiro' => 'SENAI',
+        'data_inicial' => '2025-01-01',
+        'data_final' => '2025-12-31'
+    ],
+    [
+        'id' => 3,
+        'codigo' => 'CAL-2025-EMPRESA-X',
+        'descricao' => 'Calendário Empresa X',
+        'empresa_parceiro' => 'Empresa X',
+        'data_inicial' => '2025-03-01',
+        'data_final' => '2025-11-30'
+    ]
+];
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -22,924 +79,198 @@
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
+                <img src="logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fas fa-tasks"></i> Gestão de Alocações</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
-                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
-                            UCs</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                    <li><a href="#"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
+                    <li><a href="#"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+                    <li><a href="#"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
                     <li><a href="calendario.php" class="active"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
-                    <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                    <li><a href="#"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
             </nav>
         </aside>
 
         <main class="main-content">
-            <button class="menu-toggle" id="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
             <header class="main-header">
-                <h1>Calendário Geral</h1>
+                <h1>Gestão de Calendário Acadêmico</h1>
             </header>
 
-            <div id="calendar">
-
-                <section class="instructor-calendar-section flex gap-6">
-                    <!-- Painel Esquerdo -->
-                    <div class="w-1/2 space-y-6">
-                        <div class="calendar-header space-y-4">
-                            <div class="month-year-controls flex items-center gap-2">
-                                <button id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
-                                <div class="month-year-selects flex gap-2">
-                                    <select id="monthSelect"></select>
-                                    <select id="yearSelect"></select>
-                                </div>
-                                <button id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
-                            </div>
-
-                            <div class="calendar-filters space-y-3">
-                                <div class="filter-group">
-                                    <label for="areaFilter" class="block text-sm font-medium">Filtrar por Área:</label>
-                                    <select id="areaFilter" class="w-full border rounded">
-                                        <option value="all">Todas as Áreas</option>
-                                        <option value="Tecnologia da Informação">Tecnologia da Informação</option>
-                                        <option value="Eletroeletrônica">Eletroeletrônica</option>
-                                        <option value="Mecânica">Mecânica</option>
-                                        <option value="Gestão">Gestão</option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-group">
-                                    <label for="turnoFilter" class="block text-sm font-medium">Filtrar por
-                                        Turno:</label>
-                                    <select id="turnoFilter" class="w-full border rounded">
-                                        <option value="all">Todos os Turnos</option>
-                                        <option value="Manhã">Manhã</option>
-                                        <option value="Tarde">Tarde</option>
-                                        <option value="Noite">Noite</option>
-                                    </select>
-                                </div>
-
-                                <div class="filter-group">
-                                    <label for="instrutorFilter" class="block text-sm font-medium">Filtrar por
-                                        Instrutor:</label>
-                                    <select id="instrutorFilter" class="w-full border rounded">
-                                        <option value="all">Todos os Instrutores</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="calendar-search">
-                                <input type="text" id="searchFilter"
-                                    placeholder="Buscar por instrutor, curso, UC ou sala..."
-                                    class="w-full border rounded p-2">
-                            </div>
-
-                            <div class="btn-group flex gap-2">
-                                <button class="btn btn-secondary" id="printBtn"><i class="fas fa-print"></i>
-                                    Imprimir</button>
-                                <button class="btn btn-primary" id="addFeriadoBtn"><i class="fas fa-plus-circle"></i>
-                                    Feriado</button>
-                                <button class="btn btn-primary" id="addAulaBtn"><i class="fas fa-plus-circle"></i>
-                                    Aula</button>
-                            </div>
+            <div class="page-content-grid">
+                <div class="filters-actions-section">
+                    <h2>Filtros/Ações</h2>
+                    <form>
+                        <div class="form-group">
+                            <label for="filtro1">Filtro 1:</label>
+                            <select id="filtro1" name="filtro1" class="form-control"><option value="">Selecione</option></select>
                         </div>
-                    </div>
-            </div>
-            <!-- Painel Direito: Calendário -->
-            <div class="w-1/2">
-                <div class="calendar-grid">
-                    <div class="day-name">Dom</div>
-                    <div class="day-name">Seg</div>
-                    <div class="day-name">Ter</div>
-                    <div class="day-name">Qua</div>
-                    <div class="day-name">Qui</div>
-                    <div class="day-name">Sex</div>
-                    <div class="day-name">Sáb</div>
-                    <!-- Dias do calendário serão gerados aqui -->
+                        <div class="form-group">
+                            <label for="filtro2">Filtro 2:</label>
+                            <select id="filtro2" name="filtro2" class="form-control"><option value="">Selecione</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filtro3">Filtro 3:</label>
+                            <select id="filtro3" name="filtro3" class="form-control"><option value="">Selecione</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filtro4">Filtro 4:</label>
+                            <select id="filtro4" name="filtro4" class="form-control"><option value="">Selecione</option></select>
+                        </div>
+                        <button type="button" class="btn btn-secondary">Filtrar</button>
+
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-primary" onclick="openModal('modalAdicionarEvento')">Adicionar Evento</button>
+                            <button type="button" class="btn btn-primary" onclick="openModal('modalCadastrarCalendario')">Cadastrar Calendário</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="calendar-section">
+                    <h2>Calendário Geral</h2>
+                    <div id="calendario"></div>
                 </div>
             </div>
-            </section>
 
-            <!-- Novo Calendário de Disponibilidade de Instrutores -->
-            <section class="instructor-calendar-section">
-                <h2>Disponibilidade de Instrutores</h2>
-
-                <!-- Adicione este container para o gráfico -->
-                <div class="chart-container mb-6" style="position: relative; height:300px; width:100%">
-                    <canvas id="instructorsPieChart"></canvas>
+             <section class="table-section" style="margin-top: 30px;">
+                <h2>Calendários Cadastrados</h2>
+                <div class="form-group">
+                    <input type="text" placeholder="Buscar por descrição ou empresa..." class="form-control">
                 </div>
-
-                <div class="calendar-grid instructor-calendar-grid">
-                    <div class="day-name">Dom</div>
-                    <div class="day-name">Seg</div>
-                    <div class="day-name">Ter</div>
-                    <div class="day-name">Qua</div>
-                    <div class="day-name">Qui</div>
-                    <div class="day-name">Sex</div>
-                    <div class="day-name">Sáb</div>
-                    <!-- Dias do calendário de instrutores serão gerados aqui -->
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Empresa/Parceiro</th>
+                                <th>Data Inicial</th>
+                                <th>Data Final</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($calendarios_cadastrados as $cal) : ?>
+                            <tr>
+                                <td><?= htmlspecialchars($cal['descricao']) ?></td>
+                                <td><?= htmlspecialchars($cal['empresa_parceiro']) ?></td>
+                                <td><?= date('d/m/Y', strtotime($cal['data_inicial'])) ?></td>
+                                <td><?= date('d/m/Y', strtotime($cal['data_final'])) ?></td>
+                                <td class="actions">
+                                    <button class="btn btn-icon btn-edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-icon btn-delete"><i class="fas fa-trash-alt"></i></button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </section>
-
         </main>
     </div>
 
-    <!-- Modal de Adicionar Feriado -->
-    <div id="feriadoModal" class="modal">
+    <div id="modalAdicionarEvento" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 id="feriadoModalTitle">Adicionar Feriado</h2>
-            <form id="feriadoForm">
+            <span class="close-button" onclick="closeModal('modalAdicionarEvento')">&times;</span>
+            <h2>Adicionar Evento</h2>
+            <form>
                 <div class="form-group">
-                    <label for="feriadoDate">Data:</label>
-                    <input type="date" id="feriadoDate" required>
+                    <label for="eventoCalendario">Calendário(s):</label>
+                    <select id="eventoCalendario" name="calendarios[]" multiple required style="height: 100px;">
+                        <?php foreach($calendarios_cadastrados as $cal): ?>
+                            <option value="<?= $cal['id'] ?>"><?= htmlspecialchars($cal['descricao']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="feriadoDescricao">Descrição:</label>
-                    <textarea id="feriadoDescricao" rows="3" required></textarea>
+                    <label for="eventoDescricao">Descrição:</label>
+                    <textarea id="eventoDescricao" name="descricao" rows="3" required></textarea>
                 </div>
-                <div class="btn-modal-actions">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
-                    <button type="button" class="btn btn-secondary" id="cancelFeriadoBtn"><i
-                            class="fas fa-times-circle"></i> Cancelar</button>
+                <div class="form-group">
+                    <label for="eventoInicio">Início:</label>
+                    <input type="datetime-local" id="eventoInicio" name="inicio" required>
                 </div>
+                <div class="form-group">
+                    <label for="eventoFim">Fim:</label>
+                    <input type="datetime-local" id="eventoFim" name="fim" required>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modalAdicionarEvento')">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar Evento</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Adicionar Aula -->
-    <div id="aulaModal" class="modal">
+    <div id="modalCadastrarCalendario" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 id="aulaModalTitle">Adicionar Aula</h2>
-            <form id="aulaForm">
+            <span class="close-button" onclick="closeModal('modalCadastrarCalendario')">&times;</span>
+            <h2>Cadastrar Calendário</h2>
+            <form>
                 <div class="form-group">
-                    <label for="aulaDate">Data:</label>
-                    <input type="date" id="aulaDate" required>
+                    <label for="calNome">Nome do Calendário:</label>
+                    <input type="text" id="calNome" name="nome" required>
                 </div>
                 <div class="form-group">
-                    <label for="codigoTurma">Código da Turma:</label>
-                    <input type="text" id="codigoTurma" required>
-                </div>
-                <div class="form-group">
-                    <label for="nomeInstrutor">Nome do Instrutor:</label>
-                    <input type="text" id="nomeInstrutor" required>
-                </div>
-                <div class="form-group">
-                    <label for="sala">Sala:</label>
-                    <input type="text" id="sala" required>
-                </div>
-                <div class="form-group">
-                    <label for="unidadeCurricular">Unidade Curricular:</label>
-                    <input type="text" id="unidadeCurricular" required>
-                </div>
-                <div class="form-group">
-                    <label for="turno">Turno:</label>
-                    <select id="turno" required>
-                        <option value="Manhã">Manhã</option>
-                        <option value="Tarde">Tarde</option>
-                        <option value="Noite">Noite</option>
+                    <label for="calEmpresa">Empresa/Parceiro:</label>
+                    <select id="calEmpresa" name="empresa">
+                        <option value="SENAI">SENAI</option>
+                        <option value="Empresa X">Empresa X</option>
+                        <option value="Empresa Y">Empresa Y</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="area">Área:</label>
-                    <select id="area" required>
-                        <option value="Tecnologia da Informação">Tecnologia da Informação</option>
-                        <option value="Eletroeletrônica">Eletroeletrônica</option>
-                        <option value="Mecânica">Mecânica</option>
-                        <option value="Gestão">Gestão</option>
-                    </select>
+                    <label for="calInicio">Início do Calendário:</label>
+                    <input type="date" id="calInicio" name="inicio_cal" required>
                 </div>
-                <div class="btn-modal-actions">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
-                    <button type="button" class="btn btn-secondary" id="cancelAulaBtn"><i
-                            class="fas fa-times-circle"></i> Cancelar</button>
+                <div class="form-group">
+                    <label for="calFim">Fim do Calendário:</label>
+                    <input type="date" id="calFim" name="fim_cal" required>
                 </div>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modalCadastrarCalendario')">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Cadastrar Calendário</button>
             </form>
-        </div>
-    </div>
-
-    <!-- Novo Modal para Detalhes Diários dos Instrutores -->
-    <div id="dailyInstructorDetailsModal" class="modal">
-        <div class="modal-content daily-instructor-details-modal-content">
-            <span class="close-button" id="closeDailyInstructorDetailsBtn">&times;</span>
-            <h2>Disponibilidade de Instrutores em <span id="dailyInstructorDetailsDate"></span></h2>
-            <ul id="dailyInstructorDetailsList" class="daily-instructor-details-list">
-                <!-- Detalhes dos instrutores para o dia selecionado serão carregados aqui -->
-            </ul>
         </div>
     </div>
 
     <script>
-        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        const today = new Date();
-        let currentMonth = today.getMonth();
-        let currentYear = today.getFullYear();
-
-        const calendarGrid = document.querySelector('.calendar-grid');
-        const monthSelect = document.getElementById('monthSelect');
-        const yearSelect = document.getElementById('yearSelect');
-        const prevMonthBtn = document.getElementById('prevMonthBtn');
-        const nextMonthBtn = document.getElementById('nextMonthBtn');
-
-        const addFeriadoBtn = document.getElementById('addFeriadoBtn');
-        const addAulaBtn = document.getElementById('addAulaBtn');
-        const printBtn = document.getElementById('printBtn');
-
-        const areaFilter = document.getElementById('areaFilter');
-        const searchFilter = document.getElementById('searchFilter');
-        const turnoFilter = document.getElementById('turnoFilter');
-        const instrutorFilter = document.getElementById('instrutorFilter');
-
-        const feriadoModal = document.getElementById('feriadoModal');
-        const closeFeriadoBtn = feriadoModal.querySelector('.close-button');
-        const cancelFeriadoBtn = feriadoModal.querySelector('#cancelFeriadoBtn');
-        const feriadoForm = document.getElementById('feriadoForm');
-        const feriadoDateInput = document.getElementById('feriadoDate');
-        const feriadoDescricaoInput = document.getElementById('feriadoDescricao');
-
-        const aulaModal = document.getElementById('aulaModal');
-        const closeAulaBtn = aulaModal.querySelector('.close-button');
-        const cancelAulaBtn = aulaModal.querySelector('#cancelAulaBtn');
-        const aulaForm = document.getElementById('aulaForm');
-        const aulaDateInput = document.getElementById('aulaDate');
-        const codigoTurmaInput = document.getElementById('codigoTurma');
-        const nomeInstrutorInput = document.getElementById('nomeInstrutor');
-        const salaInput = document.getElementById('sala');
-        const unidadeCurricularInput = document.getElementById('unidadeCurricular');
-        const turnoInput = document.getElementById('turno');
-        const areaInput = document.getElementById('area');
-
-        // Elementos do Novo Calendário de Instrutores
-        const instructorCalendarGrid = document.querySelector('.instructor-calendar-grid');
-        const dailyInstructorDetailsModal = document.getElementById('dailyInstructorDetailsModal');
-        const closeDailyInstructorDetailsBtn = document.getElementById('closeDailyInstructorDetailsBtn');
-        const dailyInstructorDetailsDate = document.getElementById('dailyInstructorDetailsDate');
-        const dailyInstructorDetailsList = document.getElementById('dailyInstructorDetailsList');
-
-        let feriadosData = [{
-            date: '2025-01-01',
-            description: 'Confraternização Universal'
-        },
-        {
-            date: '2025-04-18',
-            description: 'Paixão de Cristo'
-        },
-        {
-            date: '2025-04-21',
-            description: 'Tiradentes'
-        },
-        {
-            date: '2025-05-01',
-            description: 'Dia do Trabalho'
-        },
-        {
-            date: '2025-07-16',
-            description: 'Nossa Senhora do Carmo (Betim)'
-        },
-        {
-            date: '2025-09-07',
-            description: 'Independência do Brasil'
-        },
-        {
-            date: '2025-10-12',
-            description: 'Nossa Senhora Aparecida'
-        },
-        {
-            date: '2025-11-02',
-            description: 'Finados'
-        },
-        {
-            date: '2025-11-15',
-            description: 'Proclamação da República'
-        },
-        {
-            date: '2025-11-20',
-            description: 'Dia da Consciência Negra'
-        },
-        {
-            date: '2025-12-25',
-            description: 'Natal'
+        // Lógica para abrir/fechar modal (reutilizada)
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
         }
-        ];
 
-        let aulasData = []; // Será preenchido via fetch
-        let allInstrutoresNames = []; // Lista de todos os instrutores conhecidos
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
 
-        /**
-         * Função assíncrona para buscar os dados das aulas de um arquivo PHP externo.
-         */
-        async function fetchAulasData() {
-            try {
-                const response = await fetch('dados_aulas.php');
-
-                if (!response.ok) {
-                    throw new Error('Não foi possível carregar os dados das aulas.');
-                }
-
-                aulasData = await response.json();
-
-                // Coleta todos os nomes de instrutores únicos das aulas
-                allInstrutoresNames = [...new Set(aulasData.map(aula => aula.instrutor))].sort();
-
-                populateInstrutorFilter();
-                renderCalendar();
-                renderInstructorAvailabilityCalendar(); // Renderiza o novo calendário
-            } catch (error) {
-                console.error('Erro ao buscar dados:', error);
-                // Opcional: mostrar uma mensagem de erro na interface do usuário
+        // Fechar modal clicando fora
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target.id);
             }
         }
 
-        function populateInstrutorFilter() {
-            instrutorFilter.innerHTML = '<option value="all">Todos os Instrutores</option>';
-            allInstrutoresNames.forEach(instrutor => {
-                const option = document.createElement('option');
-                option.value = instrutor;
-                option.textContent = instrutor;
-                instrutorFilter.appendChild(option);
-            });
-        }
-
-        function renderCalendar() {
-            calendarGrid.innerHTML = `
-                <div class="day-name">Dom</div>
-                <div class="day-name">Seg</div>
-                <div class="day-name">Ter</div>
-                <div class="day-name">Qua</div>
-                <div class="day-name">Qui</div>
-                <div class="day-name">Sex</div>
-                <div class="day-name">Sáb</div>
-            `;
-
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const numEmptyDays = firstDay.getDay();
-
-            for (let i = 0; i < numEmptyDays; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.classList.add('empty-day');
-                calendarGrid.appendChild(emptyDay);
-            }
-
-            for (let i = 1; i <= lastDay.getDate(); i++) {
-                const day = document.createElement('div');
-                day.classList.add('day');
-
-                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-
-                let dayContent = `<span class="day-number">${i}</span>`;
-
-                const feriado = feriadosData.find(f => f.date === dateString);
-                if (feriado) {
-                    day.classList.add('feriado');
-                    dayContent += `<span class="event-tag feriado-tag" title="${feriado.description}">${feriado.description}</span>`;
-                }
-
-                const searchTerm = searchFilter.value.toLowerCase();
-                const selectedArea = areaFilter.value;
-                const selectedTurno = turnoFilter.value;
-                const selectedInstrutor = instrutorFilter.value;
-
-                const filteredAulas = aulasData.filter(a => {
-                    const isSameDate = a.date === dateString;
-                    const isSameArea = selectedArea === 'all' || a.area === selectedArea;
-                    const isSameTurno = selectedTurno === 'all' || a.turno === selectedTurno;
-                    const isSameInstrutor = selectedInstrutor === 'all' || a.instrutor === selectedInstrutor;
-
-                    const matchesSearch = searchTerm === '' ||
-                        a.instrutor.toLowerCase().includes(searchTerm) ||
-                        a.codigoTurma.toLowerCase().includes(searchTerm) ||
-                        a.uc.toLowerCase().includes(searchTerm) ||
-                        a.sala.toLowerCase().includes(searchTerm);
-
-                    return isSameDate && isSameArea && isSameTurno && isSameInstrutor && matchesSearch;
-                });
-
-                const sortedAulas = filteredAulas.sort((a, b) => {
-                    const order = {
-                        'Manhã': 1,
-                        'Tarde': 2,
-                        'Noite': 3
-                    };
-                    return order[a.turno] - order[b.turno];
-                });
-
-                sortedAulas.forEach(aula => {
-                    let turnoClass = '';
-                    if (aula.turno === 'Manhã') {
-                        turnoClass = 'aula-manha';
-                    } else if (aula.turno === 'Tarde') {
-                        turnoClass = 'aula-tarde';
-                    } else if (aula.turno === 'Noite') {
-                        turnoClass = 'aula-noite';
-                    }
-                    dayContent += `<span class="event-tag ${turnoClass}" title="Turno: ${aula.turno} | Instrutor: ${aula.instrutor} | Sala: ${aula.sala} | UC: ${aula.uc}">${aula.codigoTurma} (${aula.turno})</span>`;
-                });
-
-                const dayDate = new Date(currentYear, currentMonth, i);
-                const isToday = dayDate.toDateString() === today.toDateString();
-                if (isToday) {
-                    day.classList.add('today');
-                }
-
-                day.innerHTML = dayContent;
-                calendarGrid.appendChild(day);
-            }
-            updateHeader();
-        }
-
-        function updateHeader() {
-            monthSelect.innerHTML = monthNames.map((name, index) =>
-                `<option value="${index}" ${index === currentMonth ? 'selected' : ''}>${name}</option>`
-            ).join('');
-
-            yearSelect.innerHTML = '';
-            for (let i = currentYear - 5; i <= currentYear + 5; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = i;
-                if (i === currentYear) {
-                    option.selected = true;
-                }
-                yearSelect.appendChild(option);
-            }
-        }
-
-        // --- Lógica do Novo Calendário de Disponibilidade de Instrutores ---
-        let instructorsPieChart = null;
-
-        function renderInstructorAvailabilityCalendar() {
-            instructorCalendarGrid.innerHTML = `
-        <div class="day-name">Dom</div>
-        <div class="day-name">Seg</div>
-        <div class="day-name">Ter</div>
-        <div class="day-name">Qua</div>
-        <div class="day-name">Qui</div>
-        <div class="day-name">Sex</div>
-        <div class="day-name">Sáb</div>
-    `;
-
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const numEmptyDays = firstDay.getDay();
-
-            for (let i = 0; i < numEmptyDays; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.classList.add('empty-day', 'instructor-day');
-                instructorCalendarGrid.appendChild(emptyDay);
-            }
-
-            // Variáveis para estatísticas mensais
-            let totalFreeDays = 0;
-            let totalOccupiedDays = 0;
-            let totalConflictDays = 0;
-
-            for (let i = 1; i <= lastDay.getDate(); i++) {
-                const day = document.createElement('div');
-                day.classList.add('day', 'instructor-day');
-
-                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                day.dataset.date = dateString;
-
-                let dayContent = `<span class="day-number">${i}</span>`;
-
-                const dayStatus = getInstructorDailySummary(dateString);
-
-                let statusClass = 'free';
-                let statusText = 'Livre';
-
-                if (dayStatus.conflictCount > 0) {
-                    statusClass = 'conflict';
-                    statusText = `Conflito (${dayStatus.conflictCount})`;
-                    totalConflictDays++;
-                } else if (dayStatus.occupiedCount > 0) {
-                    statusClass = 'occupied';
-                    statusText = `Ocupado (${dayStatus.occupiedCount})`;
-                    totalOccupiedDays++;
-                } else {
-                    totalFreeDays++;
-                }
-
-                day.classList.add(statusClass);
-                dayContent += `<span class="instructor-day-summary">${statusText}</span>`;
-
-                const dayDate = new Date(currentYear, currentMonth, i);
-                const isToday = dayDate.toDateString() === today.toDateString();
-                if (isToday) {
-                    day.classList.add('today');
-                }
-
-                day.innerHTML = dayContent;
-                day.addEventListener('click', () => openDailyInstructorDetailsModal(dateString));
-                instructorCalendarGrid.appendChild(day);
-            }
-
-            // Atualiza ou cria o gráfico de pizza
-            updateInstructorsPieChart(totalFreeDays, totalOccupiedDays, totalConflictDays);
-        }
-
-        function updateInstructorsPieChart(free, occupied, conflict) {
-            const ctx = document.getElementById('instructorsPieChart').getContext('2d');
-
-            // Destrói o gráfico anterior se existir
-            if (instructorsPieChart) {
-                instructorsPieChart.destroy();
-            }
-
-            instructorsPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Instrutores Livres', 'Instrutores Ocupados', 'Conflitos de Agenda'],
-                    datasets: [{
-                        data: [free, occupied, conflict],
-                        backgroundColor: [
-                            '#4CAF50', // Verde para livres
-                            '#FFC107', // Amarelo para ocupados
-                            '#F44336'  // Vermelho para conflitos
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 1
-                    }]
+        // Inicialização do FullCalendar
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendario');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'pt-br', // Traduz para o português do Brasil
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Distribuição de Instrutores - ${monthNames[currentMonth]} ${currentYear}`,
-                            font: {
-                                size: 16
-                            }
-                        },
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 20
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
+                events: <?php echo json_encode($eventos_calendario); ?>, // Carrega os eventos do PHP
+                editable: true,       // Permite arrastar e redimensionar eventos
+                selectable: true,     // Permite selecionar datas
+                dayMaxEvents: true,   // Ativa o link "+ more" quando há muitos eventos
             });
-        }
-
-        function getInstructorDailySummary(dateString) {
-            let conflictCount = 0;
-            let occupiedCount = 0;
-            let freeCount = 0;
-
-            // Para cada instrutor conhecido, verifique seu status para a data
-            allInstrutoresNames.forEach(instrutorName => {
-                const classesForInstructorOnDay = aulasData.filter(aula =>
-                    aula.date === dateString && aula.instrutor === instrutorName
-                );
-
-                if (classesForInstructorOnDay.length > 1) {
-                    conflictCount++;
-                } else if (classesForInstructorOnDay.length === 1) {
-                    occupiedCount++;
-                } else {
-                    freeCount++;
-                }
-            });
-
-            return {
-                conflictCount,
-                occupiedCount,
-                freeCount
-            };
-        }
-
-        function openDailyInstructorDetailsModal(dateString) {
-            dailyInstructorDetailsDate.textContent = formatDisplayDate(dateString);
-            dailyInstructorDetailsList.innerHTML = '';
-
-            const instructorDetailsForDay = [];
-            let freeCount = 0;
-            let occupiedCount = 0;
-            let conflictCount = 0;
-
-            allInstrutoresNames.forEach(instrutorName => {
-                const classesForInstructorOnDay = aulasData.filter(aula =>
-                    aula.date === dateString && aula.instrutor === instrutorName
-                );
-
-                let status = 'Livre';
-                let statusClass = 'free-text';
-                let classesInfo = [];
-
-                if (classesForInstructorOnDay.length > 1) {
-                    status = 'Conflito';
-                    statusClass = 'conflict-text';
-                    conflictCount++;
-                    classesForInstructorOnDay.forEach(aula => {
-                        classesInfo.push(`${aula.uc} (${aula.codigoTurma}) - Sala: ${aula.sala} - Turno: ${aula.turno}`);
-                    });
-                } else if (classesForInstructorOnDay.length === 1) {
-                    status = 'Ocupado';
-                    statusClass = 'occupied-text';
-                    occupiedCount++;
-                    const aula = classesForInstructorOnDay[0];
-                    classesInfo.push(`${aula.uc} (${aula.codigoTurma}) - Sala: ${aula.sala} - Turno: ${aula.turno}`);
-                } else {
-                    freeCount++;
-                }
-
-                instructorDetailsForDay.push({
-                    name: instrutorName,
-                    status: status,
-                    statusClass: statusClass,
-                    classes: classesInfo
-                });
-            });
-
-            // Ordena os instrutores: Conflito (vermelho), Ocupado (amarelo), Livre (verde)
-            instructorDetailsForDay.sort((a, b) => {
-                const order = { 'Conflito': 1, 'Ocupado': 2, 'Livre': 3 };
-                return order[a.status] - order[b.status];
-            });
-
-            // Adiciona o gráfico de pizza diário
-            const chartHtml = `
-        <div class="chart-container" style="height: 250px; margin-bottom: 20px;">
-            <canvas id="dailyInstructorsPieChart"></canvas>
-        </div>
-    `;
-            dailyInstructorDetailsList.insertAdjacentHTML('beforeend', chartHtml);
-
-            // Cria o gráfico de pizza diário
-            const dailyCtx = document.getElementById('dailyInstructorsPieChart').getContext('2d');
-            new Chart(dailyCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Livre', 'Ocupado', 'Conflito'],
-                    datasets: [{
-                        data: [freeCount, occupiedCount, conflictCount],
-                        backgroundColor: [
-                            '#4CAF50', // Verde
-                            '#FFC107', // Amarelo
-                            '#F44336'  // Vermelho
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Status dos Instrutores - ${formatDisplayDate(dateString)}`,
-                            font: {
-                                size: 14
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Adiciona a lista de instrutores
-            if (instructorDetailsForDay.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'Nenhum instrutor cadastrado no sistema.';
-                dailyInstructorDetailsList.appendChild(li);
-            } else {
-                instructorDetailsForDay.forEach(item => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<strong>${item.name}:</strong> <span class="status-text ${item.statusClass}">${item.status}</span>`;
-                    if (item.classes.length > 0) {
-                        item.classes.forEach(info => {
-                            const span = document.createElement('span');
-                            span.classList.add('class-info');
-                            span.textContent = info;
-                            li.appendChild(span);
-                        });
-                    }
-                    dailyInstructorDetailsList.appendChild(li);
-                });
-            }
-
-            dailyInstructorDetailsModal.style.display = 'flex';
-            document.body.classList.add('modal-open');
-        }
-
-        function closeDailyInstructorDetailsModal() {
-            dailyInstructorDetailsModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
-        }
-
-        function formatDisplayDate(dateString) {
-            if (!dateString) return '';
-            const [year, month, day] = dateString.split('-');
-            return `${day}/${month}/${year}`;
-        }
-
-
-        function openFeriadoModal() {
-            feriadoModal.style.display = 'flex';
-            document.body.classList.add('modal-open');
-        }
-
-        function closeFeriadoModal() {
-            feriadoModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
-            feriadoForm.reset();
-        }
-
-        function openAulaModal() {
-            aulaModal.style.display = 'flex';
-            document.body.classList.add('modal-open');
-        }
-
-        function closeAulaModal() {
-            aulaModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
-            aulaForm.reset();
-        }
-
-        // Event listener para o botão de imprimir
-        printBtn.addEventListener('click', () => {
-            window.print();
-        });
-
-        addFeriadoBtn.addEventListener('click', openFeriadoModal);
-        closeFeriadoBtn.addEventListener('click', closeFeriadoModal);
-        cancelFeriadoBtn.addEventListener('click', closeFeriadoModal);
-
-        feriadoForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const date = feriadoDateInput.value;
-            const description = feriadoDescricaoInput.value;
-
-            if (date && description) {
-                feriadosData = feriadosData.filter(f => f.date !== date);
-                feriadosData.push({
-                    date,
-                    description
-                });
-                currentYear = new Date(date).getFullYear();
-                currentMonth = new Date(date).getMonth();
-                renderCalendar();
-                renderInstructorAvailabilityCalendar(); // Atualiza o calendário de instrutores
-                closeFeriadoModal();
-            }
-        });
-
-        addAulaBtn.addEventListener('click', openAulaModal);
-        closeAulaBtn.addEventListener('click', closeAulaModal);
-        cancelAulaBtn.addEventListener('click', closeAulaModal);
-
-        aulaForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const date = aulaDateInput.value;
-            const codigoTurma = codigoTurmaInput.value;
-            const nomeInstrutor = nomeInstrutorInput.value;
-            const sala = salaInput.value;
-            const unidadeCurricular = unidadeCurricularInput.value;
-            const turno = turnoInput.value;
-            const area = areaInput.value;
-
-            if (date && codigoTurma && nomeInstrutor && sala && unidadeCurricular && turno && area) {
-                aulasData.push({
-                    date,
-                    codigoTurma,
-                    instrutor: nomeInstrutor,
-                    sala,
-                    uc: unidadeCurricular,
-                    turno,
-                    area
-                });
-
-                // Adiciona o novo instrutor à lista se ainda não existir
-                if (!allInstrutoresNames.includes(nomeInstrutor)) {
-                    allInstrutoresNames.push(nomeInstrutor);
-                    allInstrutoresNames.sort(); // Mantém a lista ordenada
-                }
-
-                populateInstrutorFilter();
-
-                currentYear = new Date(date).getFullYear();
-                currentMonth = new Date(date).getMonth();
-                renderCalendar();
-                renderInstructorAvailabilityCalendar(); // Atualiza o calendário de instrutores
-                closeAulaModal();
-            }
-        });
-
-        // Corrigido: Adicionado o event listener para o botão 'X' do modal de detalhes do instrutor
-        closeDailyInstructorDetailsBtn.addEventListener('click', closeDailyInstructorDetailsModal);
-
-        window.onclick = (event) => {
-            if (event.target == feriadoModal) {
-                closeFeriadoModal();
-            }
-            if (event.target == aulaModal) {
-                closeAulaModal();
-            }
-            // Corrigido: Chamar a função de fechamento diretamente se o clique for no overlay do modal
-            if (event.target == dailyInstructorDetailsModal) {
-                closeDailyInstructorDetailsModal();
-            }
-        };
-
-        prevMonthBtn.addEventListener('click', () => {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-            renderInstructorAvailabilityCalendar(); // Atualiza o calendário de instrutores
-        });
-
-        nextMonthBtn.addEventListener('click', () => {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar();
-            renderInstructorAvailabilityCalendar(); // Atualiza o calendário de instrutores
-        });
-
-        monthSelect.addEventListener('change', () => {
-            currentMonth = parseInt(monthSelect.value);
-            renderCalendar();
-            renderInstructorAvailabilityCalendar(); // Atualiza o calendário de instrutores
-        });
-        yearSelect.addEventListener('change', () => {
-            currentYear = parseInt(yearSelect.value);
-            renderCalendar();
-            renderInstructorAvailabilityCalendar(); // Atualiza o calendário de instrutores
-        });
-
-        areaFilter.addEventListener('change', () => renderCalendar());
-        turnoFilter.addEventListener('change', () => renderCalendar());
-        instrutorFilter.addEventListener('change', () => renderCalendar());
-        searchFilter.addEventListener('input', () => renderCalendar());
-
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchAulasData(); // Chama a função para buscar os dados ao carregar a página
-        });
-
-        // Menu Toggle para Mobile
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
-
-        // Fechar o menu ao clicar fora dele em telas menores
-        document.addEventListener('click', (event) => {
-            if (window.innerWidth <= 768 && sidebar.classList.contains('active') && !sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
-                sidebar.classList.remove('active');
-            }
+            calendar.render();
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    let calendarEl = document.getElementById('calendar');
-    let calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listWeek'
-        },
-        events: [
-            { title: 'Reunião', start: '2025-07-25' },
-            { title: 'Aula', start: '2025-07-26T10:00:00', end: '2025-07-26T12:00:00' }
-        ]
-    });
-    calendar.render();
-});
-</script>
-
 </body>
-
 </html>
