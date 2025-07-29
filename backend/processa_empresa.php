@@ -9,8 +9,8 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 // Conexão MongoDB
-$client = new MongoDB\Client("mongodb://localhost:27017");
-$db = $client->senai_betim_bd;
+$client = new MongoDB\Client("mongodb+srv://09116122:aBJ3J0L3ce9rLuWh@senai.jgpu3za.mongodb.net/?retryWrites=true&w=majority&appName=senai");
+$db = $client->senai_sistema_gestao;
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === "OPTIONS") {

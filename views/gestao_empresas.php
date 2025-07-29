@@ -1,12 +1,3 @@
-<?php
-
-function getNextId($data)
-{
-    return !empty($data) ? max(array_column($data, 'id')) + 1 : 1;
-}
-
-?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -15,10 +6,8 @@ function getNextId($data)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Empresas - SENAI</title>
     <link rel="stylesheet" href="../css/style_turmas.css">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
 </head>
 
 <body>
@@ -33,13 +22,10 @@ function getNextId($data)
                     <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
                     <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
-                    <li><a href="gestao_empresas.php" class="active"><i class="fas fa-building"></i> Gestão de
-                            Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
-                            UCs</a></li>
+                    <li><a href="gestao_empresas.php" class="active"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
                     <li><a href="calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -52,8 +38,7 @@ function getNextId($data)
             </button>
             <header class="main-header">
                 <h1>Gestão de Empresas</h1>
-                <button class="btn btn-primary" id="addEmpresaBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova
-                    Empresa</button>
+                <button class="btn btn-primary" id="addEmpresaBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova Empresa</button>
             </header>
 
             <section class="table-section">
@@ -80,25 +65,7 @@ function getNextId($data)
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($empresas as $empresa): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($empresa['id']); ?></td>
-                                    <td><?php echo htmlspecialchars($empresa['nome']); ?></td>
-                                    <td><?php echo htmlspecialchars($empresa['cnpj_matriz']); ?></td>
-                                    <td><?php echo htmlspecialchars($empresa['cnpj_filial']); ?></td>
-                                    <td><?php echo htmlspecialchars($empresa['endereco']); ?></td>
-                                    <td><?php echo htmlspecialchars($empresa['responsavel_nome']); ?></td>
-                                    <td><?php echo htmlspecialchars($empresa['responsavel_telefone']); ?></td>
-                                    <td><?php echo htmlspecialchars($empresa['responsavel_email']); ?></td>
-                                    <td class="actions">
-                                        <button class="btn btn-icon btn-edit" title="Editar"
-                                            data-id="<?php echo $empresa['id']; ?>"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-icon btn-delete" title="Excluir"
-                                            data-id="<?php echo $empresa['id']; ?>"><i
-                                                class="fas fa-trash-alt"></i></button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+                            <!-- Preenchido pelo JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -112,6 +79,13 @@ function getNextId($data)
             <h2 id="modalTitle">Adicionar Nova Empresa</h2>
             <form id="empresaForm">
                 <input type="hidden" id="empresaId">
+                <!-- SELECT DE INSTITUIÇÃO COMO PRIMEIRO CAMPO -->
+                <div class="form-group">
+                    <label for="instituicaoId">Instituição:</label>
+                    <select id="instituicaoId" required>
+                        <option value="">Selecione</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="nomeEmpresa">Nome da Empresa:</label>
                     <input type="text" id="nomeEmpresa" required>
@@ -140,15 +114,8 @@ function getNextId($data)
                     <label for="responsavelEmail">Email do Responsável:</label>
                     <input type="email" id="responsavelEmail" required>
                 </div>
-                <div class="form-group">
-                    <label for="instituicaoId">Instituição:</label>
-                    <select id="instituicaoId" required>
-                        <option value="">Selecione</option>
-                    </select>
-                </div>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar Empresa</button>
-                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i>
-                    Cancelar</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
             </form>
         </div>
     </div>
@@ -191,13 +158,13 @@ function getNextId($data)
         }
 
         async function carregarInstituicoes() {
-            instituicaoSelect.innerHTML = `<option value="">Selecione</option>`;
-            const resp = await fetch(API_EMPRESA + '?action=instituicoes');
+            instituicaoSelect.innerHTML = <option value="">Selecione</option>;
+            const resp = await fetch('processa_instituicao.php');
             const lista = await resp.json();
             instituicoesMap = {};
             lista.forEach(inst => {
                 instituicoesMap[inst._id] = inst.razao_social;
-                instituicaoSelect.innerHTML += `<option value="${inst._id}">${inst.razao_social}</option>`;
+                instituicaoSelect.innerHTML += <option value="${inst._id}">${inst.razao_social}</option>;
             });
         }
 
@@ -212,7 +179,7 @@ function getNextId($data)
             const searchTerm = (searchEmpresaInput.value || '').toLowerCase();
 
             const filteredEmpresas = empresasData.filter(empresa => {
-                const searchString = `${empresa.razao_social || ''} ${empresa.cnpj_matriz || ''} ${empresa.cnpj_filial || ''} ${empresa.responsavel_nome || ''} ${empresa.responsavel_email || ''}`.toLowerCase();
+                const searchString = ${empresa.razao_social || ''} ${empresa.cnpj_matriz || ''} ${empresa.cnpj_filial || ''} ${empresa.responsavel_nome || ''} ${empresa.responsavel_email || ''}.toLowerCase();
                 return searchString.includes(searchTerm);
             });
 
@@ -225,19 +192,19 @@ function getNextId($data)
             filteredEmpresas.forEach(empresa => {
                 const row = dataTableBody.insertRow();
                 row.innerHTML = `
-            <td>${empresa._id}</td>
-            <td>${empresa.razao_social || ''}</td>
-            <td>${empresa.cnpj_matriz || ''}</td>
-            <td>${empresa.cnpj_filial || ''}</td>
-            <td>${empresa.endereco || ''}</td>
-            <td>${empresa.responsavel_nome || ''}</td>
-            <td>${empresa.responsavel_telefone || ''}</td>
-            <td>${empresa.responsavel_email || ''}</td>
-            <td class="actions">
-                <button class="btn btn-icon btn-edit" title="Editar" data-id="${empresa._id}"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-icon btn-delete" title="Excluir" data-id="${empresa._id}"><i class="fas fa-trash-alt"></i></button>
-            </td>
-        `;
+                    <td>${empresa._id}</td>
+                    <td>${empresa.razao_social || ''}</td>
+                    <td>${empresa.cnpj_matriz || ''}</td>
+                    <td>${empresa.cnpj_filial || ''}</td>
+                    <td>${empresa.endereco || ''}</td>
+                    <td>${empresa.responsavel_nome || ''}</td>
+                    <td>${empresa.responsavel_telefone || ''}</td>
+                    <td>${empresa.responsavel_email || ''}</td>
+                    <td class="actions">
+                        <button class="btn btn-icon btn-edit" title="Editar" data-id="${empresa._id}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-icon btn-delete" title="Excluir" data-id="${empresa._id}"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                `;
             });
             attachTableActionListeners();
         }
@@ -270,7 +237,7 @@ function getNextId($data)
         }
 
         async function deleteEmpresa(id) {
-            if (confirm(`Tem certeza que deseja excluir a empresa?`)) {
+            if (confirm(Tem certeza que deseja excluir a empresa?)) {
                 await fetch(API_EMPRESA + '?id=' + id, { method: 'DELETE' });
                 carregarEmpresas();
             }
@@ -328,8 +295,8 @@ function getNextId($data)
             await carregarInstituicoes();
             await carregarEmpresas();
         });
+        addEmpresaBtn.onclick = openModal;
+
     </script>
-
 </body>
-
 </html>
