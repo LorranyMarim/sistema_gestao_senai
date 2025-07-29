@@ -75,11 +75,7 @@ python-dotenv
 
 # Execução do Projeto:
 
-## Observação: Banco de Dados
-
-O sistema usa **MongoDB Atlas**.  
-No arquivo `api/db.py` a URL padrão já está configurada.
-A base de dados se chama "senai_sistema_gestao". Para acessa-la peça o login e senha do criador do cluster (Lorrany Marim).
+#### Observação: Banco de Dados: O sistema usa MongoDB Atlas. No arquivo `api/db.py` a URL padrão já está configurada. A base de dados se chama "senai_sistema_gestao". Para acessa-la peça o login e senha do criador do cluster (Lorrany Marim).
 ---
 
 ## 1º Passo: Executando o Painel XAMPP
