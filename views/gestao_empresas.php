@@ -149,6 +149,12 @@
             empresaModal.style.display = 'flex';
             document.body.classList.add('modal-open');
         }
+        // 
+        async function openModal() {
+            await carregarInstituicoes();
+            empresaModal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+        }
         function closeModal() {
             empresaModal.style.display = 'none';
             document.body.classList.remove('modal-open');
