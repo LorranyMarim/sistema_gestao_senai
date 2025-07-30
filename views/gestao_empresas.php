@@ -73,7 +73,7 @@
         </main>
     </div>
 
-    <div id="empresaModal" class="modal">
+    <div id="empresaModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2 id="modalTitle">Adicionar Nova Empresa</h2>
@@ -121,7 +121,7 @@
     </div>
 
     <script>
-        const API_EMPRESA = 'processa_empresa.php';
+        const API_EMPRESA = '../backend/processa_empresa.php';
         let empresasData = [];
         let instituicoesMap = {};
 
@@ -145,16 +145,13 @@
         const responsavelEmailInput = document.getElementById('responsavelEmail');
         const instituicaoSelect = document.getElementById('instituicaoId');
 
-        function openModal() {
-            empresaModal.style.display = 'flex';
-            document.body.classList.add('modal-open');
-        }
-        // 
+        // Modal abre e carrega as instituições
         async function openModal() {
             await carregarInstituicoes();
             empresaModal.style.display = 'flex';
             document.body.classList.add('modal-open');
         }
+
         function closeModal() {
             empresaModal.style.display = 'none';
             document.body.classList.remove('modal-open');
@@ -164,13 +161,13 @@
         }
 
         async function carregarInstituicoes() {
-            instituicaoSelect.innerHTML = <option value="">Selecione</option>;
-            const resp = await fetch('processa_instituicao.php');
+            instituicaoSelect.innerHTML = `<option value="">Selecione</option>`;
+            const resp = await fetch('../backend/processa_instituicao.php');
             const lista = await resp.json();
             instituicoesMap = {};
             lista.forEach(inst => {
                 instituicoesMap[inst._id] = inst.razao_social;
-                instituicaoSelect.innerHTML += <option value="${inst._id}">${inst.razao_social}</option>;
+                instituicaoSelect.innerHTML += `<option value="${inst._id}">${inst.razao_social}</option>`;
             });
         }
 
@@ -185,7 +182,7 @@
             const searchTerm = (searchEmpresaInput.value || '').toLowerCase();
 
             const filteredEmpresas = empresasData.filter(empresa => {
-                const searchString = ${empresa.razao_social || ''} ${empresa.cnpj_matriz || ''} ${empresa.cnpj_filial || ''} ${empresa.responsavel_nome || ''} ${empresa.responsavel_email || ''}.toLowerCase();
+                const searchString = `${empresa.razao_social || ''} ${empresa.cnpj || ''} ${empresa.cnpj_filial || ''} ${empresa.responsavel_nome || ''} ${empresa.responsavel_email || ''}`.toLowerCase();
                 return searchString.includes(searchTerm);
             });
 
@@ -200,7 +197,7 @@
                 row.innerHTML = `
                     <td>${empresa._id}</td>
                     <td>${empresa.razao_social || ''}</td>
-                    <td>${empresa.cnpj_matriz || ''}</td>
+                    <td>${empresa.cnpj || ''}</td>
                     <td>${empresa.cnpj_filial || ''}</td>
                     <td>${empresa.endereco || ''}</td>
                     <td>${empresa.responsavel_nome || ''}</td>
@@ -230,7 +227,7 @@
                 modalTitle.textContent = "Editar Empresa";
                 empresaIdInput.value = empresa._id;
                 nomeEmpresaInput.value = empresa.razao_social || '';
-                cnpjMatrizInput.value = empresa.cnpj_matriz || '';
+                cnpjMatrizInput.value = empresa.cnpj || '';
                 cnpjFilialInput.value = empresa.cnpj_filial || '';
                 enderecoEmpresaInput.value = empresa.endereco || '';
                 responsavelNomeInput.value = empresa.responsavel_nome || '';
@@ -238,12 +235,13 @@
                 responsavelEmailInput.value = empresa.responsavel_email || '';
                 await carregarInstituicoes();
                 instituicaoSelect.value = empresa.instituicao_id || '';
-                openModal();
+                empresaModal.style.display = 'flex';
+                document.body.classList.add('modal-open');
             }
         }
 
         async function deleteEmpresa(id) {
-            if (confirm(Tem certeza que deseja excluir a empresa?)) {
+            if (confirm("Tem certeza que deseja excluir a empresa?")) {
                 await fetch(API_EMPRESA + '?id=' + id, { method: 'DELETE' });
                 carregarEmpresas();
             }
@@ -255,7 +253,8 @@
             empresaForm.reset();
             empresaIdInput.value = '';
             await carregarInstituicoes();
-            openModal();
+            empresaModal.style.display = 'flex';
+            document.body.classList.add('modal-open');
         };
         closeBtn.onclick = closeModal;
         cancelBtn.onclick = closeModal;
@@ -266,7 +265,7 @@
             const id = empresaIdInput.value;
             const payload = {
                 razao_social: nomeEmpresaInput.value,
-                cnpj_matriz: cnpjMatrizInput.value,
+                cnpj: cnpjMatrizInput.value,
                 cnpj_filial: cnpjFilialInput.value,
                 endereco: enderecoEmpresaInput.value,
                 responsavel_nome: responsavelNomeInput.value,
@@ -301,8 +300,8 @@
             await carregarInstituicoes();
             await carregarEmpresas();
         });
-        addEmpresaBtn.onclick = openModal;
-
     </script>
+
 </body>
+
 </html>

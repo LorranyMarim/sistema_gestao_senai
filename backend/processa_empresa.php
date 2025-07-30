@@ -24,7 +24,7 @@ function sanitizeEmpresa($data) {
     // Prepara e sanitiza todos os campos
     return [
         'razao_social'        => $data['razao_social']        ?? '',
-        'cnpj_matriz'         => $data['cnpj_matriz']         ?? '',
+        'cnpj'         => $data['cnpj']         ?? '',
         'cnpj_filial'         => $data['cnpj_filial']         ?? '',
         'endereco'            => $data['endereco']            ?? '',
         'responsavel_nome'    => $data['responsavel_nome']    ?? '',
@@ -53,7 +53,7 @@ switch ($method) {
     case "POST":
         // Adicionar nova empresa (Empresa)
         $data = json_decode(file_get_contents("php://input"), true);
-        if (!isset($data['razao_social']) || !isset($data['cnpj_matriz']) || !isset($data['instituicao_id'])) {
+        if (!isset($data['razao_social']) || !isset($data['cnpj']) || !isset($data['instituicao_id'])) {
             http_response_code(400);
             echo json_encode(["erro" => "Campos obrigatórios faltando: razão social, CNPJ matriz, instituição"]);
             exit;
