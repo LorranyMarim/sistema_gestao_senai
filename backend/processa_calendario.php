@@ -4,25 +4,53 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-// URL base da API FastAPI
-$api_url_empresas     = 'http://localhost:8000/api/empresas';
-$api_url_instituicoes = 'http://localhost:8000/api/instituicoes';
-
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+$api_url = 'http://localhost:8000/api/calendarios';
 
 function getRequestData() {
     return json_decode(file_get_contents('php://input'), true);
 }
+
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
 
 if ($method === "OPTIONS") {
     http_response_code(200);
     exit;
 }
 
-// Listar instituições (usado no select do modal)
-if ($method === "GET" && $action === "instituicoes") {
-    $ch = curl_init($api_url_instituicoes);
+if ($method === "POST" && $action === "evento") {
+    // Adicionar evento para 1 ou mais calendários
+    $data = getRequestData();
+    $ch = curl_init($api_url . "/adicionar_evento");
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    $response = curl_exec($ch);
+    curl_close($ch);
+    echo $response;
+    exit;
+}
+
+if ($method === "PUT" && $action === "editar_dia_nao_letivo") {
+    $id = $_GET['id'] ?? '';
+    $data = getRequestData();
+    $ch = curl_init($api_url . "/$id/editar_dia_nao_letivo");
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    $response = curl_exec($ch);
+    curl_close($ch);
+    echo $response;
+    exit;
+}
+
+if ($method === "DELETE" && $action === "remover_dia_nao_letivo") {
+    $id = $_GET['id'] ?? '';
+    $data = $_GET['data'] ?? '';
+    $ch = curl_init($api_url . "/$id/remover_dia_nao_letivo?data=$data");
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($ch);
     curl_close($ch);
@@ -32,8 +60,7 @@ if ($method === "GET" && $action === "instituicoes") {
 
 switch ($method) {
     case "GET":
-        // Listar empresas
-        $ch = curl_init($api_url_empresas);
+        $ch = curl_init($api_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($ch);
         curl_close($ch);
@@ -41,9 +68,8 @@ switch ($method) {
         break;
 
     case "POST":
-        // Criar nova empresa
         $data = getRequestData();
-        $ch = curl_init($api_url_empresas);
+        $ch = curl_init($api_url);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
@@ -54,11 +80,9 @@ switch ($method) {
         break;
 
     case "PUT":
-        // Editar empresa
         $id = $_GET['id'] ?? '';
-        if (!$id) { http_response_code(400); echo json_encode(['error'=>'ID não informado']); exit; }
         $data = getRequestData();
-        $ch = curl_init($api_url_empresas . "/$id");
+        $ch = curl_init($api_url . "/$id");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
@@ -69,10 +93,8 @@ switch ($method) {
         break;
 
     case "DELETE":
-        // Excluir empresa
         $id = $_GET['id'] ?? '';
-        if (!$id) { http_response_code(400); echo json_encode(['error'=>'ID não informado']); exit; }
-        $ch = curl_init($api_url_empresas . "/$id");
+        $ch = curl_init($api_url . "/$id");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($ch);

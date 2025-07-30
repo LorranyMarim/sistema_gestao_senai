@@ -6,6 +6,8 @@ from rotas_instituicao import router as instituicao_router
 from rotas_uc import router as uc_router
 from rotas_alocacao import router as alocacao_router
 from rotas_empresa import router as empresa_router
+from rotas_calendario import router as calendario_router
+
 
 
 app = FastAPI()
@@ -24,6 +26,8 @@ app.include_router(instituicao_router)
 app.include_router(uc_router)
 app.include_router(alocacao_router)
 app.include_router(empresa_router)
+app.include_router(calendario_router)
+
 
 @app.get("/")
 def status():

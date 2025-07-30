@@ -73,13 +73,13 @@
         </main>
     </div>
 
+    <!-- Modal de Cadastro/Edição -->
     <div id="empresaModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2 id="modalTitle">Adicionar Nova Empresa</h2>
             <form id="empresaForm">
                 <input type="hidden" id="empresaId">
-                <!-- SELECT DE INSTITUIÇÃO COMO PRIMEIRO CAMPO -->
                 <div class="form-group">
                     <label for="instituicaoId">Instituição:</label>
                     <select id="instituicaoId" required>
@@ -120,6 +120,49 @@
         </div>
     </div>
 
+    <!-- Modal Visualizar Empresa -->
+    <div id="visualizarEmpresaModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button" id="closeVisualizarEmpresa">&times;</span>
+            <h2>Detalhes da Empresa</h2>
+            <form>
+                <div class="form-group">
+                    <label>Instituição:</label>
+                    <input type="text" id="viewInstituicao" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Nome da Empresa:</label>
+                    <input type="text" id="viewNomeEmpresa" readonly>
+                </div>
+                <div class="form-group">
+                    <label>CNPJ Matriz:</label>
+                    <input type="text" id="viewCnpjMatriz" readonly>
+                </div>
+                <div class="form-group">
+                    <label>CNPJ Filial:</label>
+                    <input type="text" id="viewCnpjFilial" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Endereço:</label>
+                    <input type="text" id="viewEndereco" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Nome do Responsável:</label>
+                    <input type="text" id="viewResponsavelNome" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Telefone do Responsável:</label>
+                    <input type="text" id="viewResponsavelTelefone" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Email do Responsável:</label>
+                    <input type="text" id="viewResponsavelEmail" readonly>
+                </div>
+                <button type="button" class="btn btn-secondary" id="fecharVisualizarEmpresa">Fechar</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_EMPRESA = '../backend/processa_empresa.php';
         let empresasData = [];
@@ -145,7 +188,19 @@
         const responsavelEmailInput = document.getElementById('responsavelEmail');
         const instituicaoSelect = document.getElementById('instituicaoId');
 
-        // Modal abre e carrega as instituições
+        // Modal Visualizar
+        const visualizarEmpresaModal = document.getElementById('visualizarEmpresaModal');
+        const closeVisualizarEmpresa = document.getElementById('closeVisualizarEmpresa');
+        const fecharVisualizarEmpresa = document.getElementById('fecharVisualizarEmpresa');
+        const viewInstituicao = document.getElementById('viewInstituicao');
+        const viewNomeEmpresa = document.getElementById('viewNomeEmpresa');
+        const viewCnpjMatriz = document.getElementById('viewCnpjMatriz');
+        const viewCnpjFilial = document.getElementById('viewCnpjFilial');
+        const viewEndereco = document.getElementById('viewEndereco');
+        const viewResponsavelNome = document.getElementById('viewResponsavelNome');
+        const viewResponsavelTelefone = document.getElementById('viewResponsavelTelefone');
+        const viewResponsavelEmail = document.getElementById('viewResponsavelEmail');
+
         async function openModal() {
             await carregarInstituicoes();
             empresaModal.style.display = 'flex';
@@ -204,6 +259,7 @@
                     <td>${empresa.responsavel_telefone || ''}</td>
                     <td>${empresa.responsavel_email || ''}</td>
                     <td class="actions">
+                        <button class="btn btn-icon btn-view" title="Visualizar" data-id="${empresa._id}"><i class="fas fa-eye"></i></button>
                         <button class="btn btn-icon btn-edit" title="Editar" data-id="${empresa._id}"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-icon btn-delete" title="Excluir" data-id="${empresa._id}"><i class="fas fa-trash-alt"></i></button>
                     </td>
@@ -213,12 +269,36 @@
         }
 
         function attachTableActionListeners() {
+            document.querySelectorAll('.btn-view').forEach(button => {
+                button.onclick = (e) => {
+                    const empresa = empresasData.find(emp => emp._id === e.currentTarget.dataset.id);
+                    openVisualizarEmpresaModal(empresa);
+                };
+            });
             document.querySelectorAll('.btn-edit').forEach(button => {
                 button.onclick = (e) => openEditModal(e.currentTarget.dataset.id);
             });
             document.querySelectorAll('.btn-delete').forEach(button => {
                 button.onclick = (e) => deleteEmpresa(e.currentTarget.dataset.id);
             });
+        }
+
+        function openVisualizarEmpresaModal(empresa) {
+            viewInstituicao.value = instituicoesMap[empresa.instituicao_id] || '';
+            viewNomeEmpresa.value = empresa.razao_social || '';
+            viewCnpjMatriz.value = empresa.cnpj || '';
+            viewCnpjFilial.value = empresa.cnpj_filial || '';
+            viewEndereco.value = empresa.endereco || '';
+            viewResponsavelNome.value = empresa.responsavel_nome || '';
+            viewResponsavelTelefone.value = empresa.responsavel_telefone || '';
+            viewResponsavelEmail.value = empresa.responsavel_email || '';
+            visualizarEmpresaModal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+        }
+
+        function closeVisualizarEmpresaModal() {
+            visualizarEmpresaModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
         }
 
         async function openEditModal(id) {
@@ -260,6 +340,9 @@
         cancelBtn.onclick = closeModal;
         searchEmpresaInput.oninput = updateTableDisplay;
 
+        closeVisualizarEmpresa.onclick = closeVisualizarEmpresaModal;
+        fecharVisualizarEmpresa.onclick = closeVisualizarEmpresaModal;
+
         empresaForm.onsubmit = async function (event) {
             event.preventDefault();
             const id = empresaIdInput.value;
@@ -293,6 +376,7 @@
 
         window.onclick = (event) => {
             if (event.target == empresaModal) closeModal();
+            if (event.target == visualizarEmpresaModal) closeVisualizarEmpresaModal();
         };
 
         // Inicialização
@@ -303,5 +387,4 @@
     </script>
 
 </body>
-
 </html>

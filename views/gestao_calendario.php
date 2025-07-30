@@ -1,37 +1,10 @@
 <?php
-// --- DADOS SIMULADOS ---
-$eventos_calendario = [
-    [
-        'title' => 'Manutenção Preventiva - Lab 01',
-        'start' => date('Y-m-d') . 'T08:00:00',
-        'end' => date('Y-m-d') . 'T11:45:00',
-        'backgroundColor' => '#007BFF',
-        'borderColor' => '#0056b3'
-    ],
-    [
-        'title' => 'Palestra de Segurança',
-        'start' => date('Y-m-') . '15',
-        'allDay' => true,
-        'backgroundColor' => '#28a745',
-        'borderColor' => '#1e7e34'
-    ],
-];
-$calendarios_cadastrados = [
-    [
-        'id' => 1,
-        'descricao' => 'Calendário Acadêmico Geral 2025',
-        'empresa_parceiro' => 'SENAI',
-        'data_inicial' => '2025-01-01',
-        'data_final' => '2025-12-31'
-    ],
-    [
-        'id' => 2,
-        'descricao' => 'Calendário de Férias e Recessos',
-        'empresa_parceiro' => 'SENAI',
-        'data_inicial' => '2025-01-01',
-        'data_final' => '2025-12-31'
-    ],
-];
+// --- DADOS SIMULADOS REMOVIDOS ---
+// Array de eventos vazio para o calendário
+$eventos_calendario = [];
+
+// Array de calendários cadastrados vazio para a tabela
+$calendarios_cadastrados = [];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -43,7 +16,6 @@ $calendarios_cadastrados = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.global.js'></script>
-
     <style>
         /* Estilos adicionais para organizar a página de calendário */
         .calendar-page-layout {
@@ -53,16 +25,16 @@ $calendarios_cadastrados = [
             flex-wrap: wrap; /* Permite que os itens quebrem para a linha de baixo em telas menores */
         }
         .filters-container {
-            flex: 1; /* Ocupa 1 parte do espaço */
-            min-width: 320px; /* Largura mínima para o container de filtros */
+            flex: 1;
+            min-width: 320px;
             background-color: #ffffff;
             padding: 25px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
         }
         .calendar-container-main {
-            flex: 3; /* Ocupa 3 partes do espaço, sendo maior */
-            min-width: 500px; /* Largura mínima para o calendário não espremer */
+            flex: 3;
+            min-width: 500px;
             background-color: #ffffff;
             padding: 25px;
             border-radius: 8px;
@@ -82,7 +54,6 @@ $calendarios_cadastrados = [
             gap: 10px;
             flex-wrap: wrap;
         }
-        /* Estilo para os inputs e selects dos formulários e filtros */
         .form-control {
             width: 100%;
             padding: 10px;
@@ -93,7 +64,6 @@ $calendarios_cadastrados = [
         }
     </style>
 </head>
-
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
