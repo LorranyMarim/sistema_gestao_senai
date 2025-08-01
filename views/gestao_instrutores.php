@@ -25,12 +25,10 @@
                    <!--<li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>-->
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php" class="active"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php" class="active"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
                    <!--<li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>-->
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
-                            UCs</a></li>
+                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
                     <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -64,7 +62,7 @@
                                 <th>Telefone</th>
                                 <th>Email</th>
                                 <th>Instituição</th>
-                                <th>Mapa de Competência</th>
+                                <!-- <th>Mapa de Competência</th> --> <!-- Removido -->
                                 <th>Turnos</th>
                                 <th>Carga Horária</th>
                                 <th class="actions">Ações</th>
@@ -118,8 +116,6 @@
                         <option value="Manhã">Manhã</option>
                         <option value="Tarde">Tarde</option>
                         <option value="Noite">Noite</option>
-                        <option value="Integral">Integral</option>
-                        <option value="Outros">Outros</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -160,7 +156,7 @@
                 </div>
                 <div class="form-group">
                     <label>Mapa de Competência:</label>
-                    <input type="text" id="viewMapaCompetencia" readonly>
+                    <div id="viewMapaCompetenciaList" style="padding: 4px 0;"></div>
                 </div>
                 <div class="form-group">
                     <label>Turnos:</label>
@@ -179,7 +175,7 @@
         const API_INSTRUTOR = '../backend/processa_instrutor.php';
         let instrutoresData = [];
         let instituicoesMap = {};
-        let ucsMap = {}; // <--- Adicionado
+        let ucsMap = {};
 
         const instrutorModal = document.getElementById('instrutorModal');
         const addInstrutorBtn = document.getElementById('addInstrutorBtn');
@@ -209,7 +205,7 @@
         const viewMatriculaInstrutor = document.getElementById('viewMatriculaInstrutor');
         const viewTelefone = document.getElementById('viewTelefone');
         const viewEmail = document.getElementById('viewEmail');
-        const viewMapaCompetencia = document.getElementById('viewMapaCompetencia');
+        const viewMapaCompetenciaList = document.getElementById('viewMapaCompetenciaList');
         const viewTurnosInstrutor = document.getElementById('viewTurnosInstrutor');
         const viewCargaHoraria = document.getElementById('viewCargaHoraria');
 
@@ -277,12 +273,12 @@
 
             if (filteredInstrutores.length === 0) {
                 const noDataRow = dataTableBody.insertRow();
-                noDataRow.innerHTML = '<td colspan="10">Nenhum Instrutor encontrado com os filtros aplicados.</td>';
+                noDataRow.innerHTML = '<td colspan="9">Nenhum Instrutor encontrado com os filtros aplicados.</td>';
                 return;
             }
 
             filteredInstrutores.forEach(instrutor => {
-                const mapaCompetenciaNomes = (instrutor.mapa_competencia || []).map(id => ucsMap[id] || id).join(", ");
+                // Remover coluna Mapa de Competência da tabela!
                 const turnosNomes = (instrutor.turnos || []).join(", ");
                 const row = dataTableBody.insertRow();
                 row.innerHTML = `
@@ -292,7 +288,6 @@
                     <td>${instrutor.telefone || ''}</td>
                     <td>${instrutor.email || ''}</td>
                     <td>${instituicoesMap[instrutor.instituicao_id] || ''}</td>
-                    <td>${mapaCompetenciaNomes}</td>
                     <td>${turnosNomes}</td>
                     <td>${instrutor.carga_horaria || ''}</td>
                     <td class="actions">
@@ -326,7 +321,12 @@
             viewMatriculaInstrutor.value = instrutor.matricula || '';
             viewTelefone.value = instrutor.telefone || '';
             viewEmail.value = instrutor.email || '';
-            viewMapaCompetencia.value = (instrutor.mapa_competencia || []).map(id => ucsMap[id] || id).join(', ');
+            // Mostra Mapa de Competência um item por linha
+            let ucsHtml = '';
+            (instrutor.mapa_competencia || []).forEach(id => {
+                ucsHtml += `<div>${ucsMap[id] || id}</div>`;
+            });
+            viewMapaCompetenciaList.innerHTML = ucsHtml || '<div>-</div>';
             viewTurnosInstrutor.value = (instrutor.turnos || []).join(', ');
             viewCargaHoraria.value = instrutor.carga_horaria || '';
             visualizarInstrutorModal.style.display = 'flex';
@@ -426,6 +426,5 @@
             await carregarInstrutores();
         });
     </script>
-
 </body>
 </html>
