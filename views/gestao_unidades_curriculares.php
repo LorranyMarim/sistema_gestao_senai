@@ -47,20 +47,22 @@
             <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
             <h3>Menu Principal</h3>
         </div>
-        <nav class="sidebar-nav">
-            <ul>
-                <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                <li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>
-                <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
-                <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
-                <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-                <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
-                <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-            </ul>
-        </nav>
+       <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <!--<li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>-->
+                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
+                    <!--<li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>-->
+                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de
+                            UCs</a></li>
+                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
+                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
     </aside>
     <main class="main-content">
         <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>

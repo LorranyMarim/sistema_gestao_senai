@@ -13,9 +13,7 @@ $calendarios_cadastrados = [];
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.global.js"></script>
-    <!-- jQuery deve vir ANTES do Select2! -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Select2 CSS e JS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <style>
@@ -25,7 +23,6 @@ $calendarios_cadastrados = [];
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
-
         .filters-container {
             flex: 1;
             min-width: 320px;
@@ -34,7 +31,6 @@ $calendarios_cadastrados = [];
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
         }
-
         .calendar-container-main {
             flex: 3;
             min-width: 500px;
@@ -43,7 +39,6 @@ $calendarios_cadastrados = [];
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
         }
-
         .filters-container h2,
         .calendar-container-main h2 {
             color: #004B8D;
@@ -53,14 +48,12 @@ $calendarios_cadastrados = [];
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
         }
-
         .action-buttons-group {
             margin-top: 20px;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-
         .form-control {
             width: 100%;
             padding: 10px;
@@ -76,20 +69,20 @@ $calendarios_cadastrados = [];
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="logo.png" alt="Logo SENAI" class="sidebar-logo">
+                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
             <nav class="sidebar-nav">
                 <ul>
                     <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>
+                    <!--<li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>-->
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
                     <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
-                    <li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>
+                    <!--<li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>-->
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-                    <li><a href="calendario.php" class="active"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
+                    <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
                     <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
             </nav>
@@ -101,7 +94,6 @@ $calendarios_cadastrados = [];
             </header>
 
             <div class="calendar-page-layout">
-
                 <div class="filters-container">
                     <h2>Filtros/Ações</h2>
                     <form>
@@ -133,8 +125,7 @@ $calendarios_cadastrados = [];
                         <div class="action-buttons-group">
                             <button type="button" class="btn btn-primary"
                                 id="btnAbrirModalCadastrarCalendario">Cadastrar Calendário</button>
-                            <button type="button" class="btn btn-primary"
-                                id="btnAbrirModalAdicionarEvento">Adicionar Evento</button>
+                            <button type="button" class="btn btn-primary" id="btnAbrirModalAdicionarEvento">Adicionar Evento</button>
                         </div>
                     </form>
                 </div>
@@ -250,6 +241,7 @@ $calendarios_cadastrados = [];
         let listaEmpresas = [];
         let listaInstituicoes = [];
         let listaCalendarios = [];
+        let fullcalendarObj = null; // Para armazenar o calendar
 
         // Select2 + carregamento de calendários para Adicionar Evento
         async function carregarListaCalendariosParaEvento() {
@@ -261,7 +253,6 @@ $calendarios_cadastrados = [];
                 listaCalendarios.forEach(cal => {
                     select.append(`<option value="${cal._id}">${cal.nome_calendario || cal.descricao || '(Sem nome)'}</option>`);
                 });
-                // Reinicializa Select2 (remove anterior e adiciona de novo)
                 select.select2('destroy').select2({
                     dropdownParent: $('#modalAdicionarEvento .modal-content'),
                     width: '100%',
@@ -286,12 +277,10 @@ $calendarios_cadastrados = [];
         }
 
         async function carregarDadosReferencia() {
-            // Empresas
             const empRes = await fetch('../backend/processa_empresa.php');
             if (empRes.ok) {
                 listaEmpresas = await empRes.json();
             }
-            // Instituições
             const instRes = await fetch('../backend/processa_instituicao.php');
             if (instRes.ok) {
                 listaInstituicoes = await instRes.json();
@@ -304,7 +293,6 @@ $calendarios_cadastrados = [];
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
-            // Limpa campos ao fechar o modal de evento ou cadastro
             if (modalId === 'modalCadastrarCalendario') {
                 document.getElementById('formCadastrarCalendario').reset();
             }
@@ -316,7 +304,6 @@ $calendarios_cadastrados = [];
             }
         }
 
-        // Fechar modal clicando fora
         window.onclick = function (event) {
             if (event.target.classList.contains('modal')) {
                 closeModal(event.target.id);
@@ -325,7 +312,7 @@ $calendarios_cadastrados = [];
 
         document.addEventListener('DOMContentLoaded', function () {
             var calendarEl = document.getElementById('calendario');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            fullcalendarObj = new FullCalendar.Calendar(calendarEl, {
                 locale: 'pt-br',
                 initialView: 'dayGridMonth',
                 headerToolbar: {
@@ -333,24 +320,22 @@ $calendarios_cadastrados = [];
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
                 },
-                events: <?php echo json_encode($eventos_calendario); ?>,
                 editable: true,
                 selectable: true,
                 dayMaxEvents: true,
             });
-            calendar.render();
+            fullcalendarObj.render();
             carregarDadosReferencia();
             carregarCalendarios();
+            carregarEventosNoCalendario(fullcalendarObj); // carrega eventos no calendário na primeira vez
         });
 
-        // Carregar instituições e empresas ao abrir o modal de cadastro de calendário
         document.getElementById('btnAbrirModalCadastrarCalendario').addEventListener('click', function () {
             openModal('modalCadastrarCalendario');
             carregarInstituicoesEmpresas();
         });
 
         async function carregarInstituicoesEmpresas() {
-            // Pega instituições
             const instSelect = document.getElementById('calInstituicao');
             instSelect.innerHTML = '<option value="">Selecione</option>';
             const instRes = await fetch('../backend/processa_instituicao.php');
@@ -363,7 +348,6 @@ $calendarios_cadastrados = [];
                     instSelect.appendChild(opt);
                 });
             }
-            // Pega empresas
             const empSelect = document.getElementById('calEmpresa');
             empSelect.innerHTML = '<option value="">Selecione</option>';
             const empRes = await fetch('../backend/processa_empresa.php');
@@ -378,7 +362,6 @@ $calendarios_cadastrados = [];
             }
         }
 
-        // Submit do formulário de cadastro de calendário
         document.getElementById('formCadastrarCalendario').onsubmit = async function (e) {
             e.preventDefault();
 
@@ -388,7 +371,7 @@ $calendarios_cadastrados = [];
                 id_empresa: document.getElementById('calEmpresa').value,
                 data_inicial: document.getElementById('calInicio').value,
                 data_final: document.getElementById('calFim').value,
-                dias_letivos: {} // vazio ao cadastrar
+                dias_letivos: {}
             };
 
             if (!data.id_instituicao || !data.nome_calendario || !data.id_empresa || !data.data_inicial || !data.data_final) {
@@ -405,6 +388,7 @@ $calendarios_cadastrados = [];
                 alert('Calendário cadastrado com sucesso!');
                 closeModal('modalCadastrarCalendario');
                 carregarCalendarios();
+                carregarEventosNoCalendario(fullcalendarObj);
             } else {
                 alert('Erro ao cadastrar calendário!');
             }
@@ -437,29 +421,43 @@ $calendarios_cadastrados = [];
                 });
             }
         }
-        async function carregarEventosNoCalendario(calendar) {
-    const res = await fetch('../backend/processa_calendario.php');
-    if (!res.ok) return;
-    const calendarios = await res.json();
-    let eventos = [];
 
-    calendarios.forEach(cal => {
-        const nomeCalendario = cal.nome_calendario || cal.descricao || '';
-        if (cal.dias_nao_letivos && Array.isArray(cal.dias_nao_letivos)) {
-            cal.dias_nao_letivos.forEach(dia => {
-                eventos.push({
-                    title: `${dia.descricao} (${nomeCalendario})`,
-                    start: dia.data,
-                    allDay: true
-                });
-            });
+        // Função para gerar cor pastel a partir do id do calendário
+        function corParaCalendario(id) {
+            // Gera cor pastel baseada no hash do id
+            let hash = 0;
+            for (let i = 0; i < id.length; i++) {
+                hash = id.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = (hash % 360 + 360) % 360;
+            return `hsl(${h},70%,80%)`;
         }
-    });
 
-    // Remove todos os eventos e adiciona novos
-    calendar.removeAllEvents();
-    eventos.forEach(evt => calendar.addEvent(evt));
-}
+        async function carregarEventosNoCalendario(calendar) {
+            const res = await fetch('../backend/processa_calendario.php');
+            if (!res.ok) return;
+            const calendarios = await res.json();
+            let eventos = [];
+
+            calendarios.forEach(cal => {
+                const nomeCalendario = cal.nome_calendario || cal.descricao || '';
+                const cor = corParaCalendario(cal._id || cal.id || '');
+                if (cal.dias_nao_letivos && Array.isArray(cal.dias_nao_letivos)) {
+                    cal.dias_nao_letivos.forEach(dia => {
+                        eventos.push({
+                            title: `${dia.descricao} (${nomeCalendario})`,
+                            start: dia.data,
+                            allDay: true,
+                            backgroundColor: cor,
+                            borderColor: cor,
+                        });
+                    });
+                }
+            });
+
+            calendar.removeAllEvents();
+            eventos.forEach(evt => calendar.addEvent(evt));
+        }
 
         function formatarDataBR(data) {
             if (!data) return '';
@@ -494,7 +492,6 @@ $calendarios_cadastrados = [];
             openModal('modalVisualizarCalendario');
         }
 
-        // Submit do formulário de adicionar evento
         document.getElementById('formAdicionarEvento').onsubmit = async function (e) {
             e.preventDefault();
 
@@ -523,13 +520,12 @@ $calendarios_cadastrados = [];
             if (res.ok) {
                 alert("Evento cadastrado e dias não letivos registrados!");
                 closeModal('modalAdicionarEvento');
-                carregarCalendarios(); // Atualiza a tabela automaticamente
+                carregarCalendarios();
+                carregarEventosNoCalendario(fullcalendarObj);
             } else {
                 alert("Erro ao cadastrar evento!");
             }
         };
-
     </script>
 </body>
-
 </html>
