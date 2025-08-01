@@ -30,15 +30,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <nav class="sidebar-nav">
                 <ul>
                     <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <!--<li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>-->
                     <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <!--<li><a href="gestao_salas.php"><i class="fas fa-door-open"></i> Gestão de Salas</a></li>-->
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
-                            UCs</a></li>
+                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
                     <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -69,7 +65,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 <th>Tipo</th>
                                 <th>Categoria</th>
                                 <th>Eixo Tecnológico</th>
-                                <th>Empresa</th>
+                                <th>Empresa/Parceiro</th>
                                 <th>Modalidade</th>
                                 <th>Carga Horária</th>
                                 <th>Ações</th>
@@ -141,23 +137,21 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 <input type="number" id="cargaHoraria" name="carga_horaria" required min="1">
                             </div>
                             <div class="form-group">
-                                <label for="convenioSelect">Empresa:</label>
+                                <label for="convenioSelect">Empresa/Parceiro:</label>
                                 <select id="convenioSelect" name="empresa" required>
                                     <option value="">Selecione</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="ucsSelect">Unidades Curriculares:</label>
-                                <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;"
-                                    required></select>
+                                <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;" required></select>
                             </div>
                             <div class="form-group">
                                 <label for="observacao">Observação:</label>
                                 <input type="text" id="observacao" name="observacao">
                             </div>
                             <button type="submit" class="btn btn-primary">Salvar Curso</button>
-                            <button type="button" class="btn btn-secondary"
-                                onclick="fecharModal('modalCurso')">Cancelar</button>
+                            <button type="button" class="btn btn-secondary" onclick="fecharModal('modalCurso')">Cancelar</button>
                         </form>
                     </div>
                 </div>
@@ -182,8 +176,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
     <script>
         let empresasCache = [];
-
-        // --- VARIÁVEIS GLOBAIS ---
         let cursosCache = [], instituicoesCache = [], ucsCache = [], ucDataMap = {};
         let cursoEditando = null, modoEdicao = false;
 
@@ -270,18 +262,32 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             const tbody = $('#cursosTable tbody');
             tbody.empty();
             cursos.forEach(curso => {
+                let empresaNome = '';
+                if (curso.empresa) {
+                    if (Array.isArray(curso.empresa)) {
+                        empresaNome = curso.empresa.map(empId => {
+                            const emp = empresasCache.find(e => e._id == empId);
+                            return emp ? emp.razao_social : empId;
+                        }).join(', ');
+                    } else {
+                        const emp = empresasCache.find(e => e._id == curso.empresa);
+                        empresaNome = emp ? emp.razao_social : curso.empresa;
+                    }
+                }
                 tbody.append(`<tr>
                     <td>${curso.nome || ''}</td>
                     <td>${curso.tipo || ''}</td>
                     <td>${curso.categoria || ''}</td>
                     <td>${curso.eixo_tecnologico || ''}</td>
-                    <td>${(Array.isArray(curso.empresa) ? curso.empresa.join(', ') : curso.empresa || '')}</td>
+                    <td>${empresaNome}</td>
                     <td>${curso.nivel_curso || ''}</td>
                     <td>${curso.carga_horaria || ''}</td>
                     <td>
-                        <button class="btn btn-icon btn-view" data-id="${curso._id}" title="Visualizar"><i class="far fa-file-alt"></i></button>
-                        <button class="btn btn-icon btn-edit" data-id="${curso._id}" title="Editar"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-icon btn-delete" data-id="${curso._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="btn btn-icon btn-view" data-id="${curso._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-icon btn-edit" data-id="${curso._id}" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-icon btn-delete" data-id="${curso._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                        </div>
                     </td>
                 </tr>`);
             });
@@ -321,9 +327,64 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             }
         }
 
+        // --- VALIDAÇÃO DE DADOS ---
+        function validarFormCurso() {
+            const nome = $('#nomeCurso').val().trim();
+            const modalidade = $('#nivelCurso').val();
+            const tipo = $('#tipoCurso').val();
+            const categoria = $('#categoriaCurso').val().trim();
+            const eixo = $('#eixoTecnologicoCurso').val().trim();
+            const cargaHoraria = parseInt($('#cargaHoraria').val(), 10);
+            const empresa = $('#convenioSelect').val();
+            const instituicao = $('#instituicaoId').val();
+
+            if (!instituicao) {
+                alert("Selecione a Instituição.");
+                $('#instituicaoId').focus();
+                return false;
+            }
+            if (!nome || nome.length < 3 || nome.length > 100) {
+                alert("Nome do curso obrigatório (3-100 caracteres).");
+                $('#nomeCurso').focus();
+                return false;
+            }
+            if (!modalidade) {
+                alert("Selecione a Modalidade.");
+                $('#nivelCurso').focus();
+                return false;
+            }
+            if (!tipo) {
+                alert("Selecione o Tipo.");
+                $('#tipoCurso').focus();
+                return false;
+            }
+            if (!categoria) {
+                alert("Categoria obrigatória.");
+                $('#categoriaCurso').focus();
+                return false;
+            }
+            if (!eixo) {
+                alert("Eixo Tecnológico obrigatório.");
+                $('#eixoTecnologicoCurso').focus();
+                return false;
+            }
+            if (!empresa) {
+                alert("Selecione a Empresa/Parceiro.");
+                $('#convenioSelect').focus();
+                return false;
+            }
+            if (!cargaHoraria || isNaN(cargaHoraria) || cargaHoraria <= 0) {
+                alert("Informe a Carga Horária corretamente.");
+                $('#cargaHoraria').focus();
+                return false;
+            }
+            return true;
+        }
+
         // --- CRUD: SALVAR CURSO ---
         function salvarCurso(e) {
             e.preventDefault();
+            if (!validarFormCurso()) return;
             const selectedUcs = $('#ucsSelect').val();
             if (!selectedUcs.length) {
                 alert('Selecione ao menos uma Unidade Curricular.');
@@ -479,6 +540,18 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         function mostrarDetalheCurso(cursoId) {
             const curso = cursosCache.find(c => c._id == cursoId);
             const nomeInstituicao = instituicoesCache.find(i => i._id == curso.instituicao_id)?.razao_social || curso.instituicao_id;
+            let empresaNome = '';
+            if (curso.empresa) {
+                if (Array.isArray(curso.empresa)) {
+                    empresaNome = curso.empresa.map(empId => {
+                        const emp = empresasCache.find(e => e._id == empId);
+                        return emp ? emp.razao_social : empId;
+                    }).join(', ');
+                } else {
+                    const emp = empresasCache.find(e => e._id == curso.empresa);
+                    empresaNome = emp ? emp.razao_social : curso.empresa;
+                }
+            }
             let html = `
             <div class="popup-field"><span class="popup-label">ID:</span> ${curso._id}</div>
             <div class="popup-field"><span class="popup-label">Nome:</span> ${curso.nome || ''}</div>
@@ -487,7 +560,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <div class="popup-field"><span class="popup-label">Categoria:</span> ${curso.categoria || ''}</div>
             <div class="popup-field"><span class="popup-label">Eixo Tecnológico:</span> ${curso.eixo_tecnologico || ''}</div>
             <div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria || ''}</div>
-            <div class="popup-field"><span class="popup-label">Empresa:</span> ${(Array.isArray(curso.empresa) ? curso.empresa.join(', ') : curso.empresa || '')}</div>
+            <div class="popup-field"><span class="popup-label">Empresa/Parceiro:</span> ${empresaNome}</div>
             <div class="popup-field"><span class="popup-label">Instituição:</span> ${nomeInstituicao}</div>
             <div class="popup-field"><span class="popup-label">Unidades Curriculares do Curso:</span></div>
             <div style="max-height:350px;overflow:auto;">${renderUCTable(curso.ordem_ucs)}</div>
