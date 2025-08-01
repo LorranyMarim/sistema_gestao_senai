@@ -67,6 +67,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             <tr>
                                 <th>Nome</th>
                                 <th>Tipo</th>
+                                <th>Categoria</th>
+                                <th>Eixo Tecnológico</th>
                                 <th>Empresa</th>
                                 <th>Modalidade</th>
                                 <th>Carga Horária</th>
@@ -116,14 +118,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="categoriaCurso">Categoria:</label>
-                                <input type="text" id="categoriaCurso" name="categoria" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="eixoTecnologicoCurso">Eixo Tecnológico:</label>
-                                <input type="text" id="eixoTecnologicoCurso" name="eixo_tecnologico" required>
-                            </div>
-                            <div class="form-group">
                                 <label for="tipoCurso">Tipo:</label>
                                 <select id="tipoCurso" name="tipo" required>
                                     <option value="">Selecione</option>
@@ -132,6 +126,16 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                     <option value="Aprendizagem">Semipresencial</option>
                                 </select>
                             </div>
+                            <!-- NOVOS CAMPOS -->
+                            <div class="form-group">
+                                <label for="categoriaCurso">Categoria:</label>
+                                <input type="text" id="categoriaCurso" name="categoria" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="eixoTecnologicoCurso">Eixo Tecnológico:</label>
+                                <input type="text" id="eixoTecnologicoCurso" name="eixo_tecnologico" required>
+                            </div>
+                            <!-- FIM NOVOS CAMPOS -->
                             <div class="form-group">
                                 <label for="cargaHoraria">Carga Horária (h):</label>
                                 <input type="number" id="cargaHoraria" name="carga_horaria" required min="1">
@@ -140,9 +144,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                 <label for="convenioSelect">Empresa:</label>
                                 <select id="convenioSelect" name="empresa" required>
                                     <option value="">Selecione</option>
-                                    <option value="Empresa 1">Empresa 1</option>
-                                    <option value="Empresa 2">Empresa 2</option>
-                                    <option value="Teste">Teste</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -180,6 +181,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
     <script>
+        let empresasCache = [];
+
         // --- VARIÁVEIS GLOBAIS ---
         let cursosCache = [], instituicoesCache = [], ucsCache = [], ucDataMap = {};
         let cursoEditando = null, modoEdicao = false;
@@ -189,7 +192,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             carregarCursos();
 
             $('#searchCurso').on('input', filtrarCursos);
-            $('#btnAddCurso').click(() => abrirModalCurso());
+            $('#btnAddCurso').click(() => {
+                preencherSelectConvenios();
+                abrirModalCurso();
+            });
             $('#formCurso').on('submit', salvarCurso);
             $('#saveAllUcsBtn').on('click', salvarUcsConfig);
 
@@ -222,10 +228,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             return resp.ok ? await resp.json() : [];
         }
         async function carregarCursos() {
-            [cursosCache, instituicoesCache, ucsCache] = await Promise.all([
+            [cursosCache, instituicoesCache, ucsCache, empresasCache] = await Promise.all([
                 fetchJson('http://localhost:8000/api/cursos'),
                 fetchJson('http://localhost:8000/api/instituicoes'),
-                fetchJson('http://localhost:8000/api/unidades_curriculares')
+                fetchJson('http://localhost:8000/api/unidades_curriculares'),
+                fetchJson('http://localhost:8000/api/empresas')
             ]);
             ucsCache.forEach(uc => { ucDataMap[uc._id || uc.id] = uc.descricao; });
             renderCursosTable(cursosCache);
@@ -250,9 +257,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         }
         function preencherSelectConvenios(selected = []) {
             const select = $('#convenioSelect');
-            const empresas = ['Empresa 1', 'Empresa 2', 'Teste'];
             select.empty();
-            empresas.forEach(cv => select.append(`<option value="${cv}">${cv}</option>`));
+            select.append('<option value="">Selecione</option>');
+            empresasCache.forEach(emp => {
+                select.append(`<option value="${emp._id}" ${Array.isArray(selected) && selected.includes(emp._id) ? 'selected' : ''}>${emp.razao_social}</option>`);
+            });
             select.val(selected).trigger('change');
         }
 
@@ -264,6 +273,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 tbody.append(`<tr>
                     <td>${curso.nome || ''}</td>
                     <td>${curso.tipo || ''}</td>
+                    <td>${curso.categoria || ''}</td>
+                    <td>${curso.eixo_tecnologico || ''}</td>
                     <td>${(Array.isArray(curso.empresa) ? curso.empresa.join(', ') : curso.empresa || '')}</td>
                     <td>${curso.nivel_curso || ''}</td>
                     <td>${curso.carga_horaria || ''}</td>
@@ -288,16 +299,16 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         function abrirModalCurso(edit = false, cursoId = null) {
             modoEdicao = edit;
             cursoEditando = edit ? cursosCache.find(c => c._id == cursoId) : null;
-
-            preencherSelectInstituicao(edit ? cursoEditando.instituicao_id : "");
+            preencherSelectInstituicao(edit ? cursoEditando?.instituicao_id : "");
+            preencherSelectConvenios(edit ? cursoEditando?.empresa : "");
             preencherSelectUCs(edit && cursoEditando.ordem_ucs ? cursoEditando.ordem_ucs.map(u => u.id) : []);
-            // empresa agora é select simples:
-            $('#convenioSelect').val(edit && cursoEditando.empresa ? cursoEditando.empresa : "");
-            $('#nivelCurso').val(edit ? cursoEditando.nivel_curso : "");
-            $('#tipoCurso').val(edit ? cursoEditando.tipo : "");
-            $('#cargaHoraria').val(edit ? cursoEditando.carga_horaria : "");
-            $('#cursoId').val(edit ? cursoEditando._id : "");
-            $('#nomeCurso').val(edit ? cursoEditando.nome : "");
+            $('#nivelCurso').val(edit ? cursoEditando?.nivel_curso : "");
+            $('#tipoCurso').val(edit ? cursoEditando?.tipo : "");
+            $('#cargaHoraria').val(edit ? cursoEditando?.carga_horaria : "");
+            $('#cursoId').val(edit ? cursoEditando?._id : "");
+            $('#nomeCurso').val(edit ? cursoEditando?.nome : "");
+            $('#categoriaCurso').val(edit ? cursoEditando?.categoria || "" : "");
+            $('#eixoTecnologicoCurso').val(edit ? cursoEditando?.eixo_tecnologico || "" : "");
             $('#modalCursoTitulo').text(edit ? "Editar Curso" : "Adicionar Novo Curso");
             $('#modalCurso').addClass('show');
         }
@@ -322,6 +333,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 nome: $('#nomeCurso').val(),
                 tipo: $('#tipoCurso').val(),
                 nivel_curso: $('#nivelCurso').val(),
+                categoria: $('#categoriaCurso').val(),
+                eixo_tecnologico: $('#eixoTecnologicoCurso').val(),
                 carga_horaria: parseInt($('#cargaHoraria').val(), 10),
                 empresa: $('#convenioSelect').val(),
                 instituicao_id: $('#instituicaoId').val(),
@@ -471,6 +484,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <div class="popup-field"><span class="popup-label">Nome:</span> ${curso.nome || ''}</div>
             <div class="popup-field"><span class="popup-label">Tipo:</span> ${curso.tipo || ''}</div>
             <div class="popup-field"><span class="popup-label">Modalidade:</span> ${curso.nivel_curso || ''}</div>
+            <div class="popup-field"><span class="popup-label">Categoria:</span> ${curso.categoria || ''}</div>
+            <div class="popup-field"><span class="popup-label">Eixo Tecnológico:</span> ${curso.eixo_tecnologico || ''}</div>
             <div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria || ''}</div>
             <div class="popup-field"><span class="popup-label">Empresa:</span> ${(Array.isArray(curso.empresa) ? curso.empresa.join(', ') : curso.empresa || '')}</div>
             <div class="popup-field"><span class="popup-label">Instituição:</span> ${nomeInstituicao}</div>
@@ -479,7 +494,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             `;
             document.getElementById('detalheCursoConteudo').innerHTML = html;
             $('#modalDetalheCurso').addClass('show');
-            // Armazena para edição/exclusão
             $('#btnEditarCurso').data('id', cursoId);
             $('#btnExcluirCurso').data('id', cursoId);
         }

@@ -95,7 +95,7 @@
                 </div>
                 <div class="form-group">
                     <label for="cnpjMatriz">CNPJ Matriz:</label>
-                    <input type="text" id="cnpjMatriz" placeholder="00.000.000/0001-00" required>
+                    <input type="text" id="cnpjMatriz" placeholder="00.000.000/0001-00">
                 </div>
                 <div class="form-group">
                     <label for="cnpjFilial">CNPJ Filial (se houver):</label>
@@ -103,19 +103,19 @@
                 </div>
                 <div class="form-group">
                     <label for="enderecoEmpresa">Endereço:</label>
-                    <input type="text" id="enderecoEmpresa" required>
+                    <input type="text" id="enderecoEmpresa">
                 </div>
                 <div class="form-group">
                     <label for="responsavelNome">Nome do Responsável:</label>
-                    <input type="text" id="responsavelNome" required>
+                    <input type="text" id="responsavelNome">
                 </div>
                 <div class="form-group">
                     <label for="responsavelTelefone">Telefone do Responsável:</label>
-                    <input type="text" id="responsavelTelefone" placeholder="(XX) XXXXX-XXXX" required>
+                    <input type="text" id="responsavelTelefone" placeholder="(XX) XXXXX-XXXX">
                 </div>
                 <div class="form-group">
                     <label for="responsavelEmail">Email do Responsável:</label>
-                    <input type="email" id="responsavelEmail" required>
+                    <input type="email" id="responsavelEmail">
                 </div>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar Empresa</button>
                 <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
