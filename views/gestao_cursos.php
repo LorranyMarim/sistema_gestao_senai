@@ -112,8 +112,16 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                     <option value="Técnico">Técnico</option>
                                     <option value="Aprendizagem">Aperfeiçoamento</option>
                                     <option value="Aprendizagem">Qualificação</option>
-                                    <option value="Aprendizagem">Especialização</option>                               
+                                    <option value="Aprendizagem">Especialização</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoriaCurso">Categoria:</label>
+                                <input type="text" id="categoriaCurso" name="categoria" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="eixoTecnologicoCurso">Eixo Tecnológico:</label>
+                                <input type="text" id="eixoTecnologicoCurso" name="eixo_tecnologico" required>
                             </div>
                             <div class="form-group">
                                 <label for="tipoCurso">Tipo:</label>
