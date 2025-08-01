@@ -12,65 +12,24 @@
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.3);
             align-items: center;
             justify-content: center;
             z-index: 999;
         }
-
-        .modal.show {
-            display: flex !important;
-        }
-
+        .modal.show { display: flex !important; }
         .modal-content {
-            background: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            min-width: 320px;
-            max-width: 90vw;
-            position: relative;
+            background: #fff; border-radius: 10px; padding: 30px;
+            min-width: 320px; max-width: 90vw; position: relative;
         }
-
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 30px;
-            font-size: 2em;
-            cursor: pointer;
-        }
-
-        .alert-error,
-        .alert-success {
-            margin: 10px 0 0 0;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-
-        .alert-error {
-            background: #fde2e1;
-            color: #b20000;
-        }
-
-        .alert-success {
-            background: #e7f8e2;
-            color: #227b2f;
-        }
-
-        .form-group label {
-            font-weight: bold;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            justify-content: center;
-        }
+        .close-button { position: absolute; top: 15px; right: 30px; font-size: 2em; cursor: pointer; }
+        .alert-error, .alert-success { margin: 10px 0 0 0; padding: 8px 12px; border-radius: 8px; font-size: 1em; }
+        .alert-error { background: #fde2e1; color: #b20000; }
+        .alert-success { background: #e7f8e2; color: #227b2f; }
+        .form-group label { font-weight: bold; }
+        .action-buttons { display: flex; gap: 6px; align-items: center; justify-content: center; }
     </style>
 </head>
 
@@ -86,11 +45,9 @@
                     <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i>
-                            Gestão de UCs</a></li>
+                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
                     <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -100,8 +57,7 @@
             <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
             <header class="main-header">
                 <h1>Gestão de Unidades Curriculares</h1>
-                <button class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova
-                    UC</button>
+                <button class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova UC</button>
             </header>
             <section class="table-section">
                 <h2>Unidades Curriculares Cadastradas</h2>
@@ -160,8 +116,7 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar UC</button>
-                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i>
-                    Cancelar</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
             </form>
         </div>
     </div>
@@ -194,7 +149,7 @@
     </div>
 
     <script>
-        // SIDEBAR
+        // Sidebar
         const menuToggle = document.getElementById('menu-toggle');
         const sidebar = document.querySelector('.sidebar');
         const dashboardContainer = document.querySelector('.dashboard-container');
@@ -209,12 +164,11 @@
             }
         });
 
-        // GLOBALS
+        // Globals & elements
         let instituicoesCache = [];
         let ucsCache = [];
         let ucEditId = null;
 
-        // MODAL
         const ucModal = document.getElementById('ucModal');
         const addUcBtn = document.getElementById('addUcBtn');
         const closeModalBtn = document.getElementById('closeModalBtn');
@@ -228,7 +182,6 @@
         const statusUc = document.getElementById('statusUc');
         const alertUc = document.getElementById('alertUc');
 
-        // Visualizar UC
         const visualizarUcModal = document.getElementById('visualizarUcModal');
         const closeVisualizarUcBtn = document.getElementById('closeVisualizarUcBtn');
         const fecharVisualizarUcBtn = document.getElementById('fecharVisualizarUcBtn');
@@ -240,14 +193,13 @@
         // Caracteres proibidos
         const forbiddenChars = /[<>"';{}]/g;
 
-        // --- INSTITUIÇÕES ---
+        // Instituições
         async function fetchInstituicoes() {
             if (instituicoesCache.length > 0) return instituicoesCache;
             const resp = await fetch('../backend/processa_instituicao.php');
             instituicoesCache = await resp.json();
             return instituicoesCache;
         }
-
         async function preencherSelectInstituicao(selectedId = "") {
             const insts = await fetchInstituicoes();
             selectInstituicao.innerHTML = '<option value="">Selecione a instituição</option>';
@@ -256,7 +208,7 @@
             });
         }
 
-        // MODAL CONTROL
+        // Modal control
         function openModalUC(edit = false, uc = {}) {
             preencherSelectInstituicao(edit ? uc.instituicao_id : "");
             ucModal.classList.add('show');
@@ -286,7 +238,7 @@
             if (event.target === visualizarUcModal) closeVisualizarUcModal();
         };
 
-        // VISUALIZAR UC
+        // Visualizar UC
         function openVisualizarUcModal(uc) {
             const inst = instituicoesCache.find(i => i._id === uc.instituicao_id);
             viewInstituicaoUc.value = inst ? inst.razao_social : '';
@@ -301,7 +253,7 @@
         closeVisualizarUcBtn.onclick = closeVisualizarUcModal;
         fecharVisualizarUcBtn.onclick = closeVisualizarUcModal;
 
-        // BUSCA E TABELA
+        // Busca e tabela
         async function carregarUnidadesCurriculares() {
             try {
                 const [ucs, insts] = await Promise.all([
@@ -314,7 +266,6 @@
                 document.getElementById('ucTableBody').innerHTML = `<tr><td colspan="6">Erro ao buscar dados.</td></tr>`;
             }
         }
-
         function renderTableUC(ucs, insts) {
             const tbody = document.getElementById('ucTableBody');
             const search = (document.getElementById('searchUc').value || '').toLowerCase();
@@ -335,21 +286,21 @@
             filtrar.forEach((uc) => {
                 const inst = insts.find(i => i._id === uc.instituicao_id);
                 tbody.innerHTML += `
-            <tr>
-                <td>${uc._id}</td>
-                <td>${inst ? inst.razao_social : ''}</td>
-                <td>${uc.descricao ?? ''}</td>
-                <td>${uc.sala_ideal ?? ''}</td>
-                <td>${uc.status ?? 'Ativa'}</td>
-              <td>
-                <div class="action-buttons">
-                     <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
-                     <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            </td>
-            </tr>
-            `;
+                <tr>
+                    <td>${uc._id}</td>
+                    <td>${inst ? inst.razao_social : ''}</td>
+                    <td>${uc.descricao ?? ''}</td>
+                    <td>${uc.sala_ideal ?? ''}</td>
+                    <td>${uc.status ?? 'Ativa'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                `;
             });
             document.querySelectorAll('.btn-view').forEach(btn =>
                 btn.onclick = async function () {
@@ -375,63 +326,38 @@
             );
         }
 
-        // --- VALIDAÇÃO FRONTEND ---
+        // Validação frontend
         function validateUcForm() {
-            // Remover alert anterior
-            alertUc.textContent = "";
-            alertUc.className = "";
-            alertUc.style.display = "none";
-
-            // Sanitizar e validar cada campo
-            function sanitize(val) {
-                return val.replace(/\s+/g, ' ').trim();
-            }
-            // Nome da instituição obrigatório
+            alertUc.textContent = ""; alertUc.className = ""; alertUc.style.display = "none";
+            function sanitize(val) { return val.replace(/\s+/g, ' ').trim(); }
             if (!selectInstituicao.value) {
-                showAlert("Selecione uma instituição.", "error");
-                selectInstituicao.focus();
-                return false;
+                showAlert("Selecione uma instituição.", "error"); selectInstituicao.focus(); return false;
             }
-            // Descrição
             descricaoUcInput.value = sanitize(descricaoUcInput.value);
             if (descricaoUcInput.value.length < 2 || descricaoUcInput.value.length > 100) {
-                showAlert("Descrição deve ter entre 2 e 100 caracteres.", "error");
-                descricaoUcInput.focus();
-                return false;
+                showAlert("Descrição deve ter entre 2 e 100 caracteres.", "error"); descricaoUcInput.focus(); return false;
             }
             if (forbiddenChars.test(descricaoUcInput.value)) {
-                showAlert("Descrição contém caracteres inválidos.", "error");
-                descricaoUcInput.focus();
-                return false;
+                showAlert("Descrição contém caracteres inválidos.", "error"); descricaoUcInput.focus(); return false;
             }
-            // Sala Ideal
             salaIdealInput.value = sanitize(salaIdealInput.value);
             if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 100) {
-                showAlert("Sala Ideal deve ter entre 2 e 100 caracteres.", "error");
-                salaIdealInput.focus();
-                return false;
+                showAlert("Sala Ideal deve ter entre 2 e 100 caracteres.", "error"); salaIdealInput.focus(); return false;
             }
             if (forbiddenChars.test(salaIdealInput.value)) {
-                showAlert("Sala Ideal contém caracteres inválidos.", "error");
-                salaIdealInput.focus();
-                return false;
+                showAlert("Sala Ideal contém caracteres inválidos.", "error"); salaIdealInput.focus(); return false;
             }
-            // Status obrigatório
             if (!statusUc.value) {
-                showAlert("Selecione o status.", "error");
-                statusUc.focus();
-                return false;
+                showAlert("Selecione o status.", "error"); statusUc.focus(); return false;
             }
             return true;
         }
-
         function showAlert(msg, type = "error") {
             alertUc.textContent = msg;
             alertUc.className = (type === "error" ? "alert-error" : "alert-success");
             alertUc.style.display = "block";
             if (type === "success") setTimeout(() => { alertUc.style.display = "none"; }, 2500);
         }
-
         [descricaoUcInput, salaIdealInput, selectInstituicao, statusUc].forEach(input => {
             input.addEventListener("input", () => {
                 alertUc.textContent = "";
@@ -464,12 +390,13 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+
             if (res.ok) {
-                showAlert("Unidade Curricular salva com sucesso!", "success");
+                closeModalUC();
                 setTimeout(() => {
-                    closeModalUC();
+                    alert('Unidade Curricular salva com sucesso!');
                     carregarUnidadesCurriculares();
-                }, 1200);
+                }, 200);
             } else {
                 showAlert("Erro ao salvar UC. Tente novamente.", "error");
             }
@@ -477,8 +404,6 @@
 
         document.getElementById('searchUc').oninput = carregarUnidadesCurriculares;
         document.addEventListener('DOMContentLoaded', carregarUnidadesCurriculares);
-
     </script>
 </body>
-
 </html>
