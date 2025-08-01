@@ -1,5 +1,3 @@
-# auth_utils.py
-
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Request, status
@@ -25,7 +23,6 @@ def verificar_token(token: str):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
 
-# Dependency para rotas protegidas
 def autenticar_usuario(request: Request):
     token = request.cookies.get("session_token")
     if not token:

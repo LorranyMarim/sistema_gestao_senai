@@ -1,6 +1,6 @@
 <?php
 // Inclui o arquivo que contém a lista de turmas
-require_once 'dados_turmas.php';
+require_once '../data/dados_turmas.php';
 
 // Lógica de manipulação (exemplo simplificado, em um ambiente real usaria POST para formulários)
 // A implementação real de CRUD aqui envolveria conexão com BD e manipulação de $_POST
@@ -21,7 +21,7 @@ function formatarData($data)
     <title>Gestão de Turmas - SENAI</title>
         <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style_turmas.css">
+    <link rel="stylesheet" href="../css/style_turmas.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
@@ -29,12 +29,12 @@ function formatarData($data)
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="logo.png" alt="Logo SENAI" class="sidebar-logo">
+                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <!--<li><a href="gestao_alocacao.php"><i class="fas fa-random"></i> Gestão de Alocações</a></li>-->
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php" class="active"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
