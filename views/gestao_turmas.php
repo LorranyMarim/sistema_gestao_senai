@@ -1,12 +1,7 @@
 <?php
+// Inclusão dos seus arquivos de dados
 require_once '../data/dados_turmas.php';
-require_once '../data/dados_uc.php'; // Inclui os dados das Unidades Curriculares
-
-function formatarData($data)
-{
-    if (empty($data)) return '';
-    return DateTime::createFromFormat('Y-m-d', $data)->format('d/m/Y');
-}
+require_once '../data/dados_uc.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -36,7 +31,7 @@ function formatarData($data)
             --cor-cinza-texto: #6c757d;
         }
 
-
+        /* ESTILOS GERAIS (DA PÁGINA E TABELA) */
         .content-section {
             background-color: white;
             padding: 25px;
@@ -45,10 +40,35 @@ function formatarData($data)
         }
 
         .content-section h2 {
-            color: #333;
+            color: #004B8D;
             margin-top: 0;
             margin-bottom: 15px;
             font-size: 1.5rem;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        /* --- INÍCIO DA SEÇÃO MODIFICADA --- */
+        .search-container .form-control {
+            width: 100%;
+            /* Adicionado para ocupar a largura total */
+            padding-left: 40px;
+            height: 45px;
+            border-radius: 5px;
+            border: 1px solid var(--cor-borda);
+        }
+
+        /* --- FIM DA SEÇÃO MODIFICADA --- */
+
+        .search-container .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--cor-cinza-texto);
         }
 
         .table-responsive {
@@ -104,6 +124,7 @@ function formatarData($data)
             color: var(--cor-perigo);
         }
 
+        /* ESTILOS DE MODAL (BASE) */
         .modal {
             display: none;
             position: fixed;
@@ -134,12 +155,14 @@ function formatarData($data)
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--cor-borda);
         }
 
         .modal-header h2 {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: var(--cor-texto-principal);
+            margin: 0;
         }
 
         .close-button {
@@ -150,19 +173,33 @@ function formatarData($data)
             cursor: pointer;
         }
 
-        .modal-header .close-button.hidden {
-            display: none;
-        }
-
         .modal-body {
-            padding: 0 25px 25px;
+            padding: 25px;
+            padding-top: 0;
             overflow-y: auto;
         }
 
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px 25px;
+            border-top: 1px solid var(--cor-borda);
+        }
+
+        .modal-footer {
+            padding: 15px 25px;
+            border-top: 1px solid var(--cor-borda);
+            text-align: right;
+            margin-top: auto;
+        }
+
+        /* ESTILOS DO FORMULÁRIO MULTI-STEP */
         .stepper-wrapper {
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
+            padding-top: 25px;
         }
 
         .step-item {
@@ -238,41 +275,107 @@ function formatarData($data)
             font-size: 1rem;
         }
 
-        .modal-actions {
+        /* ESTILOS DAS ABAS DO MODAL DE VISUALIZAÇÃO */
+        .modal-tabs {
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            padding-top: 20px;
-            border-top: 1px solid var(--cor-borda);
-            margin-top: 20px;
+            margin: 25px -25px 0 -25px;
+            border-bottom: 1px solid var(--cor-borda);
         }
 
-        /* CSS Específico para o Modal de UCs */
+        .tab-button {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: none;
+            border-bottom: 4px solid transparent;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab-button[data-target="#info-gerais-pane"] {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
+        .tab-button[data-target="#ucs-pane"] {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .tab-button[data-target="#info-gerais-pane"].active {
+            background-color: var(--cor-primaria);
+            color: white;
+            font-weight: bold;
+            border-bottom-color: var(--cor-sidebar);
+        }
+
+        .tab-button[data-target="#ucs-pane"].active {
+            background-color: var(--cor-aviso);
+            color: #212529;
+            font-weight: bold;
+            border-bottom-color: #d39e00;
+        }
+
+        .tab-pane {
+            display: none;
+            padding-top: 25px;
+        }
+
+        .tab-pane.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        /* Layout de visualização de informações */
+        .info-pane-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #333;
+            min-width: 150px;
+            padding-right: 10px;
+        }
+
+        .info-value {
+            background-color: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 4px;
+            flex-grow: 1;
+            color: #495057;
+        }
+
+        /* ESTILOS DIVERSOS PARA MODAIS */
         #ucModal .modal-content {
             max-width: 950px;
         }
 
-        /* Modal maior */
-        #ucModal h3 {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            color: #333;
+        #ucModal .modal-body,
+        #turmaFormModal .modal-body {
+            padding-top: 0;
         }
 
         #uc-rows-container {
             display: flex;
             flex-direction: column;
             gap: 15px;
+            padding-top: 25px;
         }
 
         .uc-row {
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .uc-row .form-group {
-            margin-bottom: 0;
         }
 
         .uc-row-order {
@@ -289,9 +392,11 @@ function formatarData($data)
             padding: 10px;
             border-radius: 5px;
             background-color: #fdfdfd;
+            flex-grow: 1;
         }
 
         .uc-row .form-group {
+            margin-bottom: 0;
             flex: 1 1 auto;
         }
 
@@ -319,16 +424,44 @@ function formatarData($data)
             display: flex;
             justify-content: center;
             align-items: center;
+            border: none;
+            color: white;
+            cursor: pointer;
         }
 
         .uc-row .btn-add-uc {
             background-color: var(--cor-sucesso);
-            color: white;
         }
 
         .uc-row .btn-remove-uc {
             background-color: var(--cor-perigo);
-            color: white;
+        }
+
+        .uc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .uc-table th,
+        .uc-table td {
+            border: 1px solid var(--cor-borda);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .uc-table thead {
+            background-color: #f2f2f2;
+        }
+
+        .uc-table th {
+            font-weight: bold;
+        }
+
+        .uc-table .sub-header th {
+            font-size: 0.8rem;
+            text-align: center;
+            background-color: #e9ecef;
         }
 
         @keyframes fadeIn {
@@ -373,12 +506,17 @@ function formatarData($data)
             </header>
             <section class="content-section">
                 <h2>Turmas Cadastradas</h2>
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar por código da turma ou curso...">
+                </div>
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Código da Turma</th>
+                                <th>Curso</th>
                                 <th>Data Inicial</th>
                                 <th>Data Final</th>
                                 <th class="actions">Ações</th>
@@ -391,12 +529,11 @@ function formatarData($data)
         </main>
     </div>
 
-    <div id="viewModal" class="modal"> </div>
-
+    <div id="viewModal" class="modal"></div>
     <div id="turmaFormModal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
-                <h2 id="modalTitle">Cadastrar Turma</h2>
+                <h2 id="modalTitle">Adicionar Turma</h2>
                 <button class="close-button" id="closeFormModalBtn">&times;</button>
             </header>
             <div class="modal-body">
@@ -412,172 +549,297 @@ function formatarData($data)
                     </div>
                 </div>
                 <form id="multiStepForm" novalidate>
+                    <input type="hidden" id="turmaId" name="turmaId">
                     <div class="form-step active" data-step="1">
-                        <div class="form-group"><label for="instituicao">Instituição:</label><select id="instituicao" required>
-                                <option value="">Selecione</option>
-                                <option value="SENAI BETIM">SENAI BETIM</option>
-                            </select></div>
-                        <div class="form-group"><label for="curso">Curso:</label><select id="curso" required>
-                                <option value="">Selecione</option>
-                                <option value="Técnico em Sistemas">Técnico em Sistemas</option>
-                            </select></div>
-                        <div class="form-group"><label for="codigoTurma">Código da Turma:</label><input type="text" id="codigoTurma" required></div>
-                        <div class="form-group"><label for="dataInicio">Data do Início:</label><input type="date" id="dataInicio" required></div>
-                        <div class="form-group"><label for="dataFim">Data do Fim:</label><input type="date" id="dataFim" required></div>
+                        <div class="form-group"><label for="form_codigo_turma">Código da Turma:</label><input type="text" id="form_codigo_turma" required></div>
+                        <div class="form-group"><label for="form_curso">Curso:</label><input type="text" id="form_curso" required></div>
+                        <div class="form-group"><label for="form_data_inicio">Data de Início:</label><input type="date" id="form_data_inicio" required></div>
+                        <div class="form-group"><label for="form_data_termino">Data de Término:</label><input type="date" id="form_data_termino" required></div>
                     </div>
                     <div class="form-step" data-step="2">
-                        <div class="form-group"><label for="calendario">Calendário:</label><select id="calendario" required>
+                        <div class="form-group"><label for="form_turno">Turno:</label><select id="form_turno" required>
                                 <option value="">Selecione</option>
-                                <option value="Padrão 2025/1">Padrão 2025/1</option>
-                            </select></div>
-                        <div class="form-group"><label for="empresa">Empresa/Parceiro:</label><select id="empresa" required>
-                                <option value="N/A">N/A</option>
-                            </select></div>
-                        <div class="form-group"><label for="eixo">Eixo Tecnológico:</label><select id="eixo" required>
-                                <option value="">Selecione</option>
-                                <option value="Informação e Comunicação">Informação e Comunicação</option>
-                            </select></div>
-                        <div class="form-group"><label for="turno">Turno:</label><select id="turno" required>
-                                <option value="">Selecione</option>
-                                <option value="MANHÃ">Manhã</option>
+                                <option value="MANHA">Manhã</option>
                                 <option value="TARDE">Tarde</option>
                                 <option value="NOITE">Noite</option>
+                                <option value="INTEGRAL">Integral</option>
+                                <option value="TARDE/NOITE">Tarde/Noite</option>
                             </select></div>
-                        <div class="form-group"><label for="numAlunos">Número de Alunos:</label><input type="number" id="numAlunos" required min="1"></div>
+                        <div class="form-group"><label for="form_num_alunos">Número de Alunos:</label><input type="number" id="form_num_alunos" required min="1"></div>
+                        <div class="form-group"><label for="form_instituicao">Instituição:</label><input type="text" id="form_instituicao" value="SENAI CFP Afonso Bicalho"></div>
+                        <div class="form-group"><label for="form_calendario">Calendário:</label><input type="text" id="form_calendario" value="Padrão 2025/1"></div>
+                        <div class="form-group"><label for="form_empresa">Empresa/Parceiro:</label><input type="text" id="form_empresa" value="Comunidade"></div>
                     </div>
                     <div class="form-step" data-step="3">
-                        <div class="form-group"><label for="categoria">Categoria:</label><select id="categoria" required>
-                                <option value="">Selecione</option>
-                                <option value="Aprendizagem Industrial">Aprendizagem Industrial</option>
-                            </select></div>
-                        <div class="form-group"><label for="modalidade">Modalidade:</label><select id="modalidade" required>
-                                <option value="">Selecione</option>
-                                <option value="Presencial">Presencial</option>
-                            </select></div>
-                        <div class="form-group"><label for="tipo">Tipo:</label><select id="tipo" required>
-                                <option value="">Selecione</option>
-                                <option value="Qualificação">Qualificação</option>
-                            </select></div>
-                        <div class="form-group"><label for="cargaHoraria">Carga horária total:</label><input type="number" id="cargaHoraria" placeholder="Ex: 1200" required min="1"></div>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancelar</button>
-                        <button type="button" class="btn btn-secondary" id="prevBtn">Voltar</button>
-                        <button type="button" class="btn btn-primary" id="nextBtn">Próximo</button>
+                        <div class="form-group"><label for="form_eixo">Eixo Tecnológico:</label><input type="text" id="form_eixo" value="Informação e Comunicação"></div>
+                        <div class="form-group"><label for="form_categoria">Categoria:</label><input type="text" id="form_categoria" value="Técnico"></div>
+                        <div class="form-group"><label for="form_modalidade">Modalidade:</label><input type="text" id="form_modalidade" value="Presencial"></div>
+                        <div class="form-group"><label for="form_tipo">Tipo:</label><input type="text" id="form_tipo" value="Qualificação"></div>
+                        <div class="form-group"><label for="form_cargaHoraria">Carga horária total:</label><input type="number" id="form_cargaHoraria" placeholder="Ex: 1200" required min="1"></div>
                     </div>
                 </form>
             </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancelar</button>
+                <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">Voltar</button>
+                <button type="button" class="btn btn-primary" id="nextBtn">Próximo</button>
+            </div>
         </div>
     </div>
-
     <div id="ucModal" class="modal">
         <div class="modal-content">
             <header class="modal-header">
                 <h2>Cadastrar Unidades Curriculares na Turma</h2>
-                <button class="close-button hidden" id="closeUcModalBtn">&times;</button>
+                <button class="close-button" id="closeUcModalBtn">&times;</button>
             </header>
             <div class="modal-body">
-                <h3>Ordem das Unidades Curriculares</h3>
-                <div id="uc-rows-container">
-                </div>
+                <div id="uc-rows-container"></div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" id="cancelUcBtn">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="saveUcBtn">Cadastrar Unidades Curriculares</button>
+                <button type="button" class="btn btn-primary" id="saveUcBtn">Salvar Turma e UCs</button>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            let turmasData = <?php echo json_encode($turmas); ?>;
+            let turmasData = JSON.parse(JSON.stringify(<?php echo json_encode($turmas); ?>));
             const ucData = <?php echo json_encode($unidades_curriculares); ?>;
 
-            // --- LÓGICA DO MODAL DE CADASTRO/EDIÇÃO (PRINCIPAL) ---
+            const searchInput = document.getElementById('searchInput');
+            const tableBody = document.querySelector('.data-table tbody');
+            const viewModal = document.getElementById('viewModal');
             const turmaFormModal = document.getElementById('turmaFormModal');
+            const modalTitle = document.getElementById('modalTitle');
             const addTurmaBtn = document.getElementById('addTurmaBtn');
             const closeFormModalBtn = document.getElementById('closeFormModalBtn');
             const cancelFormBtn = document.getElementById('cancelFormBtn');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
+            const multiStepForm = document.getElementById('multiStepForm');
             const formSteps = document.querySelectorAll('.form-step');
             const stepItems = document.querySelectorAll('.step-item');
-            const modalTitle = document.getElementById('modalTitle');
             let currentStep = 1;
-            const totalSteps = formSteps.length;
+            let turmaEmEdicao = {};
 
-            // --- LÓGICA DO MODAL DE UNIDADES CURRICULARES ---
             const ucModal = document.getElementById('ucModal');
             const ucRowsContainer = document.getElementById('uc-rows-container');
             const saveUcBtn = document.getElementById('saveUcBtn');
             const cancelUcBtn = document.getElementById('cancelUcBtn');
             const closeUcModalBtn = document.getElementById('closeUcModalBtn');
 
-            const openFormModal = (turmaId = null) => {
+            function formatarDataJS(data) {
+                if (!data) return '---';
+                const [ano, mes, dia] = data.split('-');
+                if (ano && mes && dia) return `${dia}/${mes}/${ano}`;
+                return data;
+            }
+
+            function openViewModal(turmaId) {
+                const turma = turmasData.find(t => t.id == turmaId);
+                if (!turma) {
+                    alert('Turma não encontrada!');
+                    return;
+                }
+
+                const fieldsToDisplay = [{
+                        label: 'Instituição:',
+                        key: 'instituicao'
+                    }, {
+                        label: 'Curso:',
+                        key: 'curso'
+                    }, {
+                        label: 'Código da Turma:',
+                        key: 'codigo_turma'
+                    },
+                    {
+                        label: 'Data de Início:',
+                        key: 'data_inicio',
+                        isDate: true
+                    }, {
+                        label: 'Data de Término:',
+                        key: 'data_termino',
+                        isDate: true
+                    },
+                    {
+                        label: 'Calendário:',
+                        key: 'calendario'
+                    }, {
+                        label: 'Empresa/Parceiro:',
+                        key: 'empresa'
+                    }, {
+                        label: 'Eixo Tecnológico:',
+                        key: 'eixo'
+                    },
+                    {
+                        label: 'Turno:',
+                        key: 'turno'
+                    }, {
+                        label: 'Número de Alunos:',
+                        key: 'num_alunos'
+                    }, {
+                        label: 'Categoria:',
+                        key: 'categoria'
+                    },
+                    {
+                        label: 'Modalidade:',
+                        key: 'modalidade'
+                    }, {
+                        label: 'Tipo:',
+                        key: 'tipo'
+                    }, {
+                        label: 'Carga Horária Total:',
+                        key: 'cargaHoraria',
+                        suffix: ' horas'
+                    }
+                ];
+
+                const infoGeraisHtml = fieldsToDisplay.map(field => {
+                    let value = turma[field.key] || 'Não informado';
+                    if (field.isDate) value = formatarDataJS(turma[field.key]);
+                    if (field.suffix && turma[field.key]) value += ` ${field.suffix}`;
+                    return `<div class="info-row"><label class="info-label">${field.label}</label><span class="info-value">${value}</span></div>`;
+                }).join('');
+
+                let ucRowsHtml = '<tr><td colspan="11" style="text-align:center;">Nenhuma unidade curricular encontrada para esta turma.</td></tr>';
+                if (turma.unidades_curriculares && turma.unidades_curriculares.length > 0) {
+                    ucRowsHtml = turma.unidades_curriculares.map(uc => `<tr><td>${uc.ordem || '---'}</td><td>${uc.descricao || '---'}</td><td>${uc.presencial_ch || '0'}</td><td>${uc.presencial_qa || '0'}</td><td>${uc.presencial_qd || '0'}</td><td>${uc.ead_ch || '0'}</td><td>${uc.ead_qa || '0'}</td><td>${uc.ead_qd || '0'}</td><td>${uc.instrutor || 'A definir'}</td><td>${formatarDataJS(uc.data_inicio)}</td><td>${formatarDataJS(uc.data_termino)}</td></tr>`).join('');
+                }
+
+                const modalContent = `<div class="modal-content" style="max-width: 900px;"><header class="modal-header"><h2>Dados da Turma: ${turma.codigo_turma}</h2><button class="close-button" id="closeViewModalBtn">&times;</button></header><div class="modal-body"><div class="modal-tabs"><button class="tab-button active" data-target="#info-gerais-pane">Informações Gerais</button><button class="tab-button" data-target="#ucs-pane">Unidades Curriculares</button></div><div id="info-gerais-pane" class="tab-pane active"><div class="info-pane-body">${infoGeraisHtml}</div></div><div id="ucs-pane" class="tab-pane"><div class="table-responsive"><table class="uc-table"><thead><tr><th rowspan="2">Ordem</th><th rowspan="2">Descrição</th><th colspan="3">Presencial</th><th colspan="3">EAD</th><th rowspan="2">Instrutor</th><th rowspan="2">Início</th><th rowspan="2">Fim</th></tr><tr class="sub-header"><th>C.H</th><th>Q.A</th><th>Q.D</th><th>C.H</th><th>Q.A</th><th>Q.D</th></tr></thead><tbody>${ucRowsHtml}</tbody></table></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="closeViewModalFooterBtn">Fechar</button></div></div>`;
+                viewModal.innerHTML = modalContent;
+                viewModal.style.display = 'flex';
+                document.body.classList.add('modal-open');
+
+                const tabButtons = viewModal.querySelectorAll('.tab-button');
+                const tabPanes = viewModal.querySelectorAll('.tab-pane');
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        tabPanes.forEach(pane => pane.classList.remove('active'));
+                        button.classList.add('active');
+                        viewModal.querySelector(button.dataset.target).classList.add('active');
+                    });
+                });
+
+                document.getElementById('closeViewModalBtn').addEventListener('click', closeViewModal);
+                document.getElementById('closeViewModalFooterBtn').addEventListener('click', closeViewModal);
+            }
+
+            function closeViewModal() {
+                viewModal.style.display = 'none';
+                viewModal.innerHTML = '';
+                document.body.classList.remove('modal-open');
+            }
+            viewModal.addEventListener('click', (event) => {
+                if (event.target === viewModal) closeViewModal();
+            });
+
+            function openFormModal(turmaId = null) {
+                multiStepForm.reset();
+                turmaEmEdicao = {};
                 currentStep = 1;
                 updateFormStep();
-                turmaFormModal.classList.add('locked');
-                closeFormModalBtn.classList.add('hidden');
+                if (turmaId) {
+                    modalTitle.textContent = 'Editar Turma';
+                    const turma = turmasData.find(t => t.id == turmaId);
+                    if (turma) {
+                        document.getElementById('turmaId').value = turma.id;
+                        document.getElementById('form_codigo_turma').value = turma.codigo_turma || '';
+                        document.getElementById('form_curso').value = turma.curso || '';
+                        document.getElementById('form_data_inicio').value = turma.data_inicio || '';
+                        document.getElementById('form_data_termino').value = turma.data_termino || '';
+                        document.getElementById('form_turno').value = turma.turno || '';
+                        document.getElementById('form_num_alunos').value = turma.num_alunos || '';
+                        document.getElementById('form_instituicao').value = turma.instituicao || 'SENAI CFP Afonso Bicalho';
+                        document.getElementById('form_calendario').value = turma.calendario || 'Padrão 2025/1';
+                        document.getElementById('form_empresa').value = turma.empresa || 'Comunidade';
+                        document.getElementById('form_eixo').value = turma.eixo || 'Informação e Comunicação';
+                        document.getElementById('form_categoria').value = turma.categoria || 'Técnico';
+                        document.getElementById('form_modalidade').value = turma.modalidade || 'Presencial';
+                        document.getElementById('form_tipo').value = turma.tipo || 'Qualificação';
+                        document.getElementById('form_cargaHoraria').value = turma.cargaHoraria || '';
+                    }
+                } else {
+                    modalTitle.textContent = 'Adicionar Turma';
+                    document.getElementById('turmaId').value = '';
+                }
                 turmaFormModal.style.display = 'flex';
                 document.body.classList.add('modal-open');
-            };
-            const closeFormModal = () => {
-                turmaFormModal.classList.remove('locked');
-                closeFormModalBtn.classList.remove('hidden');
+            }
+
+            function closeFormModal() {
                 turmaFormModal.style.display = 'none';
                 document.body.classList.remove('modal-open');
-            };
-            const openUcModal = () => {
-                closeFormModal();
-                ucModal.classList.add('locked');
-                ucModal.style.display = 'flex';
-                document.body.classList.add('modal-open');
-                ucRowsContainer.innerHTML = ''; // Limpa antes de adicionar
-                addUcRow(); // Adiciona a primeira linha obrigatória
-            };
-            const closeUcModal = () => {
-                if (confirm('Deseja cancelar o cadastro de Unidades Curriculares? O cadastro da turma será perdido.')) {
-                    ucModal.classList.remove('locked');
-                    ucModal.style.display = 'none';
-                    document.body.classList.remove('modal-open');
-                }
-            };
+            }
+
+            function updateFormStep() {
+                formSteps.forEach(step => step.classList.remove('active'));
+                formSteps[currentStep - 1].classList.add('active');
+                stepItems.forEach((item, index) => {
+                    item.classList.toggle('active', index < currentStep);
+                });
+                prevBtn.style.display = currentStep > 1 ? 'inline-flex' : 'none';
+                cancelFormBtn.style.display = currentStep === 1 ? 'inline-flex' : 'none';
+                nextBtn.textContent = (currentStep === formSteps.length) ? 'Avançar para UCs' : 'Próximo';
+            }
 
             addTurmaBtn.addEventListener('click', () => openFormModal());
+            closeFormModalBtn.addEventListener('click', closeFormModal);
             cancelFormBtn.addEventListener('click', closeFormModal);
-            cancelUcBtn.addEventListener('click', closeUcModal);
-            closeUcModalBtn.addEventListener('click', closeUcModal); // Embora oculto, é bom ter
-
-            nextBtn.addEventListener('click', () => {
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    updateFormStep();
-                } else {
-                    openUcModal();
-                }
-            });
             prevBtn.addEventListener('click', () => {
                 if (currentStep > 1) {
                     currentStep--;
                     updateFormStep();
                 }
             });
-
-            function updateFormStep() {
-                formSteps.forEach(step => step.classList.remove('active'));
-                formSteps[currentStep - 1].classList.add('active');
-                stepItems.forEach((step, index) => step.classList.toggle('active', index < currentStep));
-                if (currentStep === 1) {
-                    prevBtn.style.display = 'none';
-                    cancelFormBtn.style.display = 'inline-flex';
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < formSteps.length) {
+                    currentStep++;
+                    updateFormStep();
                 } else {
-                    prevBtn.style.display = 'inline-flex';
-                    cancelFormBtn.style.display = 'none';
+                    turmaEmEdicao = {
+                        id: document.getElementById('turmaId').value,
+                        codigo_turma: document.getElementById('form_codigo_turma').value,
+                        curso: document.getElementById('form_curso').value,
+                        data_inicio: document.getElementById('form_data_inicio').value,
+                        data_termino: document.getElementById('form_data_termino').value,
+                        turno: document.getElementById('form_turno').value,
+                        num_alunos: document.getElementById('form_num_alunos').value,
+                        instituicao: document.getElementById('form_instituicao').value,
+                        calendario: document.getElementById('form_calendario').value,
+                        empresa: document.getElementById('form_empresa').value,
+                        eixo: document.getElementById('form_eixo').value,
+                        categoria: document.getElementById('form_categoria').value,
+                        modalidade: document.getElementById('form_modalidade').value,
+                        tipo: document.getElementById('form_tipo').value,
+                        cargaHoraria: document.getElementById('form_cargaHoraria').value,
+                    };
+                    closeFormModal();
+                    openUcModal();
                 }
-                nextBtn.textContent = (currentStep === totalSteps) ? 'Salvar e Avançar' : 'Próximo';
+            });
+
+            function openUcModal() {
+                ucModal.style.display = 'flex';
+                document.body.classList.add('modal-open');
+                ucRowsContainer.innerHTML = '';
+                const ucsExistentes = turmasData.find(t => t.id == turmaEmEdicao.id)?.unidades_curriculares || [];
+                if (ucsExistentes.length > 0) {
+                    ucsExistentes.forEach(uc => addUcRow(uc));
+                } else {
+                    addUcRow();
+                }
             }
 
-            // --- LÓGICA DINÂMICA DO MODAL DE UCs ---
+            function closeUcModal() {
+                if (confirm('Tem certeza que deseja cancelar? Todas as alterações na turma e UCs serão perdidas.')) {
+                    ucModal.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                }
+            }
+
             function createUcSelectOptions() {
                 let options = '<option value="">Selecione</option>';
                 ucData.forEach(uc => {
@@ -586,43 +848,24 @@ function formatarData($data)
                 return options;
             }
 
-            function addUcRow() {
+            function addUcRow(uc = {}) {
                 const newRow = document.createElement('div');
                 newRow.className = 'uc-row';
                 const rowIndex = ucRowsContainer.children.length + 1;
-
-                newRow.innerHTML = `
-                <span class="uc-row-order">${rowIndex}º</span>
-                <div class="inputs-container">
-                    <div class="form-group medium"><label>Descrição</label><select class="uc-select">${createUcSelectOptions()}</select></div>
-                    <div class="form-group small"><label>Presencial C.H.</label><input type="text" class="uc-presencial-ch" readonly></div>
-                    <div class="form-group small"><label>Presencial Q.A.</label><input type="text" class="uc-presencial-qa" readonly></div>
-                    <div class="form-group small"><label>Presencial Q.D.</label><input type="text" class="uc-presencial-qd" readonly></div>
-                    <div class="form-group small"><label>EAD C.H.</label><input type="text" class="uc-ead-ch" readonly></div>
-                    <div class="form-group small"><label>EAD Q.A.</label><input type="text" class="uc-ead-qa" readonly></div>
-                    <div class="form-group small"><label>EAD Q.D.</label><input type="text" class="uc-ead-qd" readonly></div>
-                    <div class="form-group medium"><label>Instrutor</label><select><option value="">Selecione</option></select></div>
-                    <div class="form-group medium"><label>Data Início</label><input type="date"></div>
-                    <div class="form-group medium"><label>Data Fim</label><input type="date"></div>
-                </div>
-                <button type="button" class="btn-add-remove btn-add-uc">+</button>
-                <button type="button" class="btn-add-remove btn-remove-uc">-</button>
-            `;
+                newRow.innerHTML = `<span class="uc-row-order">${rowIndex}º</span><div class="inputs-container"><div class="form-group medium"><label>Descrição</label><select class="uc-select">${createUcSelectOptions()}</select></div><div class="form-group small"><label>Pres. C.H.</label><input type="text" class="uc-presencial-ch" readonly></div><div class="form-group small"><label>Pres. Q.A.</label><input type="text" class="uc-presencial-qa" readonly></div><div class="form-group small"><label>Pres. Q.D.</label><input type="text" class="uc-presencial-qd" readonly></div><div class="form-group small"><label>EAD C.H.</label><input type="text" class="uc-ead-ch" readonly></div><div class="form-group small"><label>EAD Q.A.</label><input type="text" class="uc-ead-qa" readonly></div><div class="form-group small"><label>EAD Q.D.</label><input type="text" class="uc-ead-qd" readonly></div><div class="form-group medium"><label>Instrutor</label><input type="text" class="uc-instrutor"></div><div class="form-group medium"><label>Data Início</label><input type="date" class="uc-data-inicio"></div><div class="form-group medium"><label>Data Fim</label><input type="date" class="uc-data-fim"></div></div><button type="button" class="btn-add-remove btn-add-uc">+</button><button type="button" class="btn-add-remove btn-remove-uc">-</button>`;
                 ucRowsContainer.appendChild(newRow);
                 updateUcRowButtons();
             }
 
             function removeUcRow(button) {
                 button.closest('.uc-row').remove();
-                updateUcRowButtons();
                 updateUcRowOrder();
             }
 
             function updateUcRowButtons() {
                 const rows = ucRowsContainer.querySelectorAll('.uc-row');
                 rows.forEach((row, index) => {
-                    const removeBtn = row.querySelector('.btn-remove-uc');
-                    removeBtn.style.display = (rows.length > 1) ? 'flex' : 'none';
+                    row.querySelector('.btn-remove-uc').style.display = (rows.length > 1) ? 'flex' : 'none';
                 });
             }
 
@@ -636,13 +879,11 @@ function formatarData($data)
                 if (e.target.classList.contains('btn-add-uc')) addUcRow();
                 if (e.target.classList.contains('btn-remove-uc')) removeUcRow(e.target);
             });
-
             ucRowsContainer.addEventListener('change', function(e) {
                 if (e.target.classList.contains('uc-select')) {
                     const selectedId = e.target.value;
                     const selectedUc = ucData.find(uc => uc.id == selectedId);
                     const parentRow = e.target.closest('.uc-row');
-
                     if (selectedUc) {
                         parentRow.querySelector('.uc-presencial-ch').value = selectedUc.presencial_ch;
                         parentRow.querySelector('.uc-presencial-qa').value = selectedUc.presencial_qa;
@@ -656,24 +897,83 @@ function formatarData($data)
                 }
             });
 
+            cancelUcBtn.addEventListener('click', closeUcModal);
+            closeUcModalBtn.addEventListener('click', closeUcModal);
             saveUcBtn.addEventListener('click', () => {
-                alert('Simulação: Turma e Unidades Curriculares foram salvas com sucesso!');
-                ucModal.classList.remove('locked');
-                closeUcModal();
+                const ucsSalvas = [];
+                ucRowsContainer.querySelectorAll('.uc-row').forEach((row, index) => {
+                    const ucSelect = row.querySelector('.uc-select');
+                    const selectedUcData = ucData.find(uc => uc.id == ucSelect.value);
+                    if (selectedUcData) {
+                        ucsSalvas.push({
+                            ordem: index + 1,
+                            descricao: selectedUcData.descricao,
+                            presencial_ch: row.querySelector('.uc-presencial-ch').value,
+                            presencial_qa: row.querySelector('.uc-presencial-qa').value,
+                            presencial_qd: row.querySelector('.uc-presencial-qd').value,
+                            ead_ch: row.querySelector('.uc-ead-ch').value,
+                            ead_qa: row.querySelector('.uc-ead-qa').value,
+                            ead_qd: row.querySelector('.uc-ead-qd').value,
+                            instrutor: row.querySelector('.uc-instrutor').value,
+                            data_inicio: row.querySelector('.uc-data-inicio').value,
+                            data_termino: row.querySelector('.uc-data-fim').value
+                        });
+                    }
+                });
+
+                turmaEmEdicao.unidades_curriculares = ucsSalvas;
+
+                if (turmaEmEdicao.id) {
+                    const id = parseInt(turmaEmEdicao.id);
+                    const index = turmasData.findIndex(t => t.id == id);
+                    if (index !== -1) {
+                        turmasData[index] = {
+                            ...turmasData[index],
+                            ...turmaEmEdicao
+                        };
+                    }
+                } else {
+                    const newId = turmasData.length > 0 ? Math.max(...turmasData.map(t => t.id)) + 1 : 1;
+                    turmaEmEdicao.id = newId;
+                    turmasData.push(turmaEmEdicao);
+                }
+
+                ucModal.style.display = 'none';
                 document.body.classList.remove('modal-open');
+                updateTableDisplay();
             });
 
-            // --- LÓGICA DA TABELA PRINCIPAL (Funções vazias para preencher) ---
             function updateTableDisplay() {
-                /* Adicione sua lógica de exibição da tabela aqui */
+                const searchTerm = searchInput.value.toLowerCase();
+                tableBody.innerHTML = '';
+                const filteredTurmas = turmasData.filter(turma => (turma.codigo_turma && turma.codigo_turma.toLowerCase().includes(searchTerm)) || (turma.curso && turma.curso.toLowerCase().includes(searchTerm)));
+                if (filteredTurmas.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Nenhuma turma encontrada.</td></tr>`;
+                    return;
+                }
+
+                filteredTurmas.forEach(turma => {
+                    const row = `<tr><td>${turma.id}</td><td>${turma.codigo_turma}</td><td>${turma.curso}</td><td>${formatarDataJS(turma.data_inicio)}</td><td>${formatarDataJS(turma.data_termino)}</td><td class="actions"><button class="btn-icon btn-view" data-id="${turma.id}"><i class="fas fa-eye"></i></button><button class="btn-icon btn-edit" data-id="${turma.id}"><i class="fas fa-edit"></i></button><button class="btn-icon btn-delete" data-id="${turma.id}"><i class="fas fa-trash-alt"></i></button></td></tr>`;
+                    tableBody.innerHTML += row;
+                });
+                attachTableActionListeners();
             }
 
             function attachTableActionListeners() {
-                document.querySelectorAll('.btn-edit').forEach(button => {
-                    button.onclick = (e) => openFormModal(e.currentTarget.dataset.id);
+                document.querySelectorAll('.btn-view').forEach(button => button.addEventListener('click', (e) => openViewModal(e.currentTarget.dataset.id)));
+                document.querySelectorAll('.btn-edit').forEach(button => button.addEventListener('click', (e) => openFormModal(e.currentTarget.dataset.id)));
+                document.querySelectorAll('.btn-delete').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        if (confirm(`Tem certeza que deseja deletar a turma?`)) {
+                            const id = e.currentTarget.dataset.id;
+                            turmasData = turmasData.filter(t => t.id != id);
+                            updateTableDisplay();
+                        }
+                    });
                 });
-                // Adicione aqui a lógica para os botões de visualizar e deletar
             }
+
+            searchInput.addEventListener('input', updateTableDisplay);
             updateTableDisplay();
         });
     </script>
