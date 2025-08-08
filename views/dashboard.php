@@ -89,11 +89,10 @@ require_once("../config/verifica_login.php"); // Caminho relativo à página!
                 </div>
                 <i class="fas fa-play-circle text-4xl opacity-75"></i>
             </div>
-            <!-- Turmas com Dados Incompletos -->
             <div class="bg-red-500 text-white p-6 rounded-lg shadow-md flex items-center justify-between">
                 <div>
                     <div class="text-2xl font-bold" id="turmasIncompletas">0</div>
-                    <div class="text-sm">Dados Incompletos</div>
+                    <div class="text-sm">Turmas com UCs sem Instrutor</div>
                 </div>
                 <i class="fas fa-exclamation-triangle text-4xl opacity-75"></i>
             </div>

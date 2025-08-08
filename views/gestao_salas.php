@@ -392,7 +392,7 @@
 
             const id = salaIdInput.value;
             const nome = salaNomeInput.value.trim();
-            const capacidade = parseInt(salaCapacidadeInput.value);
+            const capacidade = parseFloat(salaCapacidadeInput.value);
             const ferramentas = salaFerramentasInput.value.split(',').map(f => f.trim()).filter(f => f !== '');
             const disciplinas = salaDisciplinasInput.value.split(',').map(d => d.trim()).filter(d => d !== '');
 

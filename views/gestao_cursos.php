@@ -334,7 +334,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             const tipo = $('#tipoCurso').val();
             const categoria = $('#categoriaCurso').val().trim();
             const eixo = $('#eixoTecnologicoCurso').val().trim();
-            const cargaHoraria = parseInt($('#cargaHoraria').val(), 10);
+            const cargaHoraria = parseFloat($('#cargaHoraria').val(), 10);
             const empresa = $('#convenioSelect').val();
             const instituicao = $('#instituicaoId').val();
 
@@ -396,7 +396,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 nivel_curso: $('#nivelCurso').val(),
                 categoria: $('#categoriaCurso').val(),
                 eixo_tecnologico: $('#eixoTecnologicoCurso').val(),
-                carga_horaria: parseInt($('#cargaHoraria').val(), 10),
+                carga_horaria: parseFloat($('#cargaHoraria').val(), 10),
                 empresa: $('#convenioSelect').val(),
                 instituicao_id: $('#instituicaoId').val(),
                 ordem_ucs: selectedUcs.map(id => ({ id, descricao: ucDataMap[id] }))
@@ -497,14 +497,14 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     id: id,
                     unidade_curricular: form.querySelectorAll('input[readonly]')[1].value,
                     presencial: {
-                        carga_horaria: parseInt(presencial_ch, 10),
-                        quantidade_aulas_45min: parseInt(presencial_aulas, 10),
-                        dias_letivos: parseInt(presencial_dias, 10)
+                        carga_horaria: parseFloat(presencial_ch, 10),
+                        quantidade_aulas_45min: parseFloat(presencial_aulas, 10),
+                        dias_letivos: parseFloat(presencial_dias, 10)
                     },
                     ead: {
-                        carga_horaria: parseInt(ead_ch, 10),
-                        quantidade_aulas_45min: parseInt(ead_aulas, 10),
-                        dias_letivos: parseInt(ead_dias, 10)
+                        carga_horaria: parseFloat(ead_ch, 10),
+                        quantidade_aulas_45min: parseFloat(ead_aulas, 10),
+                        dias_letivos: parseFloat(ead_dias, 10)
                     }
                 };
                 ucsToSave.push(values);

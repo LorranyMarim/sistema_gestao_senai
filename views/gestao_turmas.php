@@ -232,6 +232,7 @@
                                 <th>Código da Turma</th>
                                 <th>Data Inicial</th>
                                 <th>Data Final</th>
+                                <th>Empresa</th>
                                 <th class="actions">Ações</th>
                             </tr>
                         </thead>
@@ -361,417 +362,592 @@
     </div>
 
     <script>
-        // --- URLs do backend FastAPI ---
-        const URL_API = "http://localhost:8000/api";
+// ---------- Util ----------
+function toHexId(v) {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "object") {
+    if (v.$oid) return v.$oid;
+    if (v.oid) return v.oid;
+    if (v._id && typeof v._id === "string") return v._id;
+    if (v._id && typeof v._id === "object" && v._id.$oid) return v._id.$oid;
+  }
+  return String(v);
+}
 
-        // Armazena dados de selects globais
-        let dadosCursos = [];
-        let dadosInstituicoes = [];
-        let dadosEmpresas = [];
-        let dadosCalendarios = [];
-        let dadosUcs = [];
-        let dadosInstrutores = [];
+// ---------- Config ----------
+const URL_API = "http://localhost:8000/api";
+// >>>> AJUSTE ESTE CAMINHO para o seu PHP proxy <<<<
+const URL_SALVAR_TURMA = "../backend/processa_turma.php";
 
-        // Utils para buscar dados via FastAPI
-        async function fetchCursos() {
-            const r = await fetch(`${URL_API}/cursos`);
-            return r.json();
-        }
-        async function fetchInstituicoes() {
-            const r = await fetch(`${URL_API}/instituicoes`);
-            return r.json();
-        }
-        async function fetchEmpresas() {
-            const r = await fetch(`${URL_API}/empresas`);
-            return r.json();
-        }
-        async function fetchCalendarios() {
-            const r = await fetch(`${URL_API}/calendarios`);
-            return r.json();
-        }
-        async function fetchUcs() {
-            const r = await fetch(`${URL_API}/unidades_curriculares`);
-            return r.json();
-        }
-        async function fetchInstrutores() {
-            const r = await fetch(`${URL_API}/instrutores`);
-            return r.json();
-        }
+// ---------- Stores globais ----------
+let dadosCursos = [];
+let dadosInstituicoes = [];
+let dadosEmpresas = [];
+let dadosCalendarios = [];
+let dadosUcs = [];
+let dadosInstrutores = [];
 
-        // CSS dinâmico: botão verde para adicionar e botão vermelho para remover
-        document.addEventListener("DOMContentLoaded", function () {
-            const style = document.createElement('style');
-            style.innerHTML = `
-        #addUcBtn.btn.btn-primary {
-            background-color: #28a745 !important;
-            border-color: #28a745 !important;
-        }
-        #addUcBtn.btn.btn-primary:hover {
-            background-color: #218838 !important;
-            border-color: #1e7e34 !important;
-        }
-        .uc-remove-btn {
-            background: #dc3545 !important;
-            color: #fff !important;
-            border: none !important;
-            border-radius: 50% !important;
-            width: 34px;
-            height: 34px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-            margin-left: 8px;
-        }
-        .uc-remove-btn:hover {
-            background: #b91c1c !important;
-        }
-    `;
-            document.head.appendChild(style);
-        });
+// Map para empresa -> nome
+let empById = new Map();
+function getEmpresaNome(id) {
+  return empById.get(toHexId(id)) || "—";
+}
 
-        // Ao DOM pronto, popula os selects e inicializa eventos
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Carregar dados dos selects de todos os steps
-            [dadosCursos, dadosInstituicoes, dadosEmpresas, dadosCalendarios, dadosUcs, dadosInstrutores] = await Promise.all([
-                fetchCursos(), fetchInstituicoes(), fetchEmpresas(), fetchCalendarios(), fetchUcs(), fetchInstrutores()
-            ]);
-            populaSelectCursos();
-            populaSelectInstituicoes();
-            populaSelectEmpresas();
-            populaSelectCalendarios();
+// ---------- Fetch helpers ----------
+async function fetchCursos()          { const r = await fetch(`${URL_API}/cursos`);                return r.json(); }
+async function fetchInstituicoes()    { const r = await fetch(`${URL_API}/instituicoes`);          return r.json(); }
+async function fetchEmpresas()        { const r = await fetch(`${URL_API}/empresas`);              return r.json(); }
+async function fetchCalendarios()     { const r = await fetch(`${URL_API}/calendarios`);           return r.json(); }
+async function fetchUcs()             { const r = await fetch(`${URL_API}/unidades_curriculares`); return r.json(); }
+async function fetchInstrutores()     { const r = await fetch(`${URL_API}/instrutores`);           return r.json(); }
 
-            // Multi-step lógica
-            let turmaDados = {};
-            let currentStep = 1;
-            const totalSteps = 3;
+// ---------- Helpers de UI ----------
+function fmtBR(iso) {
+  if (!iso) return "—";
+  const d = iso.slice(0,10).split("-");
+  return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : iso;
+}
 
-            const turmaFormModal = document.getElementById('turmaFormModal');
-            const addTurmaBtn = document.getElementById('addTurmaBtn');
-            const closeFormModalBtn = document.getElementById('closeFormModalBtn');
-            const cancelFormBtn = document.getElementById('cancelFormBtn');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const formSteps = document.querySelectorAll('.form-step');
-            const stepItems = document.querySelectorAll('.step-item');
+document.addEventListener("DOMContentLoaded", async () => {
+  // ---------- CSS dinâmico específico dos botões do modal de UCs ----------
+  const style = document.createElement("style");
+  style.innerHTML = `
+    #addUcBtn.btn.btn-primary { background-color: #28a745 !important; border-color: #28a745 !important; }
+    #addUcBtn.btn.btn-primary:hover { background-color: #218838 !important; border-color: #1e7e34 !important; }
+    .uc-remove-btn { background: #dc3545 !important; color: #fff !important; border: none !important; border-radius: 50% !important; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; margin-left: 8px; }
+    .uc-remove-btn:hover { background: #b91c1c !important; }
+  `;
+  document.head.appendChild(style);
 
-            // Abrir o modal de turma
-            addTurmaBtn.addEventListener('click', () => {
-                currentStep = 1;
-                clearForm();
-                updateFormStep();
-                turmaFormModal.style.display = 'flex';
-                document.body.classList.add('modal-open');
-            });
-            closeFormModalBtn.onclick = cancelFormBtn.onclick = function () {
-                turmaFormModal.style.display = 'none';
-                document.body.classList.remove('modal-open');
-            }
+  // ---------- Carrega dados base ----------
+  try {
+    [
+      dadosCursos,
+      dadosInstituicoes,
+      dadosEmpresas,
+      dadosCalendarios,
+      dadosUcs,
+      dadosInstrutores,
+    ] = await Promise.all([
+      fetchCursos(),
+      fetchInstituicoes(),
+      fetchEmpresas(),
+      fetchCalendarios(),
+      fetchUcs(),
+      fetchInstrutores(),
+    ]);
+    // monta o mapa de empresas para nome
+    empById = new Map(dadosEmpresas.map(e => [toHexId(e._id), e.razao_social || ""]));
+  } catch (e) {
+    console.error("Erro ao carregar dados iniciais:", e);
+    alert("Não foi possível carregar dados iniciais. Verifique a API.");
+    return;
+  }
 
-            nextBtn.onclick = () => {
-                if (!validateStep(currentStep)) return;
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    updateFormStep();
-                    if (currentStep === 3) fillStep3();
-                } else {
-                    turmaFormModal.style.display = 'none';
-                    openUcModal();
-                }
-            };
-            prevBtn.onclick = () => {
-                if (currentStep > 1) {
-                    currentStep--;
-                    updateFormStep();
-                }
-            };
-            function updateFormStep() {
-                formSteps.forEach((el, i) => el.classList.toggle('active', (i + 1) === currentStep));
-                stepItems.forEach((step, i) => {
-                    step.classList.toggle('active', i < currentStep);
-                    step.classList.toggle('completed', i < currentStep - 1);
-                });
-                prevBtn.style.display = (currentStep === 1) ? 'none' : '';
-                cancelFormBtn.style.display = (currentStep === 1) ? '' : 'none';
-                nextBtn.textContent = (currentStep === totalSteps) ? 'Salvar' : 'Próximo';
-            }
-            function clearForm() {
-                document.getElementById('codigoTurma').value = "";
-                document.getElementById('curso').selectedIndex = 0;
-                document.getElementById('dataInicio').value = "";
-                document.getElementById('dataFim').value = "";
-                document.getElementById('turno').selectedIndex = 0;
-                document.getElementById('numAlunos').value = "";
-                document.getElementById('instituicao').selectedIndex = 0;
-                document.getElementById('calendario').selectedIndex = 0;
-                document.getElementById('empresa').selectedIndex = 0;
-            }
-            function fillStep3() {
-                document.getElementById('codigoTurmaConf').value = document.getElementById('codigoTurma').value;
-                const curso = dadosCursos.find(c => c._id === document.getElementById('curso').value);
-                document.getElementById('cursoConf').value = curso ? curso.nome : "";
-                document.getElementById('categoriaConf').value = curso ? curso.categoria : "";
-                document.getElementById('modalidadeConf').value = curso ? curso.nivel_curso : "";
-                document.getElementById('tipoConf').value = curso ? curso.tipo : "";
-                document.getElementById('cargaHorariaConf').value = curso ? curso.carga_horaria : "";
-                document.getElementById('eixoTecConf').value = curso ? curso.eixo_tecnologico : "";
-                document.getElementById('dataInicioConf').value = document.getElementById('dataInicio').value;
-                document.getElementById('dataFimConf').value = document.getElementById('dataFim').value;
-                document.getElementById('turnoConf').value = document.getElementById('turno').value;
-                document.getElementById('numAlunosConf').value = document.getElementById('numAlunos').value;
-                const inst = dadosInstituicoes.find(i => i._id === document.getElementById('instituicao').value);
-                document.getElementById('instituicaoConf').value = inst ? inst.razao_social : "";
-                const cal = dadosCalendarios.find(c => c._id === document.getElementById('calendario').value);
-                document.getElementById('calendarioConf').value = cal ? cal.nome_calendario : "";
-                const emp = dadosEmpresas.find(e => e._id === document.getElementById('empresa').value);
-                document.getElementById('empresaConf').value = emp ? emp.razao_social : "";
-            }
-            function validateStep(step) {
-                if (step === 1) {
-                    if (!document.getElementById('codigoTurma').value.trim() ||
-                        !document.getElementById('curso').value ||
-                        !document.getElementById('dataInicio').value ||
-                        !document.getElementById('dataFim').value) {
-                        alert("Preencha todos os campos do passo 1!");
-                        return false;
-                    }
-                }
-                if (step === 2) {
-                    if (!document.getElementById('turno').value ||
-                        !document.getElementById('numAlunos').value ||
-                        !document.getElementById('instituicao').value ||
-                        !document.getElementById('calendario').value ||
-                        !document.getElementById('empresa').value) {
-                        alert("Preencha todos os campos do passo 2!");
-                        return false;
-                    }
-                }
-                return true;
-            }
-            function populaSelectCursos() {
-                const sel = document.getElementById('curso');
-                sel.innerHTML = '<option value="">Selecione</option>';
-                dadosCursos.forEach(c => sel.innerHTML += `<option value="${c._id}">${c.nome}</option>`);
-            }
-            function populaSelectInstituicoes() {
-                const sel = document.getElementById('instituicao');
-                sel.innerHTML = '<option value="">Selecione</option>';
-                dadosInstituicoes.forEach(i => sel.innerHTML += `<option value="${i._id}">${i.razao_social}</option>`);
-            }
-            function populaSelectEmpresas() {
-                const sel = document.getElementById('empresa');
-                sel.innerHTML = '<option value="">Selecione</option>';
-                dadosEmpresas.forEach(e => sel.innerHTML += `<option value="${e._id}">${e.razao_social}</option>`);
-            }
-            function populaSelectCalendarios() {
-                const sel = document.getElementById('calendario');
-                sel.innerHTML = '<option value="">Selecione</option>';
-                dadosCalendarios.forEach(c => sel.innerHTML += `<option value="${c._id}">${c.nome_calendario}</option>`);
-            }
+  // ---------- Elementos do modal principal ----------
+  const turmaFormModal    = document.getElementById("turmaFormModal");
+  const addTurmaBtn       = document.getElementById("addTurmaBtn");
+  const closeFormModalBtn = document.getElementById("closeFormModalBtn");
+  const cancelFormBtn     = document.getElementById("cancelFormBtn");
+  const prevBtn           = document.getElementById("prevBtn");
+  const nextBtn           = document.getElementById("nextBtn");
+  const formSteps         = document.querySelectorAll(".form-step");
+  const stepItems         = document.querySelectorAll(".step-item");
 
-            // Modal Unidades Curriculares
-            const ucModal = document.getElementById('ucModal');
-            const closeUcModalBtn = document.getElementById('closeUcModalBtn');
-            const cancelUcBtn = document.getElementById('cancelUcBtn');
-            const saveUcBtn = document.getElementById('saveUcBtn');
-            const ucRowsContainer = document.getElementById('uc-rows-container');
-            const addUcBtn = document.getElementById('addUcBtn');
+  if (!turmaFormModal || !addTurmaBtn || !closeFormModalBtn || !cancelFormBtn || !prevBtn || !nextBtn) {
+    console.error("Elementos do modal não encontrados.");
+    return;
+  }
 
-            let ucList = [];
+  // ---------- Popular selects do Step 1/2 ----------
+  function populaSelectCursos() {
+    const sel = document.getElementById("curso");
+    sel.innerHTML = '<option value="">Selecione</option>';
+    dadosCursos.forEach(c => {
+      sel.innerHTML += `<option value="${toHexId(c._id)}">${c.nome}</option>`;
+    });
+  }
+  function populaSelectInstituicoes() {
+    const sel = document.getElementById("instituicao");
+    sel.innerHTML = '<option value="">Selecione</option>';
+    dadosInstituicoes.forEach(i => {
+      sel.innerHTML += `<option value="${toHexId(i._id)}">${i.razao_social}</option>`;
+    });
+  }
+  function populaSelectEmpresas() {
+    const sel = document.getElementById("empresa");
+    sel.innerHTML = '<option value="">Selecione</option>';
+    dadosEmpresas.forEach(e => {
+      sel.innerHTML += `<option value="${toHexId(e._id)}">${e.razao_social}</option>`;
+    });
+  }
+  function populaSelectCalendarios() {
+    const sel = document.getElementById("calendario");
+    sel.innerHTML = '<option value="">Selecione</option>';
+    dadosCalendarios.forEach(c => {
+      sel.innerHTML += `<option value="${toHexId(c._id)}">${c.nome_calendario}</option>`;
+    });
+  }
 
-            // Função para ordinal em português (1°, 2°, 3°...)
-            function ordinalNumber(n) {
-                return `${n}°`;
-            }
+  populaSelectCursos();
+  populaSelectInstituicoes();
+  populaSelectEmpresas();
+  populaSelectCalendarios();
 
-            function openUcModal() {
-                ucRowsContainer.innerHTML = '';
-                ucList = [];
-                addUcRow();
-                ucModal.style.display = 'flex';
-                document.body.classList.add('modal-open');
-            }
+  // ===== Listagem de turmas =====
+  const tbody          = document.querySelector(".data-table tbody");
+  const searchEmpresa  = document.getElementById("searchEmpresa");
+  let turmasCache      = [];
 
-            function closeUcModal() {
-                if (confirm("Cancelar irá perder o cadastro das UCs. Deseja continuar?")) {
-                    ucModal.style.display = 'none';
-                    document.body.classList.remove('modal-open');
-                }
-            }
+  async function fetchTurmas() {
+    const r = await fetch(`${URL_API}/turmas`);
+    if (!r.ok) throw new Error(`Falha ao buscar turmas: ${r.status}`);
+    return r.json();
+  }
 
-            closeUcModalBtn.onclick = cancelUcBtn.onclick = closeUcModal;
-            addUcBtn.classList.add('btn', 'btn-primary'); // Garantir que fica verde
+  function renderTurmas(list) {
+    tbody.innerHTML = "";
+    list.forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${t.id}</td>
+        <td>${t.codigo || ""}</td>
+        <td>${fmtBR(t.data_inicio)}</td>
+        <td>${fmtBR(t.data_fim)}</td>
+        <td>${getEmpresaNome(t.id_empresa)}</td>
+        <td class="actions">
+          <button class="btn-view"   data-id="${t.id}" title="Visualizar"><i class="fas fa-eye"></i></button>
+          <button class="btn-edit"   data-id="${t.id}" title="Editar"><i class="fas fa-edit"></i></button>
+          <button class="btn-delete" data-id="${t.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
-            addUcBtn.onclick = function () {
-                addUcRow();
-            }
+  async function loadTurmas() {
+    turmasCache = await fetchTurmas();
+    renderTurmas(turmasCache);
+  }
 
-            // Atualiza os números ordinais de todas as UCs
-            function updateAllUcOrdinals() {
-                ucRowsContainer.querySelectorAll('.uc-ordinal-label').forEach((label, i) => {
-                    label.textContent = ordinalNumber(i + 1);
-                });
-            }
+  // filtro por empresa (nome) ou código da turma
+  if (searchEmpresa) {
+    searchEmpresa.addEventListener("input", () => {
+      const q = searchEmpresa.value.trim().toLowerCase();
+      if (!q) { renderTurmas(turmasCache); return; }
+      const filtradas = turmasCache.filter(t => {
+        const empNome = getEmpresaNome(t.id_empresa).toLowerCase();
+        const codigo  = (t.codigo || "").toLowerCase();
+        return empNome.includes(q) || codigo.includes(q);
+      });
+      renderTurmas(filtradas);
+    });
+  }
 
-            function addUcRow(data = null) {
-                const accordion = document.createElement('div');
-                accordion.className = 'uc-accordion open';
+  // carrega a tabela ao abrir a página
+  await loadTurmas();
 
-                let ucName = 'Selecione uma unidade curricular';
-                const cursoId = document.getElementById('curso').value;
-                const curso = dadosCursos.find(c => c._id === cursoId);
-                let ucOptions = '';
-                if (curso && Array.isArray(curso.ordem_ucs)) {
-                    ucOptions = curso.ordem_ucs
-                        .map(uc => `<option value="${uc.id}">${uc.unidade_curricular}</option>`)
-                        .join('');
-                }
+  // ---------- Lógica do multi-step ----------
+  let currentStep = 1;
+  const totalSteps = 3;
 
-                // Monta o HTML dos campos presenciais e EAD lado a lado
-                accordion.innerHTML = `
-    <div style="display: flex; align-items: center;">
-        <strong class="uc-ordinal-label" style="margin-right: 10px; font-size:1.1em;"></strong>
+  function updateFormStep() {
+    formSteps.forEach((el, i) => el.classList.toggle("active", i + 1 === currentStep));
+    stepItems.forEach((step, i) => {
+      step.classList.toggle("active", i < currentStep);
+      step.classList.toggle("completed", i < currentStep - 1);
+    });
+    prevBtn.style.display       = currentStep === 1 ? "none" : "";
+    cancelFormBtn.style.display = currentStep === 1 ? "" : "none";
+    nextBtn.textContent         = currentStep === totalSteps ? "Salvar" : "Próximo";
+  }
+
+  function clearForm() {
+    document.getElementById("codigoTurma").value = "";
+    document.getElementById("curso").selectedIndex = 0;
+    document.getElementById("dataInicio").value = "";
+    document.getElementById("dataFim").value = "";
+    document.getElementById("turno").selectedIndex = 0;
+    document.getElementById("numAlunos").value = "";
+    document.getElementById("instituicao").selectedIndex = 0;
+    document.getElementById("calendario").selectedIndex = 0;
+    document.getElementById("empresa").selectedIndex = 0;
+  }
+
+  function fillStep3() {
+    const cursoSel = document.getElementById("curso").value;
+
+    document.getElementById("codigoTurmaConf").value = document.getElementById("codigoTurma").value;
+
+    const curso = dadosCursos.find(c => toHexId(c._id) === toHexId(cursoSel));
+    document.getElementById("cursoConf").value        = curso ? curso.nome : "";
+    document.getElementById("categoriaConf").value    = curso ? curso.categoria : "";
+    document.getElementById("modalidadeConf").value   = curso ? curso.nivel_curso : "";
+    document.getElementById("tipoConf").value         = curso ? curso.tipo : "";
+    document.getElementById("cargaHorariaConf").value = curso ? curso.carga_horaria : "";
+    document.getElementById("eixoTecConf").value      = curso ? curso.eixo_tecnologico : "";
+
+    document.getElementById("dataInicioConf").value = document.getElementById("dataInicio").value;
+    document.getElementById("dataFimConf").value    = document.getElementById("dataFim").value;
+    document.getElementById("turnoConf").value      = document.getElementById("turno").value;
+    document.getElementById("numAlunosConf").value  = document.getElementById("numAlunos").value;
+
+    const instSel = document.getElementById("instituicao").value;
+    const calSel  = document.getElementById("calendario").value;
+    const empSel  = document.getElementById("empresa").value;
+
+    const inst = dadosInstituicoes.find(i => toHexId(i._id) === toHexId(instSel));
+    const cal  = dadosCalendarios.find(c => toHexId(c._id) === toHexId(calSel));
+    const emp  = dadosEmpresas.find(e => toHexId(e._id) === toHexId(empSel));
+
+    document.getElementById("instituicaoConf").value = inst ? inst.razao_social : "";
+    document.getElementById("calendarioConf").value  = cal ? cal.nome_calendario : "";
+    document.getElementById("empresaConf").value     = emp ? emp.razao_social : "";
+  }
+
+  function validateStep(step) {
+    if (step === 1) {
+      if (
+        !document.getElementById("codigoTurma").value.trim() ||
+        !document.getElementById("curso").value ||
+        !document.getElementById("dataInicio").value ||
+        !document.getElementById("dataFim").value
+      ) {
+        alert("Preencha todos os campos do passo 1!");
+        return false;
+      }
+    }
+    if (step === 2) {
+      if (
+        !document.getElementById("turno").value ||
+        !document.getElementById("numAlunos").value ||
+        !document.getElementById("instituicao").value ||
+        !document.getElementById("calendario").value ||
+        !document.getElementById("empresa").value
+      ) {
+        alert("Preencha todos os campos do passo 2!");
+        return false;
+      }
+    }
+    return true;
+  }
+
+  addTurmaBtn.addEventListener("click", () => {
+    currentStep = 1;
+    clearForm();
+    updateFormStep();
+    turmaFormModal.style.display = "flex";
+    document.body.classList.add("modal-open");
+  });
+
+  closeFormModalBtn.onclick = cancelFormBtn.onclick = function () {
+    turmaFormModal.style.display = "none";
+    document.body.classList.remove("modal-open");
+  };
+
+  nextBtn.onclick = () => {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < totalSteps) {
+      currentStep++;
+      updateFormStep();
+      if (currentStep === 3) fillStep3();
+    } else {
+      // último passo -> abre modal de UCs
+      turmaFormModal.style.display = "none";
+      openUcModal();
+    }
+  };
+
+  prevBtn.onclick = () => {
+    if (currentStep > 1) {
+      currentStep--;
+      updateFormStep();
+    }
+  };
+
+  // ---------- Modal de UCs ----------
+  const ucModal         = document.getElementById("ucModal");
+  const closeUcModalBtn = document.getElementById("closeUcModalBtn");
+  const cancelUcBtn     = document.getElementById("cancelUcBtn");
+  const saveUcBtn       = document.getElementById("saveUcBtn");
+  const ucRowsContainer = document.getElementById("uc-rows-container");
+  const addUcBtn        = document.getElementById("addUcBtn");
+
+  let ucList = [];
+
+  function ordinalNumber(n) { return `${n}°`; }
+  function updateAllUcOrdinals() {
+    ucRowsContainer.querySelectorAll(".uc-ordinal-label").forEach((label, i) => {
+      label.textContent = ordinalNumber(i + 1);
+    });
+  }
+
+  function openUcModal() {
+    ucRowsContainer.innerHTML = "";
+    ucList = [];
+    addUcRow();
+    ucModal.style.display = "flex";
+    document.body.classList.add("modal-open");
+  }
+
+  function closeUcModal() {
+    if (confirm("Cancelar irá perder o cadastro das UCs. Deseja continuar?")) {
+      ucModal.style.display = "none";
+      document.body.classList.remove("modal-open");
+    }
+  }
+
+  if (addUcBtn) addUcBtn.classList.add("btn", "btn-primary");
+  closeUcModalBtn.onclick = cancelUcBtn.onclick = closeUcModal;
+  if (addUcBtn) addUcBtn.onclick = () => addUcRow();
+
+  function addUcRow() {
+    const accordion = document.createElement("div");
+    accordion.className = "uc-accordion open";
+
+    const cursoId = document.getElementById("curso").value;
+    const curso   = dadosCursos.find(c => toHexId(c._id) === toHexId(cursoId));
+
+    let ucOptions = "";
+    if (curso && Array.isArray(curso.ordem_ucs)) {
+      ucOptions = curso.ordem_ucs
+        .map(uc => `<option value="${toHexId(uc.id)}">${uc.unidade_curricular}</option>`)
+        .join("");
+    }
+
+    const ucName = "Selecione uma unidade curricular";
+    accordion.innerHTML = `
+      <div style="display:flex; align-items:center;">
+        <strong class="uc-ordinal-label" style="margin-right:10px; font-size:1.1em;"></strong>
         <div class="uc-accordion-header open" style="flex:1;">
-            <span class="uc-title">${ucName}</span>
-            <i class="fas fa-chevron-right"></i>
+          <span class="uc-title">${ucName}</span>
+          <i class="fas fa-chevron-right"></i>
         </div>
         <button type="button" class="uc-remove-btn btn-add-remove btn-remove-uc" title="Remover Unidade Curricular">
-            <i class="fas fa-minus"></i>
+          <i class="fas fa-minus"></i>
         </button>
-    </div>
-    <div class="uc-accordion-content">
+      </div>
+      <div class="uc-accordion-content">
         <div class="form-group">
-            <label>UC</label>
-            <select class="uc-select" required>
-                <option value="">Selecione</option>
-                ${ucOptions}
-            </select>
+          <label>UC</label>
+          <select class="uc-select" required>
+            <option value="">Selecione</option>
+            ${ucOptions}
+          </select>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <div class="form-group" style="flex:1;">
-                <label>Carga horária Presencial</label>
-                <input class="uc-presencial-ch" type="number" disabled>
-            </div>
-            <div class="form-group" style="flex:1;">
-                <label>Quantidade de Aulas Presencial</label>
-                <input class="uc-presencial-aulas" type="number" disabled>
-            </div>
-            <div class="form-group" style="flex:1;">
-                <label>Quantidade de Dias Presencial</label>
-                <input class="uc-presencial-dias" type="number" disabled>
-            </div>
+
+        <div style="display:flex; gap:8px;">
+          <div class="form-group" style="flex:1;">
+            <label>Carga horária Presencial</label>
+            <input class="uc-presencial-ch" type="number" disabled>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Quantidade de Aulas Presencial</label>
+            <input class="uc-presencial-aulas" type="number" disabled>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Quantidade de Dias Presencial</label>
+            <input class="uc-presencial-dias" type="number" disabled>
+          </div>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 6px;">
-            <div class="form-group" style="flex:1;">
-                <label>Carga horária EAD</label>
-                <input class="uc-ead-ch" type="number" disabled>
-            </div>
-            <div class="form-group" style="flex:1;">
-                <label>Quantidade de Aulas EAD</label>
-                <input class="uc-ead-aulas" type="number" disabled>
-            </div>
-            <div class="form-group" style="flex:1;">
-                <label>Quantidade de Dias EAD</label>
-                <input class="uc-ead-dias" type="number" disabled>
-            </div>
+
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <div class="form-group" style="flex:1;">
+            <label>Carga horária EAD</label>
+            <input class="uc-ead-ch" type="number" disabled>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Quantidade de Aulas EAD</label>
+            <input class="uc-ead-aulas" type="number" disabled>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Quantidade de Dias EAD</label>
+            <input class="uc-ead-dias" type="number" disabled>
+          </div>
         </div>
+
         <div class="form-group" style="margin-top:8px;">
-            <label>Instrutor</label>
-            <select class="uc-instrutor" required>
-                <option value="">Selecione</option>
-                ${dadosInstrutores.map(ins => `<option value="${ins._id}">${ins.nome}</option>`).join('')}
-            </select>
+          <label>Instrutor</label>
+          <select class="uc-instrutor" required>
+            <option value="">Selecione</option>
+            ${dadosInstrutores.map(ins => `<option value="${toHexId(ins._id)}">${ins.nome}</option>`).join("")}
+          </select>
         </div>
-        <div class="form-row" style="display: flex; gap: 8px;">
-            <div class="form-group" style="flex:1;">
-                <label>Data Início</label>
-                <input type="date" class="uc-data-inicio" required>
-            </div>
-            <div class="form-group" style="flex:1;">
-                <label>Data Término</label>
-                <input type="date" class="uc-data-fim" required>
-            </div>
+
+        <div class="form-row" style="display:flex; gap:8px;">
+          <div class="form-group" style="flex:1;">
+            <label>Data Início</label>
+            <input type="date" class="uc-data-inicio" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Data Término</label>
+            <input type="date" class="uc-data-fim" required>
+          </div>
         </div>
-    </div>
+      </div>
     `;
 
-                ucRowsContainer.appendChild(accordion);
-                ucList.push({});
-                updateAllUcOrdinals();
+    ucRowsContainer.appendChild(accordion);
+    ucList.push({});
+    updateAllUcOrdinals();
 
-                // Accordion abrir/fechar
-                accordion.querySelector('.uc-accordion-header').onclick = function (e) {
-                    if (e.target.closest('.uc-remove-btn')) return;
-                    accordion.classList.toggle('open');
-                };
+    accordion.querySelector(".uc-accordion-header").onclick = function (e) {
+      if (e.target.closest(".uc-remove-btn")) return;
+      accordion.classList.toggle("open");
+    };
 
-                // Remover UC
-                accordion.querySelector('.uc-remove-btn').onclick = function () {
-                    if (ucRowsContainer.childElementCount > 1) {
-                        accordion.remove();
-                        ucList.splice([...ucRowsContainer.children].indexOf(accordion), 1);
-                        updateAllUcOrdinals();
-                    } else {
-                        alert("Deve ter pelo menos uma UC na turma.");
-                    }
-                };
+    accordion.querySelector(".uc-remove-btn").onclick = function () {
+      if (ucRowsContainer.childElementCount > 1) {
+        const idx = [...ucRowsContainer.children].indexOf(accordion);
+        accordion.remove();
+        if (idx >= 0) ucList.splice(idx, 1);
+        updateAllUcOrdinals();
+      } else {
+        alert("Deve ter pelo menos uma UC na turma.");
+      }
+    };
 
-                // Preenche campos automáticos ao selecionar UC
-                accordion.querySelector('.uc-select').onchange = function () {
-                    const ucId = this.value;
-                    const title = accordion.querySelector('.uc-title');
-                    const cursoId = document.getElementById('curso').value;
-                    const curso = dadosCursos.find(c => c._id === cursoId);
-                    let foundUc = null;
+    accordion.querySelector(".uc-select").onchange = function () {
+      const ucId    = toHexId(this.value);
+      const cursoId = document.getElementById("curso").value;
+      const curso   = dadosCursos.find(c => toHexId(c._id) === toHexId(cursoId));
 
-                    // Busca na ordem_ucs do curso selecionado
-                    if (curso && Array.isArray(curso.ordem_ucs)) {
-                        foundUc = curso.ordem_ucs.find(ucObj => String(ucObj.id) === String(ucId));
+      const foundUc = (curso && Array.isArray(curso.ordem_ucs))
+        ? curso.ordem_ucs.find(ucObj => toHexId(ucObj.id) === ucId)
+        : null;
 
-                    }
+      accordion.querySelector(".uc-title").textContent = foundUc
+        ? foundUc.unidade_curricular
+        : "Selecione uma unidade curricular";
 
-                    title.textContent = foundUc ? foundUc.unidade_curricular : 'Selecione uma unidade curricular';
+      const p = foundUc?.presencial || {};
+      const e = foundUc?.ead || {};
 
-                    // Preenche ou limpa os campos
-                    accordion.querySelector('.uc-presencial-ch').value = foundUc?.presencial?.carga_horaria || "";
-                    accordion.querySelector('.uc-presencial-aulas').value = foundUc?.presencial?.quantidade_aulas_45min || "";
-                    accordion.querySelector('.uc-presencial-dias').value = foundUc?.presencial?.dias_letivos || "";
-                    accordion.querySelector('.uc-ead-ch').value = foundUc?.ead?.carga_horaria || "";
-                    accordion.querySelector('.uc-ead-aulas').value = foundUc?.ead?.quantidade_aulas_45min || "";
-                    accordion.querySelector('.uc-ead-dias').value = foundUc?.ead?.dias_letivos || "";
-                };
-            }
+      accordion.querySelector(".uc-presencial-ch").value    = (p.carga_horaria ?? p.cargaHoraria ?? "");
+      accordion.querySelector(".uc-presencial-aulas").value = (p.quantidade_aulas_45min ?? p.aulas45 ?? "");
+      accordion.querySelector(".uc-presencial-dias").value  = (p.dias_letivos ?? p.dias ?? "");
+      accordion.querySelector(".uc-ead-ch").value           = (e.carga_horaria ?? e.cargaHoraria ?? "");
+      accordion.querySelector(".uc-ead-aulas").value        = (e.quantidade_aulas_45min ?? e.aulas45 ?? "");
+      accordion.querySelector(".uc-ead-dias").value         = (e.dias_letivos ?? e.dias ?? "");
+    };
+  }
 
+  // ---------- Monta payload TurmaCreate (exigido pelo FastAPI) ----------
+  function buildTurmaPayload(arrUC) {
+    return {
+      codigo:         document.getElementById("codigoTurma").value.trim(),
+      id_curso:       toHexId(document.getElementById("curso").value),
+      data_inicio:    document.getElementById("dataInicio").value,
+      data_fim:       document.getElementById("dataFim").value,
+      turno:          document.getElementById("turno").value,
+      num_alunos:     parseInt(document.getElementById("numAlunos").value, 10),
+      id_instituicao: toHexId(document.getElementById("instituicao").value),
+      id_calendario:  toHexId(document.getElementById("calendario").value),
+      id_empresa:     toHexId(document.getElementById("empresa").value),
+      unidades_curriculares: arrUC.map(uc => ({
+        id_uc:        toHexId(uc.uc),
+        id_instrutor: toHexId(uc.instrutor),
+        data_inicio:  uc.data_inicio,
+        data_fim:     uc.data_fim
+      }))
+    };
+  }
 
+  // ---------- POST para o PHP (que chama a API FastAPI) ----------
+  async function salvarTurmaNoBackend(payload) {
+    const r = await fetch(URL_SALVAR_TURMA, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json().catch(() => ({}));
+    return { ok: r.ok, status: r.status, data };
+  }
 
-            // Salvar UCs da turma (simulação)
-            saveUcBtn.onclick = function () {
-                let ok = true;
-                let arrUC = [];
-                ucRowsContainer.querySelectorAll('.uc-accordion').forEach(acc => {
-                    const selectUc = acc.querySelector('.uc-select');
-                    const instrutor = acc.querySelector('.uc-instrutor');
-                    const dataIni = acc.querySelector('.uc-data-inicio');
-                    const dataFim = acc.querySelector('.uc-data-fim');
-                    if (!selectUc.value || !instrutor.value || !dataIni.value || !dataFim.value) ok = false;
-                    arrUC.push({
-                        uc: selectUc.value,
-                        instrutor: instrutor.value,
-                        data_inicio: dataIni.value,
-                        data_fim: dataFim.value
-                    });
-                });
-                if (!ok || arrUC.length === 0) {
-                    alert("Preencha todas as informações obrigatórias para cada UC.");
-                    return;
-                }
-                // Aqui faria a requisição para salvar a turma + UCs no backend!
-                alert("Turma e Unidades Curriculares cadastradas com sucesso! (Simulação)");
-                ucModal.style.display = 'none';
-                document.body.classList.remove('modal-open');
-            };
+  // ---------- Clique em "Cadastrar Unidades Curriculares" ----------
+  if (saveUcBtn) {
+    saveUcBtn.onclick = async function () {
+      let ok = true;
+      const arrUC = [];
+
+      ucRowsContainer.querySelectorAll(".uc-accordion").forEach(acc => {
+        const selectUc = acc.querySelector(".uc-select");
+        const instrutor = acc.querySelector(".uc-instrutor");
+        const dataIni = acc.querySelector(".uc-data-inicio");
+        const dataFim = acc.querySelector(".uc-data-fim");
+
+        if (!selectUc.value || !instrutor.value || !dataIni.value || !dataFim.value) ok = false;
+
+        arrUC.push({
+          uc: selectUc.value,
+          instrutor: instrutor.value,
+          data_inicio: dataIni.value,
+          data_fim: dataFim.value,
         });
-    </script>
+      });
+
+      if (!ok || arrUC.length === 0) {
+        alert("Preencha todas as informações obrigatórias para cada UC.");
+        return;
+      }
+
+      // Monta o corpo exatamente como o FastAPI espera:
+      const payload = buildTurmaPayload(arrUC);
+
+      // Validação de última hora (campos principais)
+      if (!payload.codigo || !payload.id_curso || !payload.data_inicio || !payload.data_fim ||
+          !payload.turno || !payload.num_alunos || !payload.id_instituicao ||
+          !payload.id_calendario || !payload.id_empresa) {
+        alert("Há campos obrigatórios da turma sem preenchimento.");
+        return;
+      }
+
+      try {
+        const resp = await salvarTurmaNoBackend(payload);
+
+        if (resp.data && resp.data.success) {
+          alert("Turma e Unidades Curriculares cadastradas com sucesso!");
+          ucModal.style.display = "none";
+          document.body.classList.remove("modal-open");
+          await loadTurmas();
+        } else {
+          const msg = (resp.data && (resp.data.error || resp.data.detail)) || "Erro ao salvar turma.";
+          console.error("Erro salvar:", resp);
+          alert(`Falha ao salvar: ${msg}`);
+        }
+      } catch (err) {
+        console.error("Exceção no salvar:", err);
+        alert("Erro inesperado ao salvar turma. Verifique o console e o backend.");
+      }
+    };
+  }
+
+  // Delegação de cliques nos botões da tabela
+  tbody.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("button");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (!id) return;
+
+    if (btn.classList.contains("btn-view")) {
+      alert(`Visualizar (implementar modal de detalhes) – ID: ${id}`);
+    } else if (btn.classList.contains("btn-edit")) {
+      alert(`Editar (reaproveitar stepper e enviar PUT) – ID: ${id}`);
+    } else if (btn.classList.contains("btn-delete")) {
+      if (confirm("Tem certeza que deseja excluir esta turma?")) {
+        // Implementar DELETE se desejar:
+        // fetch(`${URL_API}/turmas/${id}`, { method: 'DELETE' }).then(() => loadTurmas());
+        alert("DELETE não implementado aqui (posso te enviar esse trecho também).");
+      }
+    }
+  });
+});
+</script>
+
+
+
+
 
 </body>
 
