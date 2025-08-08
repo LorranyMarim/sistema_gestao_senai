@@ -11,6 +11,8 @@ const STATE = {
   instituicoes: [],
   calendarios: [],
   fc: null, // FullCalendar instance
+  calEmEdicaoId: null,
+  gerenciarEventosCalId: null,
 };
 
 // ===================== Utils =====================
@@ -51,23 +53,21 @@ async function fetchJSON(url, options = {}) {
   return res.json();
 }
 
-// ===================== Data lookups =====================
+// ===================== Lookups =====================
 function nomeEmpresa(id) {
   const e = STATE.empresas.find(x => toId(x) === id || toId(x._id) === id);
   return e?.razao_social || id || "";
 }
-
 function nomeInstituicao(id) {
   const i = STATE.instituicoes.find(x => toId(x) === id || toId(x._id) === id);
   return i?.razao_social || id || "";
 }
 
-// ===================== Modal helpers (expostos globalmente p/ botões existentes) =====================
+// ===================== Modais =====================
 function openModal(id) {
   const el = document.getElementById(id);
   if (el) el.style.display = "flex";
 }
-
 function closeModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -79,18 +79,14 @@ function closeModal(id) {
   if (id === "modalAdicionarEvento") {
     $("#formAdicionarEvento")?.reset();
     if ($("#eventoCalendario") && $("#eventoCalendario").classList.contains("select2-hidden-accessible")) {
-      // via jQuery
       try { $("#eventoCalendario").value = null; } catch (_) {}
       window.jQuery && window.jQuery("#eventoCalendario").val(null).trigger("change");
     }
   }
 }
-
-// Deixar acessível ao HTML (X dos modais):
 window.openModal = openModal;
 window.closeModal = closeModal;
 
-// Fechar clicando fora
 window.addEventListener("click", (ev) => {
   if (ev.target?.classList?.contains("modal")) {
     closeModal(ev.target.id);
@@ -104,7 +100,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await carregarCalendarios();
   await carregarEventosNoCalendario();
 
-  // Abertura de modais
   $("#btnAbrirModalAdicionarEvento")?.addEventListener("click", async () => {
     openModal("modalAdicionarEvento");
     await carregarListaCalendariosParaEvento();
@@ -115,20 +110,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     await carregarInstituicoesEmpresas();
   });
 
-  // Submits
   $("#formCadastrarCalendario")?.addEventListener("submit", onSubmitCadastrarCalendario);
   $("#formAdicionarEvento")?.addEventListener("submit", onSubmitAdicionarEvento);
 
-  // Delegação de ações na tabela (view/edit/delete)
   $("#tbodyCalendarios")?.addEventListener("click", onClickTabelaCalendarios);
 
-  // Filtro simples por texto
   $("#filtroCalendarios")?.addEventListener("input", filtrarCalendariosPorTexto);
 });
 
 // ===================== FullCalendar =====================
 function initFullCalendar() {
   const el = document.getElementById("calendario");
+  if (!el) return;
   STATE.fc = new FullCalendar.Calendar(el, {
     locale: "pt-br",
     initialView: "dayGridMonth",
@@ -146,16 +139,11 @@ function initFullCalendar() {
 
 // ===================== Carregamentos =====================
 async function carregarDadosReferencia() {
-  try {
-    STATE.empresas = await fetchJSON(API.empresa);
-  } catch (e) {
-    console.error("Falha ao carregar empresas:", e.message);
-  }
-  try {
-    STATE.instituicoes = await fetchJSON(API.instituicao);
-  } catch (e) {
-    console.error("Falha ao carregar instituições:", e.message);
-  }
+  try { STATE.empresas = await fetchJSON(API.empresa); }
+  catch (e) { console.error("Falha ao carregar empresas:", e.message); }
+
+  try { STATE.instituicoes = await fetchJSON(API.instituicao); }
+  catch (e) { console.error("Falha ao carregar instituições:", e.message); }
 }
 
 async function carregarCalendarios() {
@@ -205,7 +193,6 @@ async function carregarListaCalendariosParaEvento() {
     const $select = window.jQuery && window.jQuery("#eventoCalendario");
     if (!$select) return;
 
-    // Recria as opções
     $select.empty();
     lista.forEach(cal => {
       const id = toId(cal) || toId(cal._id) || toId(cal.id);
@@ -213,13 +200,13 @@ async function carregarListaCalendariosParaEvento() {
       $select.append(`<option value="${id}">${nome}</option>`);
     });
 
-    // >>> Igual ao "Mapa de Competência (UCs)": apenas width e placeholder <<<
     if ($select.hasClass("select2-hidden-accessible")) {
       $select.select2("destroy");
     }
     $select.select2({
       width: "100%",
-      placeholder: "Selecione os Calendários"
+      placeholder: "Selecione os Calendários",
+      dropdownParent: window.jQuery("#modalAdicionarEvento .modal-content"),
     });
 
   } catch (e) {
@@ -227,14 +214,11 @@ async function carregarListaCalendariosParaEvento() {
   }
 }
 
-
 async function carregarInstituicoesEmpresas() {
-  // Popular selects do modal "Cadastrar Calendário"
   const instSelect = $("#calInstituicao");
   const empSelect = $("#calEmpresa");
   if (!instSelect || !empSelect) return;
 
-  // Instituições
   instSelect.innerHTML = '<option value="">Selecione</option>';
   STATE.instituicoes.forEach(i => {
     const opt = document.createElement("option");
@@ -243,7 +227,6 @@ async function carregarInstituicoesEmpresas() {
     instSelect.appendChild(opt);
   });
 
-  // Empresas
   empSelect.innerHTML = '<option value="">Selecione</option>';
   STATE.empresas.forEach(e => {
     const opt = document.createElement("option");
@@ -253,7 +236,33 @@ async function carregarInstituicoesEmpresas() {
   });
 }
 
-// ===================== Renderização da Tabela =====================
+// ===================== Edição de calendário =====================
+async function abrirEdicaoCalendario(cal) {
+  STATE.calEmEdicaoId = toId(cal) || toId(cal._id) || toId(cal.id);
+  await carregarInstituicoesEmpresas();
+
+  $("#calIdEdicao").value = STATE.calEmEdicaoId;
+  $("#calNome").value = cal.nome_calendario || "";
+  $("#calInicio").value = cal.data_inicial || "";
+  $("#calFim").value = cal.data_final || "";
+  $("#calInstituicao").value = cal.id_instituicao || "";
+  $("#calEmpresa").value = cal.id_empresa || "";
+
+  const btn = $("#btnCadastrarCalendario");
+  if (btn) btn.textContent = "Salvar alterações";
+
+  openModal("modalCadastrarCalendario");
+}
+
+function resetEdicaoCalendarioUI() {
+  STATE.calEmEdicaoId = null;
+  const btn = $("#btnCadastrarCalendario");
+  if (btn) btn.textContent = "Cadastrar";
+  const hid = $("#calIdEdicao");
+  if (hid) hid.value = "";
+}
+
+// ===================== Tabela principal =====================
 function renderTabelaCalendarios(lista) {
   const tbody = $("#tbodyCalendarios");
   if (!tbody) return;
@@ -297,37 +306,49 @@ async function onSubmitCadastrarCalendario(ev) {
   ev.preventDefault();
   const btn = $("#btnCadastrarCalendario");
   try {
-    btn && (btn.disabled = true);
+    if (btn) btn.disabled = true;
 
-    const data = {
+    const payload = {
       id_instituicao: $("#calInstituicao").value,
       nome_calendario: $("#calNome").value.trim(),
       id_empresa: $("#calEmpresa").value,
       data_inicial: $("#calInicio").value,
       data_final: $("#calFim").value,
-      dias_letivos: {}, // mantido como no código original
+      dias_letivos: {},
     };
 
-    if (!data.id_instituicao || !data.nome_calendario || !data.id_empresa || !data.data_inicial || !data.data_final) {
+    if (!payload.id_instituicao || !payload.nome_calendario || !payload.id_empresa || !payload.data_inicial || !payload.data_final) {
       alert("Preencha todos os campos obrigatórios!");
       return;
     }
 
-    await fetchJSON(API.calendario, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    const idEdicao = $("#calIdEdicao").value;
+    if (idEdicao) {
+      await fetchJSON(`${API.calendario}?id=${encodeURIComponent(idEdicao)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      alert("Calendário atualizado com sucesso!");
+    } else {
+      await fetchJSON(API.calendario, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      alert("Calendário cadastrado com sucesso!");
+    }
 
-    alert("Calendário cadastrado com sucesso!");
     closeModal("modalCadastrarCalendario");
+    resetEdicaoCalendarioUI();
     await carregarCalendarios();
     await carregarEventosNoCalendario();
+
   } catch (e) {
     console.error(e);
-    alert("Erro ao cadastrar calendário!");
+    alert("Erro ao salvar calendário!");
   } finally {
-    btn && (btn.disabled = false);
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -367,7 +388,19 @@ async function onSubmitAdicionarEvento(ev) {
   }
 }
 
-function onClickTabelaCalendarios(ev) {
+// === NOVO: somente permite excluir calendário se não houver dias_nao_letivos ===
+function podeExcluirCalendario(cal) {
+  const arr = cal?.dias_nao_letivos;
+  return !(Array.isArray(arr) && arr.length > 0);
+}
+
+async function excluirCalendario(id) {
+  await fetchJSON(`${API.calendario}?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+async function onClickTabelaCalendarios(ev) {
   const btn = ev.target.closest("button[data-action]");
   if (!btn) return;
 
@@ -377,20 +410,195 @@ function onClickTabelaCalendarios(ev) {
     const cid = toId(c) || toId(c._id) || toId(c.id);
     return cid === id;
   });
-
   if (!cal) return;
 
   if (action === "view") {
-    visualizarCalendario(cal);
+    abrirVisualizarCalendarioFull(cal);
   } else if (action === "edit") {
-    // Placeholder para sua edição (não alterei comportamento original)
-    alert("Funcionalidade de edição pendente.");
+    const editarCalendario = confirm(
+      "Clique em OK para editar os DADOS do calendário.\nClique em Cancelar para GERENCIAR os eventos (dias não letivos)."
+    );
+    if (editarCalendario) {
+      abrirEdicaoCalendario(cal);
+    } else {
+      abrirGerenciarEventos(cal);
+    }
   } else if (action === "delete") {
-    // Placeholder para sua exclusão (não alterei comportamento original)
-    alert("Funcionalidade de exclusão pendente.");
+    if (!podeExcluirCalendario(cal)) {
+      alert("Não é possível excluir este calendário: existem Dias Não Letivos cadastrados.\nRemova-os primeiro e tente novamente.");
+      return;
+    }
+    if (confirm("Tem certeza que deseja excluir este calendário? Esta ação não poderá ser desfeita.")) {
+      try {
+        await excluirCalendario(id);
+        await carregarCalendarios();
+        await carregarEventosNoCalendario();
+        alert("Calendário excluído com sucesso.");
+      } catch (e) {
+        console.error(e);
+        alert("Erro ao excluir calendário.");
+      }
+    }
   }
 }
 
+function getCalendarioById(id) {
+  return STATE.calendarios.find(c => {
+    const cid = toId(c) || toId(c._id) || toId(c.id);
+    return cid === id;
+  });
+}
+
+// ===================== Modal FULL: visualizar (somente excluir dias) =====================
+async function abrirVisualizarCalendarioFull(cal) {
+  const calId = toId(cal) || toId(cal._id) || toId(cal.id);
+
+  const resumoHTML = [
+    `<strong>Nome:</strong> ${cal.nome_calendario || ""}<br>`,
+    `<strong>Empresa/Parceiro:</strong> ${nomeEmpresa(cal.id_empresa)}<br>`,
+    `<strong>Instituição:</strong> ${nomeInstituicao(cal.id_instituicao)}<br>`,
+    `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}`,
+  ].join("");
+  $("#detalhesCalendarioFull").innerHTML = resumoHTML;
+
+  const thead = $("#tblDiasLetivos thead");
+  if (thead) {
+    thead.innerHTML = `
+      <tr>
+        <th>Data</th>
+        <th>Descrição</th>
+        <th>Ações</th>
+      </tr>`;
+  }
+
+  const diasNL = Array.isArray(cal.dias_nao_letivos) ? cal.dias_nao_letivos.slice() : [];
+  diasNL.sort((a, b) => String(a.data).localeCompare(String(b.data)));
+
+  const tbody = $("#tbodyDiasLetivos");
+  if (!tbody) return;
+
+  const delBtnStyle = 'width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;';
+
+  if (!diasNL.length) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Nenhum dia não letivo cadastrado.</td></tr>`;
+  } else {
+    tbody.innerHTML = diasNL.map(d => `
+      <tr data-date="${d.data}">
+        <td>${fmtBR(d.data)}</td>
+        <td>${d.descricao || ""}</td>
+        <td class="actions">
+          <button class="btn btn-icon btn-delete" title="Excluir" data-acao="remover" aria-label="Excluir dia" style="${delBtnStyle}">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  tbody.onclick = async (ev) => {
+    const btn = ev.target.closest("button[data-acao='remover']");
+    const tr = ev.target.closest("tr[data-date]");
+    if (!btn || !tr) return;
+
+    const dataOriginal = tr.getAttribute("data-date");
+    if (confirm(`Remover o dia não letivo ${fmtBR(dataOriginal)}?`)) {
+      await removerDiaNaoLetivo(calId, dataOriginal);
+      await carregarCalendarios();
+      await carregarEventosNoCalendario();
+      const atualizado = getCalendarioById(calId);
+      abrirVisualizarCalendarioFull(atualizado);
+    }
+  };
+
+  openModal("modalVisualizarCalendarioFull");
+}
+
+// ===================== Modal pequeno: gerenciar (somente excluir) =====================
+function abrirGerenciarEventos(cal) {
+  const calId = toId(cal) || toId(cal._id) || toId(cal.id);
+  STATE.gerenciarEventosCalId = calId;
+
+  const delBtnStyle = 'width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;';
+
+  const detalhes = [
+    `<strong>Nome:</strong> ${cal.nome_calendario || ""}<br>`,
+    `<strong>Empresa/Parceiro:</strong> ${nomeEmpresa(cal.id_empresa)}<br>`,
+    `<strong>Instituição:</strong> ${nomeInstituicao(cal.id_instituicao)}<br>`,
+    `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}<br><br>`,
+    `<strong>Dias Não Letivos:</strong>`,
+    `<ul id="listaDnl" style="margin-top:6px;">`,
+    ...(Array.isArray(cal.dias_nao_letivos) && cal.dias_nao_letivos.length
+      ? cal.dias_nao_letivos
+          .slice()
+          .sort((a, b) => String(a.data).localeCompare(String(b.data)))
+          .map(d => `
+            <li data-data="${d.data}">
+              <span class="dnl-data">${fmtBR(d.data)}</span> - <span class="dnl-desc">${d.descricao || ""}</span>
+              <button class="btn btn-icon btn-delete" title="Excluir" data-acao="remover" aria-label="Excluir dia" style="${delBtnStyle}">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </li>
+          `)
+      : ["<li>Nenhum</li>"]),
+    `</ul>`,
+    `<div style="margin-top:10px;">
+       <button class="btn btn-warning" id="btnAdicionarEventoRapido">
+         <i class="fas fa-calendar-plus"></i> Adicionar Novo Evento (intervalo)
+       </button>
+     </div>`
+  ].join("");
+
+  $("#detalhesCalendario").innerHTML = detalhes;
+  openModal("modalVisualizarCalendario");
+
+  const lista = $("#listaDnl");
+  if (lista) {
+    lista.addEventListener("click", async (ev) => {
+      const btn = ev.target.closest("button[data-acao='remover']");
+      const li = ev.target.closest("li[data-data]");
+      if (!btn || !li) return;
+
+      const dataOriginal = li.getAttribute("data-data");
+      if (confirm(`Remover o dia não letivo ${fmtBR(dataOriginal)}?`)) {
+        await removerDiaNaoLetivo(STATE.gerenciarEventosCalId, dataOriginal);
+        await recarregarGerenciarEventos();
+      }
+    });
+  }
+
+  const btnRapido = $("#btnAdicionarEventoRapido");
+  if (btnRapido) {
+    btnRapido.addEventListener("click", async () => {
+      openModal("modalAdicionarEvento");
+      await carregarListaCalendariosParaEvento();
+      const $select = window.jQuery && window.jQuery("#eventoCalendario");
+      if ($select) {
+        $select.val([STATE.gerenciarEventosCalId]).trigger("change");
+      }
+    });
+  }
+}
+
+async function recarregarGerenciarEventos() {
+  await carregarCalendarios();
+  await carregarEventosNoCalendario();
+  const cal = getCalendarioById(STATE.gerenciarEventosCalId);
+  if (cal) abrirGerenciarEventos(cal);
+}
+
+// ===================== API auxiliares (excluir dia NL) =====================
+async function removerDiaNaoLetivo(calId, data) {
+  try {
+    await fetchJSON(`${API.calendario}?action=remover_dia_nao_letivo&id=${encodeURIComponent(calId)}&data=${encodeURIComponent(data)}`, {
+    method: "DELETE",
+    });
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao remover dia não letivo.");
+  }
+}
+
+// ===================== Filtro =====================
 function filtrarCalendariosPorTexto(ev) {
   const q = ev.target.value.trim().toLowerCase();
   if (!q) {
@@ -405,7 +613,7 @@ function filtrarCalendariosPorTexto(ev) {
   renderTabelaCalendarios(filtrados);
 }
 
-// ===================== Visualização (modal de detalhes) =====================
+// ===================== Modal pequeno legado (sem ações) =====================
 function visualizarCalendario(cal) {
   const html = [
     `<strong>Nome:</strong> ${cal.nome_calendario || ""}<br>`,
@@ -424,3 +632,83 @@ function visualizarCalendario(cal) {
   $("#detalhesCalendario").innerHTML = html;
   openModal("modalVisualizarCalendario");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function attachDateRangeValidation({ formId, startId, endId, fieldNames = { start: 'Início', end: 'Fim' } }) {
+  const form = document.getElementById(formId);
+  const startEl = document.getElementById(startId);
+  const endEl = document.getElementById(endId);
+  if (!form || !startEl || !endEl) return;
+
+  const validate = () => {
+    // atualiza o min do fim com base no início
+    if (startEl.value) endEl.min = startEl.value;
+
+    // limpa mensagens se faltar algum valor
+    if (!startEl.value || !endEl.value) {
+      endEl.setCustomValidity('');
+      return;
+    }
+
+    // comparação ISO funciona para date e datetime-local
+    const startVal = startEl.value;
+    const endVal = endEl.value;
+
+    if (endVal < startVal) {
+      endEl.setCustomValidity(`${fieldNames.end} não pode ser anterior ao ${fieldNames.start}.`);
+    } else {
+      endEl.setCustomValidity('');
+    }
+  };
+
+  startEl.addEventListener('input', validate);
+  endEl.addEventListener('input', validate);
+
+  form.addEventListener('submit', (e) => {
+    validate();
+    if (!form.checkValidity()) {
+      e.preventDefault();
+      form.reportValidity(); // mostra o balão de erro do HTML5
+    }
+  });
+
+  // roda uma vez ao iniciar
+  validate();
+}
+
+// Ativa a validação nos dois modais
+document.addEventListener('DOMContentLoaded', () => {
+  attachDateRangeValidation({
+    formId: 'formCadastrarCalendario',
+    startId: 'calInicio',
+    endId: 'calFim',
+    fieldNames: { start: 'Início do Calendário', end: 'Término do Calendário' }
+  });
+
+  attachDateRangeValidation({
+    formId: 'formAdicionarEvento',
+    startId: 'eventoInicio',
+    endId: 'eventoFim',
+    fieldNames: { start: 'Início', end: 'Fim' }
+  });
+});

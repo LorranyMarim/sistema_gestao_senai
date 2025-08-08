@@ -125,6 +125,7 @@
             <span class="close-button" onclick="closeModal('modalCadastrarCalendario')">&times;</span>
             <h2>Cadastrar Calendário</h2>
             <form id="formCadastrarCalendario">
+                <input type="hidden" id="calIdEdicao" value="">
                 <div class="form-group">
                     <label for="calInstituicao">Instituição:</label>
                     <select id="calInstituicao" name="instituicao" class="form-control" required>
@@ -155,13 +156,43 @@
         </div>
     </div>
 
-    <!-- MODAL DETALHES -->
+    <!-- MODAL DETALHES (ANTIGO, PEQUENO) -->
     <div id="modalVisualizarCalendario" class="modal">
         <div class="modal-content" style="max-width:500px">
             <span class="close-button" onclick="closeModal('modalVisualizarCalendario')">&times;</span>
             <h2>Detalhes do Calendário</h2>
             <div id="detalhesCalendario"></div>
         </div>
+    </div>
+
+    <!-- MODAL VISUALIZAR (TELA CHEIA) -->
+    <div id="modalVisualizarCalendarioFull" class="modal">
+      <div class="modal-content" style="max-width:none;width:95vw;height:90vh;overflow:auto;">
+        <span class="close-button" onclick="closeModal('modalVisualizarCalendarioFull')">&times;</span>
+        <h2>Calendário - Visualização Completa</h2>
+
+        <!-- Resumo do calendário -->
+        <div id="detalhesCalendarioFull" class="form-group" style="margin-bottom:12px;"></div>
+
+        <!-- Tabela de Dias Letivos -->
+        <section class="table-section" style="margin-top:12px;">
+          <h3>Dias Letivos</h3>
+          <div class="table-responsive">
+            <table class="data-table" id="tblDiasLetivos">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descrição</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyDiasLetivos">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </div>
 
     <!-- Seu JS agora fica separado em assets/js -->
