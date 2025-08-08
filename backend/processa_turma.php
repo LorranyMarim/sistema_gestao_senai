@@ -1,25 +1,27 @@
 <?php
 header('Content-Type: application/json');
 
-// Só POST
+// Apenas POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Method Not Allowed
+    http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Método inválido']);
     exit;
 }
 
-// Lê JSON do body
+// Lê JSON
 $raw  = file_get_contents('php://input');
 $data = json_decode($raw, true);
-
 if (!is_array($data)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'JSON inválido no body']);
     exit;
 }
 
-/* ====== Validação mínima (opcional, mas ajuda a evitar 422) ====== */
-$required = ['codigo','id_curso','data_inicio','data_fim','turno','num_alunos','id_instituicao','id_calendario','id_empresa','unidades_curriculares'];
+/* ===== Validação mínima ===== */
+$required = [
+    'codigo','id_curso','data_inicio','data_fim','turno',
+    'num_alunos','id_instituicao','id_calendario','id_empresa','unidades_curriculares'
+];
 $missing = array_values(array_diff($required, array_keys($data)));
 if ($missing) {
     http_response_code(400);
@@ -31,11 +33,21 @@ if (!is_array($data['unidades_curriculares']) || count($data['unidades_curricula
     echo json_encode(['success' => false, 'error' => 'unidades_curriculares deve ser uma lista não vazia']);
     exit;
 }
-$data['num_alunos'] = (int)$data['num_alunos']; // força inteiro
-/* ================================================================ */
 
-// Chama a API FastAPI
-$apiUrl = 'http://localhost:8000/api/turmas/'; // mantenha a barra final
+// Normalizações
+$data['num_alunos'] = (int)$data['num_alunos'];
+
+// status: default true; coerção p/ boolean se vier do front
+if (!array_key_exists('status', $data)) {
+    $data['status'] = true;
+} else {
+    // aceita true/false, "true"/"false", 1/0
+    $val = filter_var($data['status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    $data['status'] = ($val === null) ? true : $val;
+}
+
+/* ===== Chama a API FastAPI ===== */
+$apiUrl = 'http://localhost:8000/api/turmas/'; // mantém a barra final
 $ch = curl_init($apiUrl);
 curl_setopt_array($ch, [
     CURLOPT_POST            => 1,
@@ -47,7 +59,7 @@ curl_setopt_array($ch, [
     CURLOPT_POSTFIELDS      => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
     CURLOPT_CONNECTTIMEOUT  => 5,
     CURLOPT_TIMEOUT         => 15,
-    CURLOPT_FOLLOWLOCATION  => false, // com barra final não precisamos seguir redirect
+    CURLOPT_FOLLOWLOCATION  => false,
     CURLOPT_MAXREDIRS       => 0,
 ]);
 
@@ -56,36 +68,33 @@ $httpcode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlErr  = curl_error($ch);
 curl_close($ch);
 
-// Falha de transporte (DNS, porta, serviço off, etc.)
+// Falha de transporte
 if ($result === false) {
-    http_response_code(502); // Bad Gateway
+    http_response_code(502);
     echo json_encode([
         'success' => false,
         'error'   => 'Falha ao conectar na API de turmas',
         'detail'  => $curlErr
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Tente decodificar a resposta da API para repassar mensagens úteis
+// Resposta da API
 $resp = json_decode($result, true);
 
-// Sucesso (criado)
+// Sucesso
 if ($httpcode === 201) {
     http_response_code(201);
     echo json_encode(['success' => true, 'api' => $resp ?: []], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Erro da API: repasse o status original
+// Erro da API
 http_response_code($httpcode);
-
-// Mensagem amigável + payload bruto para debug inicial
 $msg = 'Erro ao cadastrar turma!';
 if (is_array($resp) && isset($resp['detail'])) {
     $msg = is_string($resp['detail']) ? $resp['detail'] : json_encode($resp['detail'], JSON_UNESCAPED_UNICODE);
 }
-
 echo json_encode([
     'success' => false,
     'error'   => $msg,

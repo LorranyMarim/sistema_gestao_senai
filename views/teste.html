@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="container-fluid mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label">Buscar</label>
+      <div class="input-group">
+        <input id="q" type="search" class="form-control" placeholder="Código, curso...">
+        <button id="btnBuscar" class="btn btn-outline-secondary"><i class="fa fa-search"></i></button>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Curso</label>
+      <select id="fCurso" class="form-select"></select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Turno</label>
+      <select id="fTurno" class="form-select">
+        <option value="">Todos</option><option>Manhã</option><option>Tarde</option><option>Noite</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Status</label>
+      <select id="fStatus" class="form-select">
+        <option value="">Todos</option><option>Planejada</option><option>Em andamento</option><option>Concluída</option>
+      </select>
+    </div>
+    <div class="col-md-2 text-end">
+      <button id="btnAddTurma" class="btn btn-primary"><i class="fa fa-plus"></i> Nova Turma</button>
+    </div>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th role="button" data-sort="codigo">Código</th>
+        <th role="button" data-sort="curso">Curso</th>
+        <th role="button" data-sort="turno">Turno</th>
+        <th role="button" data-sort="inicio">Início–Fim</th>
+        <th role="button" data-sort="vagas">Vagas</th>
+        <th role="button" data-sort="status">Status</th>
+        <th class="text-end">Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tblTurmas">
+      <!-- linhas via JS -->
+    </tbody>
+  </table>
+</div>
+
+<div class="d-flex justify-content-between align-items-center">
+  <div class="small text-muted" id="rangeInfo">Mostrando 0–0 de 0</div>
+  <nav>
+    <ul class="pagination mb-0" id="pager"><!-- páginas via JS --></ul>
+  </nav>
+</div>
+
+<!-- Offcanvas Detalhe -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="ocTurma">
+  <div class="offcanvas-header">
+    <div>
+      <div class="h5 mb-0" id="ocTitulo"></div>
+      <span class="badge" id="ocStatus"></span>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul class="nav nav-tabs" id="ocTabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabResumo">Resumo</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabUCs">Unidades Curriculares</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabCrono">Cronograma</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabAlunos">Alunos</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabProfs">Professores</button></li>
+    </ul>
+    <div class="tab-content pt-3">
+      <div class="tab-pane fade show active" id="tabResumo"></div>
+      <div class="tab-pane fade" id="tabUCs"><div class="accordion" id="accUCs"></div></div>
+      <div class="tab-pane fade" id="tabCrono"><ul class="list-group" id="lstCrono"></ul></div>
+      <div class="tab-pane fade" id="tabAlunos"><ul class="list-group" id="lstAlunos"></ul></div>
+      <div class="tab-pane fade" id="tabProfs"><div class="row g-3" id="gridProfs"></div></div>
+    </div>
+  </div>
+</div>
+<script>
+    const API = "http://localhost:8000/api/turmas";
+let state = { page: 1, pageSize: 25, sortBy: "inicio", sortDir: "asc", q: "", curso: "", turno: "", status: "" };
+
+async function fetchTurmas() {
+  const params = new URLSearchParams({
+    page: state.page,
+    page_size: state.pageSize,
+    sort_by: state.sortBy,
+    sort_dir: state.sortDir,
+    q: state.q,
+    curso: state.curso,
+    turno: state.turno,
+    status: state.status
+  });
+  document.getElementById("tblTurmas").innerHTML = `
+    <tr><td colspan="7" class="text-center py-4">
+      <div class="spinner-border" role="status"></div>
+    </td></tr>`;
+  const res = await fetch(`${API}?${params}`);
+  if (!res.ok) { toast("Erro ao carregar turmas"); return; }
+  const data = await res.json();
+  renderTable(data.items);
+  renderPager(data.page, data.page_size, data.total);
+}
+
+function renderTable(items) {
+  const tbody = document.getElementById("tblTurmas");
+  tbody.innerHTML = items.map(t => `
+    <tr>
+      <td>${t.codigo}</td>
+      <td>${t.curso}</td>
+      <td>${t.turno ?? "-"}</td>
+      <td>${fmt(t.inicio)} – ${fmt(t.fim)}</td>
+      <td>${t.vagas ?? "-"}</td>
+      <td><span class="badge ${badgeClass(t.status)}">${t.status}</span></td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-outline-dark btn-view" data-id="${t.id}">
+          <i class="fa fa-eye"></i> Ver completo
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function renderPager(page, size, total) {
+  const first = (page - 1) * size + 1;
+  const last = Math.min(page * size, total);
+  document.getElementById("rangeInfo").textContent = `Mostrando ${total ? first : 0}–${total ? last : 0} de ${total}`;
+  const pages = Math.ceil(total / size);
+  const pager = document.getElementById("pager");
+  const btn = (p, label = p, disabled = false, active = false) =>
+    `<li class="page-item ${disabled?'disabled':''} ${active?'active':''}">
+       <a class="page-link" href="#" data-page="${p}">${label}</a>
+     </li>`;
+  let html = "";
+  html += btn(page-1, "&laquo;", page===1);
+  for (let p = Math.max(1, page-2); p <= Math.min(pages, page+2); p++) html += btn(p, p, false, p===page);
+  html += btn(page+1, "&raquo;", page===pages || pages===0);
+  pager.innerHTML = html;
+}
+
+document.getElementById("pager").addEventListener("click", e => {
+  const a = e.target.closest("a.page-link"); if (!a) return;
+  e.preventDefault();
+  const p = Number(a.dataset.page);
+  if (Number.isFinite(p) && p > 0) { state.page = p; fetchTurmas(); }
+});
+
+document.querySelector("thead").addEventListener("click", e => {
+  const th = e.target.closest("[data-sort]"); if (!th) return;
+  const col = th.dataset.sort;
+  state.sortDir = (state.sortBy === col && state.sortDir === "asc") ? "desc" : "asc";
+  state.sortBy = col; state.page = 1; fetchTurmas();
+});
+
+document.getElementById("tblTurmas").addEventListener("click", async e => {
+  const btn = e.target.closest(".btn-view"); if (!btn) return;
+  const id = btn.dataset.id;
+  const oc = document.getElementById("ocTurma");
+  const offcanvas = new bootstrap.Offcanvas(oc);
+  fillOffcanvasLoading();
+  offcanvas.show();
+  const res = await fetch(`${API}/${id}`);
+  const data = await res.json();
+  fillOffcanvas(data);
+});
+
+function fmt(d) { if (!d) return "-"; const [y,m,dd]=d.split("-"); return `${dd}/${m}/${y}`; }
+function badgeClass(st){ return st==="Concluída"?"bg-secondary":st==="Em andamento"?"bg-success":"bg-warning text-dark"; }
+
+// TODO: bind filtros + debounce de busca e chamar fetchTurmas() com state atualizado.
+fetchTurmas();
+
+</script>
+</body>
+</html>
