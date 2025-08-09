@@ -13,11 +13,19 @@ const STATE = {
   fc: null, // FullCalendar instance
   calEmEdicaoId: null,
   gerenciarEventosCalId: null,
+  // paginação/filtros
+  pagination: { page: 1, pageSize: 10, total: 0 },
+  filters: { q: "", year: "", empresa: "", instituicao: "" },
 };
 
 // ===================== Utils =====================
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+const debounce = (fn, ms=350) => {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+};
 
 function toId(obj) {
   if (!obj) return "";
@@ -75,6 +83,7 @@ function closeModal(id) {
 
   if (id === "modalCadastrarCalendario") {
     $("#formCadastrarCalendario")?.reset();
+    resetEdicaoCalendarioUI();
   }
   if (id === "modalAdicionarEvento") {
     $("#formAdicionarEvento")?.reset();
@@ -97,8 +106,9 @@ window.addEventListener("click", (ev) => {
 document.addEventListener("DOMContentLoaded", async () => {
   initFullCalendar();
   await carregarDadosReferencia();
+  popularFiltrosFixos();
   await carregarCalendarios();
-  await carregarEventosNoCalendario();
+  await carregarEventosNoCalendario(); // primeiro render
 
   $("#btnAbrirModalAdicionarEvento")?.addEventListener("click", async () => {
     openModal("modalAdicionarEvento");
@@ -112,10 +122,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   $("#formCadastrarCalendario")?.addEventListener("submit", onSubmitCadastrarCalendario);
   $("#formAdicionarEvento")?.addEventListener("submit", onSubmitAdicionarEvento);
-
   $("#tbodyCalendarios")?.addEventListener("click", onClickTabelaCalendarios);
 
-  $("#filtroCalendarios")?.addEventListener("input", filtrarCalendariosPorTexto);
+  // Filtros e paginação
+  const debouncedBusca = debounce(async (val) => {
+    STATE.filters.q = val.trim();
+    STATE.pagination.page = 1;
+    await carregarCalendarios();
+  }, 400);
+
+  $("#filtroBusca")?.addEventListener("input", (e) => debouncedBusca(e.target.value));
+  $("#filtroAno")?.addEventListener("change", async (e) => { STATE.filters.year = e.target.value; STATE.pagination.page = 1; await carregarCalendarios(); });
+  $("#filtroEmpresa")?.addEventListener("change", async (e) => { STATE.filters.empresa = e.target.value; STATE.pagination.page = 1; await carregarCalendarios(); });
+  $("#filtroInstituicao")?.addEventListener("change", async (e) => { STATE.filters.instituicao = e.target.value; STATE.pagination.page = 1; await carregarCalendarios(); });
+  $("#pageSize")?.addEventListener("change", async (e) => { STATE.pagination.pageSize = parseInt(e.target.value || "10", 10); STATE.pagination.page = 1; await carregarCalendarios(); });
+  $("#btnPrevPage")?.addEventListener("click", async () => {
+    if (STATE.pagination.page > 1) { STATE.pagination.page--; await carregarCalendarios(); }
+  });
+  $("#btnNextPage")?.addEventListener("click", async () => {
+    const { page, pageSize, total } = STATE.pagination;
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    if (page < maxPage) { STATE.pagination.page++; await carregarCalendarios(); }
+  });
 });
 
 // ===================== FullCalendar =====================
@@ -130,9 +158,31 @@ function initFullCalendar() {
       center: "title",
       right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
     },
-    editable: true,
-    selectable: true,
+    editable: false,
+    selectable: false,
     dayMaxEvents: true,
+    events: async (info, success, failure) => {
+      try {
+        const qs = new URLSearchParams({
+          action: "eventos_range",
+          start: info.startStr,
+          end: info.endStr,
+        }).toString();
+        const eventos = await fetchJSON(`${API.calendario}?${qs}`);
+        // normaliza cor pelo id do calendário
+        const mapped = (eventos || []).map(ev => ({
+          title: `${ev.descricao} (${ev.nome_calendario || "Calendário"})`,
+          start: ev.data,
+          allDay: true,
+          backgroundColor: corParaCalendario(ev.calendario_id),
+          borderColor: corParaCalendario(ev.calendario_id),
+        }));
+        success(mapped);
+      } catch (e) {
+        console.error("Falha ao carregar eventos por faixa:", e);
+        failure(e);
+      }
+    },
   });
   STATE.fc.render();
 }
@@ -141,15 +191,50 @@ function initFullCalendar() {
 async function carregarDadosReferencia() {
   try { STATE.empresas = await fetchJSON(API.empresa); }
   catch (e) { console.error("Falha ao carregar empresas:", e.message); }
-
   try { STATE.instituicoes = await fetchJSON(API.instituicao); }
   catch (e) { console.error("Falha ao carregar instituições:", e.message); }
 }
 
+function popularFiltrosFixos() {
+  // Empresa/Instituição
+  const empSel = $("#filtroEmpresa");
+  const instSel = $("#filtroInstituicao");
+  if (empSel) {
+    empSel.innerHTML = `<option value="">Todas</option>` + STATE.empresas.map(e => `<option value="${toId(e)}">${e.razao_social || "(sem nome)"}</option>`).join("");
+  }
+  if (instSel) {
+    instSel.innerHTML = `<option value="">Todas</option>` + STATE.instituicoes.map(i => `<option value="${toId(i)}">${i.razao_social || "(sem nome)"}</option>`).join("");
+  }
+  // Ano (dinâmico: ano corrente -2 até +2)
+  const anoSel = $("#filtroAno");
+  if (anoSel) {
+    const now = new Date().getFullYear();
+    const anos = [];
+    for (let a = now + 2; a >= now - 10; a--) anos.push(a); // mais histórico
+    anoSel.innerHTML = `<option value="">Todos</option>` + anos.map(a => `<option value="${a}">${a}</option>`).join("");
+  }
+}
+
 async function carregarCalendarios() {
   try {
-    STATE.calendarios = await fetchJSON(API.calendario);
+    const { page, pageSize } = STATE.pagination;
+    const { q, year, empresa, instituicao } = STATE.filters;
+    const qs = new URLSearchParams({
+      page: String(page),
+      limit: String(pageSize),
+    });
+    if (q) qs.set("q", q);
+    if (year) qs.set("year", year);
+    if (empresa) qs.set("empresa_id", empresa);
+    if (instituicao) qs.set("instituicao_id", instituicao);
+
+    const res = await fetchJSON(`${API.calendario}?${qs.toString()}`);
+    // Back-end retorna {items, total} (ver rotas novas)
+    STATE.calendarios = res.items || [];
+    STATE.pagination.total = res.total ?? STATE.calendarios.length;
+
     renderTabelaCalendarios(STATE.calendarios);
+    atualizarPaginacaoUI();
   } catch (e) {
     console.error("Falha ao carregar calendários:", e.message);
     $("#tbodyCalendarios").innerHTML = '<tr><td colspan="5" style="text-align:center;">Erro ao carregar.</td></tr>';
@@ -157,39 +242,19 @@ async function carregarCalendarios() {
 }
 
 async function carregarEventosNoCalendario() {
-  let calendarios = [];
   try {
-    calendarios = await fetchJSON(API.calendario);
+    // apenas força refetch da fonte de eventos
+    STATE.fc?.refetchEvents();
   } catch (e) {
     console.error("Falha ao carregar eventos:", e.message);
-    return;
   }
-
-  const eventos = [];
-  calendarios.forEach(cal => {
-    const id = toId(cal) || toId(cal._id) || toId(cal.id);
-    const nome = cal.nome_calendario || cal.descricao || "";
-    const cor = corParaCalendario(id);
-    if (Array.isArray(cal.dias_nao_letivos)) {
-      cal.dias_nao_letivos.forEach(d => {
-        eventos.push({
-          title: `${d.descricao} (${nome})`,
-          start: d.data,
-          allDay: true,
-          backgroundColor: cor,
-          borderColor: cor,
-        });
-      });
-    }
-  });
-
-  STATE.fc.removeAllEvents();
-  eventos.forEach(evt => STATE.fc.addEvent(evt));
 }
 
 async function carregarListaCalendariosParaEvento() {
   try {
-    const lista = await fetchJSON(API.calendario);
+    // para o select2 do modal de eventos — paginação simples client-side
+    const res = await fetchJSON(`${API.calendario}?limit=1000&page=1`);
+    const lista = res.items || res; // compat
     const $select = window.jQuery && window.jQuery("#eventoCalendario");
     if (!$select) return;
 
@@ -208,7 +273,6 @@ async function carregarListaCalendariosParaEvento() {
       placeholder: "Selecione os Calendários",
       dropdownParent: window.jQuery("#modalAdicionarEvento .modal-content"),
     });
-
   } catch (e) {
     console.error("Falha ao carregar lista de calendários para evento:", e.message);
   }
@@ -301,6 +365,12 @@ function renderTabelaCalendarios(lista) {
   tbody.innerHTML = rows.join("");
 }
 
+function atualizarPaginacaoUI() {
+  const { page, pageSize, total } = STATE.pagination;
+  const maxPage = Math.max(1, Math.ceil(total / pageSize));
+  $("#pageInfo").textContent = `Página ${page} de ${maxPage} • ${total} registros`;
+}
+
 // ===================== Handlers =====================
 async function onSubmitCadastrarCalendario(ev) {
   ev.preventDefault();
@@ -340,7 +410,6 @@ async function onSubmitCadastrarCalendario(ev) {
     }
 
     closeModal("modalCadastrarCalendario");
-    resetEdicaoCalendarioUI();
     await carregarCalendarios();
     await carregarEventosNoCalendario();
 
@@ -388,16 +457,13 @@ async function onSubmitAdicionarEvento(ev) {
   }
 }
 
-// === NOVO: somente permite excluir calendário se não houver dias_nao_letivos ===
+// regra: só exclui calendário se NÃO houver dias_não_letivos
 function podeExcluirCalendario(cal) {
   const arr = cal?.dias_nao_letivos;
   return !(Array.isArray(arr) && arr.length > 0);
 }
-
 async function excluirCalendario(id) {
-  await fetchJSON(`${API.calendario}?id=${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
+  await fetchJSON(`${API.calendario}?id=${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 async function onClickTabelaCalendarios(ev) {
@@ -418,11 +484,8 @@ async function onClickTabelaCalendarios(ev) {
     const editarCalendario = confirm(
       "Clique em OK para editar os DADOS do calendário.\nClique em Cancelar para GERENCIAR os eventos (dias não letivos)."
     );
-    if (editarCalendario) {
-      abrirEdicaoCalendario(cal);
-    } else {
-      abrirGerenciarEventos(cal);
-    }
+    if (editarCalendario) abrirEdicaoCalendario(cal);
+    else abrirGerenciarEventos(cal);
   } else if (action === "delete") {
     if (!podeExcluirCalendario(cal)) {
       alert("Não é possível excluir este calendário: existem Dias Não Letivos cadastrados.\nRemova-os primeiro e tente novamente.");
@@ -461,23 +524,13 @@ async function abrirVisualizarCalendarioFull(cal) {
   ].join("");
   $("#detalhesCalendarioFull").innerHTML = resumoHTML;
 
-  const thead = $("#tblDiasLetivos thead");
-  if (thead) {
-    thead.innerHTML = `
-      <tr>
-        <th>Data</th>
-        <th>Descrição</th>
-        <th>Ações</th>
-      </tr>`;
-  }
+  const tbody = $("#tbodyDiasLetivos");
+  if (!tbody) return;
 
   const diasNL = Array.isArray(cal.dias_nao_letivos) ? cal.dias_nao_letivos.slice() : [];
   diasNL.sort((a, b) => String(a.data).localeCompare(String(b.data)));
 
-  const tbody = $("#tbodyDiasLetivos");
-  if (!tbody) return;
-
-  const delBtnStyle = 'width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;';
+  const delBtnStyle = 'width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;';
 
   if (!diasNL.length) {
     tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Nenhum dia não letivo cadastrado.</td></tr>`;
@@ -499,13 +552,12 @@ async function abrirVisualizarCalendarioFull(cal) {
     const btn = ev.target.closest("button[data-acao='remover']");
     const tr = ev.target.closest("tr[data-date]");
     if (!btn || !tr) return;
-
     const dataOriginal = tr.getAttribute("data-date");
     if (confirm(`Remover o dia não letivo ${fmtBR(dataOriginal)}?`)) {
       await removerDiaNaoLetivo(calId, dataOriginal);
       await carregarCalendarios();
       await carregarEventosNoCalendario();
-      const atualizado = getCalendarioById(calId);
+      const atualizado = getCalendarioById(calId) || cal; // fallback
       abrirVisualizarCalendarioFull(atualizado);
     }
   };
@@ -518,7 +570,7 @@ function abrirGerenciarEventos(cal) {
   const calId = toId(cal) || toId(cal._id) || toId(cal.id);
   STATE.gerenciarEventosCalId = calId;
 
-  const delBtnStyle = 'width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;';
+  const delBtnStyle = 'width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;';
 
   const detalhes = [
     `<strong>Nome:</strong> ${cal.nome_calendario || ""}<br>`,
@@ -590,7 +642,7 @@ async function recarregarGerenciarEventos() {
 async function removerDiaNaoLetivo(calId, data) {
   try {
     await fetchJSON(`${API.calendario}?action=remover_dia_nao_letivo&id=${encodeURIComponent(calId)}&data=${encodeURIComponent(data)}`, {
-    method: "DELETE",
+      method: "DELETE",
     });
   } catch (e) {
     console.error(e);
@@ -598,22 +650,7 @@ async function removerDiaNaoLetivo(calId, data) {
   }
 }
 
-// ===================== Filtro =====================
-function filtrarCalendariosPorTexto(ev) {
-  const q = ev.target.value.trim().toLowerCase();
-  if (!q) {
-    renderTabelaCalendarios(STATE.calendarios);
-    return;
-  }
-  const filtrados = STATE.calendarios.filter(cal => {
-    const nome = (cal.nome_calendario || cal.descricao || "").toLowerCase();
-    const emp = (nomeEmpresa(cal.id_empresa) || "").toLowerCase();
-    return nome.includes(q) || emp.includes(q);
-  });
-  renderTabelaCalendarios(filtrados);
-}
-
-// ===================== Modal pequeno legado (sem ações) =====================
+// ===================== Modal pequeno legado (somente visualizar)
 function visualizarCalendario(cal) {
   const html = [
     `<strong>Nome:</strong> ${cal.nome_calendario || ""}<br>`,
@@ -633,27 +670,7 @@ function visualizarCalendario(cal) {
   openModal("modalVisualizarCalendario");
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* ===== Validação de intervalo de datas nos formulários ===== */
 function attachDateRangeValidation({ formId, startId, endId, fieldNames = { start: 'Início', end: 'Fim' } }) {
   const form = document.getElementById(formId);
   const startEl = document.getElementById(startId);
@@ -661,19 +678,13 @@ function attachDateRangeValidation({ formId, startId, endId, fieldNames = { star
   if (!form || !startEl || !endEl) return;
 
   const validate = () => {
-    // atualiza o min do fim com base no início
     if (startEl.value) endEl.min = startEl.value;
-
-    // limpa mensagens se faltar algum valor
     if (!startEl.value || !endEl.value) {
       endEl.setCustomValidity('');
       return;
     }
-
-    // comparação ISO funciona para date e datetime-local
     const startVal = startEl.value;
     const endVal = endEl.value;
-
     if (endVal < startVal) {
       endEl.setCustomValidity(`${fieldNames.end} não pode ser anterior ao ${fieldNames.start}.`);
     } else {
@@ -683,20 +694,16 @@ function attachDateRangeValidation({ formId, startId, endId, fieldNames = { star
 
   startEl.addEventListener('input', validate);
   endEl.addEventListener('input', validate);
-
   form.addEventListener('submit', (e) => {
     validate();
     if (!form.checkValidity()) {
       e.preventDefault();
-      form.reportValidity(); // mostra o balão de erro do HTML5
+      form.reportValidity();
     }
   });
-
-  // roda uma vez ao iniciar
   validate();
 }
 
-// Ativa a validação nos dois modais
 document.addEventListener('DOMContentLoaded', () => {
   attachDateRangeValidation({
     formId: 'formCadastrarCalendario',
@@ -704,7 +711,6 @@ document.addEventListener('DOMContentLoaded', () => {
     endId: 'calFim',
     fieldNames: { start: 'Início do Calendário', end: 'Término do Calendário' }
   });
-
   attachDateRangeValidation({
     formId: 'formAdicionarEvento',
     startId: 'eventoInicio',
