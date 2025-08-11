@@ -5,9 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Unidades Curriculares - SENAI</title>
+
+    <!-- Tailwind (mantido) -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- CSS do projeto (ajustado para a estrutura /css) -->
     <link rel="stylesheet" href="../assets/css/style_turmas.css">
+
+    <!-- Font Awesome (mantido) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Estilo inline do modal (mantido para não alterar aparência) -->
     <style>
         .modal {
             display: none;
@@ -31,6 +39,9 @@
         .form-group label { font-weight: bold; }
         .action-buttons { display: flex; gap: 6px; align-items: center; justify-content: center; }
     </style>
+
+    <!-- Script da página (externo e com defer para carregar após o DOM) -->
+    <script src="../assets/js/gestao_unidades_curriculares.js" defer></script>
 </head>
 
 <body>
@@ -53,20 +64,25 @@
                 </ul>
             </nav>
         </aside>
+
         <main class="main-content">
             <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
+
             <header class="main-header">
                 <h1>Gestão de Unidades Curriculares</h1>
                 <button class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova UC</button>
             </header>
+
             <section class="table-section">
                 <h2>Unidades Curriculares Cadastradas</h2>
+
                 <div class="filter-section">
                     <div class="filter-group">
                         <label for="searchUc">Buscar UC:</label>
                         <input type="text" id="searchUc" placeholder="Digite para filtrar..." class="search-input">
                     </div>
                 </div>
+
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
@@ -91,23 +107,28 @@
         <div class="modal-content">
             <span class="close-button" id="closeModalBtn">&times;</span>
             <h2 id="modalTitleUc">Adicionar Nova Unidade Curricular</h2>
+
             <form id="ucForm" autocomplete="off">
                 <input type="hidden" id="ucId">
                 <div id="alertUc" style="display:none"></div>
+
                 <div class="form-group">
                     <label for="instituicaoUc">Instituição:</label>
                     <select id="instituicaoUc" required>
                         <option value="">Selecione a instituição</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label for="descricaoUc">Descrição da UC:</label>
                     <input type="text" id="descricaoUc" required minlength="2" maxlength="100">
                 </div>
+
                 <div class="form-group">
                     <label for="salaIdeal">Sala Ideal:</label>
                     <input type="text" id="salaIdeal" required minlength="2" maxlength="100">
                 </div>
+
                 <div class="form-group">
                     <label for="statusUc">Status:</label>
                     <select id="statusUc" required>
@@ -115,6 +136,7 @@
                         <option value="Inativa">Inativa</option>
                     </select>
                 </div>
+
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar UC</button>
                 <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
             </form>
@@ -126,6 +148,7 @@
         <div class="modal-content">
             <span class="close-button" id="closeVisualizarUcBtn">&times;</span>
             <h2>Detalhes da Unidade Curricular</h2>
+
             <form>
                 <div class="form-group">
                     <label>Instituição:</label>
@@ -147,263 +170,5 @@
             </form>
         </div>
     </div>
-
-    <script>
-        // Sidebar
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        const dashboardContainer = document.querySelector('.dashboard-container');
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            dashboardContainer.classList.toggle('sidebar-active');
-        });
-        dashboardContainer.addEventListener('click', (event) => {
-            if (dashboardContainer.classList.contains('sidebar-active') && !sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
-                sidebar.classList.remove('active');
-                dashboardContainer.classList.remove('sidebar-active');
-            }
-        });
-
-        // Globals & elements
-        let instituicoesCache = [];
-        let ucsCache = [];
-        let ucEditId = null;
-
-        const ucModal = document.getElementById('ucModal');
-        const addUcBtn = document.getElementById('addUcBtn');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const ucForm = document.getElementById('ucForm');
-        const modalTitleUc = document.getElementById('modalTitleUc');
-        const ucIdInput = document.getElementById('ucId');
-        const descricaoUcInput = document.getElementById('descricaoUc');
-        const salaIdealInput = document.getElementById('salaIdeal');
-        const selectInstituicao = document.getElementById('instituicaoUc');
-        const statusUc = document.getElementById('statusUc');
-        const alertUc = document.getElementById('alertUc');
-
-        const visualizarUcModal = document.getElementById('visualizarUcModal');
-        const closeVisualizarUcBtn = document.getElementById('closeVisualizarUcBtn');
-        const fecharVisualizarUcBtn = document.getElementById('fecharVisualizarUcBtn');
-        const viewInstituicaoUc = document.getElementById('viewInstituicaoUc');
-        const viewDescricaoUc = document.getElementById('viewDescricaoUc');
-        const viewSalaIdealUc = document.getElementById('viewSalaIdealUc');
-        const viewStatusUc = document.getElementById('viewStatusUc');
-
-        // Caracteres proibidos
-        const forbiddenChars = /[<>"';{}]/g;
-
-        // Instituições
-        async function fetchInstituicoes() {
-            if (instituicoesCache.length > 0) return instituicoesCache;
-            const resp = await fetch('../backend/processa_instituicao.php');
-            instituicoesCache = await resp.json();
-            return instituicoesCache;
-        }
-        async function preencherSelectInstituicao(selectedId = "") {
-            const insts = await fetchInstituicoes();
-            selectInstituicao.innerHTML = '<option value="">Selecione a instituição</option>';
-            insts.forEach(i => {
-                selectInstituicao.innerHTML += `<option value="${i._id}" ${i._id === selectedId ? "selected" : ""}>${i.razao_social}</option>`;
-            });
-        }
-
-        // Modal control
-        function openModalUC(edit = false, uc = {}) {
-            preencherSelectInstituicao(edit ? uc.instituicao_id : "");
-            ucModal.classList.add('show');
-            ucIdInput.value = edit ? uc._id : '';
-            descricaoUcInput.value = edit ? uc.descricao : '';
-            salaIdealInput.value = edit ? uc.sala_ideal : '';
-            statusUc.value = edit ? uc.status : "Ativa";
-            modalTitleUc.innerText = edit ? "Editar Unidade Curricular" : "Adicionar Nova Unidade Curricular";
-            ucEditId = edit ? uc._id : null;
-            alertUc.style.display = "none";
-            alertUc.className = "";
-            alertUc.textContent = "";
-        }
-        function closeModalUC() {
-            ucModal.classList.remove('show');
-            ucForm.reset();
-            ucEditId = null;
-            alertUc.style.display = "none";
-            alertUc.className = "";
-            alertUc.textContent = "";
-        }
-        addUcBtn.onclick = () => openModalUC();
-        closeModalBtn.onclick = closeModalUC;
-        cancelBtn.onclick = closeModalUC;
-        window.onclick = function (event) {
-            if (event.target === ucModal) closeModalUC();
-            if (event.target === visualizarUcModal) closeVisualizarUcModal();
-        };
-
-        // Visualizar UC
-        function openVisualizarUcModal(uc) {
-            const inst = instituicoesCache.find(i => i._id === uc.instituicao_id);
-            viewInstituicaoUc.value = inst ? inst.razao_social : '';
-            viewDescricaoUc.value = uc.descricao ?? '';
-            viewSalaIdealUc.value = uc.sala_ideal ?? '';
-            viewStatusUc.value = uc.status ?? 'Ativa';
-            visualizarUcModal.classList.add('show');
-        }
-        function closeVisualizarUcModal() {
-            visualizarUcModal.classList.remove('show');
-        }
-        closeVisualizarUcBtn.onclick = closeVisualizarUcModal;
-        fecharVisualizarUcBtn.onclick = closeVisualizarUcModal;
-
-        // Busca e tabela
-        async function carregarUnidadesCurriculares() {
-            try {
-                const [ucs, insts] = await Promise.all([
-                    fetch('../backend/processa_unidade_curricular.php').then(r => r.json()),
-                    fetchInstituicoes()
-                ]);
-                ucsCache = ucs;
-                renderTableUC(ucs, insts);
-            } catch (err) {
-                document.getElementById('ucTableBody').innerHTML = `<tr><td colspan="6">Erro ao buscar dados.</td></tr>`;
-            }
-        }
-        function renderTableUC(ucs, insts) {
-            const tbody = document.getElementById('ucTableBody');
-            const search = (document.getElementById('searchUc').value || '').toLowerCase();
-            tbody.innerHTML = '';
-            const filtrar = ucs.filter(uc => {
-                const inst = insts.find(i => i._id === uc.instituicao_id);
-                return (
-                    !search ||
-                    (uc.descricao || '').toLowerCase().includes(search) ||
-                    (uc.sala_ideal || '').toLowerCase().includes(search) ||
-                    (inst && (inst.razao_social || '').toLowerCase().includes(search))
-                );
-            });
-            if (!filtrar.length) {
-                tbody.innerHTML = `<tr><td colspan="6">Nenhuma UC cadastrada.</td></tr>`;
-                return;
-            }
-            filtrar.forEach((uc) => {
-                const inst = insts.find(i => i._id === uc.instituicao_id);
-                tbody.innerHTML += `
-                <tr>
-                    <td>${uc._id}</td>
-                    <td>${inst ? inst.razao_social : ''}</td>
-                    <td>${uc.descricao ?? ''}</td>
-                    <td>${uc.sala_ideal ?? ''}</td>
-                    <td>${uc.status ?? 'Ativa'}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
-                            <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                `;
-            });
-            document.querySelectorAll('.btn-view').forEach(btn =>
-                btn.onclick = async function () {
-                    const id = this.dataset.id;
-                    const uc = ucsCache.find(uc => uc._id === id);
-                    if (uc) openVisualizarUcModal(uc);
-                }
-            );
-            document.querySelectorAll('.btn-edit').forEach(btn =>
-                btn.onclick = async function () {
-                    const id = this.dataset.id;
-                    const uc = ucsCache.find(uc => uc._id === id);
-                    if (uc) openModalUC(true, uc);
-                }
-            );
-            document.querySelectorAll('.btn-delete').forEach(btn =>
-                btn.onclick = async function () {
-                    if (confirm('Deseja excluir esta UC?')) {
-                        await fetch('../backend/processa_unidade_curricular.php?id=' + this.dataset.id, { method: 'DELETE' });
-                        carregarUnidadesCurriculares();
-                    }
-                }
-            );
-        }
-
-        // Validação frontend
-        function validateUcForm() {
-            alertUc.textContent = ""; alertUc.className = ""; alertUc.style.display = "none";
-            function sanitize(val) { return val.replace(/\s+/g, ' ').trim(); }
-            if (!selectInstituicao.value) {
-                showAlert("Selecione uma instituição.", "error"); selectInstituicao.focus(); return false;
-            }
-            descricaoUcInput.value = sanitize(descricaoUcInput.value);
-            if (descricaoUcInput.value.length < 2 || descricaoUcInput.value.length > 100) {
-                showAlert("Descrição deve ter entre 2 e 100 caracteres.", "error"); descricaoUcInput.focus(); return false;
-            }
-            if (forbiddenChars.test(descricaoUcInput.value)) {
-                showAlert("Descrição contém caracteres inválidos.", "error"); descricaoUcInput.focus(); return false;
-            }
-            salaIdealInput.value = sanitize(salaIdealInput.value);
-            if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 100) {
-                showAlert("Sala Ideal deve ter entre 2 e 100 caracteres.", "error"); salaIdealInput.focus(); return false;
-            }
-            if (forbiddenChars.test(salaIdealInput.value)) {
-                showAlert("Sala Ideal contém caracteres inválidos.", "error"); salaIdealInput.focus(); return false;
-            }
-            if (!statusUc.value) {
-                showAlert("Selecione o status.", "error"); statusUc.focus(); return false;
-            }
-            return true;
-        }
-        function showAlert(msg, type = "error") {
-            alertUc.textContent = msg;
-            alertUc.className = (type === "error" ? "alert-error" : "alert-success");
-            alertUc.style.display = "block";
-            if (type === "success") setTimeout(() => { alertUc.style.display = "none"; }, 2500);
-        }
-        [descricaoUcInput, salaIdealInput, selectInstituicao, statusUc].forEach(input => {
-            input.addEventListener("input", () => {
-                alertUc.textContent = "";
-                alertUc.className = "";
-                alertUc.style.display = "none";
-            });
-        });
-
-        // CRUD do modal
-        ucForm.onsubmit = async function (e) {
-            e.preventDefault();
-            if (!validateUcForm()) return;
-
-            const data = {
-                descricao: descricaoUcInput.value,
-                sala_ideal: salaIdealInput.value,
-                instituicao_id: selectInstituicao.value,
-                status: statusUc.value
-            };
-            let method, url;
-            if (ucEditId) {
-                method = 'PUT';
-                url = '../backend/processa_unidade_curricular.php?id=' + ucEditId;
-            } else {
-                method = 'POST';
-                url = '../backend/processa_unidade_curricular.php';
-            }
-            const res = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (res.ok) {
-                closeModalUC();
-                setTimeout(() => {
-                    alert('Unidade Curricular salva com sucesso!');
-                    carregarUnidadesCurriculares();
-                }, 200);
-            } else {
-                showAlert("Erro ao salvar UC. Tente novamente.", "error");
-            }
-        };
-
-        document.getElementById('searchUc').oninput = carregarUnidadesCurriculares;
-        document.addEventListener('DOMContentLoaded', carregarUnidadesCurriculares);
-    </script>
 </body>
 </html>

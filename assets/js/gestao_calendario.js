@@ -22,7 +22,7 @@ const STATE = {
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-const debounce = (fn, ms=350) => {
+const debounce = (fn, ms = 350) => {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 };
@@ -60,6 +60,12 @@ async function fetchJSON(url, options = {}) {
   }
   return res.json();
 }
+
+// normalizador sem acento/caixa (para busca por nome)
+const norm = (s) => (s || "")
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase();
 
 // ===================== Lookups =====================
 function nomeEmpresa(id) {
@@ -110,6 +116,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   await carregarCalendarios();
   await carregarEventosNoCalendario(); // primeiro render
 
+  // Placeholder coerente da busca (item 3)
+  const buscaInput = $("#filtroBusca");
+  if (buscaInput) {
+    buscaInput.setAttribute("placeholder", "Buscar por nome do calendário, empresa ou instituição");
+  }
+
   $("#btnAbrirModalAdicionarEvento")?.addEventListener("click", async () => {
     openModal("modalAdicionarEvento");
     await carregarListaCalendariosParaEvento();
@@ -118,6 +130,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#btnAbrirModalCadastrarCalendario")?.addEventListener("click", async () => {
     openModal("modalCadastrarCalendario");
     await carregarInstituicoesEmpresas();
+    if (STATE.filters.instituicao) $("#calInstituicao").value = STATE.filters.instituicao;
+    if (STATE.filters.empresa) $("#calEmpresa").value = STATE.filters.empresa;
   });
 
   $("#formCadastrarCalendario")?.addEventListener("submit", onSubmitCadastrarCalendario);
@@ -205,12 +219,12 @@ function popularFiltrosFixos() {
   if (instSel) {
     instSel.innerHTML = `<option value="">Todas</option>` + STATE.instituicoes.map(i => `<option value="${toId(i)}">${i.razao_social || "(sem nome)"}</option>`).join("");
   }
-  // Ano (dinâmico: ano corrente -2 até +2)
+  // Ano (dinâmico)
   const anoSel = $("#filtroAno");
   if (anoSel) {
     const now = new Date().getFullYear();
     const anos = [];
-    for (let a = now + 2; a >= now - 10; a--) anos.push(a); // mais histórico
+    for (let a = now + 5; a >= now - 5; a--) anos.push(a);
     anoSel.innerHTML = `<option value="">Todos</option>` + anos.map(a => `<option value="${a}">${a}</option>`).join("");
   }
 }
@@ -219,17 +233,30 @@ async function carregarCalendarios() {
   try {
     const { page, pageSize } = STATE.pagination;
     const { q, year, empresa, instituicao } = STATE.filters;
+
     const qs = new URLSearchParams({
       page: String(page),
       limit: String(pageSize),
     });
-    if (q) qs.set("q", q);
+
+    // AJUSTE 1: mapear q -> id_empresa e NÃO enviar q se já virou filtro
+    let usouEmpresaPeloQ = false;
+    if (q && !empresa) {
+      const alvo = norm(q.trim());
+      const emp = STATE.empresas.find(e => norm(e.razao_social).includes(alvo));
+      if (emp) {
+        qs.set("id_empresa", toId(emp));
+        usouEmpresaPeloQ = true;
+      }
+    }
+    if (q && !usouEmpresaPeloQ) qs.set("q", q);
+
     if (year) qs.set("year", year);
-    if (empresa) qs.set("empresa_id", empresa);
-    if (instituicao) qs.set("instituicao_id", instituicao);
+    if (empresa) qs.set("id_empresa", empresa);
+    if (instituicao) qs.set("id_instituicao", instituicao);
 
     const res = await fetchJSON(`${API.calendario}?${qs.toString()}`);
-    // Back-end retorna {items, total} (ver rotas novas)
+    // Back-end retorna {items, total}
     STATE.calendarios = res.items || [];
     STATE.pagination.total = res.total ?? STATE.calendarios.length;
 
@@ -237,7 +264,9 @@ async function carregarCalendarios() {
     atualizarPaginacaoUI();
   } catch (e) {
     console.error("Falha ao carregar calendários:", e.message);
-    $("#tbodyCalendarios").innerHTML = '<tr><td colspan="5" style="text-align:center;">Erro ao carregar.</td></tr>';
+    // AJUSTE 2: proteção no catch se a tabela não existir
+    const tb = $("#tbodyCalendarios");
+    if (tb) tb.innerHTML = '<tr><td colspan="5" style="text-align:center;">Erro ao carregar.</td></tr>';
   }
 }
 

@@ -14,7 +14,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     <title>Login - SENAI</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <script>
     // Validações avançadas de formulário
     document.addEventListener("DOMContentLoaded", function() {
