@@ -161,7 +161,14 @@
   function renderTableUC() {
     const search = (searchInput.value || '').toLowerCase();
     const rows = [];
-
+function ucTimestamp(u) {
+  if (u.created_at) return Date.parse(u.created_at) || 0;
+  if (u.data_cadastro) return Date.parse(u.data_cadastro) || 0;
+  if (typeof u._id === 'string' && /^[a-f\d]{24}$/i.test(u._id)) {
+    return parseInt(u._id.slice(0, 8), 16) * 1000; // ObjectId -> segundos
+  }
+  return 0;
+}
     const filtered = STATE.ucs.filter(uc => {
       const inst = STATE.instituicoes.find(i => i._id === uc.instituicao_id);
       return (
@@ -256,6 +263,69 @@
   function sanitize(val) {
     return (val || '').replace(/\s+/g, ' ').trim();
   }
+
+  function validateUcForm() {
+  clearAlert();
+
+  // Campos obrigatórios
+  if (!selectInstituicao.value) {
+    showAlert('Selecione uma instituição.', 'error');
+    selectInstituicao.focus();
+    return false;
+  }
+
+  // Normalização
+  descricaoUcInput.value = sanitize(descricaoUcInput.value);
+  salaIdealInput.value = sanitize(salaIdealInput.value);
+
+  // Descrição: 3–150
+  if (descricaoUcInput.value.length < 3 || descricaoUcInput.value.length > 150) {
+    showAlert('Descrição deve ter entre 3 e 150 caracteres.', 'error');
+    descricaoUcInput.focus();
+    return false;
+  }
+  // opcionalmente mantenha a barreira contra caracteres proibidos
+  if (forbiddenChars.test(descricaoUcInput.value)) {
+    showAlert('Descrição contém caracteres inválidos.', 'error');
+    descricaoUcInput.focus();
+    return false;
+  }
+
+  // Sala Ideal: 2–20 e apenas letras/números (permitindo espaço)
+  const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
+  if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
+    showAlert('Sala Ideal deve ter entre 2 e 20 caracteres.', 'error');
+    salaIdealInput.focus();
+    return false;
+  }
+  if (!alphaNumBR.test(salaIdealInput.value)) {
+    showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error');
+    salaIdealInput.focus();
+    return false;
+  }
+
+  if (!statusUc.value) {
+    showAlert('Selecione o status.', 'error');
+    statusUc.focus();
+    return false;
+  }
+
+  return true;
+}
+
+
+// Sala Ideal: 2–20 e apenas letras/números/espaços
+const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
+if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
+  showAlert('Sala Ideal deve ter entre 2 e 20 caracteres.', 'error');
+  salaIdealInput.focus();
+  return false;
+}
+if (!alphaNumBR.test(salaIdealInput.value)) {
+  showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error');
+  salaIdealInput.focus();
+  return false;
+}
 
   function validateUcForm() {
     clearAlert();

@@ -12,8 +12,11 @@
   <link rel="stylesheet" href="../assets/css/style_turmas.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+  <!-- FullCalendar -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.global.js"></script>
+
+  <!-- jQuery (para Select2) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
   <!-- Select2 -->
@@ -36,7 +39,7 @@
           <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
           <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
           <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-          <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
+          <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
           <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
@@ -52,14 +55,14 @@
           <h2>Calendário Geral</h2>
           <div class="action-buttons-group">
             <button type="button" class="btn btn-primary" id="btnAbrirModalCadastrarCalendario">
-              <i class="fas fa-plus-circle"></i>Cadastrar Calendário
+              <i class="fas fa-plus-circle"></i> Cadastrar Calendário
             </button>
             <button type="button" class="btn btn-warning" id="btnAbrirModalAdicionarEvento">
-              <i class="fas fa-calendar-plus"></i>Adicionar Evento
+              <i class="fas fa-calendar-plus"></i> Adicionar Evento
             </button>
           </div>
           <p>Visualize os eventos e datas importantes. Eventos são carregados por faixa de datas visível.</p>
-          <div id="calendario"></div>
+          <div id="calendario" aria-label="Calendário Acadêmico"></div>
         </div>
       </div>
 
@@ -70,8 +73,8 @@
         <div class="filter-section">
           <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap;">
             <div class="filter-group">
-              <label for="filtroBusca">Buscar (nome/empresa):</label>
-              <input id="filtroBusca" type="text" placeholder="Digite para filtrar..." class="form-control">
+              <label for="filtroBusca">Buscar:</label>
+              <input id="filtroBusca" type="text" placeholder="Digite para filtrar..." class="form-control" autocomplete="off">
             </div>
             <div class="filter-group">
               <label for="filtroAno">Ano:</label>
@@ -106,13 +109,14 @@
         </div>
 
         <div class="table-responsive">
-          <table class="data-table">
+          <table class="data-table" aria-label="Tabela de Calendários">
             <thead>
               <tr>
                 <th>Descrição</th>
                 <th>Empresa/Parceiro</th>
                 <th>Data Inicial</th>
                 <th>Data Final</th>
+                <th>DATA/HORA DE CRIAÇÃO</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -121,20 +125,20 @@
         </div>
 
         <div class="pagination-bar" style="display:flex;align-items:center;gap:8px; margin-top:10px;">
-          <button id="btnPrevPage" class="btn btn-secondary">&laquo; Anterior</button>
+          <button id="btnPrevPage" class="btn btn-secondary" aria-label="Página anterior">&laquo; Anterior</button>
           <span id="pageInfo">Página 1</span>
-          <button id="btnNextPage" class="btn btn-secondary">Próxima &raquo;</button>
+          <button id="btnNextPage" class="btn btn-secondary" aria-label="Próxima página">Próxima &raquo;</button>
         </div>
       </section>
     </main>
   </div>
 
   <!-- MODAL ADICIONAR EVENTO -->
-  <div id="modalAdicionarEvento" class="modal">
+  <div id="modalAdicionarEvento" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloAdicionarEvento">
     <div class="modal-content">
-      <span class="close-button" onclick="closeModal('modalAdicionarEvento')">&times;</span>
-      <h2>Adicionar Evento</h2>
-      <form id="formAdicionarEvento">
+      <span class="close-button" onclick="closeModal('modalAdicionarEvento')" aria-label="Fechar">&times;</span>
+      <h2 id="tituloAdicionarEvento">Adicionar Evento</h2>
+      <form id="formAdicionarEvento" novalidate>
         <div class="form-group">
           <label for="eventoCalendario">Calendário(s):</label>
           <select id="eventoCalendario" name="calendarios[]" multiple="multiple" class="form-control" style="width:100%"></select>
@@ -158,11 +162,11 @@
   </div>
 
   <!-- MODAL CADASTRAR/EDITAR CALENDÁRIO -->
-  <div id="modalCadastrarCalendario" class="modal">
+  <div id="modalCadastrarCalendario" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloCadastrarCalendario">
     <div class="modal-content">
-      <span class="close-button" onclick="closeModal('modalCadastrarCalendario')">&times;</span>
-      <h2>Cadastrar Calendário</h2>
-      <form id="formCadastrarCalendario">
+      <span class="close-button" onclick="closeModal('modalCadastrarCalendario')" aria-label="Fechar">&times;</span>
+      <h2 id="tituloCadastrarCalendario">Cadastrar Calendário</h2>
+      <form id="formCadastrarCalendario" novalidate>
         <input type="hidden" id="calIdEdicao" value="">
         <div class="form-group">
           <label for="calInstituicao">Instituição:</label>
@@ -172,7 +176,7 @@
         </div>
         <div class="form-group">
           <label for="calNome">Nome do Calendário:</label>
-          <input type="text" id="calNome" name="nome" class="form-control" required>
+          <input type="text" id="calNome" name="nome" class="form-control" required autocomplete="off">
         </div>
         <div class="form-group">
           <label for="calEmpresa">Empresa/Parceiro:</label>
@@ -188,6 +192,7 @@
           <label for="calFim">Fim do Calendário:</label>
           <input type="date" id="calFim" name="fim_cal" class="form-control" required>
         </div>
+        <!-- Observação: data_criacao NÃO aparece no formulário (é controlado pelo backend) -->
         <button type="button" class="btn btn-warning" onclick="closeModal('modalCadastrarCalendario')">Cancelar</button>
         <button id="btnCadastrarCalendario" type="submit" class="btn btn-primary">Cadastrar</button>
       </form>
@@ -195,15 +200,15 @@
   </div>
 
   <!-- MODAL FULL SCREEN (Visualizar + tabela de Não Letivos) -->
-  <div id="modalVisualizarCalendarioFull" class="modal modal-lg">
+  <div id="modalVisualizarCalendarioFull" class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="tituloVisualizarCalendarioFull">
     <div class="modal-content modal-content-lg">
-      <span class="close-button" onclick="closeModal('modalVisualizarCalendarioFull')">&times;</span>
-      <h2>Detalhes do Calendário</h2>
+      <span class="close-button" onclick="closeModal('modalVisualizarCalendarioFull')" aria-label="Fechar">&times;</span>
+      <h2 id="tituloVisualizarCalendarioFull">Detalhes do Calendário</h2>
 
       <div id="detalhesCalendarioFull" style="margin-bottom:10px;"></div>
 
       <div class="table-responsive">
-        <table id="tblDiasLetivos" class="data-table">
+        <table id="tblDiasLetivos" class="data-table" aria-label="Tabela de Dias Não Letivos">
           <thead>
             <tr>
               <th>Data</th>
@@ -218,14 +223,15 @@
   </div>
 
   <!-- Modal pequeno legado (gerenciar dias) -->
-  <div id="modalVisualizarCalendario" class="modal">
+  <div id="modalVisualizarCalendario" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloVisualizarCalendario">
     <div class="modal-content" style="max-width:500px">
-      <span class="close-button" onclick="closeModal('modalVisualizarCalendario')">&times;</span>
-      <h2>Detalhes do Calendário</h2>
+      <span class="close-button" onclick="closeModal('modalVisualizarCalendario')" aria-label="Fechar">&times;</span>
+      <h2 id="tituloVisualizarCalendario">Detalhes do Calendário</h2>
       <div id="detalhesCalendario"></div>
     </div>
   </div>
 
+  <!-- JS da página -->
   <script src="../assets/js/gestao_calendario.js"></script>
 </body>
 </html>

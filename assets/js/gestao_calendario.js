@@ -43,6 +43,14 @@ function fmtBR(iso) {
   return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
 }
 
+function fmtDateTimeBR(v) {
+  if (!v) return "—";
+  const d = new Date(v); // ISO (UTC) -> Date
+  const data = d.toLocaleDateString("pt-BR");
+  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${data} ${hora}`;
+}
+
 function corParaCalendario(id) {
   if (!id) return "#e6f0ff";
   let hash = 0;
@@ -116,7 +124,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await carregarCalendarios();
   await carregarEventosNoCalendario(); // primeiro render
 
-  // Placeholder coerente da busca (item 3)
   const buscaInput = $("#filtroBusca");
   if (buscaInput) {
     buscaInput.setAttribute("placeholder", "Buscar por nome do calendário, empresa ou instituição");
@@ -183,7 +190,6 @@ function initFullCalendar() {
           end: info.endStr,
         }).toString();
         const eventos = await fetchJSON(`${API.calendario}?${qs}`);
-        // normaliza cor pelo id do calendário
         const mapped = (eventos || []).map(ev => ({
           title: `${ev.descricao} (${ev.nome_calendario || "Calendário"})`,
           start: ev.data,
@@ -239,17 +245,20 @@ async function carregarCalendarios() {
       limit: String(pageSize),
     });
 
-    // AJUSTE 1: mapear q -> id_empresa e NÃO enviar q se já virou filtro
-    let usouEmpresaPeloQ = false;
-    if (q && !empresa) {
+    // Busca inteligente: se "q" bater com empresa ou instituição conhecidas, envia o id específico
+    let usouQ = false;
+    if (q) {
       const alvo = norm(q.trim());
-      const emp = STATE.empresas.find(e => norm(e.razao_social).includes(alvo));
-      if (emp) {
-        qs.set("id_empresa", toId(emp));
-        usouEmpresaPeloQ = true;
+      if (!empresa) {
+        const emp = STATE.empresas.find(e => norm(e.razao_social).includes(alvo));
+        if (emp) { qs.set("id_empresa", toId(emp)); usouQ = true; }
       }
+      if (!usouQ && !instituicao) {
+        const inst = STATE.instituicoes.find(i => norm(i.razao_social).includes(alvo));
+        if (inst) { qs.set("id_instituicao", toId(inst)); usouQ = true; }
+      }
+      if (!usouQ) qs.set("q", q);
     }
-    if (q && !usouEmpresaPeloQ) qs.set("q", q);
 
     if (year) qs.set("year", year);
     if (empresa) qs.set("id_empresa", empresa);
@@ -264,15 +273,13 @@ async function carregarCalendarios() {
     atualizarPaginacaoUI();
   } catch (e) {
     console.error("Falha ao carregar calendários:", e.message);
-    // AJUSTE 2: proteção no catch se a tabela não existir
     const tb = $("#tbodyCalendarios");
-    if (tb) tb.innerHTML = '<tr><td colspan="5" style="text-align:center;">Erro ao carregar.</td></tr>';
+    if (tb) tb.innerHTML = '<tr><td colspan="6" style="text-align:center;">Erro ao carregar.</td></tr>';
   }
 }
 
 async function carregarEventosNoCalendario() {
   try {
-    // apenas força refetch da fonte de eventos
     STATE.fc?.refetchEvents();
   } catch (e) {
     console.error("Falha ao carregar eventos:", e.message);
@@ -281,7 +288,6 @@ async function carregarEventosNoCalendario() {
 
 async function carregarListaCalendariosParaEvento() {
   try {
-    // para o select2 do modal de eventos — paginação simples client-side
     const res = await fetchJSON(`${API.calendario}?limit=1000&page=1`);
     const lista = res.items || res; // compat
     const $select = window.jQuery && window.jQuery("#eventoCalendario");
@@ -361,7 +367,7 @@ function renderTabelaCalendarios(lista) {
   if (!tbody) return;
 
   if (!Array.isArray(lista) || lista.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum calendário cadastrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhum calendário cadastrado.</td></tr>';
     return;
   }
 
@@ -371,12 +377,15 @@ function renderTabelaCalendarios(lista) {
     const empresa = nomeEmpresa(cal.id_empresa);
     const dtIni = cal.data_inicial ? fmtBR(cal.data_inicial) : "";
     const dtFim = cal.data_final ? fmtBR(cal.data_final) : "";
+    const criadoEm = fmtDateTimeBR(cal.data_criacao);
+
     return `
       <tr>
         <td>${nome}</td>
         <td>${empresa}</td>
         <td>${dtIni}</td>
         <td>${dtFim}</td>
+        <td>${criadoEm}</td>
         <td class="actions">
           <button class="btn btn-icon btn-view" title="Visualizar" data-action="view" data-id="${id}">
             <i class="fas fa-eye"></i>
@@ -413,7 +422,7 @@ async function onSubmitCadastrarCalendario(ev) {
       id_empresa: $("#calEmpresa").value,
       data_inicial: $("#calInicio").value,
       data_final: $("#calFim").value,
-      dias_letivos: {},
+      dias_letivos: {}, // ignorado pelo backend; mantido por compat
     };
 
     if (!payload.id_instituicao || !payload.nome_calendario || !payload.id_empresa || !payload.data_inicial || !payload.data_final) {
@@ -549,7 +558,8 @@ async function abrirVisualizarCalendarioFull(cal) {
     `<strong>Nome:</strong> ${cal.nome_calendario || ""}<br>`,
     `<strong>Empresa/Parceiro:</strong> ${nomeEmpresa(cal.id_empresa)}<br>`,
     `<strong>Instituição:</strong> ${nomeInstituicao(cal.id_instituicao)}<br>`,
-    `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}`,
+    `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}<br>`,
+    `<strong>Criado em:</strong> ${fmtDateTimeBR(cal.data_criacao)}`
   ].join("");
   $("#detalhesCalendarioFull").innerHTML = resumoHTML;
 
@@ -605,7 +615,8 @@ function abrirGerenciarEventos(cal) {
     `<strong>Nome:</strong> ${cal.nome_calendario || ""}<br>`,
     `<strong>Empresa/Parceiro:</strong> ${nomeEmpresa(cal.id_empresa)}<br>`,
     `<strong>Instituição:</strong> ${nomeInstituicao(cal.id_instituicao)}<br>`,
-    `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}<br><br>`,
+    `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}<br>`,
+    `<strong>Criado em:</strong> ${fmtDateTimeBR(cal.data_criacao)}<br><br>`,
     `<strong>Dias Não Letivos:</strong>`,
     `<ul id="listaDnl" style="margin-top:6px;">`,
     ...(Array.isArray(cal.dias_nao_letivos) && cal.dias_nao_letivos.length
