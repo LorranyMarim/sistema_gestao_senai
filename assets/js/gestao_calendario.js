@@ -6,6 +6,9 @@ const API = Object.freeze({
   instituicao: "../backend/processa_instituicao.php",
 });
 
+const TZ = "America/Sao_Paulo";
+
+
 const STATE = {
   empresas: [],
   instituicoes: [],
@@ -43,11 +46,18 @@ function fmtBR(iso) {
   return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
 }
 
+const FIX_OFFSET_MS = 3 * 60 * 60 * 1000;
+
 function fmtDateTimeBR(v) {
   if (!v) return "—";
-  const d = new Date(v); // ISO (UTC) -> Date
-  const data = d.toLocaleDateString("pt-BR");
-  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  let iso = String(v);
+  // se vier sem offset, trate como UTC
+  if (/^\d{4}-\d{2}-\d{2}T/.test(iso) && !(/[zZ]|[+\-]\d{2}:?\d{2}$/.test(iso))) iso += "Z";
+  const d = new Date(iso);
+  const corrigido = new Date(d.getTime() - FIX_OFFSET_MS); // << subtrai 3h
+
+  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", year: "2-digit", month: "2-digit", day: "2-digit" }).format(corrigido);
+  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" }).format(corrigido);
   return `${data} ${hora}`;
 }
 
@@ -173,6 +183,7 @@ function initFullCalendar() {
   if (!el) return;
   STATE.fc = new FullCalendar.Calendar(el, {
     locale: "pt-br",
+    timeZone: "America/Sao_Paulo",
     initialView: "dayGridMonth",
     headerToolbar: {
       left: "prev,next today",

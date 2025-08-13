@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from db import get_mongo_db
 from bson.objectid import ObjectId
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from typing import Optional, Dict, Any, List
 
 router = APIRouter()
@@ -49,7 +49,7 @@ def _as_str_id(doc: Dict[str, Any]) -> Dict[str, Any]:
     # FastAPI serializa datetime; ainda assim, se vier como datetime, garante isoformat.
     if isinstance(doc.get("data_criacao"), datetime):
         # ISO 8601 sem timezone (UTC); o front parseia normalmente.
-        doc["data_criacao"] = doc["data_criacao"].isoformat()
+        doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
     return doc
 
 # -------------------- Listar com paginação/filtros --------------------
@@ -127,7 +127,7 @@ def adicionar_calendario(calendario: Dict[str, Any]):
 
     # Proteções e defaults
     calendario["dias_nao_letivos"] = []
-    calendario["data_criacao"] = datetime.utcnow()  # imutável
+    calendario["data_criacao"] = datetime.now(timezone.utc)  # imutável
 
     result = db["calendario"].insert_one(calendario)
     calendario["_id"] = str(result.inserted_id)
