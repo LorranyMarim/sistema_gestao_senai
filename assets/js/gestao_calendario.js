@@ -7,7 +7,7 @@ const API = Object.freeze({
 });
 
 const TZ = "America/Sao_Paulo";
-
+const FIX_OFFSET_MS = 3 * 60 * 60 * 1000; // ajuste pedido: -3h
 
 const STATE = {
   empresas: [],
@@ -46,19 +46,54 @@ function fmtBR(iso) {
   return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
 }
 
-const FIX_OFFSET_MS = 3 * 60 * 60 * 1000;
-
-function fmtDateTimeBR(v) {
-  if (!v) return "—";
+// ---- Datas/horários ----
+function parseIsoAssumindoUtc(v) {
+  if (!v) return null;
   let iso = String(v);
   // se vier sem offset, trate como UTC
   if (/^\d{4}-\d{2}-\d{2}T/.test(iso) && !(/[zZ]|[+\-]\d{2}:?\d{2}$/.test(iso))) iso += "Z";
   const d = new Date(iso);
-  const corrigido = new Date(d.getTime() - FIX_OFFSET_MS); // << subtrai 3h
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
+function fmtDateTimeBR(v) {
+  if (!v) return "—";
+  const d = parseIsoAssumindoUtc(v);
+  if (!d) return "—";
+  // ajuste -3h solicitado
+  const corrigido = new Date(d.getTime() - FIX_OFFSET_MS);
   const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", year: "2-digit", month: "2-digit", day: "2-digit" }).format(corrigido);
   const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" }).format(corrigido);
   return `${data} ${hora}`;
+}
+
+// timestamp do ObjectId (primeiros 4 bytes = epoch seconds)
+function tsFromObjectId(id) {
+  const s = String(id || "");
+  if (!/^[a-fA-F0-9]{24}$/.test(s)) return 0;
+  try {
+    const seconds = parseInt(s.substring(0, 8), 16);
+    return seconds * 1000;
+  } catch {
+    return 0;
+  }
+}
+
+// timestamp de criação para ordenação (desc)
+function tsCriacao(cal) {
+  // 1) data_criacao
+  const d = parseIsoAssumindoUtc(cal?.data_criacao);
+  if (d) return d.getTime() - FIX_OFFSET_MS; // manter coerência com exibição
+
+  // 2) timestamp embutido no _id (Mongo)
+  const id = toId(cal) || toId(cal?._id) || toId(cal?.id);
+  const tId = tsFromObjectId(id);
+  if (tId) return tId;
+
+  // 3) fallback: datas do período
+  const di = cal?.data_inicial ? Date.parse(cal.data_inicial) : 0;
+  const df = cal?.data_final ? Date.parse(cal.data_final) : 0;
+  return Math.max(di, df, 0);
 }
 
 function corParaCalendario(id) {
@@ -305,6 +340,7 @@ async function carregarListaCalendariosParaEvento() {
     if (!$select) return;
 
     $select.empty();
+    // manter a ordem padrão ou alfabética; aqui deixamos como veio
     lista.forEach(cal => {
       const id = toId(cal) || toId(cal._id) || toId(cal.id);
       const nome = cal.nome_calendario || cal.descricao || "(Sem nome)";
@@ -382,7 +418,10 @@ function renderTabelaCalendarios(lista) {
     return;
   }
 
-  const rows = lista.map(cal => {
+  // ORDENAR por mais recente (data_criacao DESC), com fallbacks
+  const ordenada = [...lista].sort((a, b) => tsCriacao(b) - tsCriacao(a));
+
+  const rows = ordenada.map(cal => {
     const id = toId(cal) || toId(cal._id) || toId(cal.id);
     const nome = cal.nome_calendario || cal.descricao || "";
     const empresa = nomeEmpresa(cal.id_empresa);
