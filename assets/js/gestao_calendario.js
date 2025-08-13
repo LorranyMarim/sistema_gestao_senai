@@ -457,6 +457,10 @@ function atualizarPaginacaoUI() {
   const { page, pageSize, total } = STATE.pagination;
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
   $("#pageInfo").textContent = `Página ${page} de ${maxPage} • ${total} registros`;
+  const prev = $("#btnPrevPage");
+  const next = $("#btnNextPage");
+  if (prev) { prev.disabled = page <= 1; prev.setAttribute("aria-disabled", prev.disabled); }
+  if (next) { next.disabled = page >= maxPage; next.setAttribute("aria-disabled", next.disabled); }
 }
 
 // ===================== Handlers =====================
