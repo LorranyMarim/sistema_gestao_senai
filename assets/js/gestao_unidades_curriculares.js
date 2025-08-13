@@ -4,14 +4,17 @@
 
   // ===================== Config & State =====================
   const API = Object.freeze({
-    instituicao: '../backend/processa_instituicao.php',
-    uc: '../backend/processa_unidade_curricular.php',
+    instituicao: 'http://localhost:8000/api/instituicoes',
+    uc: 'http://localhost:8000/api/unidades_curriculares',
   });
 
   const STATE = {
     instituicoes: [],
     ucs: [],
     ucEditId: null,
+    pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
+    // status = [] -> Todos; ["Ativa"] -> Ativo; ["Inativa"] -> Inativo
+    filters: { q: '', instituicoes: [], status: [], created_from: '', created_to: '' },
   };
 
   // ===================== DOM Helpers =====================
@@ -50,15 +53,31 @@
   const ucTableBody = $('#ucTableBody');
   const searchInput = $('#searchUc');
 
+  // Filtros UI
+  const filterInstituicao = $('#filterInstituicao');
+  const filterStatus = $('#filterStatus');              // << select: Todos | Ativa | Inativa
+  const filterCriadoDe = $('#filterCriadoDe');          // type="date"
+  const filterCriadoAte = $('#filterCriadoAte');        // type="date"
+  const pageSizeSel = $('#pageSize');
+
+  // Paginação UI
+  const prevPageBtn = $('#prevPage');
+  const nextPageBtn = $('#nextPage');
+  const pageInfo = $('#pageInfo');
+
+  // ===================== Utils =====================
+  const debounce = (fn, ms = 350) => {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  };
+
   // ===================== Sidebar Behavior =====================
   function initSidebar() {
     if (!menuToggle || !sidebar || !dashboardContainer) return;
-
     menuToggle.addEventListener('click', () => {
       sidebar.classList.toggle('active');
       dashboardContainer.classList.toggle('sidebar-active');
     });
-
     dashboardContainer.addEventListener('click', (event) => {
       const isOpen = dashboardContainer.classList.contains('sidebar-active');
       const clickedOutsideSidebar = !sidebar.contains(event.target) && !menuToggle.contains(event.target);
@@ -69,7 +88,7 @@
     });
   }
 
-  // ===================== Fetch helpers =====================
+  // ===================== Fetch helper =====================
   async function safeFetch(url, options = {}) {
     const res = await fetch(url, options);
     if (!res.ok) {
@@ -79,6 +98,31 @@
     return res.json().catch(() => ({}));
   }
 
+  // ===================== Utils de data =====================
+  function fmtDateBR(isoLike) {
+    if (!isoLike) return '—';
+    const dt = new Date(isoLike);
+    if (isNaN(dt)) return '—';
+    return dt.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+  }
+  // converte yyyy-mm-dd -> ISO UTC no início/fim do dia local
+  function toIsoStartOfDayLocal(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+    return dt.toISOString();
+  }
+  function toIsoEndOfDayLocal(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, (m || 1) - 1, d || 1, 23, 59, 59, 999);
+    return dt.toISOString();
+  }
+
   // ===================== Instituições =====================
   async function fetchInstituicoes() {
     if (STATE.instituicoes.length) return STATE.instituicoes;
@@ -86,14 +130,19 @@
     STATE.instituicoes = Array.isArray(data) ? data : [];
     return STATE.instituicoes;
   }
-
   async function preencherSelectInstituicao(selectedId = '') {
     const insts = await fetchInstituicoes();
     const opts = ['<option value="">Selecione a instituição</option>']
       .concat(insts.map(i =>
-        `<option value="${i._id}" ${i._id === selectedId ? 'selected' : ''}>${i.razao_social}</option>`
+        `<option value="${i._id}" ${i._id === selectedId ? 'selected' : ''}>${i.razao_social ?? i.nome ?? '(sem nome)'}</option>`
       ));
     selectInstituicao.innerHTML = opts.join('');
+  }
+  async function preencherFiltroInstituicao() {
+    const insts = await fetchInstituicoes();
+    const opts = ['<option value="">Todas as instituições</option>']
+      .concat(insts.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome ?? '(sem nome)'}</option>`));
+    filterInstituicao.innerHTML = opts.join('');
   }
 
   // ===================== Modais UC =====================
@@ -108,91 +157,91 @@
     STATE.ucEditId = edit ? uc._id : null;
     clearAlert();
   }
-
   function closeModalUC() {
     ucModal.classList.remove('show');
     ucForm.reset();
     STATE.ucEditId = null;
     clearAlert();
   }
-
   function openVisualizarUcModal(uc) {
     const inst = STATE.instituicoes.find(i => i._id === uc.instituicao_id);
-    viewInstituicaoUc.value = inst ? inst.razao_social : '';
+    viewInstituicaoUc.value = inst ? (inst.razao_social ?? inst.nome ?? '') : '';
     viewDescricaoUc.value = uc.descricao ?? '';
     viewSalaIdealUc.value = uc.sala_ideal ?? '';
     viewStatusUc.value = uc.status ?? 'Ativa';
     visualizarUcModal.classList.add('show');
   }
-
-  function closeVisualizarUcModal() {
-    visualizarUcModal.classList.remove('show');
-  }
-
+  function closeVisualizarUcModal() { visualizarUcModal.classList.remove('show'); }
   function wireModalEvents() {
     addUcBtn?.addEventListener('click', () => openModalUC());
     closeModalBtn?.addEventListener('click', closeModalUC);
     cancelBtn?.addEventListener('click', closeModalUC);
-
     closeVisualizarUcBtn?.addEventListener('click', closeVisualizarUcModal);
     fecharVisualizarUcBtn?.addEventListener('click', closeVisualizarUcModal);
-
     window.addEventListener('click', (e) => {
       if (e.target === ucModal) closeModalUC();
       if (e.target === visualizarUcModal) closeVisualizarUcModal();
     });
   }
 
+  // ===================== Build Query =====================
+  function buildQuery() {
+    const p = new URLSearchParams();
+    const { page, pageSize } = STATE.pagination;
+    const { q, instituicoes, status, created_from, created_to } = STATE.filters;
+
+    if (q) p.set('q', q);
+    instituicoes.forEach(v => p.append('instituicao', v));
+    status.forEach(s => p.append('status', s)); // 0 (Todos), 1 (Ativa) ou 1 (Inativa)
+    if (created_from) p.set('created_from', created_from);
+    if (created_to)   p.set('created_to', created_to);
+    p.set('page', String(page));
+    p.set('page_size', String(pageSize));
+
+    return p.toString();
+  }
+
   // ===================== UC: Busca & Tabela =====================
   async function carregarUnidadesCurriculares() {
     try {
-      const [ucs] = await Promise.all([
-        safeFetch(API.uc),
+      const qs = buildQuery();
+      const [data] = await Promise.all([
+        safeFetch(`${API.uc}?${qs}`),
         fetchInstituicoes()
       ]);
-      STATE.ucs = Array.isArray(ucs) ? ucs : [];
+
+      // Suporta formato novo ({items,total}) e antigo ([...])
+      const items = Array.isArray(data) ? data : (data.items || []);
+      const total = Array.isArray(data) ? items.length : (data.total ?? items.length);
+
+      STATE.ucs = items;
+      STATE.pagination.total = total;
+      STATE.pagination.totalPages = Math.max(1, Math.ceil(total / STATE.pagination.pageSize));
+
       renderTableUC();
+      renderPaginationInfo();
     } catch (err) {
       console.error(err);
-      ucTableBody.innerHTML = `<tr><td colspan="6">Erro ao buscar dados.</td></tr>`;
+      ucTableBody.innerHTML = `<tr><td colspan="7">Erro ao buscar dados.</td></tr>`;
+      pageInfo && (pageInfo.textContent = '—');
     }
   }
 
   function renderTableUC() {
-    const search = (searchInput.value || '').toLowerCase();
-    const rows = [];
-function ucTimestamp(u) {
-  if (u.created_at) return Date.parse(u.created_at) || 0;
-  if (u.data_cadastro) return Date.parse(u.data_cadastro) || 0;
-  if (typeof u._id === 'string' && /^[a-f\d]{24}$/i.test(u._id)) {
-    return parseInt(u._id.slice(0, 8), 16) * 1000; // ObjectId -> segundos
-  }
-  return 0;
-}
-    const filtered = STATE.ucs.filter(uc => {
-      const inst = STATE.instituicoes.find(i => i._id === uc.instituicao_id);
-      return (
-        !search ||
-        (uc.descricao || '').toLowerCase().includes(search) ||
-        (uc.sala_ideal || '').toLowerCase().includes(search) ||
-        (inst && (inst.razao_social || '').toLowerCase().includes(search))
-      );
-    });
-
-    if (!filtered.length) {
-      ucTableBody.innerHTML = `<tr><td colspan="6">Nenhuma UC cadastrada.</td></tr>`;
+    if (!STATE.ucs.length) {
+      ucTableBody.innerHTML = `<tr><td colspan="7">Nenhuma UC cadastrada.</td></tr>`;
       return;
     }
-
-    for (const uc of filtered) {
+    const rows = STATE.ucs.map(uc => {
       const inst = STATE.instituicoes.find(i => i._id === uc.instituicao_id);
-      rows.push(`
+      return `
         <tr>
           <td>${uc._id}</td>
-          <td>${inst ? inst.razao_social : ''}</td>
+          <td>${inst ? (inst.razao_social ?? inst.nome ?? '') : ''}</td>
           <td>${uc.descricao ?? ''}</td>
           <td>${uc.sala_ideal ?? ''}</td>
           <td>${uc.status ?? 'Ativa'}</td>
+          <td>${fmtDateBR(uc.data_criacao)}</td>
           <td>
             <div class="action-buttons">
               <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
@@ -201,18 +250,25 @@ function ucTimestamp(u) {
             </div>
           </td>
         </tr>
-      `);
-    }
-
+      `;
+    });
     ucTableBody.innerHTML = rows.join('');
   }
 
-  // Event delegation para ações da tabela (melhor prática)
+  function renderPaginationInfo() {
+    const { page, total, totalPages, pageSize } = STATE.pagination;
+    if (pageInfo) pageInfo.textContent = `Página ${page} de ${totalPages} • ${total} registros`;
+    if (prevPageBtn) prevPageBtn.disabled = page <= 1;
+    if (nextPageBtn) nextPageBtn.disabled = page >= totalPages || total === 0;
+    if (pageSizeSel) pageSizeSel.value = String(pageSize);
+  }
+
+  // Delegação de eventos da tabela
   function wireTableActions() {
     ucTableBody.addEventListener('click', async (e) => {
       const viewBtn = e.target.closest('.btn-view');
       const editBtn = e.target.closest('.btn-edit');
-      const delBtn = e.target.closest('.btn-delete');
+      const delBtn  = e.target.closest('.btn-delete');
 
       if (viewBtn) {
         const id = viewBtn.dataset.id;
@@ -232,7 +288,7 @@ function ucTimestamp(u) {
         const id = delBtn.dataset.id;
         if (!confirm('Deseja excluir esta UC?')) return;
         try {
-          await safeFetch(`${API.uc}?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+          await safeFetch(`${API.uc}/${encodeURIComponent(id)}`, { method: 'DELETE' });
           await carregarUnidadesCurriculares();
         } catch (err) {
           console.error(err);
@@ -244,130 +300,32 @@ function ucTimestamp(u) {
 
   // ===================== Validação =====================
   const forbiddenChars = /[<>"';{}]/g;
-
-  function clearAlert() {
-    alertUc.textContent = '';
-    alertUc.className = '';
-    alertUc.style.display = 'none';
-  }
-
+  function clearAlert() { alertUc.textContent = ''; alertUc.className = ''; alertUc.style.display = 'none'; }
   function showAlert(msg, type = 'error') {
     alertUc.textContent = msg;
     alertUc.className = (type === 'error' ? 'alert-error' : 'alert-success');
     alertUc.style.display = 'block';
-    if (type === 'success') {
-      setTimeout(clearAlert, 2500);
-    }
+    if (type === 'success') setTimeout(clearAlert, 2500);
   }
-
-  function sanitize(val) {
-    return (val || '').replace(/\s+/g, ' ').trim();
-  }
-
-  function validateUcForm() {
-  clearAlert();
-
-  // Campos obrigatórios
-  if (!selectInstituicao.value) {
-    showAlert('Selecione uma instituição.', 'error');
-    selectInstituicao.focus();
-    return false;
-  }
-
-  // Normalização
-  descricaoUcInput.value = sanitize(descricaoUcInput.value);
-  salaIdealInput.value = sanitize(salaIdealInput.value);
-
-  // Descrição: 3–150
-  if (descricaoUcInput.value.length < 3 || descricaoUcInput.value.length > 150) {
-    showAlert('Descrição deve ter entre 3 e 150 caracteres.', 'error');
-    descricaoUcInput.focus();
-    return false;
-  }
-  // opcionalmente mantenha a barreira contra caracteres proibidos
-  if (forbiddenChars.test(descricaoUcInput.value)) {
-    showAlert('Descrição contém caracteres inválidos.', 'error');
-    descricaoUcInput.focus();
-    return false;
-  }
-
-  // Sala Ideal: 2–20 e apenas letras/números (permitindo espaço)
-  const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
-  if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
-    showAlert('Sala Ideal deve ter entre 2 e 20 caracteres.', 'error');
-    salaIdealInput.focus();
-    return false;
-  }
-  if (!alphaNumBR.test(salaIdealInput.value)) {
-    showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error');
-    salaIdealInput.focus();
-    return false;
-  }
-
-  if (!statusUc.value) {
-    showAlert('Selecione o status.', 'error');
-    statusUc.focus();
-    return false;
-  }
-
-  return true;
-}
-
-
-// Sala Ideal: 2–20 e apenas letras/números/espaços
-const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
-if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
-  showAlert('Sala Ideal deve ter entre 2 e 20 caracteres.', 'error');
-  salaIdealInput.focus();
-  return false;
-}
-if (!alphaNumBR.test(salaIdealInput.value)) {
-  showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error');
-  salaIdealInput.focus();
-  return false;
-}
+  function sanitize(val) { return (val || '').replace(/\s+/g, ' ').trim(); }
 
   function validateUcForm() {
     clearAlert();
-
-    if (!selectInstituicao.value) {
-      showAlert('Selecione uma instituição.', 'error');
-      selectInstituicao.focus();
-      return false;
-    }
-
+    if (!selectInstituicao.value) { showAlert('Selecione uma instituição.', 'error'); selectInstituicao.focus(); return false; }
     descricaoUcInput.value = sanitize(descricaoUcInput.value);
-    if (descricaoUcInput.value.length < 2 || descricaoUcInput.value.length > 100) {
-      showAlert('Descrição deve ter entre 2 e 100 caracteres.', 'error');
-      descricaoUcInput.focus();
-      return false;
+    if (descricaoUcInput.value.length < 3 || descricaoUcInput.value.length > 150) {
+      showAlert('Descrição deve ter entre 3 e 150 caracteres.', 'error'); descricaoUcInput.focus(); return false;
     }
-    if (forbiddenChars.test(descricaoUcInput.value)) {
-      showAlert('Descrição contém caracteres inválidos.', 'error');
-      descricaoUcInput.focus();
-      return false;
-    }
-
+    if (forbiddenChars.test(descricaoUcInput.value)) { showAlert('Descrição contém caracteres inválidos.', 'error'); descricaoUcInput.focus(); return false; }
     salaIdealInput.value = sanitize(salaIdealInput.value);
-    if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 100) {
-      showAlert('Sala Ideal deve ter entre 2 e 100 caracteres.', 'error');
-      salaIdealInput.focus();
-      return false;
+    const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
+    if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
+      showAlert('Sala Ideal deve ter entre 2 e 20 caracteres.', 'error'); salaIdealInput.focus(); return false;
     }
-    if (forbiddenChars.test(salaIdealInput.value)) {
-      showAlert('Sala Ideal contém caracteres inválidos.', 'error');
-      salaIdealInput.focus();
-      return false;
-    }
-
-    if (!statusUc.value) {
-      showAlert('Selecione o status.', 'error');
-      statusUc.focus();
-      return false;
-    }
+    if (!alphaNumBR.test(salaIdealInput.value)) { showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error'); salaIdealInput.focus(); return false; }
+    if (!statusUc.value) { showAlert('Selecione o status.', 'error'); statusUc.focus(); return false; }
     return true;
   }
-
   function wireInlineValidation() {
     [descricaoUcInput, salaIdealInput, selectInstituicao, statusUc].forEach(input => {
       input.addEventListener('input', clearAlert);
@@ -375,10 +333,7 @@ if (!alphaNumBR.test(salaIdealInput.value)) {
   }
 
   // ===================== Submit CRUD =====================
-  function disableForm(disabled) {
-    $$('button, input, select, textarea', ucForm).forEach(el => { el.disabled = disabled; });
-  }
-
+  function disableForm(disabled) { $$('button, input, select, textarea', ucForm).forEach(el => { el.disabled = disabled; }); }
   function buildPayload() {
     return {
       descricao: descricaoUcInput.value,
@@ -387,7 +342,6 @@ if (!alphaNumBR.test(salaIdealInput.value)) {
       status: statusUc.value
     };
   }
-
   function wireFormSubmit() {
     ucForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -395,7 +349,7 @@ if (!alphaNumBR.test(salaIdealInput.value)) {
 
       const payload = buildPayload();
       const isEdit = Boolean(STATE.ucEditId);
-      const url = isEdit ? `${API.uc}?id=${encodeURIComponent(STATE.ucEditId)}` : API.uc;
+      const url = isEdit ? `${API.uc}/${encodeURIComponent(STATE.ucEditId)}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
       try {
@@ -405,11 +359,11 @@ if (!alphaNumBR.test(salaIdealInput.value)) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
         closeModalUC();
-        // Mantém o mesmo feedback do código original
         setTimeout(async () => {
           alert('Unidade Curricular salva com sucesso!');
+          // volta pra primeira página para ver o novo registro
+          STATE.pagination.page = 1;
           await carregarUnidadesCurriculares();
         }, 200);
       } catch (err) {
@@ -421,20 +375,90 @@ if (!alphaNumBR.test(salaIdealInput.value)) {
     });
   }
 
-  // ===================== Busca =====================
-  function wireSearch() {
-    searchInput.addEventListener('input', renderTableUC);
+  // ===================== Filtros & Paginação =====================
+  function applyFiltersFromUI() {
+    // texto
+    STATE.filters.q = (searchInput?.value || '').trim();
+
+    // instituição (select simples)
+    const selInst = filterInstituicao?.value || '';
+    STATE.filters.instituicoes = selInst ? [selInst] : [];
+
+    // status (select com "Todos" | "Ativa" | "Inativa")
+    const selStatus = filterStatus?.value || '';
+    STATE.filters.status = selStatus ? [selStatus] : [];
+
+    // datas (type="date" -> envia início/fim do dia)
+    STATE.filters.created_from = toIsoStartOfDayLocal(filterCriadoDe?.value || '');
+    STATE.filters.created_to   = toIsoEndOfDayLocal(filterCriadoAte?.value || '');
+  }
+
+  function wireFilters() {
+    // busca (debounce)
+    searchInput?.addEventListener('input', debounce(async () => {
+      STATE.pagination.page = 1;
+      applyFiltersFromUI();
+      await carregarUnidadesCurriculares();
+    }, 350));
+
+    // instituicao (select simples)
+    filterInstituicao?.addEventListener('change', async () => {
+      STATE.pagination.page = 1;
+      applyFiltersFromUI();
+      await carregarUnidadesCurriculares();
+    });
+
+    // status (select)
+    filterStatus?.addEventListener('change', async () => {
+      STATE.pagination.page = 1;
+      applyFiltersFromUI();
+      await carregarUnidadesCurriculares();
+    });
+
+    // datas
+    [filterCriadoDe, filterCriadoAte].forEach(el => {
+      el?.addEventListener('change', async () => {
+        STATE.pagination.page = 1;
+        applyFiltersFromUI();
+        await carregarUnidadesCurriculares();
+      });
+    });
+
+    // itens por página
+    pageSizeSel?.addEventListener('change', async () => {
+      STATE.pagination.pageSize = parseInt(pageSizeSel.value || '10', 10);
+      STATE.pagination.page = 1;
+      await carregarUnidadesCurriculares();
+    });
+
+    // paginação
+    prevPageBtn?.addEventListener('click', async () => {
+      if (STATE.pagination.page > 1) {
+        STATE.pagination.page--;
+        await carregarUnidadesCurriculares();
+      }
+    });
+    nextPageBtn?.addEventListener('click', async () => {
+      if (STATE.pagination.page < STATE.pagination.totalPages) {
+        STATE.pagination.page++;
+        await carregarUnidadesCurriculares();
+      }
+    });
   }
 
   // ===================== Bootstrap =====================
   document.addEventListener('DOMContentLoaded', async () => {
     try {
       initSidebar();
+      await preencherFiltroInstituicao();  // popular filtro
       wireModalEvents();
       wireInlineValidation();
       wireFormSubmit();
       wireTableActions();
-      wireSearch();
+      wireFilters();
+
+      // filtros iniciais (Status = Todos)
+      applyFiltersFromUI();
       await carregarUnidadesCurriculares();
     } catch (err) {
       console.error('Falha ao inicializar a página:', err);

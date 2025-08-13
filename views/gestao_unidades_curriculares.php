@@ -38,6 +38,14 @@
         .alert-success { background: #e7f8e2; color: #227b2f; }
         .form-group label { font-weight: bold; }
         .action-buttons { display: flex; gap: 6px; align-items: center; justify-content: center; }
+        /* Oculta as colunas 1 (ID) e 2 (Instituição) da tabela principal */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1),
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+  display: none;
+}
+
     </style>
 
     <!-- Script da página (externo e com defer para carregar após o DOM) -->
@@ -77,26 +85,69 @@
                 <h2>Unidades Curriculares Cadastradas</h2>
 
                 <div class="filter-section">
-                    <div class="filter-group">
-                        <label for="searchUc">Buscar UC:</label>
-                        <input type="text" id="searchUc" placeholder="Digite para filtrar..." class="search-input">
-                    </div>
-                </div>
+  <div class="filter-group">
+    <label for="searchUc">Buscar UC:</label>
+    <input type="text" id="searchUc" placeholder="Descrição ou sala..." class="search-input">
+  </div>
+
+  <div class="filter-group">
+    <label for="filterInstituicao">Instituição:</label>
+    <select id="filterInstituicao" style="min-width: 220px;">
+      <!-- opções serão preenchidas via JS -->
+    </select>
+  </div>
+
+  <div class="filter-group">
+  <label for="filterStatus">Status:</label>
+  <select id="filterStatus">
+    <option value="">Todos</option>
+    <option value="Ativa">Ativo</option>
+    <option value="Inativa">Inativo</option>
+  </select>
+</div>
+
+  <div class="filter-group">
+    <label for="filterCriadoDe">Criado de:</label>
+    <input type="date" id="filterCriadoDe">
+  </div>
+  <div class="filter-group">
+    <label for="filterCriadoAte">Criado até:</label>
+    <input type="date" id="filterCriadoAte">
+  </div>
+
+  <div class="filter-group">
+    <label for="pageSize">Itens por página:</label>
+    <select id="pageSize">
+      <option value="10" selected>10</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+  </div>
+</div>
+
+
 
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Instituição</th>
-                                <th>Descrição da Unidade Curricular</th>
-                                <th>Sala Ideal</th>
-                                <th>Status</th>
-                                <th class="actions">Ações</th>
+                            <tr> <th>ID</th>
+    <th>Instituição</th>
+    <th>Descrição da Unidade Curricular</th>
+    <th>Sala Ideal</th>
+    <th>Status</th>
+    <th>Criado em</th>
+    <th class="actions">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="ucTableBody"></tbody>
                     </table>
+                    <div class="pagination-bar" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+  <button class="btn btn-secondary" id="prevPage">Anterior</button>
+  <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+  <button class="btn btn-secondary" id="nextPage">Próximo</button>
+</div>
+
                 </div>
             </section>
         </main>
@@ -152,19 +203,19 @@
             <form>
                 <div class="form-group">
                     <label>Instituição:</label>
-                    <input type="text" id="viewInstituicaoUc" readonly>
+                    <input type="text" id="viewInstituicaoUc" readonly disabled>
                 </div>
                 <div class="form-group">
                     <label>Descrição da UC:</label>
-                    <input type="text" id="viewDescricaoUc" readonly>
+                    <input type="text" id="viewDescricaoUc" readonly disabled>
                 </div>
                 <div class="form-group">
                     <label>Sala Ideal:</label>
-                    <input type="text" id="viewSalaIdealUc" readonly>
+                    <input type="text" id="viewSalaIdealUc" readonly disabled>
                 </div>
                 <div class="form-group">
                     <label>Status:</label>
-                    <input type="text" id="viewStatusUc" readonly>
+                    <input type="text" id="viewStatusUc" readonly disabled>
                 </div>
                 <button type="button" class="btn btn-secondary" id="fecharVisualizarUcBtn">Fechar</button>
             </form>
