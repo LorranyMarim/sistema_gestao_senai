@@ -20,32 +20,74 @@
         .modal {
             display: none;
             position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background: rgba(0, 0, 0, 0.3);
             align-items: center;
             justify-content: center;
             z-index: 999;
         }
-        .modal.show { display: flex !important; }
-        .modal-content {
-            background: #fff; border-radius: 10px; padding: 30px;
-            min-width: 320px; max-width: 90vw; position: relative;
-        }
-        .close-button { position: absolute; top: 15px; right: 30px; font-size: 2em; cursor: pointer; }
-        .alert-error, .alert-success { margin: 10px 0 0 0; padding: 8px 12px; border-radius: 8px; font-size: 1em; }
-        .alert-error { background: #fde2e1; color: #b20000; }
-        .alert-success { background: #e7f8e2; color: #227b2f; }
-        .form-group label { font-weight: bold; }
-        .action-buttons { display: flex; gap: 6px; align-items: center; justify-content: center; }
-        /* Oculta as colunas 1 (ID) e 2 (Instituição) da tabela principal */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1),
-.data-table th:nth-child(2),
-.data-table td:nth-child(2) {
-  display: none;
-}
 
+        .modal.show {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            min-width: 320px;
+            max-width: 90vw;
+            position: relative;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 30px;
+            font-size: 2em;
+            cursor: pointer;
+        }
+
+        .alert-error,
+        .alert-success {
+            margin: 10px 0 0 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .alert-error {
+            background: #fde2e1;
+            color: #b20000;
+        }
+
+        .alert-success {
+            background: #e7f8e2;
+            color: #227b2f;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Oculta as colunas 1 (ID) e 2 (Instituição) da tabela principal */
+        /* Oculta as colunas 1 (ID) e 2 (Instituição) apenas na tabela de UCs */
+        #ucTable th:nth-child(1),
+        #ucTable td:nth-child(1),
+        #ucTable th:nth-child(2),
+        #ucTable td:nth-child(2) {
+            display: none;
+        }
     </style>
 
     <!-- Script da página (externo e com defer para carregar após o DOM) -->
@@ -64,9 +106,11 @@
                     <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i>
+                            Gestão de UCs</a></li>
                     <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
                     <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
@@ -78,75 +122,77 @@
 
             <header class="main-header">
                 <h1>Gestão de Unidades Curriculares</h1>
-                <button class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova UC</button>
+                <button class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova
+                    UC</button>
             </header>
 
             <section class="table-section">
                 <h2>Unidades Curriculares Cadastradas</h2>
 
                 <div class="filter-section">
-  <div class="filter-group">
-    <label for="searchUc">Buscar UC:</label>
-    <input type="text" id="searchUc" placeholder="Descrição ou sala..." class="search-input">
-  </div>
+                    <div class="filter-group">
+                        <label for="searchUc">Buscar UC:</label>
+                        <input type="text" id="searchUc" placeholder="Descrição ou sala..." class="search-input">
+                    </div>
 
-  <div class="filter-group">
-    <label for="filterInstituicao">Instituição:</label>
-    <select id="filterInstituicao" style="min-width: 220px;">
-      <!-- opções serão preenchidas via JS -->
-    </select>
-  </div>
+                    <div class="filter-group">
+                        <label for="filterInstituicao">Instituição:</label>
+                        <select id="filterInstituicao" style="min-width: 220px;">
+                            <!-- opções serão preenchidas via JS -->
+                        </select>
+                    </div>
 
-  <div class="filter-group">
-  <label for="filterStatus">Status:</label>
-  <select id="filterStatus">
-    <option value="">Todos</option>
-    <option value="Ativa">Ativo</option>
-    <option value="Inativa">Inativo</option>
-  </select>
-</div>
+                    <div class="filter-group">
+                        <label for="filterStatus">Status:</label>
+                        <select id="filterStatus">
+                            <option value="">Todos</option>
+                            <option value="Ativa">Ativo</option>
+                            <option value="Inativa">Inativo</option>
+                        </select>
+                    </div>
 
-  <div class="filter-group">
-    <label for="filterCriadoDe">Criado de:</label>
-    <input type="date" id="filterCriadoDe">
-  </div>
-  <div class="filter-group">
-    <label for="filterCriadoAte">Criado até:</label>
-    <input type="date" id="filterCriadoAte">
-  </div>
+                    <div class="filter-group">
+                        <label for="filterCriadoDe">Criado de:</label>
+                        <input type="date" id="filterCriadoDe">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterCriadoAte">Criado até:</label>
+                        <input type="date" id="filterCriadoAte">
+                    </div>
 
-  <div class="filter-group">
-    <label for="pageSize">Itens por página:</label>
-    <select id="pageSize">
-      <option value="10" selected>10</option>
-      <option value="25">25</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-    </select>
-  </div>
-</div>
+                    <div class="filter-group">
+                        <label for="pageSize">Itens por página:</label>
+                        <select id="pageSize">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
 
 
 
                 <div class="table-responsive">
-                    <table class="data-table">
+                    <table id="ucTable" class="data-table">
                         <thead>
-                            <tr> <th>ID</th>
-    <th>Instituição</th>
-    <th>Descrição da Unidade Curricular</th>
-    <th>Sala Ideal</th>
-    <th>Status</th>
-    <th>Criado em</th>
-    <th class="actions">Ações</th>
+                            <tr>
+                                <th>ID</th>
+                                <th>Instituição</th>
+                                <th>Descrição da Unidade Curricular</th>
+                                <th>Sala Ideal</th>
+                                <th>Status</th>
+                                <th>Criado em</th>
+                                <th class="actions">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="ucTableBody"></tbody>
                     </table>
                     <div class="pagination-bar" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
-  <button class="btn btn-secondary" id="prevPage">Anterior</button>
-  <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-  <button class="btn btn-secondary" id="nextPage">Próximo</button>
-</div>
+                        <button class="btn btn-secondary" id="prevPage">Anterior</button>
+                        <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+                        <button class="btn btn-secondary" id="nextPage">Próximo</button>
+                    </div>
 
                 </div>
             </section>
@@ -189,7 +235,8 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar UC</button>
-                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i> Cancelar</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i>
+                    Cancelar</button>
             </form>
         </div>
     </div>
@@ -222,4 +269,5 @@
         </div>
     </div>
 </body>
+
 </html>

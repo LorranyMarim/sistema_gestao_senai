@@ -54,10 +54,10 @@
   const searchInput = $('#searchUc');
 
   // Filtros UI
-  const filterInstituicao = $('#filterInstituicao');
-  const filterStatus = $('#filterStatus');              // << select: Todos | Ativa | Inativa
-  const filterCriadoDe = $('#filterCriadoDe');          // type="date"
-  const filterCriadoAte = $('#filterCriadoAte');        // type="date"
+  const filterInstituicao = $('#filterInstituicao');   // select simples ("" = todas)
+  const filterStatus = $('#filterStatus');             // select: ""|Ativa|Inativa
+  const filterCriadoDe = $('#filterCriadoDe');         // type="date"
+  const filterCriadoAte = $('#filterCriadoAte');       // type="date"
   const pageSizeSel = $('#pageSize');
 
   // Paginação UI
@@ -109,7 +109,7 @@
       timeStyle: 'short',
     });
   }
-  // converte yyyy-mm-dd -> ISO UTC no início/fim do dia local
+  // yyyy-mm-dd -> ISO UTC no início/fim do dia local
   function toIsoStartOfDayLocal(dateStr) {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -192,7 +192,7 @@
 
     if (q) p.set('q', q);
     instituicoes.forEach(v => p.append('instituicao', v));
-    status.forEach(s => p.append('status', s)); // 0 (Todos), 1 (Ativa) ou 1 (Inativa)
+    status.forEach(s => p.append('status', s)); // "" (Todos) => nada enviado
     if (created_from) p.set('created_from', created_from);
     if (created_to)   p.set('created_to', created_to);
     p.set('page', String(page));
@@ -311,18 +311,26 @@
 
   function validateUcForm() {
     clearAlert();
+
+    // instituição obrigatória
     if (!selectInstituicao.value) { showAlert('Selecione uma instituição.', 'error'); selectInstituicao.focus(); return false; }
+
+    // descrição 2–100 + chars proibidos
     descricaoUcInput.value = sanitize(descricaoUcInput.value);
-    if (descricaoUcInput.value.length < 3 || descricaoUcInput.value.length > 150) {
-      showAlert('Descrição deve ter entre 3 e 150 caracteres.', 'error'); descricaoUcInput.focus(); return false;
+    if (descricaoUcInput.value.length < 2 || descricaoUcInput.value.length > 100) {
+      showAlert('Descrição deve ter entre 2 e 100 caracteres.', 'error'); descricaoUcInput.focus(); return false;
     }
     if (forbiddenChars.test(descricaoUcInput.value)) { showAlert('Descrição contém caracteres inválidos.', 'error'); descricaoUcInput.focus(); return false; }
+
+    // Sala Ideal: 2–20; letras/números/espaços (inclui acentos)
     salaIdealInput.value = sanitize(salaIdealInput.value);
     const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
     if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
       showAlert('Sala Ideal deve ter entre 2 e 20 caracteres.', 'error'); salaIdealInput.focus(); return false;
     }
     if (!alphaNumBR.test(salaIdealInput.value)) { showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error'); salaIdealInput.focus(); return false; }
+
+    // status obrigatório (Ativa/Inativa)
     if (!statusUc.value) { showAlert('Selecione o status.', 'error'); statusUc.focus(); return false; }
     return true;
   }
@@ -384,7 +392,7 @@
     const selInst = filterInstituicao?.value || '';
     STATE.filters.instituicoes = selInst ? [selInst] : [];
 
-    // status (select com "Todos" | "Ativa" | "Inativa")
+    // status (select com "Todos"| "Ativa" | "Inativa")
     const selStatus = filterStatus?.value || '';
     STATE.filters.status = selStatus ? [selStatus] : [];
 
