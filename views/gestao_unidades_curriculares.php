@@ -88,6 +88,40 @@
         #ucTable td:nth-child(2) {
             display: none;
         }
+        /* Garante que os dois modais fiquem sempre acima da sidebar/menu */
+#ucModal, #visualizarUcModal {
+  position: fixed !important;
+  inset: 0 !important;              /* top/right/bottom/left: 0 */
+  z-index: 9999 !important;         /* maior que qualquer sidebar */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.3);
+}
+#ucModal.show, #visualizarUcModal.show {
+  display: flex !important;
+}
+
+/* Unifica o tamanho visual dos conteúdos dos modais */
+#ucModal .modal-content,
+#visualizarUcModal .modal-content {
+  width: min(680px, 90vw);          /* fica elegante no desktop e mobile */
+  max-height: 90vh;                 /* evita “extrapolar” a altura */
+  overflow: auto;                   /* scroll interno se precisar */
+  border-radius: 10px;
+  padding: 30px;
+  background: #fff;
+  position: relative;
+}
+
+/* (opcional) inputs de visualização não forçam largura gigantesca */
+#visualizarUcModal .modal-content input[readonly],
+#visualizarUcModal .modal-content input[disabled] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
     </style>
 
     <!-- Script da página (externo e com defer para carregar após o DOM) -->
@@ -233,10 +267,10 @@
                         <option value="Inativa">Inativa</option>
                     </select>
                 </div>
-
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar UC</button>
                 <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i>
                     Cancelar</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar UC</button>
+                
             </form>
         </div>
     </div>
