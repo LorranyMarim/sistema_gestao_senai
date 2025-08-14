@@ -222,15 +222,15 @@
           <form>
             <div class="form-group">
               <label>Instituição:</label>
-              <input type="text" id="viewInstituicao" readonly />
+              <input type="text" id="viewInstituicao" readonly disabled/>
             </div>
             <div class="form-group">
               <label>Nome da Empresa/Parceiro:</label>
-              <input type="text" id="viewNomeEmpresa" readonly />
+              <input type="text" id="viewNomeEmpresa" readonly disabled/>
             </div>
             <div class="form-group">
               <label>CNPJ:</label>
-              <input type="text" id="viewCnpjMatriz" readonly />
+              <input type="text" id="viewCnpjMatriz" readonly disabled/>
             </div>
             <button type="button" class="btn btn-secondary" id="fecharVisualizarEmpresa">Fechar</button>
           </form>
