@@ -4,26 +4,131 @@
 const API_CURSO = '../backend/processa_curso.php';
 const API_INST  = '../backend/processa_instituicao.php';
 const API_UC    = '../backend/processa_unidade_curricular.php';
-const API_EMP   = '../backend/processa_empresa.php'; // ajuste se necessário
+const API_EMP   = '../backend/processa_empresa.php';
+
+// ======================= Domínio (conjuntos permitidos) =======================
+const TIPOS_SET   = new Set(['Presencial', 'EAD', 'Semipresencial']);
+const NIVEIS_SET  = new Set(['Técnico', 'Aperfeiçoamento', 'Qualificação', 'Especialização']);
+const STATUS_SET  = new Set(['Ativo', 'Inativo']);
+const CATEG_SET   = new Set(['C', 'A']);
+const EIXO_SET    = new Set(['TI', 'Metal Mecânica']);
 
 // ======================= Cache/estado =======================
 let empresasCache = [];
 let cursosCache = [];
 let instituicoesCache = [];
 let ucsCache = [];
-let ucDataMap = {};         // { ucId: descricao }
+let ucDataMap = {};
 let cursoEditando = null;
 let modoEdicao = false;
+
+// ======================= Utils UI =======================
+function setLoadingTable(on) {
+  const $tbody = $('#cursosTable tbody');
+  if (on) {
+    $tbody.html('<tr><td colspan="8">Carregando...</td></tr>');
+  } else if (!$tbody.children().length) {
+    $tbody.html('<tr><td colspan="8">Nenhum curso encontrado.</td></tr>');
+  }
+}
+
+function showToast(msg, type = 'info') {
+  // Simples: use alert. Se houver biblioteca de toasts, troque aqui.
+  alert(msg);
+}
+
+function setFieldError(selector, message) {
+  const $el = $(selector);
+  $el.addClass('border-red-500');
+  let $err = $el.siblings('.field-error');
+  if (!$err.length) {
+    $err = $('<div class="field-error text-red-600 text-sm mt-1"></div>');
+    $el.after($err);
+  }
+  $err.text(message || '');
+}
+
+function clearFieldError(selector) {
+  const $el = $(selector);
+  $el.removeClass('border-red-500');
+  $el.siblings('.field-error').remove();
+}
+
+function disableForm(disabled) {
+  const $form = $('#formCurso')[0];
+  if (!$form) return;
+  [...$form.elements].forEach(el => el.disabled = disabled);
+}
+
+// ======================= fetch com timeout =======================
+async function fetchWithTimeout(url, opts = {}, timeoutMs = 12000) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const resp = await fetch(url, { ...opts, signal: ctrl.signal, credentials: 'same-origin' });
+    return resp;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+async function fetchJson(url, fallback = []) {
+  try {
+    const resp = await fetchWithTimeout(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    return Array.isArray(data) ? data : (data?.items ?? data ?? fallback);
+  } catch (err) {
+    console.error('fetchJson falhou:', url, err);
+    return fallback;
+  }
+}
+
+// Carrega TODAS as UCs (ignorando paginação)
+async function fetchAllUCs(pageSize = 1000) {
+  let page = 1;
+  let all = [];
+  while (true) {
+    const chunk = await fetchJson(`${API_UC}?page=${page}&page_size=${pageSize}`, []);
+    if (!Array.isArray(chunk) || chunk.length === 0) break;
+    all = all.concat(chunk);
+    if (chunk.length < pageSize) break;
+    page += 1;
+  }
+  if (all.length === 0) {
+    all = await fetchJson(`${API_UC}?page_size=${pageSize}`, []);
+  }
+  return all;
+}
+
+function fmtDateBR(val) {
+  if (!val) return '—';
+  try {
+    const d = (val instanceof Date) ? val : new Date(val);
+    if (isNaN(+d)) return '—';
+    return d.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      dateStyle: 'short',
+      timeStyle: 'short'
+    });
+  } catch { return '—'; }
+}
+
+function normalizeStatus(s) {
+  if (!s && s !== 0) return '—';
+  const t = String(s).toLowerCase().trim();
+  if (t === 'ativo' || t === 'ativa' || t === 'true') return 'Ativo';
+  if (t === 'inativo' || t === 'inativa' || t === 'false') return 'Inativo';
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
 
 // ======================= Bootstrap =======================
 $(document).ready(function () {
   inicializarSelects();
   bindFecharModal();
   bindAccordionDelegation();
-
   carregarCursos();
 
-  // filtros/ações
   $('#searchCurso').on('input', filtrarCursos);
 
   $('#btnAddCurso').on('click', () => {
@@ -34,57 +139,27 @@ $(document).ready(function () {
   $('#formCurso').on('submit', salvarCurso);
   $('#saveAllUcsBtn').on('click', salvarUcsConfig);
 
-  // delegates da tabela
-  $(document)
-    .on('click', '.btn-view', function (e) {
-      e.stopPropagation();
-      mostrarDetalheCurso($(this).data('id'));
-    })
-    .on('click', '.btn-edit', function (e) {
-      e.stopPropagation();
-      abrirModalCurso(true, $(this).data('id'));
-    })
-    .on('click', '.btn-delete', function (e) {
-      e.stopPropagation();
-      excluirCurso($(this).data('id'));
-    });
-
-  // ações no modal de detalhes
-  $('#btnEditarCurso').on('click', function () {
-    abrirModalCurso(true, $(this).data('id'));
-  });
-  $('#btnExcluirCurso').on('click', function () {
-    excluirCurso($(this).data('id'));
+  // limpar erros inline ao digitar
+  $('#formCurso').on('input change', 'input, select, textarea', function () {
+    clearFieldError(this);
   });
 });
 
-// ======================= Util/fetch =======================
-async function fetchJson(url) {
-  try {
-    const resp = await fetch(url, { credentials: 'same-origin' });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    return Array.isArray(data) ? data : (data?.items ?? data ?? []);
-  } catch (err) {
-    console.error('fetchJson falhou:', url, err);
-    return [];
-  }
-}
-
+// ======================= Carga inicial =======================
 async function carregarCursos() {
-  const [cursos, insts, ucs, emps] = await Promise.all([
-    fetchJson(API_CURSO),
-    fetchJson(API_INST),
-    fetchJson(API_UC),
-    fetchJson(API_EMP)
+  setLoadingTable(true);
+  const [cursos, insts, emps] = await Promise.all([
+    fetchJson(API_CURSO, []),
+    fetchJson(API_INST, []),
+    fetchJson(API_EMP, [])
   ]);
+  const ucs = await fetchAllUCs(1000);
 
   cursosCache = cursos || [];
   instituicoesCache = insts || [];
   ucsCache = ucs || [];
   empresasCache = emps || [];
 
-  // mapa rápido de descrição de UC
   ucDataMap = {};
   ucsCache.forEach(uc => {
     const id = uc._id || uc.id;
@@ -94,14 +169,11 @@ async function carregarCursos() {
   renderCursosTable(cursosCache);
 }
 
+// ======================= Select2 =======================
 function inicializarSelects() {
-  $('#ucsSelect, #convenioSelect').select2({
-    theme: 'bootstrap-5',
-    width: '100%'
-  });
+  $('#ucsSelect, #convenioSelect').select2({ theme: 'bootstrap-5', width: '100%' });
 }
 
-// fecha modais sem usar onclick no HTML
 function bindFecharModal() {
   $(document).on('click', '[data-close]', function () {
     const alvo = $(this).attr('data-close');
@@ -109,7 +181,6 @@ function bindFecharModal() {
   });
 }
 
-// delega o clique do acordeão (sem onclick inline)
 function bindAccordionDelegation() {
   $(document).on('click', '.accordion-button', function () {
     const ucid = $(this).attr('data-ucid');
@@ -117,7 +188,7 @@ function bindAccordionDelegation() {
   });
 }
 
-// ======================= Preenchimento de selects =======================
+// ======================= Preenche selects =======================
 function preencherSelectInstituicao(selectedId = '') {
   const $sel = $('#instituicaoId');
   $sel.empty().append('<option value="">Selecione</option>');
@@ -140,15 +211,14 @@ function preencherSelectUCs(selectedUcs = []) {
 
 function preencherSelectConvenios(selected = []) {
   const $sel = $('#convenioSelect');
-  const selectedArr = Array.isArray(selected) ? selected.map(String) : (selected ? [String(selected)] : []);
   $sel.empty().append('<option value="">Selecione</option>');
   empresasCache.forEach(emp => {
     const id = emp._id || emp.id;
     const nome = emp.razao_social || emp.nome_fantasia || id;
-    const isSel = selectedArr.includes(String(id)) ? 'selected' : '';
-    $sel.append(`<option value="${id}" ${isSel}>${nome}</option>`);
+    $sel.append(`<option value="${id}">${nome}</option>`);
   });
-  $sel.val(selectedArr.length ? selectedArr[0] : '').trigger('change');
+  const val = Array.isArray(selected) ? selected[0] : selected;
+  $sel.val(val || '').trigger('change');
 }
 
 // ======================= Tabela =======================
@@ -162,30 +232,29 @@ function renderCursosTable(cursos) {
   }
 
   cursos.forEach(curso => {
-    // Empresa pode ser 1 id ou lista
     let empresaNome = '';
-    const val = curso.empresa;
-    if (Array.isArray(val)) {
-      empresaNome = val.map(empId => {
+    const v = curso.empresa;
+    if (Array.isArray(v)) {
+      empresaNome = v.map(empId => {
         const emp = empresasCache.find(e => String(e._id || e.id) === String(empId));
         return emp ? (emp.razao_social || emp.nome_fantasia) : empId;
       }).join(', ');
-    } else if (val) {
-      const emp = empresasCache.find(e => String(e._id || e.id) === String(val));
-      empresaNome = emp ? (emp.razao_social || emp.nome_fantasia) : val;
+    } else if (v) {
+      const emp = empresasCache.find(e => String(e._id || e.id) === String(v));
+      empresaNome = emp ? (emp.razao_social || emp.nome_fantasia) : v;
     }
 
     $tbody.append(`
       <tr>
         <td>${curso.nome || ''}</td>
-        <td>${curso.tipo || ''}</td>
         <td>${curso.categoria || ''}</td>
         <td>${curso.eixo_tecnologico || ''}</td>
         <td>${empresaNome || ''}</td>
         <td>${curso.nivel_curso || ''}</td>
-        <td>${curso.carga_horaria ?? ''}</td>
+        <td>${fmtDateBR(curso.data_criacao)}</td>
+        <td>${normalizeStatus(curso.status)}</td>
         <td>
-          <div style="display:flex;gap:4px;">
+          <div class="action-buttons">
             <button class="btn btn-icon btn-view" data-id="${curso._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
             <button class="btn btn-icon btn-edit" data-id="${curso._id}" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="btn btn-icon btn-delete" data-id="${curso._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
@@ -202,8 +271,8 @@ function filtrarCursos() {
 
   const filtrados = cursosCache.filter(curso => {
     const base = [
-      curso.nome, curso.tipo, curso.categoria, curso.eixo_tecnologico,
-      curso.nivel_curso, curso.carga_horaria, curso._id
+      curso.nome, curso.categoria, curso.eixo_tecnologico,
+      curso.nivel_curso, curso.status
     ].map(v => String(v || '').toLowerCase());
     return base.some(v => v.includes(termo));
   });
@@ -217,7 +286,7 @@ function abrirModalCurso(edit = false, cursoId = null) {
   cursoEditando = edit ? cursosCache.find(c => String(c._id) === String(cursoId)) : null;
 
   preencherSelectInstituicao(edit ? cursoEditando?.instituicao_id : '');
-  preencherSelectConvenios(edit ? (cursoEditando?.empresa ?? []) : []);
+  preencherSelectConvenios(edit ? (cursoEditando?.empresa ?? '') : '');
   preencherSelectUCs(
     edit && Array.isArray(cursoEditando?.ordem_ucs)
       ? cursoEditando.ordem_ucs.map(u => u.id)
@@ -226,6 +295,7 @@ function abrirModalCurso(edit = false, cursoId = null) {
 
   $('#nivelCurso').val(edit ? (cursoEditando?.nivel_curso || '') : '');
   $('#tipoCurso').val(edit ? (cursoEditando?.tipo || '') : '');
+  $('#statusCurso').val(edit ? (cursoEditando?.status || 'Ativo') : 'Ativo');
   $('#cargaHoraria').val(edit ? (cursoEditando?.carga_horaria ?? '') : '');
   $('#cursoId').val(edit ? (cursoEditando?._id || '') : '');
   $('#nomeCurso').val(edit ? (cursoEditando?.nome || '') : '');
@@ -247,25 +317,64 @@ function fecharModal(modalId) {
 
 // ======================= Validação =======================
 function validarFormCurso() {
+  let ok = true;
+
+  // limpa erros
+  ['#instituicaoId','#convenioSelect','#nomeCurso','#nivelCurso','#tipoCurso','#statusCurso','#categoriaCurso','#eixoTecnologicoCurso','#cargaHoraria','#ucsSelect']
+    .forEach(sel => clearFieldError(sel));
+
+  const instituicao = $('#instituicaoId').val();
+  const empresaSel = $('#convenioSelect').val();
   const nome = ($('#nomeCurso').val() || '').trim();
   const modalidade = $('#nivelCurso').val();
   const tipo = $('#tipoCurso').val();
-  const categoria = ($('#categoriaCurso').val() || '').trim();
-  const eixo = ($('#eixoTecnologicoCurso').val() || '').trim();
+  const status = $('#statusCurso').val();
+  const categoria = $('#categoriaCurso').val();
+  const eixo = $('#eixoTecnologicoCurso').val();
   const cargaHoraria = Number($('#cargaHoraria').val());
-  const empresaSel = $('#convenioSelect').val(); // select simples
-  const instituicao = $('#instituicaoId').val();
+  const ucs = $('#ucsSelect').val() || [];
 
-  if (!instituicao) { alert('Selecione a Instituição.'); $('#instituicaoId').focus(); return false; }
-  if (!nome || nome.length < 3 || nome.length > 100) { alert('Nome do curso obrigatório (3-100 caracteres).'); $('#nomeCurso').focus(); return false; }
-  if (!modalidade) { alert('Selecione a Modalidade.'); $('#nivelCurso').focus(); return false; }
-  if (!tipo) { alert('Selecione o Tipo.'); $('#tipoCurso').focus(); return false; }
-  if (!categoria) { alert('Categoria obrigatória.'); $('#categoriaCurso').focus(); return false; }
-  if (!eixo) { alert('Eixo Tecnológico obrigatório.'); $('#eixoTecnologicoCurso').focus(); return false; }
-  if (!empresaSel) { alert('Selecione a Empresa/Parceiro.'); $('#convenioSelect').focus(); return false; }
-  if (!Number.isFinite(cargaHoraria) || cargaHoraria <= 0) { alert('Informe a Carga Horária corretamente.'); $('#cargaHoraria').focus(); return false; }
+  // obrigatórios
+  if (!instituicao) { setFieldError('#instituicaoId','Obrigatório'); ok = false; }
+  if (!empresaSel) { setFieldError('#convenioSelect','Obrigatório'); ok = false; }
+  if (!nome || nome.length < 3 || nome.length > 100) { setFieldError('#nomeCurso','Entre 3 e 100 caracteres'); ok = false; }
+  if (!modalidade) { setFieldError('#nivelCurso','Obrigatório'); ok = false; }
+  if (!tipo) { setFieldError('#tipoCurso','Obrigatório'); ok = false; }
+  if (!status) { setFieldError('#statusCurso','Obrigatório'); ok = false; }
+  if (!categoria) { setFieldError('#categoriaCurso','Obrigatório'); ok = false; }
+  if (!eixo) { setFieldError('#eixoTecnologicoCurso','Obrigatório'); ok = false; }
+  if (!Number.isFinite(cargaHoraria) || !Number.isInteger(cargaHoraria) || cargaHoraria < 1) {
+    setFieldError('#cargaHoraria','Inteiro ≥ 1'); ok = false;
+  }
+  if (!ucs.length) { setFieldError('#ucsSelect','Selecione ao menos uma UC'); ok = false; }
 
-  return true;
+  // domínio
+  if (modalidade && !NIVEIS_SET.has(modalidade)) { setFieldError('#nivelCurso','Valor inválido'); ok = false; }
+  if (tipo && !TIPOS_SET.has(tipo)) { setFieldError('#tipoCurso','Valor inválido'); ok = false; }
+  if (status && !STATUS_SET.has(status)) { setFieldError('#statusCurso','Valor inválido'); ok = false; }
+  if (categoria && !CATEG_SET.has(categoria)) { setFieldError('#categoriaCurso','Valor inválido'); ok = false; }
+  if (eixo && !EIXO_SET.has(eixo)) { setFieldError('#eixoTecnologicoCurso','Valor inválido'); ok = false; }
+
+  // referências
+  const instOk = instituicoesCache.some(i => String(i._id || i.id) === String(instituicao));
+  if (instituicao && !instOk) { setFieldError('#instituicaoId','Instituição inexistente'); ok = false; }
+
+  const empOk = empresasCache.some(e => String(e._id || e.id) === String(empresaSel));
+  if (empresaSel && !empOk) { setFieldError('#convenioSelect','Empresa inexistente'); ok = false; }
+
+  const ucSet = new Set(ucs);
+  if (ucSet.size !== ucs.length) {
+    setFieldError('#ucsSelect','Remova duplicatas'); ok = false;
+  }
+  const allUcExist = ucs.every(id => ucsCache.some(u => String(u._id || u.id) === String(id)));
+  if (!allUcExist) { setFieldError('#ucsSelect','Alguma UC não existe'); ok = false; }
+
+  if (!ok) {
+    // foca no primeiro com erro
+    const $firstErr = $('.border-red-500').first();
+    if ($firstErr.length) $firstErr.focus();
+  }
+  return ok;
 }
 
 // ======================= Salvar (passo 1) =======================
@@ -273,22 +382,22 @@ function salvarCurso(e) {
   e.preventDefault();
   if (!validarFormCurso()) return;
 
-  const selectedUcs = $('#ucsSelect').val() || [];
-  if (!selectedUcs.length) {
-    alert('Selecione ao menos uma Unidade Curricular.');
-    return;
-  }
+  disableForm(true);
+
+  // Dedup UCs
+  const selectedUcs = Array.from(new Set($('#ucsSelect').val() || []));
 
   const dataBase = {
-    nome: $('#nomeCurso').val(),
+    nome: $('#nomeCurso').val().trim(),
     tipo: $('#tipoCurso').val(),
     nivel_curso: $('#nivelCurso').val(),
+    status: $('#statusCurso').val(),
     categoria: $('#categoriaCurso').val(),
     eixo_tecnologico: $('#eixoTecnologicoCurso').val(),
     carga_horaria: Number($('#cargaHoraria').val()),
     empresa: $('#convenioSelect').val(),
     instituicao_id: $('#instituicaoId').val(),
-    observacao: $('#observacao').val() || '',
+    observacao: ($('#observacao').val() || '').slice(0, 1000),
     ordem_ucs: selectedUcs.map(id => ({ id, descricao: ucDataMap[id] || '' }))
   };
 
@@ -298,7 +407,12 @@ function salvarCurso(e) {
   window._cursoDataToSave = dataBase;
 
   fecharModal('modalCurso');
-  abrirModalUcsConfig(selectedUcs, (cursoEditando && Array.isArray(cursoEditando.ordem_ucs)) ? cursoEditando.ordem_ucs : []);
+  abrirModalUcsConfig(
+    selectedUcs,
+    (cursoEditando && Array.isArray(cursoEditando.ordem_ucs)) ? cursoEditando.ordem_ucs : []
+  );
+
+  disableForm(false);
 }
 
 // ======================= Modal de UCs (passo 2) =======================
@@ -331,28 +445,28 @@ function abrirModalUcsConfig(ucsIds, dadosExistentes = []) {
 
               <div class="form-group">
                 <label>Carga Horária de Aulas Presenciais:</label>
-                <input type="number" min="0" class="form-control presencial_ch" required value="${det.presencial?.carga_horaria ?? 0}"/>
+                <input type="number" min="0" step="1" class="form-control presencial_ch" required value="${det.presencial?.carga_horaria ?? 0}"/>
               </div>
               <div class="form-group">
                 <label>Quantidade de Aulas Total (Presencial):</label>
-                <input type="number" min="0" class="form-control presencial_aulas" required value="${det.presencial?.quantidade_aulas_45min ?? 0}"/>
+                <input type="number" min="0" step="1" class="form-control presencial_aulas" required value="${det.presencial?.quantidade_aulas_45min ?? 0}"/>
               </div>
               <div class="form-group">
                 <label>Quantidade Total de Dias (Presencial):</label>
-                <input type="number" min="0" class="form-control presencial_dias" required value="${det.presencial?.dias_letivos ?? 0}"/>
+                <input type="number" min="0" step="1" class="form-control presencial_dias" required value="${det.presencial?.dias_letivos ?? 0}"/>
               </div>
 
               <div class="form-group">
                 <label>Carga Horária de Aulas EAD:</label>
-                <input type="number" min="0" class="form-control ead_ch" required value="${det.ead?.carga_horaria ?? 0}"/>
+                <input type="number" min="0" step="1" class="form-control ead_ch" required value="${det.ead?.carga_horaria ?? 0}"/>
               </div>
               <div class="form-group">
                 <label>Quantidade de Aulas Total (EAD):</label>
-                <input type="number" min="0" class="form-control ead_aulas" required value="${det.ead?.quantidade_aulas_45min ?? 0}"/>
+                <input type="number" min="0" step="1" class="form-control ead_aulas" required value="${det.ead?.quantidade_aulas_45min ?? 0}"/>
               </div>
               <div class="form-group">
                 <label>Quantidade Total de Dias (EAD):</label>
-                <input type="number" min="0" class="form-control ead_dias" required value="${det.ead?.dias_letivos ?? 0}"/>
+                <input type="number" min="0" step="1" class="form-control ead_dias" required value="${det.ead?.dias_letivos ?? 0}"/>
               </div>
             </form>
           </div>
@@ -368,7 +482,6 @@ function abrirModalUcsConfig(ucsIds, dadosExistentes = []) {
   modal.style.display = 'flex';
 }
 
-// sem onclick inline: usamos delegated handler (bindAccordionDelegation)
 function toggleAccordion(id) {
   document.querySelectorAll('.accordion-collapse').forEach(el => {
     if (el.id === 'collapse' + id) {
@@ -384,71 +497,82 @@ function salvarUcsConfig() {
   const forms = document.querySelectorAll('.uc-form-config');
   const ucsToSave = [];
   let erro = false;
+  let somaTotalCH = 0;
 
   forms.forEach(form => {
     const id = form.getAttribute('data-ucid');
 
-    const presencial_ch    = form.querySelector('.presencial_ch').value;
-    const presencial_aulas = form.querySelector('.presencial_aulas').value;
-    const presencial_dias  = form.querySelector('.presencial_dias').value;
-    const ead_ch           = form.querySelector('.ead_ch').value;
-    const ead_aulas        = form.querySelector('.ead_aulas').value;
-    const ead_dias         = form.querySelector('.ead_dias').value;
+    const presencial_ch    = parseInt(form.querySelector('.presencial_ch').value, 10);
+    const presencial_aulas = parseInt(form.querySelector('.presencial_aulas').value, 10);
+    const presencial_dias  = parseInt(form.querySelector('.presencial_dias').value, 10);
+    const ead_ch           = parseInt(form.querySelector('.ead_ch').value, 10);
+    const ead_aulas        = parseInt(form.querySelector('.ead_aulas').value, 10);
+    const ead_dias         = parseInt(form.querySelector('.ead_dias').value, 10);
 
-    if ([presencial_ch, presencial_aulas, presencial_dias, ead_ch, ead_aulas, ead_dias].some(v => v === '')) {
+    const fields = [presencial_ch, presencial_aulas, presencial_dias, ead_ch, ead_aulas, ead_dias];
+    if (fields.some(v => Number.isNaN(v) || v < 0)) {
       erro = true;
       return;
     }
+
+    somaTotalCH += (presencial_ch + ead_ch);
 
     const nomeUC = form.querySelectorAll('input[readonly]')[1].value;
     ucsToSave.push({
       id,
       unidade_curricular: nomeUC,
       presencial: {
-        carga_horaria: Number(presencial_ch),
-        quantidade_aulas_45min: Number(presencial_aulas),
-        dias_letivos: Number(presencial_dias)
+        carga_horaria: presencial_ch,
+        quantidade_aulas_45min: presencial_aulas,
+        dias_letivos: presencial_dias
       },
       ead: {
-        carga_horaria: Number(ead_ch),
-        quantidade_aulas_45min: Number(ead_aulas),
-        dias_letivos: Number(ead_dias)
+        carga_horaria: ead_ch,
+        quantidade_aulas_45min: ead_aulas,
+        dias_letivos: ead_dias
       }
     });
   });
 
   if (erro) {
-    alert('Preencha todos os campos obrigatórios de todas as UCs!');
+    showToast('Preencha corretamente (inteiros ≥ 0) todos os campos de todas as UCs.', 'error');
     return;
   }
 
   const dataFinal = Object.assign({}, window._cursoDataToSave, { ordem_ucs: ucsToSave });
 
+  // Aviso (não bloqueia): soma de CH das UCs vs carga_horaria do curso
+  const chCurso = Number(dataFinal.carga_horaria || 0);
+  if (Number.isFinite(chCurso) && chCurso > 0 && somaTotalCH !== chCurso) {
+    const prosseguir = confirm(`Aviso: soma de CH das UCs (${somaTotalCH}) difere da carga horária do curso (${chCurso}). Deseja continuar?`);
+    if (!prosseguir) return;
+  }
+
   const edit = !!(modoEdicao && cursoEditando && cursoEditando._id);
   const url = edit ? `${API_CURSO}?id=${encodeURIComponent(cursoEditando._id)}` : API_CURSO;
   const method = edit ? 'PUT' : 'POST';
 
-  fetch(url, {
+  fetchWithTimeout(url, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dataFinal)
-  })
+  }, 15000)
     .then(async resp => {
       if (!resp.ok) {
         const txt = await resp.text().catch(() => '');
         throw new Error(txt || `HTTP ${resp.status}`);
       }
-      alert(edit ? 'Curso atualizado com sucesso!' : 'Curso cadastrado com sucesso!');
+      showToast(edit ? 'Curso atualizado com sucesso!' : 'Curso cadastrado com sucesso!', 'success');
       fecharModal('modalUcsConfig');
       carregarCursos();
     })
     .catch(err => {
       console.error('Erro ao salvar curso:', err);
-      alert('Erro ao salvar curso: ' + (err?.message || 'desconhecido'));
+      showToast('Ops! Não conseguimos salvar. Revise os campos destacados ou tente novamente.', 'error');
     });
 }
 
-// ======================= Visualizar (somente leitura) =======================
+// ======================= Visualizar: SOMENTE LEITURA =======================
 function mostrarDetalheCurso(cursoId) {
   const curso = cursosCache.find(c => String(c._id) === String(cursoId));
   if (!curso) return;
@@ -476,34 +600,38 @@ function mostrarDetalheCurso(cursoId) {
     <div class="popup-field"><span class="popup-label">Eixo Tecnológico:</span> ${curso.eixo_tecnologico || ''}</div>
     <div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria ?? ''}</div>
     <div class="popup-field"><span class="popup-label">Empresa/Parceiro:</span> ${empresaNome || ''}</div>
-    <div class="popup-field"><span class="popup-label">Instituição:</span> ${instNome}</div>
+    <div class="popup-field"><span class="popup-label">Status:</span> ${normalizeStatus(curso.status)}</div>
+    <div class="popup-field"><span class="popup-label">Criado em:</span> ${fmtDateBR(curso.data_criacao)}</div>
+
     <div class="popup-field"><span class="popup-label">Unidades Curriculares do Curso:</span></div>
     <div style="max-height:350px;overflow:auto;">${renderUCTable(curso.ordem_ucs)}</div>
+
+    <div class="mt-4">
+      <button class="btn btn-secondary" data-close="modalDetalheCurso">Fechar</button>
+    </div>
   `;
 
   document.getElementById('detalheCursoConteudo').innerHTML = html;
   $('#modalDetalheCurso').addClass('show');
-  $('#btnEditarCurso').data('id', cursoId);
-  $('#btnExcluirCurso').data('id', cursoId);
 }
 
-// ======================= Excluir =======================
+// ======================= Excluir (fora do modal de detalhe) =======================
 function excluirCurso(cursoId) {
   if (!confirm('Tem certeza que deseja excluir este curso?')) return;
 
-  fetch(`${API_CURSO}?id=${encodeURIComponent(cursoId)}`, { method: 'DELETE' })
+  fetchWithTimeout(`${API_CURSO}?id=${encodeURIComponent(cursoId)}`, { method: 'DELETE' }, 12000)
     .then(async resp => {
       if (!resp.ok) {
         const txt = await resp.text().catch(() => '');
         throw new Error(txt || `HTTP ${resp.status}`);
       }
-      alert('Curso excluído com sucesso!');
+      showToast('Curso excluído com sucesso!', 'success');
       fecharModal('modalDetalheCurso');
       carregarCursos();
     })
     .catch(err => {
       console.error('Erro ao excluir curso:', err);
-      alert('Erro ao excluir curso: ' + (err?.message || 'desconhecido'));
+      showToast('Não foi possível excluir. Verifique a conexão e tente novamente.', 'error');
     });
 }
 

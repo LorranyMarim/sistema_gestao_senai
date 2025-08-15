@@ -207,6 +207,7 @@
           <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
               UCs</a></li>
           <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
+          <li><a href="gestao_relatorios.php"><i class="fas fa-file-alt"></i>Relatórios</a></li>
           <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
