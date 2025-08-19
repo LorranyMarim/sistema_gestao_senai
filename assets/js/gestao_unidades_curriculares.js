@@ -2,6 +2,11 @@
 (() => {
   'use strict';
 
+  if (!window.App) throw new Error('Carregue geral.js antes de gestao_unidades_curriculares.js.');
+  const { $, $$ } = App.dom;
+  const { debounce, toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.utils;
+  const { safeFetch } = App.net;
+
   // ===================== Config & State =====================
   const API = Object.freeze({
     instituicao: 'http://localhost:8000/api/instituicoes',
@@ -17,11 +22,8 @@
     filters: { q: '', instituicoes: [], status: [], created_from: '', created_to: '' },
   };
 
-  // ===================== DOM Helpers =====================
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-  // Sidebar
+  // ===================== DOM refs =====================
+  // Sidebar (comportamento já está no geral.js; refs aqui são opcionais se precisar)
   const menuToggle = $('#menu-toggle');
   const sidebar = $('.sidebar');
   const dashboardContainer = $('.dashboard-container');
@@ -65,40 +67,7 @@
   const nextPageBtn = $('#nextPage');
   const pageInfo = $('#pageInfo');
 
-  // ===================== Utils =====================
-  const debounce = (fn, ms = 350) => {
-    let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-  };
-
-  // ===================== Sidebar Behavior =====================
-  function initSidebar() {
-    if (!menuToggle || !sidebar || !dashboardContainer) return;
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('active');
-      dashboardContainer.classList.toggle('sidebar-active');
-    });
-    dashboardContainer.addEventListener('click', (event) => {
-      const isOpen = dashboardContainer.classList.contains('sidebar-active');
-      const clickedOutsideSidebar = !sidebar.contains(event.target) && !menuToggle.contains(event.target);
-      if (isOpen && clickedOutsideSidebar) {
-        sidebar.classList.remove('active');
-        dashboardContainer.classList.remove('sidebar-active');
-      }
-    });
-  }
-
-  // ===================== Fetch helper =====================
-  async function safeFetch(url, options = {}) {
-    const res = await fetch(url, options);
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(text || `Erro HTTP ${res.status}`);
-    }
-    return res.json().catch(() => ({}));
-  }
-
-  // ===================== Utils de data =====================
+  // ===================== Utils de data (específico desta view) =====================
   function fmtDateBR(isoLike) {
     if (!isoLike) return '—';
     const dt = new Date(isoLike);
@@ -108,19 +77,6 @@
       dateStyle: 'short',
       timeStyle: 'short',
     });
-  }
-  // yyyy-mm-dd -> ISO UTC no início/fim do dia local
-  function toIsoStartOfDayLocal(dateStr) {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const dt = new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
-    return dt.toISOString();
-  }
-  function toIsoEndOfDayLocal(dateStr) {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const dt = new Date(y, (m || 1) - 1, d || 1, 23, 59, 59, 999);
-    return dt.toISOString();
   }
 
   // ===================== Instituições =====================
@@ -457,7 +413,7 @@
   // ===================== Bootstrap =====================
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-      initSidebar();
+      // Sidebar/hamburger já é inicializado pelo geral.js
       await preencherFiltroInstituicao();  // popular filtro
       wireModalEvents();
       wireInlineValidation();

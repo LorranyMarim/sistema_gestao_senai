@@ -125,6 +125,7 @@
     </style>
 
     <!-- Script da página (externo e com defer para carregar após o DOM) -->
+    <script src="../assets/js/geral.js"></script>
     <script src="../assets/js/gestao_unidades_curriculares.js" defer></script>
 </head>
 
@@ -135,21 +136,29 @@
                 <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i>
-                            Gestão de UCs</a></li>
-                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
-                    <li><a href="gestao_relatorios.php"><i class="fas fa-file-alt"></i>Relatórios</a></li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-                </ul>
-            </nav>
+           <nav class="sidebar-nav">
+        <ul>
+          <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+          <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+          <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+          <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
+
+          <li id="nav-relatorios" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+              <span><i class="fas fa-file-alt"></i> Relatórios</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-relatorios">
+              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+            </ul>
+          </li>
+
+          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+        </ul>
+      </nav>
         </aside>
 
         <main class="main-content">

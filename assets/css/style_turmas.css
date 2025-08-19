@@ -2835,3 +2835,44 @@ body.modal-open {
 .action-buttons-group .btn i {
     margin-right: 8px;
 }
+
+/* Submenu básico */
+.sidebar-nav li.has-submenu > .submenu {
+  display: none;
+  padding-left: 1.75rem; /* recuo do submenu */
+}
+
+.sidebar-nav li.has-submenu.open > .submenu {
+  display: block;
+}
+
+/* Submenu: fechado/aberto */
+.sidebar-nav li.has-submenu > .submenu {
+  display: none;
+  padding-left: 1.75rem;
+}
+.sidebar-nav li.has-submenu.open > .submenu {
+  display: block;
+}
+
+/* Toggle com caret (direita -> baixo quando abre) */
+.sidebar-nav .submenu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-nav .submenu-toggle .caret {
+  transition: transform 0.2s ease;
+  margin-left: .75rem;
+  font-size: .85em;
+  opacity: .8;
+}
+.sidebar-nav li.has-submenu.open .submenu-toggle .caret {
+  transform: rotate(90deg);
+}
+
+/* (opcional) destaque do item ativo no submenu */
+.sidebar-nav .submenu a.active {
+  font-weight: 600;
+  text-decoration: underline;
+}

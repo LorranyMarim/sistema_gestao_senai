@@ -36,6 +36,15 @@ def _id_filter(_id: str) -> Dict[str, Any]:
     except Exception:
         return {"_id": _id}
 
+def _norm_status(v: Optional[str]) -> str:
+    """Normaliza o status para 'Ativo' ou 'Inativo' (default: 'Ativo')."""
+    if not v:
+        return "Ativo"
+    s = str(v).strip().lower()
+    if s in ("inativo", "inactive", "inact"):
+        return "Inativo"
+    return "Ativo"
+
 def _as_str_id(doc: Dict[str, Any]) -> Dict[str, Any]:
     """Normaliza documento para saída JSON (ids como string, arrays padrão, etc.)."""
     if "_id" in doc:
@@ -46,9 +55,12 @@ def _as_str_id(doc: Dict[str, Any]) -> Dict[str, Any]:
         doc["id_instituicao"] = str(doc.get("id_instituicao") or "")
     if "dias_nao_letivos" not in doc or not isinstance(doc.get("dias_nao_letivos"), list):
         doc["dias_nao_letivos"] = []
+    # status padrão para documentos antigos
+    if not doc.get("status"):
+        doc["status"] = "Ativo"
     # FastAPI serializa datetime; ainda assim, se vier como datetime, garante isoformat.
     if isinstance(doc.get("data_criacao"), datetime):
-        # ISO 8601 sem timezone (UTC); o front parseia normalmente.
+        # ISO 8601 UTC; o front parseia normalmente.
         doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
     return doc
 
@@ -64,6 +76,7 @@ def listar_calendarios(
     id_empresa: Optional[str] = Query(None, alias="id_empresa"),
     instituicao_id: Optional[str] = None,
     id_instituicao: Optional[str] = Query(None, alias="id_instituicao"),
+    status: Optional[str] = None,  # NOVO: filtro por status
 ):
     db = get_mongo_db()
     filtro: Dict[str, Any] = {}
@@ -90,6 +103,10 @@ def listar_calendarios(
             {"data_inicial": {"$lte": fim_ano}},
             {"data_final": {"$gte": inicio_ano}},
         ])
+
+    # Filtro por status
+    if status is not None and status != "":
+        filtro["status"] = _norm_status(status)
 
     # Busca textual simples
     if q:
@@ -125,8 +142,30 @@ def adicionar_calendario(calendario: Dict[str, Any]):
         if k in calendario:
             calendario[k] = _try_objectid(calendario[k])
 
-    # Proteções e defaults
-    calendario["dias_nao_letivos"] = []
+    # Normaliza/define status (padrão: Ativo)
+    calendario["status"] = _norm_status(calendario.get("status"))
+
+    # --- Gera sábados e domingos como dias não letivos ---
+    try:
+        ini = datetime.strptime(calendario["data_inicial"], "%Y-%m-%d").date()
+        fim = datetime.strptime(calendario["data_final"], "%Y-%m-%d").date()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Formato de data inválido. Use YYYY-MM-DD.")
+
+    if fim < ini:
+        raise HTTPException(status_code=400, detail="Data final não pode ser anterior à data inicial.")
+
+    dnl = []
+    dt = ini
+    while dt <= fim:
+        wd = dt.weekday()           # Monday=0 ... Sunday=6
+        if wd == 5:                 # sábado
+            dnl.append({"data": dt.isoformat(), "descricao": "Sábado"})
+        elif wd == 6:               # domingo
+            dnl.append({"data": dt.isoformat(), "descricao": "Domingo"})
+        dt += timedelta(days=1)
+
+    calendario["dias_nao_letivos"] = dnl
     calendario["data_criacao"] = datetime.now(timezone.utc)  # imutável
 
     result = db["calendario"].insert_one(calendario)
@@ -140,6 +179,10 @@ def editar_calendario(calendario_id: str, calendario: Dict[str, Any]):
 
     # Evita alteração do campo imutável
     calendario.pop("data_criacao", None)
+
+    # Normaliza status se vier no payload
+    if "status" in calendario:
+        calendario["status"] = _norm_status(calendario["status"])
 
     # Converte refs se vierem
     for k in ("id_empresa", "id_instituicao"):
@@ -178,28 +221,76 @@ def adicionar_evento(evento: Dict[str, Any]):
     if any(k not in evento for k in obrig):
         raise HTTPException(status_code=400, detail=f"Campos obrigatórios: {', '.join(obrig)}")
 
+    # validação do intervalo informado
     try:
         data_ini = datetime.strptime(evento["data_inicial"], "%Y-%m-%d")
         data_fim = datetime.strptime(evento["data_final"], "%Y-%m-%d")
     except Exception:
         raise HTTPException(status_code=400, detail="Formato de data inválido. Use YYYY-MM-DD.")
-
     if data_fim < data_ini:
         raise HTTPException(status_code=400, detail="Data final não pode ser anterior à data inicial.")
 
+    # gera as datas do intervalo
     dias: List[Dict[str, str]] = []
     dt = data_ini
     while dt <= data_fim:
         dias.append({"descricao": evento["descricao"], "data": dt.strftime("%Y-%m-%d")})
         dt += timedelta(days=1)
 
-    for cal_id in evento["calendarios_ids"]:
-        db["calendario"].update_one(
-            _id_filter(str(cal_id)),
-            {"$push": {"dias_nao_letivos": {"$each": dias}}}
-        )
+    resumo = {"por_calendario": {}, "adicionados": [], "duplicados": [], "fora_periodo": []}
 
-    return {"msg": "Evento(s) adicionado(s) aos calendários selecionados."}
+    for cal_id in evento["calendarios_ids"]:
+        # lê período do calendário + datas já existentes
+        doc = db["calendario"].find_one(
+            _id_filter(str(cal_id)),
+            {"data_inicial": 1, "data_final": 1, "dias_nao_letivos.data": 1}
+        )
+        if not doc:
+            resumo["por_calendario"][str(cal_id)] = {"erro": "Calendário não encontrado"}
+            continue
+
+        di_cal = (doc.get("data_inicial") or "").strip()
+        df_cal = (doc.get("data_final") or "").strip()
+        if not di_cal or not df_cal:
+            resumo["por_calendario"][str(cal_id)] = {"erro": "Calendário sem período definido"}
+            continue
+
+        # separa candidatos dentro do período e fora do período do calendário
+        dentro = [d for d in dias if di_cal <= d["data"] <= df_cal]
+        fora   = [d for d in dias if not (di_cal <= d["data"] <= df_cal)]
+
+        existentes = {d.get("data") for d in (doc.get("dias_nao_letivos") or [])}
+        novos = [d for d in dentro if d["data"] not in existentes]
+        dups  = [d for d in dentro if d["data"] in existentes]
+
+        if novos:
+            db["calendario"].update_one(
+                _id_filter(str(cal_id)),
+                {"$push": {"dias_nao_letivos": {"$each": novos}}}
+            )
+
+        resumo["por_calendario"][str(cal_id)] = {
+            "adicionados": [d["data"] for d in novos],
+            "duplicados":  [d["data"] for d in dups],
+            "fora_periodo":[d["data"] for d in fora],
+        }
+        resumo["adicionados"].extend([d["data"] for d in novos])
+        resumo["duplicados"].extend([d["data"] for d in dups])
+        resumo["fora_periodo"].extend([d["data"] for d in fora])
+
+    resumo["adicionados"] = sorted(set(resumo["adicionados"]))
+    resumo["duplicados"] = sorted(set(resumo["duplicados"]))
+    resumo["fora_periodo"] = sorted(set(resumo["fora_periodo"]))
+    resumo["msg"] = (
+        "Algumas datas já existiam e foram ignoradas."
+        if resumo["duplicados"] and not resumo["fora_periodo"]
+        else ("Algumas datas estavam fora do período do calendário e foram ignoradas."
+              if resumo["fora_periodo"] and not resumo["duplicados"]
+              else ("Algumas datas já existiam e outras estavam fora do período; apenas as válidas foram adicionadas."
+                    if (resumo["duplicados"] and resumo["fora_periodo"])
+                    else "Evento(s) adicionado(s) aos calendários selecionados."))
+    )
+    return resumo
 
 # -------------------- Editar dia não letivo --------------------
 @router.put("/api/calendarios/{calendario_id}/editar_dia_nao_letivo")

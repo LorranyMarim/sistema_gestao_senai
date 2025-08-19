@@ -6,7 +6,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calendário - SENAI</title>
 
   <link rel="stylesheet" href="../assets/css/style_turmas.css">
@@ -20,7 +20,7 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
   <!-- Select2 -->
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 
@@ -33,18 +33,25 @@
       </div>
       <nav class="sidebar-nav">
         <ul>
-          <li><a href="dashboard.php" ><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="gestao_cursos.php" ><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
-                            UCs</a></li>
-                    <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
-                    <li><a href="gestao_relatorios.php"><i class="fas fa-file-alt"></i>Relatórios</a></li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+          <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+          <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+          <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+          <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
+
+          <li id="nav-relatorios" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+              <span><i class="fas fa-file-alt"></i> Relatórios</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-relatorios">
+              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+            </ul>
+          </li>
+
+          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
     </aside>
@@ -75,10 +82,12 @@
 
         <!-- Filtros & Paginação -->
         <div class="filter-section">
+          <!-- Linha 1: Buscar, Ano, Empresa, Instituição -->
           <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap;">
             <div class="filter-group">
               <label for="filtroBusca">Buscar:</label>
-              <input id="filtroBusca" type="text" placeholder="Digite para filtrar..." class="form-control" autocomplete="off">
+              <input id="filtroBusca" type="text" placeholder="Digite para filtrar..." class="form-control"
+                autocomplete="off">
             </div>
             <div class="filter-group">
               <label for="filtroAno">Ano:</label>
@@ -99,6 +108,18 @@
                 <option value="">Todas</option>
               </select>
             </div>
+          </div>
+
+          <!-- Linha 2: Status, Itens por página, Limpar filtros -->
+          <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="filter-group">
+              <label for="filtroStatus">Status:</label>
+              <select id="filtroStatus" class="form-control">
+                <option value="">Todas</option>
+                <option value="Ativo">Ativo</option>
+                <option value="Inativo">Inativo</option>
+              </select>
+            </div>
 
             <div class="filter-group" style="margin-left:auto;">
               <label for="pageSize">Itens por página:</label>
@@ -109,6 +130,10 @@
                 <option>100</option>
               </select>
             </div>
+
+            <button id="btnClearFilters" class="btn btn-light" type="button" title="Limpar filtros">
+              <i class="fas fa-broom"></i> Limpar filtros
+            </button>
           </div>
         </div>
 
@@ -121,6 +146,7 @@
                 <th>Data Inicial</th>
                 <th>Data Final</th>
                 <th>DATA/HORA DE CRIAÇÃO</th>
+                 <th>Status</th> <!-- NOVO -->
                 <th>Ações</th>
               </tr>
             </thead>
@@ -145,7 +171,8 @@
       <form id="formAdicionarEvento" novalidate>
         <div class="form-group">
           <label for="eventoCalendario">Calendário(s):</label>
-          <select id="eventoCalendario" name="calendarios[]" multiple="multiple" class="form-control" style="width:100%"></select>
+          <select id="eventoCalendario" name="calendarios[]" multiple="multiple" class="form-control"
+            style="width:100%"></select>
         </div>
         <div class="form-group">
           <label for="eventoDescricao">Descrição:</label>
@@ -166,7 +193,8 @@
   </div>
 
   <!-- MODAL CADASTRAR/EDITAR CALENDÁRIO -->
-  <div id="modalCadastrarCalendario" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloCadastrarCalendario">
+  <div id="modalCadastrarCalendario" class="modal" role="dialog" aria-modal="true"
+    aria-labelledby="tituloCadastrarCalendario">
     <div class="modal-content">
       <span class="close-button" onclick="closeModal('modalCadastrarCalendario')" aria-label="Fechar">&times;</span>
       <h2 id="tituloCadastrarCalendario">Cadastrar Calendário</h2>
@@ -204,9 +232,11 @@
   </div>
 
   <!-- MODAL FULL SCREEN (Visualizar + tabela de Não Letivos) -->
-  <div id="modalVisualizarCalendarioFull" class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="tituloVisualizarCalendarioFull">
+  <div id="modalVisualizarCalendarioFull" class="modal modal-lg" role="dialog" aria-modal="true"
+    aria-labelledby="tituloVisualizarCalendarioFull">
     <div class="modal-content modal-content-lg">
-      <span class="close-button" onclick="closeModal('modalVisualizarCalendarioFull')" aria-label="Fechar">&times;</span>
+      <span class="close-button" onclick="closeModal('modalVisualizarCalendarioFull')"
+        aria-label="Fechar">&times;</span>
       <h2 id="tituloVisualizarCalendarioFull">Detalhes do Calendário</h2>
 
       <div id="detalhesCalendarioFull" style="margin-bottom:10px;"></div>
@@ -227,7 +257,8 @@
   </div>
 
   <!-- Modal pequeno legado (gerenciar dias) -->
-  <div id="modalVisualizarCalendario" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloVisualizarCalendario">
+  <div id="modalVisualizarCalendario" class="modal" role="dialog" aria-modal="true"
+    aria-labelledby="tituloVisualizarCalendario">
     <div class="modal-content" style="max-width:500px">
       <span class="close-button" onclick="closeModal('modalVisualizarCalendario')" aria-label="Fechar">&times;</span>
       <h2 id="tituloVisualizarCalendario">Detalhes do Calendário</h2>
@@ -236,6 +267,8 @@
   </div>
 
   <!-- JS da página -->
+  <script src="../assets/js/geral.js"></script>
   <script src="../assets/js/gestao_calendario.js"></script>
 </body>
+
 </html>
