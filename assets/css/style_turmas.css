@@ -2876,3 +2876,7 @@ body.modal-open {
   font-weight: 600;
   text-decoration: underline;
 }
+
+#btnClearFilters{
+    background-color: #DCDCDC;
+}

@@ -23,12 +23,6 @@
   };
 
   // ===================== DOM refs =====================
-  // Sidebar (comportamento já está no geral.js; refs aqui são opcionais se precisar)
-  const menuToggle = $('#menu-toggle');
-  const sidebar = $('.sidebar');
-  const dashboardContainer = $('.dashboard-container');
-
-  // Modais UC
   const ucModal = $('#ucModal');
   const addUcBtn = $('#addUcBtn');
   const closeModalBtn = $('#closeModalBtn');
@@ -148,7 +142,7 @@
 
     if (q) p.set('q', q);
     instituicoes.forEach(v => p.append('instituicao', v));
-    status.forEach(s => p.append('status', s)); // "" (Todos) => nada enviado
+    status.forEach(s => p.append('status', s));
     if (created_from) p.set('created_from', created_from);
     if (created_to)   p.set('created_to', created_to);
     p.set('page', String(page));
@@ -166,7 +160,6 @@
         fetchInstituicoes()
       ]);
 
-      // Suporta formato novo ({items,total}) e antigo ([...])
       const items = Array.isArray(data) ? data : (data.items || []);
       const total = Array.isArray(data) ? items.length : (data.total ?? items.length);
 
@@ -268,17 +261,14 @@
   function validateUcForm() {
     clearAlert();
 
-    // instituição obrigatória
     if (!selectInstituicao.value) { showAlert('Selecione uma instituição.', 'error'); selectInstituicao.focus(); return false; }
 
-    // descrição 2–100 + chars proibidos
     descricaoUcInput.value = sanitize(descricaoUcInput.value);
     if (descricaoUcInput.value.length < 2 || descricaoUcInput.value.length > 100) {
       showAlert('Descrição deve ter entre 2 e 100 caracteres.', 'error'); descricaoUcInput.focus(); return false;
     }
     if (forbiddenChars.test(descricaoUcInput.value)) { showAlert('Descrição contém caracteres inválidos.', 'error'); descricaoUcInput.focus(); return false; }
 
-    // Sala Ideal: 2–20; letras/números/espaços (inclui acentos)
     salaIdealInput.value = sanitize(salaIdealInput.value);
     const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
     if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
@@ -286,7 +276,6 @@
     }
     if (!alphaNumBR.test(salaIdealInput.value)) { showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error'); salaIdealInput.focus(); return false; }
 
-    // status obrigatório (Ativa/Inativa)
     if (!statusUc.value) { showAlert('Selecione o status.', 'error'); statusUc.focus(); return false; }
     return true;
   }
@@ -326,7 +315,6 @@
         closeModalUC();
         setTimeout(async () => {
           alert('Unidade Curricular salva com sucesso!');
-          // volta pra primeira página para ver o novo registro
           STATE.pagination.page = 1;
           await carregarUnidadesCurriculares();
         }, 200);
@@ -341,18 +329,14 @@
 
   // ===================== Filtros & Paginação =====================
   function applyFiltersFromUI() {
-    // texto
     STATE.filters.q = (searchInput?.value || '').trim();
 
-    // instituição (select simples)
     const selInst = filterInstituicao?.value || '';
     STATE.filters.instituicoes = selInst ? [selInst] : [];
 
-    // status (select com "Todos"| "Ativa" | "Inativa")
     const selStatus = filterStatus?.value || '';
     STATE.filters.status = selStatus ? [selStatus] : [];
 
-    // datas (type="date" -> envia início/fim do dia)
     STATE.filters.created_from = toIsoStartOfDayLocal(filterCriadoDe?.value || '');
     STATE.filters.created_to   = toIsoEndOfDayLocal(filterCriadoAte?.value || '');
   }
@@ -413,8 +397,7 @@
   // ===================== Bootstrap =====================
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-      // Sidebar/hamburger já é inicializado pelo geral.js
-      await preencherFiltroInstituicao();  // popular filtro
+      await preencherFiltroInstituicao();
       wireModalEvents();
       wireInlineValidation();
       wireFormSubmit();
@@ -424,8 +407,41 @@
       // filtros iniciais (Status = Todos)
       applyFiltersFromUI();
       await carregarUnidadesCurriculares();
+
+      // Botão "Limpar filtros" (centralizado no geral.js)
+      const clearCtl = App.ui.setupClearFilters({
+        buttonSelector: '#btnClearFilters',
+        // campos observados para habilitar/desabilitar o botão
+        watchSelectors: [
+          '#searchUc',
+          '#filterInstituicao',
+          '#filterStatus',
+          '#filterCriadoDe',
+          '#filterCriadoAte',
+        ],
+        getFiltersState: () => STATE.filters,
+        resetUI: () => {
+          const $id = (s) => document.getElementById(s);
+          $id('searchUc')         && ($id('searchUc').value = '');
+          $id('filterInstituicao')&& ($id('filterInstituicao').value = '');
+          $id('filterStatus')     && ($id('filterStatus').value = '');
+          $id('filterCriadoDe')   && ($id('filterCriadoDe').value = '');
+          $id('filterCriadoAte')  && ($id('filterCriadoAte').value = '');
+          // normalmente não resetamos "Itens por página"
+        },
+        onClear: async () => {
+          STATE.filters = { q: '', instituicoes: [], status: [], created_from: '', created_to: '' };
+          STATE.pagination.page = 1;
+          await carregarUnidadesCurriculares();
+        }
+      });
+
+      // garante estado inicial correto do botão (desabilitado sem filtros)
+      clearCtl?.update && clearCtl.update();
+
     } catch (err) {
       console.error('Falha ao inicializar a página:', err);
     }
   });
+
 })();

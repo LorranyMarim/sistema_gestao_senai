@@ -88,45 +88,52 @@
         #ucTable td:nth-child(2) {
             display: none;
         }
+
         /* Garante que os dois modais fiquem sempre acima da sidebar/menu */
-#ucModal, #visualizarUcModal {
-  position: fixed !important;
-  inset: 0 !important;              /* top/right/bottom/left: 0 */
-  z-index: 9999 !important;         /* maior que qualquer sidebar */
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,.3);
-}
-#ucModal.show, #visualizarUcModal.show {
-  display: flex !important;
-}
+        #ucModal,
+        #visualizarUcModal {
+            position: fixed !important;
+            inset: 0 !important;
+            /* top/right/bottom/left: 0 */
+            z-index: 9999 !important;
+            /* maior que qualquer sidebar */
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .3);
+        }
 
-/* Unifica o tamanho visual dos conteúdos dos modais */
-#ucModal .modal-content,
-#visualizarUcModal .modal-content {
-  width: min(680px, 90vw);          /* fica elegante no desktop e mobile */
-  max-height: 90vh;                 /* evita “extrapolar” a altura */
-  overflow: auto;                   /* scroll interno se precisar */
-  border-radius: 10px;
-  padding: 30px;
-  background: #fff;
-  position: relative;
-}
+        #ucModal.show,
+        #visualizarUcModal.show {
+            display: flex !important;
+        }
 
-/* (opcional) inputs de visualização não forçam largura gigantesca */
-#visualizarUcModal .modal-content input[readonly],
-#visualizarUcModal .modal-content input[disabled] {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
+        /* Unifica o tamanho visual dos conteúdos dos modais */
+        #ucModal .modal-content,
+        #visualizarUcModal .modal-content {
+            width: min(680px, 90vw);
+            /* fica elegante no desktop e mobile */
+            max-height: 90vh;
+            /* evita “extrapolar” a altura */
+            overflow: auto;
+            /* scroll interno se precisar */
+            border-radius: 10px;
+            padding: 30px;
+            background: #fff;
+            position: relative;
+        }
 
+        /* (opcional) inputs de visualização não forçam largura gigantesca */
+        #visualizarUcModal .modal-content input[readonly],
+        #visualizarUcModal .modal-content input[disabled] {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
     </style>
 
     <!-- Script da página (externo e com defer para carregar após o DOM) -->
-    <script src="../assets/js/geral.js"></script>
-    <script src="../assets/js/gestao_unidades_curriculares.js" defer></script>
+
 </head>
 
 <body>
@@ -136,29 +143,32 @@
                 <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
-           <nav class="sidebar-nav">
-        <ul>
-          <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-          <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
-          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-          <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-          <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
+                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de
+                            UCs</a></li>
+                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Calendário</a>
+                    </li>
 
-          <li id="nav-relatorios" class="has-submenu">
-            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
-              <span><i class="fas fa-file-alt"></i> Relatórios</span>
-              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-            </a>
-            <ul class="submenu" id="submenu-relatorios">
-              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
-            </ul>
-          </li>
+                    <li id="nav-relatorios" class="has-submenu">
+                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+                            <span><i class="fas fa-file-alt"></i> Relatórios</span>
+                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                        </a>
+                        <ul class="submenu" id="submenu-relatorios">
+                            <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+                        </ul>
+                    </li>
 
-          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-        </ul>
-      </nav>
+                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
         </aside>
 
         <main class="main-content">
@@ -174,48 +184,51 @@
                 <h2>Unidades Curriculares Cadastradas</h2>
 
                 <div class="filter-section">
-                    <div class="filter-group">
-                        <label for="searchUc">Buscar UC:</label>
-                        <input type="text" id="searchUc" placeholder="Descrição ou sala..." class="search-input">
+                    <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <div class="filter-group">
+                            <label for="searchUc">Buscar UC:</label>
+                            <input type="text" id="searchUc" placeholder="Descrição ou sala..." class="search-input">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="filterCriadoDe">Criado de:</label>
+                            <input type="date" id="filterCriadoDe">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterCriadoAte">Criado até:</label>
+                            <input type="date" id="filterCriadoAte">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterInstituicao">Instituição:</label>
+                            <select id="filterInstituicao" style="min-width: 220px;">
+                                <!-- opções serão preenchidas via JS -->
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="filter-group">
-                        <label for="filterInstituicao">Instituição:</label>
-                        <select id="filterInstituicao" style="min-width: 220px;">
-                            <!-- opções serão preenchidas via JS -->
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="filterStatus">Status:</label>
-                        <select id="filterStatus">
-                            <option value="">Todos</option>
-                            <option value="Ativa">Ativo</option>
-                            <option value="Inativa">Inativo</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="filterCriadoDe">Criado de:</label>
-                        <input type="date" id="filterCriadoDe">
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterCriadoAte">Criado até:</label>
-                        <input type="date" id="filterCriadoAte">
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="pageSize">Itens por página:</label>
-                        <select id="pageSize">
-                            <option value="10" selected>10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
+                    <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+                        <div class="filter-group">
+                            <label for="filterStatus">Status:</label>
+                            <select id="filterStatus">
+                                <option value="">Todos</option>
+                                <option value="Ativa">Ativo</option>
+                                <option value="Inativa">Inativo</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="pageSize">Itens por página:</label>
+                            <select id="pageSize">
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <button id="btnClearFilters" class="btn btn-light" type="button" title="Limpar filtros">
+                            <i class="fas fa-broom"></i> Limpar filtros
+                        </button>
                     </div>
                 </div>
-
-
 
                 <div class="table-responsive">
                     <table id="ucTable" class="data-table">
@@ -280,7 +293,7 @@
                 <button type="button" class="btn btn-secondary" id="cancelBtn"><i class="fas fa-times-circle"></i>
                     Cancelar</button>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar UC</button>
-                
+
             </form>
         </div>
     </div>
@@ -312,6 +325,8 @@
             </form>
         </div>
     </div>
+    <script src="../assets/js/geral.js"></script>
+    <script src="../assets/js/gestao_unidades_curriculares.js" defer></script>
 </body>
 
 </html>

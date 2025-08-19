@@ -191,11 +191,98 @@
     validate();
   }
 
+  // 5) Botão genérico "Limpar filtros" (centralizado aqui para reuso entre views)
+  /**
+   * App.ui.setupClearFilters({
+   *   buttonSelector: '#btnClearFilters',            // CSS selector do botão
+   *   getFiltersState: () => STATE.filters,          // função que retorna o estado atual dos filtros
+   *   resetUI: () => { /* zere inputs da UI aqui *\/ },
+   *   onClear: async () => { /* recarregue a lista/tabela aqui *\/ }
+   * })
+   */
+  function setupClearFilters({ buttonSelector = '#btnClearFilters', getFiltersState, resetUI, onClear } = {}) {
+    const btn = $(buttonSelector);
+    if (!btn) return;
+
+    // evita bind duplicado
+    if (btn.dataset.wired === '1') return;
+    btn.dataset.wired = '1';
+
+    // container de escuta: prioriza a filter-section; senão table-section; senão body
+    const container =
+      btn.closest('.filter-section') ||
+      btn.closest('.table-section') ||
+      document.body;
+
+    // Função: checa se há algum filtro aplicado (string não vazia, array com items, obj com chaves, boolean true, número não zero)
+    function hasAnyFilter(state) {
+      if (!state || typeof state !== 'object') return false;
+      for (const k of Object.keys(state)) {
+        const v = state[k];
+        if (v == null) continue;
+        if (typeof v === 'string' && v.trim() !== '') return true;
+        if (Array.isArray(v) && v.some(x => (typeof x === 'string' ? x.trim() !== '' : x != null))) return true;
+        if (typeof v === 'number' && !Number.isNaN(v) && v !== 0) return true;
+        if (typeof v === 'boolean' && v) return true;
+        if (typeof v === 'object' && Object.keys(v).length > 0) return true;
+      }
+      return false;
+    }
+
+    // Atualiza estado visual do botão
+    const updateBtn = () => {
+      const state = (typeof getFiltersState === 'function') ? (getFiltersState() || {}) : {};
+      const active = hasAnyFilter(state);
+      btn.disabled = !active;
+      btn.setAttribute('aria-disabled', String(!active));
+      // classe auxiliar opcional (caso o CSS queira estilizar o estado)
+      btn.classList.toggle('is-disabled', !active);
+    };
+
+    // Observa mudanças dos campos de filtro dentro do container (input/change)
+    const debouncedUpdate = debounce(updateBtn, 120);
+    container.addEventListener('input', debouncedUpdate, { passive: true });
+    container.addEventListener('change', debouncedUpdate, { passive: true });
+
+    // Clique do botão
+    btn.addEventListener('click', async () => {
+      // evita ação quando desabilitado
+      if (btn.disabled) return;
+
+      // feedback acessibilidade
+      btn.setAttribute('aria-busy', 'true');
+
+      try {
+        if (typeof resetUI === 'function') await resetUI();
+        if (typeof onClear === 'function')  await onClear();
+      } catch (e) {
+        console.error('[setupClearFilters] onClear/resetUI error:', e);
+      } finally {
+        btn.removeAttribute('aria-busy');
+        // Depois de limpar, o botão volta a ficar desabilitado
+        updateBtn();
+      }
+    });
+
+    // primeira avaliação
+    updateBtn();
+
+    // expõe util para chamadas externas (opcional)
+    btn._updateClearFiltersBtn = updateBtn;
+    return { update: updateBtn };
+  }
+
   // ===================== Export & Auto-init =====================
   App.dom   = { $, $$ };
   App.utils = { debounce, norm, toId, toIsoStartOfDayLocal, toIsoEndOfDayLocal };
   App.net   = { fetchJSON, safeFetch: fetchJSON };
-  App.ui    = { initRelatoriosDropdown, initSidebarHamburger, enableModalOverlayClose, attachDateRangeValidation };
+  App.ui    = {
+    initRelatoriosDropdown,
+    initSidebarHamburger,
+    enableModalOverlayClose,
+    attachDateRangeValidation,
+    setupClearFilters, // << export do botão genérico
+  };
 
   // Helper: roda agora se o DOM já está pronto; senão espera o DOMContentLoaded
   function runNowOrOnReady(fn) {
