@@ -36,6 +36,7 @@ def _to_oid(value: str, field: str) -> ObjectId:
 def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
     """Serialização enxuta para listagem"""
     out = {
+        "_id": str(doc.get("_id")),  # Adicionar _id para compatibilidade
         "id": str(doc.get("_id")),
         "codigo": doc.get("codigo", ""),
         "data_inicio": doc.get("data_inicio", ""),

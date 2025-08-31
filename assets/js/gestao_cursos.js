@@ -139,6 +139,23 @@ $(document).ready(function () {
   $('#formCurso').on('submit', salvarCurso);
   $('#saveAllUcsBtn').on('click', salvarUcsConfig);
 
+  // Event listeners para os botões de ação da tabela
+  $(document).on('click', '.btn-view', function() {
+    const cursoId = $(this).data('id');
+    mostrarDetalheCurso(cursoId);
+  });
+
+  $(document).on('click', '.btn-edit', function() {
+    const cursoId = $(this).data('id');
+    preencherSelectConvenios();
+    abrirModalCurso(true, cursoId);
+  });
+
+  $(document).on('click', '.btn-delete', function() {
+    const cursoId = $(this).data('id');
+    excluirCurso(cursoId);
+  });
+
   // limpar erros inline ao digitar
   $('#formCurso').on('input change', 'input, select, textarea', function () {
     clearFieldError(this);
@@ -515,12 +532,12 @@ function salvarUcsConfig() {
       return;
     }
 
-    somaTotalCH += (presencial_ch + ead_ch);
+    const totalCH = presencial_ch + ead_ch;
+    somaTotalCH += totalCH;
 
-    const nomeUC = form.querySelectorAll('input[readonly]')[1].value;
     ucsToSave.push({
       id,
-      unidade_curricular: nomeUC,
+      descricao: ucDataMap[id] || '',
       presencial: {
         carga_horaria: presencial_ch,
         quantidade_aulas_45min: presencial_aulas,
@@ -637,40 +654,51 @@ function excluirCurso(cursoId) {
 
 // ======================= Render tabela de UCs (detalhe) =======================
 function renderUCTable(ucs = []) {
-  if (!Array.isArray(ucs) || !ucs.length) return '-';
+  if (!Array.isArray(ucs) || ucs.length === 0) {
+    $('#ucTableContainer').html('<p>Nenhuma UC encontrada.</p>');
+    return;
+  }
 
-  let html = `<table class="uc-table">
-    <thead>
+  let tableHtml = `
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>UC</th>
+          <th>CH Presencial</th>
+          <th>Aulas Presencial</th>
+          <th>Dias Presencial</th>
+          <th>CH EAD</th>
+          <th>Aulas EAD</th>
+          <th>Dias EAD</th>
+          <th>CH Total</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  ucs.forEach(uc => {
+    const presencial = uc.presencial || {};
+    const ead = uc.ead || {};
+    const chTotal = (presencial.carga_horaria || 0) + (ead.carga_horaria || 0);
+
+    tableHtml += `
       <tr>
-        <th>#</th>
-        <th>UC</th>
-        <th>Presencial (CH/Aulas/Dias)</th>
-        <th>EAD (CH/Aulas/Dias)</th>
+        <td>${uc.descricao || uc.id || 'N/A'}</td>
+        <td>${presencial.carga_horaria || 0}h</td>
+        <td>${presencial.quantidade_aulas_45min || 0}</td>
+        <td>${presencial.dias_letivos || 0}</td>
+        <td>${ead.carga_horaria || 0}h</td>
+        <td>${ead.quantidade_aulas_45min || 0}</td>
+        <td>${ead.dias_letivos || 0}</td>
+        <td>${chTotal}h</td>
       </tr>
-    </thead>
-    <tbody>`;
-
-  ucs.forEach((uc, idx) => {
-    html += `<tr>
-      <td>${idx + 1}</td>
-      <td>${uc.unidade_curricular || ucDataMap[uc.id] || '-'}</td>
-      <td>
-        ${uc.presencial ? `
-          CH: ${uc.presencial.carga_horaria ?? '-'}<br>
-          Aulas: ${uc.presencial.quantidade_aulas_45min ?? '-'}<br>
-          Dias: ${uc.presencial.dias_letivos ?? '-'}
-        ` : '-'}
-      </td>
-      <td>
-        ${uc.ead ? `
-          CH: ${uc.ead.carga_horaria ?? '-'}<br>
-          Aulas: ${uc.ead.quantidade_aulas_45min ?? '-'}<br>
-          Dias: ${uc.ead.dias_letivos ?? '-'}
-        ` : '-'}
-      </td>
-    </tr>`;
+    `;
   });
 
-  html += `</tbody></table>`;
-  return html;
+  tableHtml += `
+      </tbody>
+    </table>
+  `;
+
+  $('#ucTableContainer').html(tableHtml);
 }

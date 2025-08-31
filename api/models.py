@@ -10,18 +10,18 @@ class UsuarioLogin(BaseModel):
 class Usuario(BaseModel):
     id: Optional[str] = None
     user_name: str = Field(..., min_length=4, max_length=50)
-    email: str = Field(..., regex=r'^[\w\.-]+@[\w\.-]+\.\w+$')
+    email: str = Field(..., pattern=r'^[\w\.-]+@[\w\.-]+\.\w+$')
     senha: str = Field(..., min_length=4)
-    tipo: str = Field(..., regex=r'^(admin|instrutor|coordenador)$')
+    tipo: str = Field(..., pattern=r'^(admin|instrutor|coordenador)$')
     ativo: bool = True
     data_criacao: Optional[datetime] = None
 
 class Curso(BaseModel):
     id: Optional[str] = None
     nome: str = Field(..., min_length=2, max_length=200)
-    nivel: str = Field(..., regex=r'^(tecnico|superior|pos_graduacao|qualificacao)$')
-    tipo: str = Field(..., regex=r'^(presencial|ead|hibrido)$')
-    status: str = Field(..., regex=r'^(ativo|inativo|planejamento)$')
+    nivel: str = Field(..., pattern=r'^(tecnico|superior|pos_graduacao|qualificacao)$')
+    tipo: str = Field(..., pattern=r'^(presencial|ead|hibrido)$')
+    status: str = Field(..., pattern=r'^(ativo|inativo|planejamento)$')
     categoria: str
     eixo_tecnologico: str
     carga_horaria: int = Field(..., gt=0)
@@ -33,20 +33,20 @@ class Curso(BaseModel):
 class Empresa(BaseModel):
     id: Optional[str] = None
     nome: str = Field(..., min_length=2, max_length=200)
-    cnpj: str = Field(..., regex=r'^\d{14}$')
+    cnpj: str = Field(..., pattern=r'^\d{14}$')
     endereco: str
     telefone: str
-    email: str = Field(..., regex=r'^[\w\.-]+@[\w\.-]+\.\w+$')
+    email: str = Field(..., pattern=r'^[\w\.-]+@[\w\.-]+\.\w+$')
     contato_responsavel: str
-    tipo_parceria: str = Field(..., regex=r'^(convenio|contrato|parceria)$')
+    tipo_parceria: str = Field(..., pattern=r'^(convenio|contrato|parceria)$')
     ativo: bool = True
     data_criacao: Optional[datetime] = None
 
 class Instrutor(BaseModel):
     id: Optional[str] = None
     nome: str = Field(..., min_length=2, max_length=200)
-    cpf: str = Field(..., regex=r'^\d{11}$')
-    email: str = Field(..., regex=r'^[\w\.-]+@[\w\.-]+\.\w+$')
+    cpf: str = Field(..., pattern=r'^\d{11}$')
+    email: str = Field(..., pattern=r'^[\w\.-]+@[\w\.-]+\.\w+$')
     telefone: str
     especializacoes: List[str] = []
     carga_horaria_maxima: int = Field(..., gt=0, le=40)
@@ -77,7 +77,7 @@ class Turma(BaseModel):
     sala: str
     vagas_total: int = Field(..., gt=0)
     vagas_ocupadas: int = Field(default=0, ge=0)
-    status: str = Field(..., regex=r'^(planejada|em_andamento|concluida|cancelada)$')
+    status: str = Field(..., pattern=r'^(planejada|em_andamento|concluida|cancelada)$')
     data_criacao: Optional[datetime] = None
 
 class Alocacao(BaseModel):
@@ -88,7 +88,7 @@ class Alocacao(BaseModel):
     data_inicio: datetime
     data_fim: datetime
     carga_horaria_semanal: int = Field(..., gt=0, le=40)
-    status: str = Field(..., regex=r'^(planejada|em_andamento|concluida|cancelada)$')
+    status: str = Field(..., pattern=r'^(planejada|em_andamento|concluida|cancelada)$')
     observacoes: Optional[str] = None
     data_criacao: Optional[datetime] = None
 
@@ -98,7 +98,7 @@ class EventoCalendario(BaseModel):
     descricao: Optional[str] = None
     data_inicio: datetime
     data_fim: datetime
-    tipo: str = Field(..., regex=r'^(aula|evento|feriado|reuniao)$')
+    tipo: str = Field(..., pattern=r'^(aula|evento|feriado|reuniao)$')
     turma_id: Optional[str] = None
     instrutor_id: Optional[str] = None
     sala: Optional[str] = None

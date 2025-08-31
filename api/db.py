@@ -2,7 +2,8 @@ from pymongo import MongoClient
 import os
 
 def get_mongo_db():
-    mongo_url = "mongodb+srv://admin:<seni123>@senai-cluster.elygotq.mongodb.net/"
+    # Usa variável de ambiente ou padrão local
+    mongo_url = os.getenv('MONGO_URL', 'mongodb://localhost:27017/')
     client = MongoClient(mongo_url)
     return client["senai_betim_bd"]
 

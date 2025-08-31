@@ -12,6 +12,7 @@ const API = Object.freeze({
   calendario: "../backend/processa_calendario.php",
   empresa: "../backend/processa_empresa.php",
   instituicao: "../backend/processa_instituicao.php",
+  turma: "../backend/processa_turma.php"
 });
 
 const TZ = "America/Sao_Paulo";
@@ -620,7 +621,7 @@ function renderTabelaCalendarios(lista) {
     const status = cal.status || "Ativo";
 
     return `
-      <tr>
+      <tr class="calendario-row" data-calendario-id="${id}" style="cursor: pointer;">
         <td>${nome}</td>
         <td>${empresa}</td>
         <td>${dtIni}</td>
@@ -642,6 +643,28 @@ function renderTabelaCalendarios(lista) {
   });
 
   tbody.innerHTML = rows.join("");
+  
+  // Adicionar event listeners para clique nas linhas
+  tbody.querySelectorAll('.calendario-row').forEach(row => {
+    row.addEventListener('click', async (e) => {
+      // Não executar se clicou em um botão de ação
+      if (e.target.closest('.actions button')) return;
+      
+      const calendarioId = row.dataset.calendarioId;
+      await exibirCalendarioComTurmas(calendarioId);
+    });
+  });
+  
+  // Adicionar event listeners para clique nas linhas
+  tbody.querySelectorAll('.calendario-row').forEach(row => {
+    row.addEventListener('click', async (e) => {
+      // Não executar se clicou em um botão de ação
+      if (e.target.closest('.actions button')) return;
+      
+      const calendarioId = row.dataset.calendarioId;
+      await exibirCalendarioComTurmas(calendarioId);
+    });
+  });
 }
 
 function atualizarPaginacaoUI() {
@@ -980,4 +1003,242 @@ function visualizarCalendario(cal) {
 
   $("#detalhesCalendario").innerHTML = html;
   openModal("modalVisualizarCalendario");
+}
+
+// Nova função para carregar turmas por calendário
+async function carregarTurmasPorCalendario(calendarioId) {
+  try {
+    const response = await fetch(`../backend/processa_turma.php`);
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status}`);
+    }
+    
+    const turmas = await response.json();
+    
+    // Filtrar turmas pelo calendário
+    return turmas.filter(turma => turma.id_calendario === calendarioId);
+  } catch (error) {
+    console.error('Erro ao carregar turmas:', error);
+    return [];
+  }
+}
+
+// Nova função para exibir calendário com turmas
+async function exibirCalendarioComTurmas(calendarioId) {
+  try {
+    const calendario = getCalendarioById(calendarioId);
+    if (!calendario) {
+      alert('Calendário não encontrado.');
+      return;
+    }
+    
+    // Carregar turmas associadas ao calendário
+    const turmas = await carregarTurmasPorCalendario(calendarioId);
+    
+    // Limpar eventos existentes no FullCalendar
+    if (STATE.fc) {
+      STATE.fc.removeAllEvents();
+    }
+    
+    // Adicionar dias não letivos do calendário
+    if (Array.isArray(calendario.dias_nao_letivos)) {
+      calendario.dias_nao_letivos.forEach(dia => {
+        if (STATE.fc && dia.data) {
+          STATE.fc.addEvent({
+            id: `nao-letivo-${dia.data}`,
+            title: dia.descricao || 'Dia não letivo',
+            start: dia.data,
+            allDay: true,
+            backgroundColor: '#ff6b6b',
+            borderColor: '#ff5252',
+            textColor: '#ffffff'
+          });
+        }
+      });
+    }
+    
+    // Adicionar turmas como eventos
+    turmas.forEach(turma => {
+      if (STATE.fc && turma.data_inicio) {
+        const endDate = turma.data_fim || turma.data_inicio;
+        
+        STATE.fc.addEvent({
+          id: `turma-${turma._id || turma.id}`,
+          title: `${turma.codigo} - ${turma.turno}`,
+          start: turma.data_inicio,
+          end: endDate,
+          allDay: true,
+          backgroundColor: '#4CAF50',
+          borderColor: '#45a049',
+          textColor: '#ffffff',
+          extendedProps: {
+            tipo: 'turma',
+            turma: turma
+          }
+        });
+      }
+    });
+    
+    // Navegar para o período do calendário
+    if (STATE.fc && calendario.data_inicial) {
+      STATE.fc.gotoDate(calendario.data_inicial);
+    }
+    
+    // Mostrar informações do calendário selecionado
+    const infoDiv = document.createElement('div');
+    infoDiv.id = 'calendario-info';
+    infoDiv.innerHTML = `
+      <div style="background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #007bff;">
+        <h3 style="margin: 0 0 10px 0; color: #333;">📅 ${calendario.nome_calendario || 'Calendário'}</h3>
+        <p style="margin: 5px 0; color: #666;"><strong>Empresa:</strong> ${nomeEmpresa(calendario.id_empresa)}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Período:</strong> ${fmtBR(calendario.data_inicial)} até ${fmtBR(calendario.data_final)}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Turmas associadas:</strong> ${turmas.length}</p>
+        ${turmas.length > 0 ? `
+          <details style="margin-top: 10px;">
+            <summary style="cursor: pointer; color: #007bff;">Ver turmas (${turmas.length})</summary>
+            <ul style="margin: 10px 0 0 20px;">
+              ${turmas.map(t => `<li>${t.codigo} - ${t.turno} (${t.num_alunos || 0} alunos)</li>`).join('')}
+            </ul>
+          </details>
+        ` : ''}
+      </div>
+    `;
+    
+    // Remover info anterior se existir
+    const existingInfo = document.getElementById('calendario-info');
+    if (existingInfo) {
+      existingInfo.remove();
+    }
+    
+    // Inserir antes do calendário
+    const calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+      calendarEl.parentNode.insertBefore(infoDiv, calendarEl);
+    }
+    
+    console.log(`Calendário ${calendario.nome_calendario} carregado com ${turmas.length} turmas`);
+    
+  } catch (error) {
+    console.error('Erro ao exibir calendário com turmas:', error);
+    alert('Erro ao carregar calendário e turmas.');
+  }
+}
+
+// Nova função para carregar turmas por calendário
+async function carregarTurmasPorCalendario(calendarioId) {
+  try {
+    const response = await fetch(`../backend/processa_turma.php`);
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status}`);
+    }
+    
+    const turmas = await response.json();
+    
+    // Filtrar turmas pelo calendário
+    return turmas.filter(turma => turma.id_calendario === calendarioId);
+  } catch (error) {
+    console.error('Erro ao carregar turmas:', error);
+    return [];
+  }
+}
+
+// Nova função para exibir calendário com turmas
+async function exibirCalendarioComTurmas(calendarioId) {
+  try {
+    const calendario = getCalendarioById(calendarioId);
+    if (!calendario) {
+      alert('Calendário não encontrado.');
+      return;
+    }
+    
+    // Carregar turmas associadas ao calendário
+    const turmas = await carregarTurmasPorCalendario(calendarioId);
+    
+    // Limpar eventos existentes no FullCalendar
+    if (STATE.fc) {
+      STATE.fc.removeAllEvents();
+    }
+    
+    // Adicionar dias não letivos do calendário
+    if (Array.isArray(calendario.dias_nao_letivos)) {
+      calendario.dias_nao_letivos.forEach(dia => {
+        if (STATE.fc && dia.data) {
+          STATE.fc.addEvent({
+            id: `nao-letivo-${dia.data}`,
+            title: dia.descricao || 'Dia não letivo',
+            start: dia.data,
+            allDay: true,
+            backgroundColor: '#ff6b6b',
+            borderColor: '#ff5252',
+            textColor: '#ffffff'
+          });
+        }
+      });
+    }
+    
+    // Adicionar turmas como eventos
+    turmas.forEach(turma => {
+      if (STATE.fc && turma.data_inicio) {
+        const endDate = turma.data_fim || turma.data_inicio;
+        
+        STATE.fc.addEvent({
+          id: `turma-${turma._id || turma.id}`,
+          title: `${turma.codigo} - ${turma.turno}`,
+          start: turma.data_inicio,
+          end: endDate,
+          allDay: true,
+          backgroundColor: '#4CAF50',
+          borderColor: '#45a049',
+          textColor: '#ffffff',
+          extendedProps: {
+            tipo: 'turma',
+            turma: turma
+          }
+        });
+      }
+    });
+    
+    // Navegar para o período do calendário
+    if (STATE.fc && calendario.data_inicial) {
+      STATE.fc.gotoDate(calendario.data_inicial);
+    }
+    
+    // Mostrar informações do calendário selecionado
+    const infoDiv = document.createElement('div');
+    infoDiv.id = 'calendario-info';
+    infoDiv.innerHTML = `
+      <div style="background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #007bff;">
+        <h3 style="margin: 0 0 10px 0; color: #333;">📅 ${calendario.nome_calendario || 'Calendário'}</h3>
+        <p style="margin: 5px 0; color: #666;"><strong>Empresa:</strong> ${nomeEmpresa(calendario.id_empresa)}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Período:</strong> ${fmtBR(calendario.data_inicial)} até ${fmtBR(calendario.data_final)}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Turmas associadas:</strong> ${turmas.length}</p>
+        ${turmas.length > 0 ? `
+          <details style="margin-top: 10px;">
+            <summary style="cursor: pointer; color: #007bff;">Ver turmas (${turmas.length})</summary>
+            <ul style="margin: 10px 0 0 20px;">
+              ${turmas.map(t => `<li>${t.codigo} - ${t.turno} (${t.num_alunos || 0} alunos)</li>`).join('')}
+            </ul>
+          </details>
+        ` : ''}
+      </div>
+    `;
+    
+    // Remover info anterior se existir
+    const existingInfo = document.getElementById('calendario-info');
+    if (existingInfo) {
+      existingInfo.remove();
+    }
+    
+    // Inserir antes do calendário
+    const calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+      calendarEl.parentNode.insertBefore(infoDiv, calendarEl);
+    }
+    
+    console.log(`Calendário ${calendario.nome_calendario} carregado com ${turmas.length} turmas`);
+    
+  } catch (error) {
+    console.error('Erro ao exibir calendário com turmas:', error);
+    alert('Erro ao carregar calendário e turmas.');
+  }
 }
