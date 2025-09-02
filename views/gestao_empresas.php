@@ -3,32 +3,42 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Empresas - SENAI</title>
 
   <link rel="stylesheet" href="../assets/css/style_turmas.css" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
   <style>
     /* ---- Evita scroll do body enquanto modal estiver aberto ---- */
-    body.modal-open { overflow: hidden; }
+    body.modal-open {
+      overflow: hidden;
+    }
 
     /* ---- Modal centralizado e limitado ao MAIN ---- */
-    .main-content { position: relative; }
+    .main-content {
+      position: relative;
+    }
 
     .modal {
       display: none;
-      position: absolute;      /* limita ao main */
-      inset: 0;                /* top/right/bottom/left = 0 dentro do main */
+      position: absolute;
+      /* limita ao main */
+      inset: 0;
+      /* top/right/bottom/left = 0 dentro do main */
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,.3);
+      background: rgba(0, 0, 0, .3);
       align-items: center;
       justify-content: center;
-      z-index: 20;             /* acima do conteúdo do main */
+      z-index: 20;
+      /* acima do conteúdo do main */
     }
-    .modal.show { display: flex !important; }
+
+    .modal.show {
+      display: flex !important;
+    }
 
     .modal-content {
       background: #fff;
@@ -38,8 +48,9 @@
       max-height: 80vh;
       overflow: auto;
       position: relative;
-      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
     }
+
     .close-button {
       position: absolute;
       top: 12px;
@@ -49,16 +60,28 @@
       line-height: 1;
     }
 
-    .alert-error, .alert-success {
+    .alert-error,
+    .alert-success {
       margin: 10px 0 0 0;
       padding: 8px 12px;
       border-radius: 8px;
       font-size: 1em;
     }
-    .alert-error { background: #fde2e1; color: #b20000; }
-    .alert-success { background: #e7f8e2; color: #227b2f; }
 
-    .form-group label { font-weight: bold; }
+    .alert-error {
+      background: #fde2e1;
+      color: #b20000;
+    }
+
+    .alert-success {
+      background: #e7f8e2;
+      color: #227b2f;
+    }
+
+    .form-group label {
+      font-weight: bold;
+    }
+
     .action-buttons {
       display: flex;
       gap: 6px;
@@ -78,7 +101,7 @@
 
 <body>
   <div class="dashboard-container">
-   <aside class="sidebar">
+    <aside class="sidebar">
       <div class="sidebar-header">
         <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
         <h3>Menu Principal</h3>
@@ -125,7 +148,7 @@
         <div class="filter-section" style="display:flex; flex-wrap:wrap; gap:12px; align-items:end;">
           <div class="filter-group">
             <label for="searchEmpresa">Buscar:</label>
-            <input type="text" id="searchEmpresa" placeholder="Razão social ou CNPJ..." class="search-input"/>
+            <input type="text" id="searchEmpresa" placeholder="Razão social ou CNPJ..." class="search-input" />
           </div>
 
           <div class="filter-group">
@@ -153,6 +176,9 @@
               <option value="100">100</option>
             </select>
           </div>
+          <button id="btnClearFilters" class="btn btn-light" type="button" title="Limpar filtros">
+            <i class="fas fa-broom"></i> Limpar filtros
+          </button>
         </div>
 
         <div class="table-responsive">
@@ -220,7 +246,7 @@
             <button type="submit" class="btn btn-primary" id="btnSubmitEmpresa">
               <i class="fas fa-save"></i> Salvar Empresa
             </button>
-            
+
           </form>
         </div>
       </div>
@@ -233,15 +259,15 @@
           <form>
             <div class="form-group">
               <label>Instituição:</label>
-              <input type="text" id="viewInstituicao" readonly disabled/>
+              <input type="text" id="viewInstituicao" readonly disabled />
             </div>
             <div class="form-group">
               <label>Nome da Empresa/Parceiro:</label>
-              <input type="text" id="viewNomeEmpresa" readonly disabled/>
+              <input type="text" id="viewNomeEmpresa" readonly disabled />
             </div>
             <div class="form-group">
               <label>CNPJ:</label>
-              <input type="text" id="viewCnpjMatriz" readonly disabled/>
+              <input type="text" id="viewCnpjMatriz" readonly disabled />
             </div>
             <button type="button" class="btn btn-secondary" id="fecharVisualizarEmpresa">Fechar</button>
           </form>
@@ -249,7 +275,9 @@
       </div>
     </main>
   </div>
-
+  <script src="../assets/js/geral.js"></script>
+  <script src="../assets/js/prefetch.js"></script>
   <script src="../assets/js/gestao_empresas.js"></script>
 </body>
+
 </html>

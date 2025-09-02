@@ -4,7 +4,7 @@
 
   // ========= Endpoints & Estado =========
   const API_EMPRESA = '../backend/processa_empresa.php';
-  const API_INST    = '../backend/processa_instituicao.php';
+  const API_INST = '../backend/processa_instituicao.php';
 
   let empresasData = [];           // lista crua vinda da API (sem filtros)
   let instituicoesMap = {};        // { _id: razao_social }
@@ -17,56 +17,56 @@
   };
 
   // ========= DOM =========
-  const empresaModal            = document.getElementById('empresaModal');
-  const addEmpresaBtn           = document.getElementById('addEmpresaBtn');
-  const closeEmpresaModal       = document.getElementById('closeEmpresaModal');
-  const empresaForm             = document.getElementById('empresaForm');
-  const cancelBtn               = document.getElementById('cancelBtn');
-  const btnSubmitEmpresa        = document.getElementById('btnSubmitEmpresa');
-  const modalTitle              = document.getElementById('modalTitle');
-  const dataTableBody           = document.querySelector('#empresasTable tbody');
+  const empresaModal = document.getElementById('empresaModal');
+  const addEmpresaBtn = document.getElementById('addEmpresaBtn');
+  const closeEmpresaModal = document.getElementById('closeEmpresaModal');
+  const empresaForm = document.getElementById('empresaForm');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const btnSubmitEmpresa = document.getElementById('btnSubmitEmpresa');
+  const modalTitle = document.getElementById('modalTitle');
+  const dataTableBody = document.querySelector('#empresasTable tbody');
 
-  const searchEmpresaInput      = document.getElementById('searchEmpresa');
-  const filterInstituicao       = document.getElementById('filterInstituicao');
-  const filterStatus            = document.getElementById('filterStatus');
-  const pageSizeSel             = document.getElementById('pageSize');
-  const prevPageBtn             = document.getElementById('prevPage');
-  const nextPageBtn             = document.getElementById('nextPage');
-  const pageInfo                = document.getElementById('pageInfo');
+  const searchEmpresaInput = document.getElementById('searchEmpresa');
+  const filterInstituicao = document.getElementById('filterInstituicao');
+  const filterStatus = document.getElementById('filterStatus');
+  const pageSizeSel = document.getElementById('pageSize');
+  const prevPageBtn = document.getElementById('prevPage');
+  const nextPageBtn = document.getElementById('nextPage');
+  const pageInfo = document.getElementById('pageInfo');
 
   // Campos do form
-  const empresaIdInput          = document.getElementById('empresaId');
-  const nomeEmpresaInput        = document.getElementById('nomeEmpresa');
-  const cnpjMatrizInput         = document.getElementById('cnpjMatriz');
-  const instituicaoSelect       = document.getElementById('instituicaoId');
-  const statusSelect            = document.getElementById('statusEmpresa');
-  const alertEmpresa            = document.getElementById('alertEmpresa');
+  const empresaIdInput = document.getElementById('empresaId');
+  const nomeEmpresaInput = document.getElementById('nomeEmpresa');
+  const cnpjMatrizInput = document.getElementById('cnpjMatriz');
+  const instituicaoSelect = document.getElementById('instituicaoId');
+  const statusSelect = document.getElementById('statusEmpresa');
+  const alertEmpresa = document.getElementById('alertEmpresa');
 
   // Modal Visualizar
-  const visualizarEmpresaModal  = document.getElementById('visualizarEmpresaModal');
-  const closeVisualizarEmpresa  = document.getElementById('closeVisualizarEmpresa');
+  const visualizarEmpresaModal = document.getElementById('visualizarEmpresaModal');
+  const closeVisualizarEmpresa = document.getElementById('closeVisualizarEmpresa');
   const fecharVisualizarEmpresa = document.getElementById('fecharVisualizarEmpresa');
-  const viewInstituicao         = document.getElementById('viewInstituicao');
-  const viewNomeEmpresa         = document.getElementById('viewNomeEmpresa');
-  const viewCnpjMatriz          = document.getElementById('viewCnpjMatriz');
+  const viewInstituicao = document.getElementById('viewInstituicao');
+  const viewNomeEmpresa = document.getElementById('viewNomeEmpresa');
+  const viewCnpjMatriz = document.getElementById('viewCnpjMatriz');
 
   // ========= Utils =========
-  const debounce = (fn, ms = 300) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
-  const strip = (s='') => s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-  const esc = (s='') => String(s)
-    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    .replaceAll('"','&quot;').replaceAll("'",'&#39;');
+  const debounce = (fn, ms = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+  const strip = (s = '') => s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const esc = (s = '') => String(s)
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 
   // ====== >>> Correção do horário local ao criar (sua sugestão) <<< ======
   function pad2(value) { return value.toString().padStart(2, '0'); }
   function nowLocalISO() {
     const d = new Date();
     return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}` +
-           `T${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+      `T${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
   }
   // =======================================================================
 
-  const safeCNPJ = (cnpj='') => cnpj.replace(/[^\d]/g, '');
+  const safeCNPJ = (cnpj = '') => cnpj.replace(/[^\d]/g, '');
 
   function fmtDateBR(input) {
     if (!input) return '—';
@@ -81,7 +81,7 @@
 
   function oidToDate(id) {
     if (!id || !/^[a-f\d]{24}$/i.test(id)) return null;
-    const ts = parseInt(id.slice(0,8), 16);
+    const ts = parseInt(id.slice(0, 8), 16);
     return new Date(ts * 1000);
   }
 
@@ -98,7 +98,7 @@
   function validaCNPJ(cnpj) {
     const v = safeCNPJ(cnpj);
     if (v.length !== 14 || /^(\d)\1{13}$/.test(v)) return false;
-    const toNums = v.split('').map(n=>+n);
+    const toNums = v.split('').map(n => +n);
     const calc = (arr) => {
       let soma = 0, pos = arr.length - 7;
       for (let i = arr.length; i >= 1; i--) {
@@ -108,15 +108,15 @@
       const resto = soma % 11;
       return (resto < 2) ? 0 : 11 - resto;
     };
-    const d1 = calc(toNums.slice(0,12));
+    const d1 = calc(toNums.slice(0, 12));
     if (d1 !== toNums[12]) return false;
-    const d2 = calc(toNums.slice(0,13));
+    const d2 = calc(toNums.slice(0, 13));
     return d2 === toNums[13];
   }
 
   // Máscara de CNPJ conforme digita
   function formatCNPJ(cnpj) {
-    const v = safeCNPJ(cnpj).slice(0,14);
+    const v = safeCNPJ(cnpj).slice(0, 14);
     let out = v;
     if (v.length > 12) out = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2}).*/, '$1.$2.$3/$4-$5');
     else if (v.length > 8) out = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4}).*/, '$1.$2.$3/$4');
@@ -129,10 +129,10 @@
   async function safeFetchJSON(url, options) {
     const res = await fetch(url, options);
     if (!res.ok) {
-      const txt = await res.text().catch(()=> '');
+      const txt = await res.text().catch(() => '');
       throw new Error(txt || `HTTP ${res.status}`);
     }
-    return res.json().catch(()=> (Array.isArray(res) ? [] : {}));
+    return res.json().catch(() => (Array.isArray(res) ? [] : {}));
   }
 
   // ========= Carregamento de dados =========
@@ -147,7 +147,7 @@
     instituicoesMap = {};
 
     if (filterInstituicao) filterInstituicao.innerHTML = '<option value="">Todas as instituições</option>';
-    if (instituicaoSelect)  instituicaoSelect.innerHTML  = '<option value="">Selecione</option>';
+    if (instituicaoSelect) instituicaoSelect.innerHTML = '<option value="">Selecione</option>';
 
     lista.forEach(inst => {
       const nome = inst.razao_social || inst.nome || '(sem nome)';
@@ -175,23 +175,23 @@
 
   // ========= Filtros e paginação (front) =========
   function getFilteredSorted() {
-    const q   = strip(STATE.filters.q).slice(0, 100);
+    const q = strip(STATE.filters.q).slice(0, 100);
     const inst = STATE.filters.instituicao;
-    const st   = STATE.filters.status; // ''|Ativa|Inativa
+    const st = STATE.filters.status; // ''|Ativa|Inativa
 
     let list = empresasData.filter(emp => {
       const nome = strip(emp.razao_social || '');
       const cnpj = strip(emp.cnpj || '');
       const haystack = `${nome} ${cnpj}`;
-      const okQ    = !q || haystack.includes(q);
+      const okQ = !q || haystack.includes(q);
       const okInst = !inst || (emp.instituicao_id === inst);
       const statusVal = (emp.status || 'Ativa');
-      const okSt  = !st || statusVal === st;
+      const okSt = !st || statusVal === st;
       return okQ && okInst && okSt;
     });
 
     // ordena SEMPRE por mais recente -> mais antigo
-    list.sort((a,b) => +getCreatedDate(b) - +getCreatedDate(a));
+    list.sort((a, b) => +getCreatedDate(b) - +getCreatedDate(a));
     return list;
   }
 
@@ -279,7 +279,7 @@
     if (!empresa) return;
     viewInstituicao.value = instituicoesMap[empresa.instituicao_id] || '';
     viewNomeEmpresa.value = empresa.razao_social || '';
-    viewCnpjMatriz.value  = empresa.cnpj || '';
+    viewCnpjMatriz.value = empresa.cnpj || '';
     visualizarEmpresaModal?.classList.add('show');
     document.body.classList.add('modal-open');
   }
@@ -291,13 +291,13 @@
   async function openEditModal(id) {
     const empresa = empresasData.find(e => e._id == id);
     if (!empresa) return;
-    modalTitle.textContent   = 'Editar Empresa';
-    empresaIdInput.value     = empresa._id || '';
-    nomeEmpresaInput.value   = empresa.razao_social || '';
-    cnpjMatrizInput.value    = empresa.cnpj || '';
+    modalTitle.textContent = 'Editar Empresa';
+    empresaIdInput.value = empresa._id || '';
+    nomeEmpresaInput.value = empresa.razao_social || '';
+    cnpjMatrizInput.value = empresa.cnpj || '';
     await carregarInstituicoes();
-    instituicaoSelect.value  = empresa.instituicao_id || '';
-    statusSelect.value       = (empresa.status === 'Inativa') ? 'Inativa' : 'Ativa';
+    instituicaoSelect.value = empresa.instituicao_id || '';
+    statusSelect.value = (empresa.status === 'Inativa') ? 'Inativa' : 'Ativa';
     empresaModal?.classList.add('show');
     document.body.classList.add('modal-open');
   }
@@ -360,7 +360,7 @@
       nomeEmpresaInput?.focus();
       return false;
     }
-    if (!['Ativa','Inativa'].includes(status)) {
+    if (!['Ativa', 'Inativa'].includes(status)) {
       showAlertEmpresa('Selecione um status válido.', 'error');
       statusSelect?.focus();
       return false;
@@ -415,7 +415,7 @@
       }
 
       if (!res.ok) {
-        const txt = await res.text().catch(()=> 'Erro ao salvar.');
+        const txt = await res.text().catch(() => 'Erro ao salvar.');
         throw new Error(txt || 'Erro ao salvar.');
       }
 
@@ -504,6 +504,8 @@
     }
   });
 
+  
+
   closeVisualizarEmpresa?.addEventListener('click', closeVisualizarEmpresaModal);
   fecharVisualizarEmpresa?.addEventListener('click', closeVisualizarEmpresaModal);
 
@@ -514,6 +516,35 @@
       await carregarEmpresas();
       if (pageSizeSel) pageSizeSel.value = String(STATE.pageSize);
       if (filterStatus) filterStatus.value = STATE.filters.status;
+      const clearCtl = App.ui.setupClearFilters({
+        buttonSelector: '#btnClearFilters',
+
+        // Observe apenas os filtros válidos desta tela (NÃO inclua #pageSize)
+        watchSelectors: ['#searchEmpresa', '#filterInstituicao', '#filterStatus'],
+
+        // Estado que habilita o botão
+        getFiltersState: () => {
+          const { q, instituicao, status } = STATE.filters; // <- nomes corretos
+          return { q, instituicao, status };
+        },
+
+        // O que zerar na UI ao clicar no botão
+        resetUI: () => {
+          if (searchEmpresaInput) searchEmpresaInput.value = '';
+          if (filterInstituicao) filterInstituicao.value = '';
+          if (filterStatus) filterStatus.value = '';
+        },
+
+        // O que zerar no estado e como recarregar
+        onClear: async () => {
+          STATE.filters = { q: '', instituicao: '', status: '' };
+          STATE.page = 1;
+          renderTabela(); // já chama renderPaginacao por dentro
+        }
+      });
+
+      // começa desabilitado se não houver filtro
+      clearCtl?.update?.();
     } catch (e) {
       console.error('Falha ao inicializar a página:', e);
     }
