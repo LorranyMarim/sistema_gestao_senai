@@ -106,8 +106,8 @@
           <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
           <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
           <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
-          <li><a href="gestao_empresas.php" class="active"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+          <li><a href="gestao_instrutores.php" class="active"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
           <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
           <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a></li>
           <li id="nav-relatorios" class="has-submenu">
@@ -245,11 +245,11 @@
     </select>
   </div>
 
-  <button type="submit" class="btn btn-primary" id="btnSalvarInstrutor">
-    <i class="fas fa-save"></i> Salvar Instrutor
-  </button>
   <button type="button" class="btn btn-secondary" id="cancelBtn">
     <i class="fas fa-times-circle"></i> Cancelar
+  </button>
+    <button type="submit" class="btn btn-primary" id="btnSalvarInstrutor">
+    <i class="fas fa-save"></i> Salvar Instrutor
   </button>
 </form>
 
@@ -301,6 +301,8 @@
   </main>
   </div>
 
+  <script src="../assets/js/geral.js"></script>
+  <script src="../assets/js/prefetch.js"></script>
   <script src="../assets/js/gestao_instrutores.js"></script>
 </body>
 </html>

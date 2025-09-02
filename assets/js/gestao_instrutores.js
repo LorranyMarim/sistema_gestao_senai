@@ -4,13 +4,13 @@
 
   // ===================== Endpoints =====================
   const API_INSTRUTOR = '../backend/processa_instrutor.php';
-  const API_INST      = '../backend/processa_instituicao.php';
-  const API_UC        = '../backend/processa_unidade_curricular.php';
+  const API_INST = '../backend/processa_instituicao.php';
+  const API_UC = '../backend/processa_unidade_curricular.php';
 
   // ===================== Estado =====================
   let instrutoresData = [];   // dados crus da API
   let instituicoesMap = {};   // { _id: nome }
-  let ucsMap          = {};   // { _id: descricao }
+  let ucsMap = {};   // { _id: descricao }
 
   // Estado dos filtros/UX (persistimos apenas o "último filtro")
   const LS_LAST_FILTER = 'instrutoresFiltersLast';
@@ -28,55 +28,55 @@
 
   // ===================== DOM =====================
   // Modais (cadastro/edição)
-  const instrutorModal            = document.getElementById('instrutorModal');
-  const addInstrutorBtn           = document.getElementById('addInstrutorBtn');
-  const closeInstrutorModalBtn    = document.getElementById('closeInstrutorModal');
-  const cancelBtn                 = document.getElementById('cancelBtn');
-  const instrutorForm             = document.getElementById('instrutorForm');
-  const modalTitle                = document.getElementById('modalTitle');
-  const btnSalvar                 = document.getElementById('btnSalvarInstrutor');
-  const alertBox                  = document.getElementById('alertInstrutor');
-  const statusSelect              = document.getElementById('statusInstrutor');
+  const instrutorModal = document.getElementById('instrutorModal');
+  const addInstrutorBtn = document.getElementById('addInstrutorBtn');
+  const closeInstrutorModalBtn = document.getElementById('closeInstrutorModal');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const instrutorForm = document.getElementById('instrutorForm');
+  const modalTitle = document.getElementById('modalTitle');
+  const btnSalvar = document.getElementById('btnSalvarInstrutor');
+  const alertBox = document.getElementById('alertInstrutor');
+  const statusSelect = document.getElementById('statusInstrutor');
 
   // Tabela e busca
-  const dataTableBody        = document.querySelector('.data-table tbody');
+  const dataTableBody = document.querySelector('.data-table tbody');
   const searchInstrutorInput = document.getElementById('searchInstrutor');
 
   // Campos do form
-  const instrutorIdInput          = document.getElementById('instrutorId');
-  const nomeInstrutorInput        = document.getElementById('nomeInstrutor');
-  const matriculaInstrutorInput   = document.getElementById('matriculaInstrutor');
-  const instrutorTelefoneInput    = document.getElementById('instrutorTelefone');
-  const instrutorEmailInput       = document.getElementById('instrutorEmail');
-  const instituicaoSelect         = document.getElementById('instituicaoId');
-  const mapaCompetenciaSelect     = window.$ ? window.$('#mapaCompetencia') : null; // select2 (multi)
-  const turnosSelect              = window.$ ? window.$('#turnosInstrutor') : null; // select2 (multi)
-  const cargaHorariaInput         = document.getElementById('cargaHoraria');
+  const instrutorIdInput = document.getElementById('instrutorId');
+  const nomeInstrutorInput = document.getElementById('nomeInstrutor');
+  const matriculaInstrutorInput = document.getElementById('matriculaInstrutor');
+  const instrutorTelefoneInput = document.getElementById('instrutorTelefone');
+  const instrutorEmailInput = document.getElementById('instrutorEmail');
+  const instituicaoSelect = document.getElementById('instituicaoId');
+  const mapaCompetenciaSelect = window.$ ? window.$('#mapaCompetencia') : null; // select2 (multi)
+  const turnosSelect = window.$ ? window.$('#turnosInstrutor') : null; // select2 (multi)
+  const cargaHorariaInput = document.getElementById('cargaHoraria');
 
   // Modal Visualizar
-  const visualizarInstrutorModal  = document.getElementById('visualizarInstrutorModal');
-  const closeVisualizarInstrutor  = document.getElementById('closeVisualizarInstrutor');
+  const visualizarInstrutorModal = document.getElementById('visualizarInstrutorModal');
+  const closeVisualizarInstrutor = document.getElementById('closeVisualizarInstrutor');
   const fecharVisualizarInstrutor = document.getElementById('fecharVisualizarInstrutor');
-  const viewInstituicao           = document.getElementById('viewInstituicao');
-  const viewNomeInstrutor         = document.getElementById('viewNomeInstrutor');
-  const viewMatriculaInstrutor    = document.getElementById('viewMatriculaInstrutor');
-  const viewTelefone              = document.getElementById('viewTelefone');
-  const viewEmail                 = document.getElementById('viewEmail');
-  const viewMapaCompetenciaList   = document.getElementById('viewMapaCompetenciaList');
-  const viewTurnosInstrutor       = document.getElementById('viewTurnosInstrutor');
-  const viewCargaHoraria          = document.getElementById('viewCargaHoraria');
+  const viewInstituicao = document.getElementById('viewInstituicao');
+  const viewNomeInstrutor = document.getElementById('viewNomeInstrutor');
+  const viewMatriculaInstrutor = document.getElementById('viewMatriculaInstrutor');
+  const viewTelefone = document.getElementById('viewTelefone');
+  const viewEmail = document.getElementById('viewEmail');
+  const viewMapaCompetenciaList = document.getElementById('viewMapaCompetenciaList');
+  const viewTurnosInstrutor = document.getElementById('viewTurnosInstrutor');
+  const viewCargaHoraria = document.getElementById('viewCargaHoraria');
 
   // ============== Utils (format, validações, helpers) ==============
-  const debounce  = (fn, ms = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
-  const strip     = (s='') => s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const debounce = (fn, ms = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+  const strip = (s = '') => s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
   const FORBIDDEN = /[<>"';{}]/g;
   const MATRICULA = /^[A-Za-z0-9._-]{3,20}$/;
-  const EMAIL     = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const TELMASK   = /^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const TELMASK = /^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
 
-  const sanitizeSpaces = (s='') => s.replace(/\s+/g, ' ').trim();
-  const onlyDigits     = (s='') => s.replace(/\D+/g, '');
+  const sanitizeSpaces = (s = '') => s.replace(/\s+/g, ' ').trim();
+  const onlyDigits = (s = '') => s.replace(/\D+/g, '');
 
   // Data/hora formatada
   function fmtDateBR(input) {
@@ -92,7 +92,7 @@
   // Extrai timestamp do ObjectId (fallback caso não haja data_criacao)
   function oidToDate(id) {
     if (!id || !/^[a-f\d]{24}$/i.test(id)) return null;
-    const ts = parseInt(id.slice(0,8), 16);
+    const ts = parseInt(id.slice(0, 8), 16);
     return new Date(ts * 1000);
   }
   function getCreatedDate(doc) {
@@ -114,7 +114,7 @@
   async function safeFetchJSON(url, options) {
     const res = await fetch(url, options);
     if (!res.ok) {
-      const txt = await res.text().catch(()=> '');
+      const txt = await res.text().catch(() => '');
       throw new Error(txt || `HTTP ${res.status}`);
     }
     const data = await res.json().catch(() => []);
@@ -137,7 +137,7 @@
   function clearForm() {
     instrutorForm?.reset();
     if (mapaCompetenciaSelect?.length) mapaCompetenciaSelect.val(null).trigger('change');
-    if (turnosSelect?.length)          turnosSelect.val(null).trigger('change');
+    if (turnosSelect?.length) turnosSelect.val(null).trigger('change');
     if (statusSelect) statusSelect.value = 'Ativo';  // default
     if (modalTitle) modalTitle.textContent = 'Adicionar Novo Instrutor';
     if (instrutorIdInput) instrutorIdInput.value = '';
@@ -165,7 +165,7 @@
   }
 
   // Máscara de telefone (amigável)
-  function maskPhone(value='') {
+  function maskPhone(value = '') {
     const d = onlyDigits(value).slice(0, 11);
     if (d.length <= 10) {
       return d
@@ -216,10 +216,10 @@
             page_size: 1000
           }),
           processResults: (data) => {
-            const items    = Array.isArray(data) ? data : (data.items || []);
-            const results  = items.map(uc => ({ id: uc._id, text: uc.descricao }));
+            const items = Array.isArray(data) ? data : (data.items || []);
+            const results = items.map(uc => ({ id: uc._id, text: uc.descricao }));
             const pageSize = (Array.isArray(data) ? items.length : (data.page_size || 1000));
-            const more     = items.length === pageSize;
+            const more = items.length === pageSize;
             return { results, pagination: { more } };
           }
         }
@@ -278,7 +278,7 @@
   // ===================== Filtros - UI Dinâmica (duas linhas) =====================
   function ensureFilterUI() {
     const tableSection = document.querySelector('.table-section');
-    let   filterSection = document.querySelector('.filter-section');
+    let filterSection = document.querySelector('.filter-section');
 
     // cria a seção se não existir
     if (!filterSection) {
@@ -288,14 +288,20 @@
     }
 
     // Zera o conteúdo e cria duas linhas
+
+
+    // Zera o conteúdo e cria TRÊS linhas
     filterSection.innerHTML = '';
     filterSection.style.display = 'block';
     const rowStyle = 'display:flex;flex-wrap:wrap;gap:12px;align-items:end;width:100%';
 
-    const row1 = document.createElement('div'); row1.style = rowStyle;
-    const row2 = document.createElement('div'); row2.style = rowStyle;
+    const row1 = document.createElement('div'); row1.style = rowStyle; // Buscar | Instituição | Status
+    const row2 = document.createElement('div'); row2.style = rowStyle; // Turno | UCs | Com/sem UCs
+    const row3 = document.createElement('div'); row3.style = rowStyle; // Ordenar por | Itens/página | Limpar filtros
+
     filterSection.appendChild(row1);
     filterSection.appendChild(row2);
+    filterSection.appendChild(row3);
 
     // Helper criador de grupos
     const mkGroup = (html) => {
@@ -305,91 +311,97 @@
       return div;
     };
 
-    // Linha 1 — Buscar | Instituição | Status | Turno
-    // Buscar: usa o input já existente, movendo-o para a linha 1
+    // ================== LINHA 1: Buscar | Instituição | Status ==================
     if (searchInstrutorInput) {
       let grp = searchInstrutorInput.closest('.filter-group');
       if (!grp) {
         grp = mkGroup(`
-          <label for="searchInstrutor">Buscar Instrutor (Nome, Matrícula, E-mail):</label>
-        `);
+      <label for="searchInstrutor">Buscar Instrutor (Nome, Matrícula, E-mail):</label>
+    `);
         grp.appendChild(searchInstrutorInput);
       }
       row1.appendChild(grp);
     } else {
       // fallback, cria se não houver no HTML
       const grp = mkGroup(`
-        <label for="searchInstrutor">Buscar Instrutor (Nome, Matrícula, E-mail):</label>
-        <input type="text" id="searchInstrutor" placeholder="Digite para filtrar..." class="search-input"/>
-      `);
+    <label for="searchInstrutor">Buscar Instrutor (Nome, Matrícula, E-mail):</label>
+    <input type="text" id="searchInstrutor" placeholder="Digite para filtrar..." class="search-input"/>
+  `);
       row1.appendChild(grp);
     }
 
     // Instituição (select único)
     row1.appendChild(mkGroup(`
-      <label for="filterInstituicao">Instituição:</label>
-      <select id="filterInstituicao" style="min-width:220px"></select>
-    `));
+  <label for="filterInstituicao">Instituição:</label>
+  <select id="filterInstituicao" style="min-width:220px"></select>
+`));
 
     // Status
     row1.appendChild(mkGroup(`
-      <label for="filterStatus">Status:</label>
-      <select id="filterStatus">
-        <option value="Todos">Todos</option>
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select>
-    `));
+  <label for="filterStatus">Status:</label>
+  <select id="filterStatus">
+    <option value="Todos">Todos</option>
+    <option value="Ativo">Ativo</option>
+    <option value="Inativo">Inativo</option>
+  </select>
+`));
 
-    // Turno (multiselect)
-    row1.appendChild(mkGroup(`
-      <label for="filterTurnos">Turno:</label>
-      <select id="filterTurnos" multiple style="min-width:200px">
-        <option value="Manhã">Manhã</option>
-        <option value="Tarde">Tarde</option>
-        <option value="Noite">Noite</option>
-      </select>
-    `));
+    // ============== LINHA 2: Turno | UCs | Com/sem UCs =================
+    row2.appendChild(mkGroup(`
+  <label for="filterTurnos">Turno:</label>
+  <select id="filterTurnos" multiple style="min-width:200px">
+    <option value="Manhã">Manhã</option>
+    <option value="Tarde">Tarde</option>
+    <option value="Noite">Noite</option>
+  </select>
+`));
 
-    // Linha 2 — UCs | Com/sem UCs | Ordenar por | Itens/página
     // UCs (multiselect via AJAX)
     row2.appendChild(mkGroup(`
-      <label for="filterUcs">Mapa de Competência (UCs):</label>
-      <select id="filterUcs" multiple style="min-width:260px"></select>
-    `));
+  <label for="filterUcs">Mapa de Competência (UCs):</label>
+  <select id="filterUcs" multiple style="min-width:260px"></select>
+`));
 
     // Com/sem UCs
     row2.appendChild(mkGroup(`
-      <label for="filterComSemUcs">Com/sem UCs:</label>
-      <select id="filterComSemUcs">
-        <option value="Todos">Todos</option>
-        <option value="Com">Com UCs</option>
-        <option value="Sem">Sem UCs</option>
-      </select>
-    `));
+  <label for="filterComSemUcs">Com/sem UCs:</label>
+  <select id="filterComSemUcs">
+    <option value="Todos">Todos</option>
+    <option value="Com">Com UCs</option>
+    <option value="Sem">Sem UCs</option>
+  </select>
+`));
 
-    // Ordenação
-    row2.appendChild(mkGroup(`
-      <label for="sortBy">Ordenar por:</label>
-      <select id="sortBy">
-        <option value="created_desc">Criado em (recente→antigo)</option>
-        <option value="nome_asc">Nome (A→Z)</option>
-        <option value="matricula_asc">Matrícula</option>
-        <option value="carga_asc">Carga horária</option>
-        <option value="status_asc">Status</option>
-      </select>
-    `));
+    // ======= LINHA 3: Ordenar por | Itens/página | Limpar filtros =======
+    row3.appendChild(mkGroup(`
+  <label for="sortBy">Ordenar por:</label>
+  <select id="sortBy">
+    <option value="created_desc">Criado em (recente→antigo)</option>
+    <option value="nome_asc">Nome (A→Z)</option>
+    <option value="matricula_asc">Matrícula</option>
+    <option value="carga_asc">Carga horária</option>
+    <option value="status_asc">Status</option>
+  </select>
+`));
 
-    // Itens/página
-    row2.appendChild(mkGroup(`
-      <label for="pageSize">Itens/página:</label>
-      <select id="pageSize">
-        <option value="10">10</option>
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-      </select>
-    `));
+    row3.appendChild(mkGroup(`
+  <label for="pageSize">Itens/página:</label>
+  <select id="pageSize">
+    <option value="10">10</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+  </select>
+`));
+
+    // Botão Limpar filtros (desabilitado por padrão). Mantém o mesmo estilo.
+    const grpClear = mkGroup(`
+  <label>&nbsp;</label>
+  <button id="btnClearFilters" class="btn btn-light" type="button" title="Limpar filtros" disabled>
+    <i class="fas fa-broom"></i> Limpar filtros
+  </button>
+`);
+    row3.appendChild(grpClear);
 
     // Paginação (prev/next + info), se não existir
     const tableResponsive = document.querySelector('.table-responsive');
@@ -401,10 +413,10 @@
       bar.style.gap = '10px';
       bar.style.marginTop = '10px';
       bar.innerHTML = `
-        <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
-        <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-        <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
-      `;
+    <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+    <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+    <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
+  `;
       tableResponsive.appendChild(bar);
     }
 
@@ -414,8 +426,8 @@
     wireFilterEvents();
     // Popular instituição
     populateFilterInstituicao();
-  }
 
+  }
   function initFilterSelect2() {
     if (!window.$?.fn?.select2) return;
 
@@ -443,10 +455,10 @@
             page_size: 1000
           }),
           processResults: (data) => {
-            const items    = Array.isArray(data) ? data : (data.items || []);
-            const results  = items.map(uc => ({ id: uc._id, text: uc.descricao }));
+            const items = Array.isArray(data) ? data : (data.items || []);
+            const results = items.map(uc => ({ id: uc._id, text: uc.descricao }));
             const pageSize = (Array.isArray(data) ? items.length : (data.page_size || 1000));
-            const more     = items.length === pageSize;
+            const more = items.length === pageSize;
             return { results, pagination: { more } };
           }
         }
@@ -455,100 +467,169 @@
   }
 
   function populateFilterInstituicao() {
-    const sel = document.getElementById('filterInstituicao');
-    if (!sel) return;
-    const current = sel.value || filters.instituicao || '';
-    sel.innerHTML = `<option value="">Todas</option>`;
-    Object.entries(instituicoesMap).forEach(([id, nome]) => {
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = nome;
-      sel.appendChild(opt);
-    });
-    sel.value = current;
+  const sel = document.getElementById('filterInstituicao');
+  if (!sel) return;
+  const current = sel.value || filters.instituicao || '';
+  sel.innerHTML = `<option value="">Todas</option>`;
+  Object.entries(instituicoesMap).forEach(([id, nome]) => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = nome;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+  updateClearBtn(); // <- ADICIONE ESTA LINHA
+}
+
+  // Lê o estado ATUAL da UI (sem depender do objeto filters)
+  function getUIFilterState() {
+    const $ = (id) => document.getElementById(id);
+    return {
+      text: ($('searchInstrutor')?.value || '').trim(),
+      instituicao: $('filterInstituicao')?.value || '',
+      status: $('filterStatus')?.value || 'Todos',
+      comSemUcs: $('filterComSemUcs')?.value || 'Todos',
+      turnos: (window.$ ? (window.$('#filterTurnos').val() || []) : []),
+      ucs: (window.$ ? (window.$('#filterUcs').val() || []) : []),
+    };
   }
+
+  function hasActiveFiltersFromUI() {
+    const s = getUIFilterState();
+    return Boolean(
+      s.text ||
+      s.instituicao ||
+      (s.status !== 'Todos') ||
+      (s.comSemUcs !== 'Todos') ||
+      (s.turnos && s.turnos.length) ||
+      (s.ucs && s.ucs.length)
+    );
+  }
+
+  function updateClearBtn() {
+    const btn = document.getElementById('btnClearFilters');
+    if (btn) btn.disabled = !hasActiveFiltersFromUI();
+  }
+
 
   function wireFilterEvents() {
-    // Busca textual — debounce
-    if (searchInstrutorInput) {
-      searchInstrutorInput.addEventListener('input', debounce(() => {
-        filters.text = searchInstrutorInput.value || '';
-        filters.page = 1;
-        persistLastFilter();
-        applyFiltersAndRender();
-      }, 250));
-    }
+  const el = (id) => document.getElementById(id);
 
-    const el = (id) => document.getElementById(id);
-
-    el('filterInstituicao')?.addEventListener('change', (e) => {
-      filters.instituicao = e.target.value || '';
+  // Busca textual — debounce
+  if (searchInstrutorInput) {
+    searchInstrutorInput.addEventListener('input', debounce(() => {
+      filters.text = searchInstrutorInput.value || '';
       filters.page = 1;
       persistLastFilter();
       applyFiltersAndRender();
-    });
-
-    el('filterStatus')?.addEventListener('change', (e) => {
-      filters.status = e.target.value || 'Todos';
-      filters.page = 1;
-      persistLastFilter();
-      applyFiltersAndRender();
-    });
-
-    el('filterComSemUcs')?.addEventListener('change', (e) => {
-      filters.comSemUcs = e.target.value || 'Todos';
-      filters.page = 1;
-      persistLastFilter();
-      applyFiltersAndRender();
-    });
-
-    el('sortBy')?.addEventListener('change', (e) => {
-      filters.sortBy = e.target.value || 'created_desc';
-      filters.page = 1;
-      persistLastFilter();
-      applyFiltersAndRender();
-    });
-
-    el('pageSize')?.addEventListener('change', (e) => {
-      filters.pageSize = Number(e.target.value || 10);
-      filters.page = 1;
-      persistLastFilter();
-      applyFiltersAndRender();
-    });
-
-    el('prevPage')?.addEventListener('click', () => {
-      if (filters.page > 1) {
-        filters.page -= 1;
-        persistLastFilter();
-        applyFiltersAndRender();
-      }
-    });
-
-    el('nextPage')?.addEventListener('click', () => {
-      const { totalPages } = getFilteredAndSorted();
-      if (filters.page < totalPages) {
-        filters.page += 1;
-        persistLastFilter();
-        applyFiltersAndRender();
-      }
-    });
-
-    // Multiselects Select2 (Turnos/UCs)
-    try {
-      $('#filterTurnos').on('change', function() {
-        filters.turnos = $(this).val() || [];
-        filters.page = 1;
-        persistLastFilter();
-        applyFiltersAndRender();
-      });
-      $('#filterUcs').on('change', function() {
-        filters.ucs = $(this).val() || [];
-        filters.page = 1;
-        persistLastFilter();
-        applyFiltersAndRender();
-      });
-    } catch {}
+      updateClearBtn();
+    }, 250));
   }
+
+  el('filterInstituicao')?.addEventListener('change', (e) => {
+    filters.instituicao = e.target.value || '';
+    filters.page = 1;
+    persistLastFilter();
+    applyFiltersAndRender();
+    updateClearBtn();
+  });
+
+  el('filterStatus')?.addEventListener('change', (e) => {
+    filters.status = e.target.value || 'Todos';
+    filters.page = 1;
+    persistLastFilter();
+    applyFiltersAndRender();
+    updateClearBtn();
+  });
+
+  el('filterComSemUcs')?.addEventListener('change', (e) => {
+    filters.comSemUcs = e.target.value || 'Todos';
+    filters.page = 1;
+    persistLastFilter();
+    applyFiltersAndRender();
+    updateClearBtn();
+  });
+
+  // Select2
+  try {
+    $('#filterTurnos').on('change', function () {
+      filters.turnos = $(this).val() || [];
+      filters.page = 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+      updateClearBtn();
+    });
+    $('#filterUcs').on('change', function () {
+      filters.ucs = $(this).val() || [];
+      filters.page = 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+      updateClearBtn();
+    });
+  } catch { }
+  const btnClear = document.getElementById('btnClearFilters');
+  if (btnClear && !btnClear._bound) {
+    btnClear.addEventListener('click', () => {
+      const $ = (id) => document.getElementById(id);
+      if ($('searchInstrutor'))   $('searchInstrutor').value = '';
+      if ($('filterInstituicao')) $('filterInstituicao').value = '';
+      if ($('filterStatus'))      $('filterStatus').value = 'Todos';
+      if ($('filterComSemUcs'))   $('filterComSemUcs').value = 'Todos';
+      try { window.$ && window.$('#filterTurnos').val([]).trigger('change'); } catch {}
+      try { window.$ && window.$('#filterUcs').val([]).trigger('change'); } catch {}
+
+      filters = {
+        ...filters,
+        text: '',
+        instituicao: '',
+        status: 'Todos',
+        turnos: [],
+        ucs: [],
+        comSemUcs: 'Todos',
+        page: 1
+      };
+      persistLastFilter();
+      applyFiltersAndRender();
+      updateClearBtn(); // volta a desabilitar
+    });
+    btnClear._bound = true; // evita listeners duplicados
+  }
+
+  // *** sortBy / pageSize / paginação NÃO interferem no botão ***
+  el('sortBy')?.addEventListener('change', (e) => {
+    filters.sortBy = e.target.value || 'created_desc';
+    filters.page = 1;
+    persistLastFilter();
+    applyFiltersAndRender();
+    // não chama updateClearBtn()
+  });
+
+  el('pageSize')?.addEventListener('change', (e) => {
+    filters.pageSize = Number(e.target.value || 10);
+    filters.page = 1;
+    persistLastFilter();
+    applyFiltersAndRender();
+    // não chama updateClearBtn()
+  });
+
+  el('prevPage')?.addEventListener('click', () => {
+    if (filters.page > 1) {
+      filters.page -= 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+    }
+  });
+
+  el('nextPage')?.addEventListener('click', () => {
+    const { totalPages } = getFilteredAndSorted();
+    if (filters.page < totalPages) {
+      filters.page += 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+    }
+  });
+}
+
 
   function persistLastFilter() {
     localStorage.setItem(LS_LAST_FILTER, JSON.stringify(filters));
@@ -557,7 +638,7 @@
     try {
       const last = JSON.parse(localStorage.getItem(LS_LAST_FILTER) || '{}');
       filters = { ...filters, ...last };
-    } catch {}
+    } catch { }
   }
   function reflectFiltersToUI() {
     const el = (id) => document.getElementById(id);
@@ -569,7 +650,7 @@
     if (el('pageSize')) el('pageSize').value = String(filters.pageSize || 10);
 
     // multiselects
-    try { $('#filterTurnos').val(filters.turnos || []).trigger('change.select2'); } catch {}
+    try { $('#filterTurnos').val(filters.turnos || []).trigger('change.select2'); } catch { }
     // UCs Select2 AJAX: injeta opções selecionadas para exibir imediatamente
     try {
       const $ucs = $('#filterUcs');
@@ -582,6 +663,7 @@
       });
       $ucs.trigger('change.select2');
     } catch {}
+
   }
 
   // ===================== Aplicar filtros, ordenar, paginar =====================
@@ -604,11 +686,11 @@
     return arr.some(id => filters.ucs.includes(id));
   }
   function matchesComSemUcs(instru) {
-  const n = Array.isArray(instru.mapa_competencia) ? instru.mapa_competencia.length : 0;
-  if (filters.comSemUcs === 'Com') return n > 0;
-  if (filters.comSemUcs === 'Sem') return n === 0;
-  return true;
-}
+    const n = Array.isArray(instru.mapa_competencia) ? instru.mapa_competencia.length : 0;
+    if (filters.comSemUcs === 'Com') return n > 0;
+    if (filters.comSemUcs === 'Sem') return n === 0;
+    return true;
+  }
   function matchesText(instru) {
     const term = strip(filters.text || '');
     if (!term) return true;
@@ -651,7 +733,7 @@
     const page = Math.min(Math.max(1, filters.page || 1), totalPages);
 
     const start = (page - 1) * pageSize;
-    const end   = start + pageSize;
+    const end = start + pageSize;
     const pageItems = filtered.slice(start, end);
 
     return { filtered, pageItems, total, page, totalPages, pageSize };
@@ -675,7 +757,7 @@
     } else {
       rows.forEach(instrutor => {
         const turnosNomes = Array.isArray(instrutor.turnos) ? instrutor.turnos.join(', ') : '';
-        const created     = getCreatedDate(instrutor);
+        const created = getCreatedDate(instrutor);
         const tr = document.createElement('tr');
 
         // Colunas (ordem do seu <thead>):
@@ -751,12 +833,12 @@
 
   function openVisualizarInstrutorModal(instrutor) {
     if (!instrutor) return;
-    viewInstituicao.value        = instituicoesMap[instrutor.instituicao_id] || '';
-    viewNomeInstrutor.value      = instrutor.nome || '';
+    viewInstituicao.value = instituicoesMap[instrutor.instituicao_id] || '';
+    viewNomeInstrutor.value = instrutor.nome || '';
     viewMatriculaInstrutor.value = instrutor.matricula || '';
-    viewCargaHoraria.value       = instrutor.carga_horaria ?? '';
-    viewTelefone.value           = instrutor.telefone || '';
-    viewEmail.value              = instrutor.email || '';
+    viewCargaHoraria.value = instrutor.carga_horaria ?? '';
+    viewTelefone.value = instrutor.telefone || '';
+    viewEmail.value = instrutor.email || '';
 
     const ucs = Array.isArray(instrutor.mapa_competencia) ? instrutor.mapa_competencia : [];
     viewMapaCompetenciaList.innerHTML = ucs.length
@@ -775,14 +857,14 @@
     const instrutor = instrutoresData.find(e => e._id === id);
     if (!instrutor) return;
 
-    modalTitle.textContent        = 'Editar Instrutor';
-    instrutorIdInput.value        = instrutor._id || '';
-    instituicaoSelect.value       = '';
-    nomeInstrutorInput.value      = instrutor.nome || '';
+    modalTitle.textContent = 'Editar Instrutor';
+    instrutorIdInput.value = instrutor._id || '';
+    instituicaoSelect.value = '';
+    nomeInstrutorInput.value = instrutor.nome || '';
     matriculaInstrutorInput.value = instrutor.matricula || '';
-    cargaHorariaInput.value       = instrutor.carga_horaria ?? '';
-    instrutorTelefoneInput.value  = instrutor.telefone || '';
-    instrutorEmailInput.value     = instrutor.email || '';
+    cargaHorariaInput.value = instrutor.carga_horaria ?? '';
+    instrutorTelefoneInput.value = instrutor.telefone || '';
+    instrutorEmailInput.value = instrutor.email || '';
 
     setFormDisabled(true);
     await carregarInstituicoes();
@@ -827,7 +909,7 @@
   }
 
   // ===================== Validações formulário =====================
-  function isValidEmail(e='') { return EMAIL.test(e); }
+  function isValidEmail(e = '') { return EMAIL.test(e); }
 
   function validateFormFields() {
     clearAlert();
@@ -862,7 +944,7 @@
     let tel = (instrutorTelefoneInput?.value || '').trim();
     if (tel) {
       const digits = onlyDigits(tel);
-      if (!(TELMASK.test(tel) || [10,11].includes(digits.length))) {
+      if (!(TELMASK.test(tel) || [10, 11].includes(digits.length))) {
         showAlert('Telefone inválido. Use (11) 98765-4321 ou informe 10/11 dígitos.');
         instrutorTelefoneInput?.focus(); return false;
       }
@@ -891,7 +973,7 @@
     }
 
     // Status – sanity
-    if (statusSelect && !['Ativo','Inativo'].includes(statusSelect.value)) {
+    if (statusSelect && !['Ativo', 'Inativo'].includes(statusSelect.value)) {
       showAlert('Status inválido.'); statusSelect.focus(); return false;
     }
 
@@ -904,7 +986,7 @@
   instrutorTelefoneInput?.addEventListener('input', (e) => {
     const pos = e.target.selectionStart;
     e.target.value = maskPhone(e.target.value);
-    try { e.target.setSelectionRange(pos, pos); } catch {}
+    try { e.target.setSelectionRange(pos, pos); } catch { }
   });
 
   // ===================== Submit (criar/editar) =====================
@@ -912,7 +994,7 @@
     ev.preventDefault();
     if (!validateFormFields()) return;
 
-    const id    = instrutorIdInput?.value || '';
+    const id = instrutorIdInput?.value || '';
     const payload = {
       nome: sanitizeSpaces(nomeInstrutorInput?.value || ''),
       matricula: (matriculaInstrutorInput?.value || '').trim(),
@@ -936,7 +1018,7 @@
       const url = id ? `${API_INSTRUTOR}?id=${encodeURIComponent(id)}` : API_INSTRUTOR;
       const res = await fetch(url, opts);
       if (!res.ok) {
-        const txt = await res.text().catch(()=> '');
+        const txt = await res.text().catch(() => '');
         throw new Error(txt || `HTTP ${res.status}`);
       }
       showAlert('Instrutor salvo com sucesso!', 'success');
@@ -976,6 +1058,9 @@
       // Carrega "último filtro" salvo
       loadLastFilter();
       reflectFiltersToUI();
+      // Botão "Limpar filtros" (usa helper do geral.js)
+      // Habilita quando QUALQUER filtro (exceto Itens/página e Ordenação) estiver ativo
+      updateClearBtn();
 
       // Catálogos
       await carregarInstituicoes();
