@@ -137,43 +137,38 @@
 </head>
 
 <body>
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
-                <h3>Menu Principal</h3>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de
-                            UCs</a></li>
-                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Calendário</a>
-                    </li>
+     <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
+        <h3>Menu Principal</h3>
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+          <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+          <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a></li>
 
-                    <li id="nav-relatorios" class="has-submenu">
-                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
-                            <span><i class="fas fa-file-alt"></i> Relatórios</span>
-                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-                        </a>
-                        <ul class="submenu" id="submenu-relatorios">
-                            <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
-                        </ul>
-                    </li>
+          <li id="nav-relatorios" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+              <span><i class="fas fa-file-alt"></i> Relatórios</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-relatorios">
+              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+            </ul>
+          </li>
 
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-                </ul>
-            </nav>
-        </aside>
+          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+        </ul>
+      </nav>
+    </aside>
 
         <main class="main-content">
-            <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
-
             <header class="main-header">
                 <h1>Gestão de Unidades Curriculares</h1>
                 <button class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova
@@ -211,8 +206,8 @@
                             <label for="filterStatus">Status:</label>
                             <select id="filterStatus">
                                 <option value="">Todos</option>
-                                <option value="Ativa">Ativo</option>
-                                <option value="Inativa">Inativo</option>
+                                <option value="Ativa">Ativa</option>
+                                <option value="Inativa">Inativa</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -326,6 +321,7 @@
         </div>
     </div>
     <script src="../assets/js/geral.js"></script>
+    <script src="../assets/js/prefetch.js"></script>
     <script src="../assets/js/gestao_unidades_curriculares.js" defer></script>
 </body>
 

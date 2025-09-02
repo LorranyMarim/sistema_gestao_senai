@@ -1,191 +1,82 @@
-<?php
-// Não carrega dados mocados; tudo via AJAX/REST do FastAPI!
-?>
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gestão de Turmas - SENAI</title>
-  <link rel="stylesheet" href="../assets/css/style_turmas.css">
+
+  <!-- Tailwind (já usava) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" />
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+  <!-- Font Awesome (já usava) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+
+  <!-- Bootstrap CSS (novo, necessário para o modal/stepper) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <!-- Seu CSS -->
+  <link rel="stylesheet" href="../assets/css/style_turmas.css" />
+
   <style>
-    /* Stepper e Accordion das UCs */
-    .stepper-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      /* MANTÉM O ALINHAMENTO VERTICAL */
-      margin-bottom: 30px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .step-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      /* GARANTE CENTRALIZAÇÃO VERTICAL DO CÍRCULO */
-      position: relative;
-      flex: 1 1 0;
-      min-width: 0;
-      min-height: 32px;
-      /* GARANTE ALTURA IGUAL AO CÍRCULO */
-    }
-
-    .step-item:not(:first-child)::before {
-      content: '';
+    /* ---------------------------------------------------------
+       IMPORTANTE: Seu CSS antigo usava .modal (conflito com Bootstrap).
+       Renomeei/escopi para .app-modal-* só se você ainda precisar
+       daquele modal custom (não-Bootstrap). Se não precisar, pode remover.
+       --------------------------------------------------------- */
+    body.app-modal-open { overflow: hidden; }
+    .main-content { position: relative; }
+    .app-modal-overlay {
+      display: none;
       position: absolute;
-      top: 50%;
-      left: -50%;
+      inset: 0;
       width: 100%;
-      height: 3px;
-      background-color: var(--cor-borda, #dee2e6);
-      z-index: 0;
-      transform: translateY(-50%);
-      transition: background-color .4s;
-      pointer-events: none;
-    }
-
-    .step-circle {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background-color: #fff;
-      border: 3px solid var(--cor-borda, #dee2e6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      color: var(--cor-borda, #dee2e6);
-      font-size: 1.2rem;
-      box-shadow: 0 1px 6px rgba(0, 0, 0, .04);
-      z-index: 1;
-      transition: background .4s, color .4s, border .4s;
-    }
-
-    .step-item.active .step-circle,
-    .step-item.completed .step-circle {
-      background-color: var(--cor-primaria, #007BFF);
-      color: #fff;
-      border-color: var(--cor-primaria, #007BFF);
-    }
-
-    .step-item.active:not(:first-child)::before,
-    .step-item.completed:not(:first-child)::before {
-      background-color: var(--cor-primaria, #007BFF);
-    }
-
-    .step-item.completed .step-circle {
-      background: linear-gradient(135deg, var(--cor-primaria, #007BFF) 80%, #fff 100%);
-      color: #fff;
-      border-color: var(--cor-primaria, #007BFF);
-      box-shadow: 0 1px 10px rgba(0, 123, 255, .08);
-    }
-
-    .step-label {
-      margin-top: 8px;
-      font-size: .97rem;
-      color: #888;
-      font-weight: 500;
-      text-align: center;
-    }
-
-    @media (max-width:480px) {
-      .step-circle {
-        width: 22px;
-        height: 22px;
-        font-size: .85rem;
-      }
-
-      .step-label {
-        font-size: .82rem;
-      }
-
-      .step-item {
-        min-height: 22px;
-      }
-    }
-
-    .uc-remove-btn {
-      background: #e3342f;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
+      height: 100%;
+      background: rgba(0,0,0,.3);
       align-items: center;
       justify-content: center;
-      margin-left: 12px;
-      transition: background 0.2s;
-      cursor: pointer;
-      font-size: 18px;
-      outline: none;
+      z-index: 20;
     }
-
-    .uc-remove-btn:hover {
-      background: #c82333;
-    }
-
-    /* Accordion UCs */
-    .uc-accordion {
-      border: 1px solid #ccc;
-      border-radius: 7px;
-      margin-bottom: 12px;
+    .app-modal-overlay.show { display: flex !important; }
+    .app-modal-content {
       background: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      width: min(720px, 92%);
+      max-height: 80vh;
+      overflow: auto;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
     }
 
-    .uc-accordion-header {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      padding: 8px 12px;
+    /* ====== Estilos do Stepper (para o modal Bootstrap) ====== */
+    .stepper-container { position: relative; padding: 10px 8px 0 8px; }
+    .steper-box { position: relative; z-index: 2; gap: 6px; }
+    .progress-line {
+      position: absolute; top: 27px; left: 16px; right: 16px; height: 4px;
+      background: #e9ecef; z-index: 1; border-radius: 999px; overflow: hidden;
     }
-
-    .uc-accordion-header span {
-      flex: 1;
+    .progress-line::after {
+      content: ""; display: block; height: 100%; width: 0%;
+      background: #0d6efd; transition: width 220ms ease;
     }
-
-    .uc-accordion-header i {
-      transition: .2s;
+    .stepper-item { display: grid; justify-items: center; text-align: center; min-width: 70px; }
+    .stepper-circle {
+      width: 34px; height: 34px; border-radius: 50%; border: 2px solid #adb5bd;
+      display: grid; place-items: center; font-weight: 600; color: #6c757d; background: #fff;
+      transition: all 180ms ease;
     }
-
-    .uc-accordion-header.open i {
-      transform: rotate(90deg);
+    .stepper-title { margin-top: 6px; font-size: 0.85rem; color: #6c757d; max-width: 120px; }
+    .stepper-item.active .stepper-circle {
+      border-color: #0d6efd; color: #0d6efd; box-shadow: 0 0 0 4px rgba(13,110,253,.12);
     }
-
-    .uc-accordion-content {
-      display: none;
-      padding: 12px;
-      border-top: 1px solid #eee;
-    }
-
-    .uc-accordion.open .uc-accordion-content {
-      display: block;
-    }
-
-    .btn-add-remove {
-      margin: 0 3px;
-    }
-
-    .form-step {
-      display: none;
-    }
-
-    .form-step.active {
-      display: block;
-    }
-
-    .table-section { position: relative; }
+    .stepper-item.completed .stepper-circle { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+    .stepper-item.active .stepper-title,
+    .stepper-item.completed .stepper-title { color: #212529; font-weight: 600; }
+    .step-pane { display: none; }
+    .step-pane.active { display: block; }
+    .form-label { font-weight: 600; }
+    .summary-table th { width: 30%; white-space: nowrap; }
+    .summary-table td, .summary-table th { vertical-align: top; }
   </style>
-
 </head>
 
 <body>
@@ -199,333 +90,381 @@
         <ul>
           <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
           <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-          <li><a href="gestao_turmas.php" class="active"><i class="fas fa-users"></i> Gestão de Turmas</a>
-          </li>
-          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-              Instrutores</a></li>
+          <li><a href="gestao_turmas.php" class="active"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
           <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-          <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de
-              UCs</a></li>
-          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
-          <li><a href="gestao_relatorios.php"><i class="fas fa-file-alt"></i>Relatórios</a></li>
+          <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a></li>
+          <li id="nav-relatorios" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+              <span><i class="fas fa-file-alt"></i> Relatórios</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-relatorios">
+              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+            </ul>
+          </li>
           <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
     </aside>
+
     <main class="main-content">
+      <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
+
       <header class="main-header">
-        <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
         <h1>Gestão de Turmas</h1>
-        <button class="btn btn-primary" id="addTurmaBtn"><i class="fas fa-plus-circle"></i> Adicionar Turma</button>
+        <!-- ESTE BOTÃO ABRIRÁ O MODAL BOOTSTRAP -->
+        <button class="btn btn-primary" id="addTurmaBtn">
+          <i class="fas fa-plus-circle"></i> Adicionar Nova Turma
+        </button>
       </header>
 
       <section class="table-section">
         <h2>Turmas Cadastradas</h2>
 
-        <!-- Filtros (input-group + selects). Persistência via query string -->
-        <div class="filter-section" id="turmas-filtros">
-          <div class="filter-group" style="min-width:260px">
-            <label for="q">Busca</label>
-            <div class="input-group">
-              <input id="q" type="text" class="search-input" placeholder="Código, empresa..." aria-label="Buscar">
-            </div>
-          </div>
-
-          <div class="filter-group">
-            <label for="fCurso">Curso</label>
-            <select id="fCurso" class="search-input">
-              <option value="">Todos</option>
-              <!-- options populadas via JS a partir de dadosCursos -->
-            </select>
-          </div>
-
-          <div class="filter-group" style="max-width:180px">
-            <label for="fTurno">Turno</label>
-            <select id="fTurno" class="search-input">
-              <option value="">Todos</option>
-              <option value="MANHÃ">Manhã</option>
-              <option value="TARDE">Tarde</option>
-              <option value="NOITE">Noite</option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <label>Período</label>
-            <div class="input-group" style="gap:.5rem">
-              <input id="fInicio" type="date" class="search-input" aria-label="Data inicial">
-              <input id="fFim" type="date" class="search-input" aria-label="Data final">
-            </div>
-          </div>
-
-          <div class="filter-group" style="max-width:140px">
-            <label for="pageSize">Por página</label>
-            <select id="pageSize" class="search-input">
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </div>
-
-          <div class="filter-group" style="max-width:120px">
-            <label>&nbsp;</label>
-            <button id="btnLimpar" class="btn btn-secondary">Limpar</button>
-          </div>
-        </div>
-
-        <!-- Tabela responsiva -->
         <div class="table-responsive">
-          <table class="data-table table table-hover">
+          <table class="data-table" id="turmasTable">
             <thead>
               <tr>
-                <th aria-hidden="true" style="width:42px"></th>
-                <th role="button" data-sort="codigo" aria-sort="none">Código <span aria-hidden="true">↕</span></th>
-                <th role="button" data-sort="turno" aria-sort="none">Turno <span aria-hidden="true">↕</span></th>
-                <th role="button" data-sort="data_inicio" aria-sort="ascending">Início <span aria-hidden="true">↕</span>
-                </th>
-                <th role="button" data-sort="data_fim" aria-sort="none">Fim <span aria-hidden="true">↕</span></th>
-                <th>Curso</th>
-                <th>Empresa</th>
-                <th role="button" data-sort="status" aria-sort="none">Status <span aria-hidden="true">↕</span></th>
+                <th>Código</th>
+                <th>Turno</th>
+                <th>Eixo Tecnologico</th>
+                <th>Empresa/Parceiro</th>
+                <th>STATUS</th>
+                <th>CRIADO EM</th>
                 <th class="actions">Ações</th>
               </tr>
             </thead>
-            <tbody id="tblTurmas"></tbody>
+            <tbody><!-- preenchido via JS --></tbody>
           </table>
-        </div>
 
-        <!-- Paginação + contagem -->
-        <div class="d-flex"
-          style="display:flex;gap:.75rem;align-items:center;justify-content:space-between;margin-top:.75rem;flex-wrap:wrap">
-          <small id="rangeInfo" class="text-muted">Mostrando 0–0 de 0</small>
-          <nav aria-label="Paginação de turmas">
-            <ul class="pagination" id="pager" style="display:flex;gap:.25rem;list-style:none;margin:0;padding:0"></ul>
-          </nav>
-        </div>
-
-        <!-- Spinner (feedback de carregamento) -->
-        <div id="loading"
-          style="display:none;position:absolute;inset:0;backdrop-filter:saturate(0.5) blur(1px);align-items:center;justify-content:center">
-          <div class="spinner-border" role="status" aria-label="Carregando…"
-            style="width:3rem;height:3rem;border:.35rem solid #ddd;border-top-color:#007BFF;border-radius:50%;animation:spin .8s linear infinite">
+          <div class="pagination-bar" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+            <button class="btn btn-secondary" id="prevPage">Anterior</button>
+            <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+            <button class="btn btn-secondary" id="nextPage">Próximo</button>
           </div>
         </div>
-
-        <!-- Toasts (erros) -->
-        <div id="toastArea" aria-live="polite" aria-atomic="true"
-          style="position:fixed;right:1rem;bottom:1rem;display:flex;flex-direction:column;gap:.5rem;z-index:1100"></div>
       </section>
     </main>
+  </div>
 
-    <style>
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
+  <!-- ======================= MODAL BOOTSTRAP COM STEPPER ======================= -->
+  <div class="modal fade" id="addTurmaModal" tabindex="-1" aria-labelledby="stepperModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="stepperModalLabel">Cadastrar Turma</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- STEPPER HEADER -->
+          <div class="stepper-container">
+            <div class="progress-line" id="progressLine"></div>
+            <div class="d-flex justify-content-between align-items-center steper-box" id="stepperHeader">
+              <div class="stepper-item active" data-step="1">
+                <div class="stepper-circle">1</div>
+                <div class="stepper-title">Dados do Curso</div>
+              </div>
+              <div class="stepper-item" data-step="2">
+                <div class="stepper-circle">2</div>
+                <div class="stepper-title">Datas/Calendários</div>
+              </div>
+              <div class="stepper-item" data-step="3">
+                <div class="stepper-circle">3</div>
+                <div class="stepper-title">Informações Gerais</div>
+              </div>
+              <div class="stepper-item" data-step="4">
+                <div class="stepper-circle">4</div>
+                <div class="stepper-title">Instrutor por UCs</div>
+              </div>
+              <div class="stepper-item" data-step="5">
+                <div class="stepper-circle">5</div>
+                <div class="stepper-title">Confirmação</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEPPER CONTENT -->
+          <div class="step-content mt-4">
+            <!-- Passo 1 -->
+            <div class="step-pane active" data-step="1">
+              <div class="mb-3">
+                <label for="instituicaoTurma" class="form-label">Instituição</label>
+                <select id="instituicaoTurma" class="form-select" required>
+                  <option value="">Selecione</option>
+                  <option>Instituição A</option>
+                  <option>Instituição B</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="codigoTurma" class="form-label">Código da Turma</label>
+                <input type="text" id="codigoTurma" class="form-control" style="text-transform: uppercase;" required />
+              </div>
+              <div class="mb-3">
+                <label for="cursoTurma" class="form-label">Curso</label>
+                <select id="cursoTurma" class="form-select" required>
+                  <option value="">Selecione</option>
+                  <option>Desenvolvimento de Sistemas</option>
+                  <option>Eletrotécnica</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="empresaTurma" class="form-label">Empresa/Parceiro</label>
+                <select id="empresaTurma" class="form-select" required>
+                  <option value="">Selecione</option>
+                  <option>Empresa X</option>
+                  <option>Empresa Y</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Passo 2 -->
+            <div class="step-pane" data-step="2">
+              <div class="mb-3">
+                <label for="calendarioTurma" class="form-label">Calendário Acadêmico</label>
+                <select id="calendarioTurma" class="form-select" required>
+                  <option value="">Selecione</option>
+                  <option>2025 - Regular</option>
+                  <option>2025 - Intensivo</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="dataInicio" class="form-label">Data de Início</label>
+                <input type="date" id="dataInicio" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label for="dataFim" class="form-label">Data de Fim</label>
+                <input type="date" id="dataFim" class="form-control" required />
+              </div>
+            </div>
+
+            <!-- Passo 3 -->
+            <div class="step-pane" data-step="3">
+              <div class="mb-3">
+                <label for="turnoTurma" class="form-label">Turno</label>
+                <select id="turnoTurma" class="form-select" required>
+                  <option value="">Selecione o turno</option>
+                  <option value="MANHÃ">Manhã</option>
+                  <option value="TARDE">Tarde</option>
+                  <option value="NOITE">Noite</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="quantidadeAlunos" class="form-label">Quantidade de Alunos</label>
+                <input type="number" id="quantidadeAlunos" class="form-control" min="1" required />
+              </div>
+              <div class="mb-3">
+                <label for="statusTurma" class="form-label">Status</label>
+                <select id="statusTurma" class="form-select" required>
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Passo 4 (com Instrutor) -->
+            <div class="step-pane" data-step="4">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                  <label for="ucTurma1" class="form-label">Unidade Curricular</label>
+                  <select id="ucTurma1" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option>Lógica de Programação</option>
+                    <option>Banco de Dados</option>
+                    <option>Desenvolvimento Web</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="instrutorTurma1" class="form-label">Instrutor</label>
+                  <select id="instrutorTurma1" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option>Juliano</option>
+                    <option>Cassio</option>
+                    <option>Priscila</option>
+                    <option>Edson</option>
+                  </select>
+                </div>
+              </div>
+              <small class="text-muted d-block mt-2">
+                * Neste exemplo há um único pareamento UC → Instrutor.
+              </small>
+            </div>
+
+            <!-- Passo 5 (Confirmação com resumo) -->
+            <div class="step-pane" data-step="5">
+              <h5 class="mb-3">Confirmação</h5>
+              <div id="summaryArea"><!-- Preenchido via JS --></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer d-flex justify-content-between">
+          <button type="button" class="btn btn-secondary" id="btn-back" disabled>Voltar</button>
+          <button type="button" class="btn btn-primary" id="btn-next">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ===================== /MODAL BOOTSTRAP ===================== -->
+
+  <!-- Bootstrap JS (necessário para Modal) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Seus scripts (se existirem) -->
+  <script src="../assets/js/geral.js"></script>
+  <script src="../assets/js/gestao_turmas.js"></script>
+
+  <script>
+    // ========= Abrir o modal Bootstrap ao clicar no botão "Adicionar Nova Turma" =========
+    const addBtn = document.getElementById('addTurmaBtn');
+    const modalEl = document.getElementById('addTurmaModal');
+    const turmaModal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+
+    addBtn.addEventListener('click', () => {
+      turmaModal.show();
+    });
+
+    // ========= Lógica do Stepper =========
+    (function () {
+      const header = document.getElementById('stepperHeader');
+      const items = Array.from(header.querySelectorAll('.stepper-item'));
+      const panes = Array.from(document.querySelectorAll('.step-pane'));
+      const progress = document.getElementById('progressLine');
+      const btnNext = document.getElementById('btn-next');
+      const btnBack = document.getElementById('btn-back');
+
+      const total = items.length;
+      let current = 1;
+
+      // Campos para o resumo
+      const fields = {
+        instituicaoTurma: () => document.getElementById('instituicaoTurma').value,
+        codigoTurma:      () => document.getElementById('codigoTurma').value,
+        cursoTurma:       () => document.getElementById('cursoTurma').value,
+        empresaTurma:     () => document.getElementById('empresaTurma').value,
+        calendarioTurma:  () => document.getElementById('calendarioTurma').value,
+        dataInicio:       () => document.getElementById('dataInicio').value,
+        dataFim:          () => document.getElementById('dataFim').value,
+        turnoTurma:       () => document.getElementById('turnoTurma').value,
+        quantidadeAlunos: () => document.getElementById('quantidadeAlunos').value,
+        statusTurma:      () => document.getElementById('statusTurma').value,
+        ucTurma1:         () => document.getElementById('ucTurma1').value,
+        instrutorTurma1:  () => document.getElementById('instrutorTurma1').value,
+      };
+
+      function setActive(step) {
+        current = Math.min(Math.max(step, 1), total);
+
+        items.forEach((el) => {
+          const n = Number(el.dataset.step);
+          el.classList.toggle('active', n === current);
+          el.classList.toggle('completed', n < current);
+        });
+
+        panes.forEach((p) => {
+          const n = Number(p.dataset.step);
+          p.classList.toggle('active', n === current);
+        });
+
+        const pct = ((current - 1) / (total - 1)) * 100;
+        updateProgressBar(pct);
+
+        btnBack.disabled = current === 1;
+        btnNext.textContent = current === total ? 'Concluir' : 'Próximo';
+      }
+
+      // Barra de progresso (::after)
+      const styleEl = document.createElement('style');
+      document.head.appendChild(styleEl);
+      function updateProgressBar(pct) {
+        styleEl.textContent = `#progressLine::after { width: ${pct}%; }`;
+      }
+
+      function validateStep(step) {
+        const pane = panes.find(p => Number(p.dataset.step) === step);
+        if (!pane) return true;
+        const required = Array.from(pane.querySelectorAll('[required]'));
+        for (const el of required) {
+          if (!el.value || el.value === '') {
+            el.classList.add('is-invalid');
+            el.addEventListener('input', () => el.classList.remove('is-invalid'), { once: true });
+            if (typeof el.focus === 'function') el.focus();
+            return false;
+          }
         }
+        return true;
       }
-    </style>
 
-  </div>
+      function buildSummary() {
+        const summaryArea = document.getElementById('summaryArea');
+        const data = {
+          'Instituição':            fields.instituicaoTurma(),
+          'Código da Turma':        fields.codigoTurma(),
+          'Curso':                  fields.cursoTurma(),
+          'Empresa/Parceiro':       fields.empresaTurma(),
+          'Calendário':             fields.calendarioTurma(),
+          'Data de Início':         fields.dataInicio(),
+          'Data de Fim':            fields.dataFim(),
+          'Turno':                  fields.turnoTurma(),
+          'Quantidade de Alunos':   fields.quantidadeAlunos(),
+          'Status da Turma':        fields.statusTurma(),
+          'Unidade Curricular':     fields.ucTurma1(),
+          'Instrutor':              fields.instrutorTurma1(),
+        };
 
-  <!-- Modal Multi-step de Turma -->
-  <div id="turmaFormModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <header class="modal-header">
-        <h2 id="modalTitle">Cadastrar Turma</h2>
-        <button class="close-button" id="closeFormModalBtn">&times;</button>
-      </header>
-      <div class="modal-body">
-        <div class="stepper-wrapper">
-          <div class="step-item active">
-            <div class="step-circle">1</div>
-            <div class="step-label">Dados Básicos</div>
-          </div>
-          <div class="step-item">
-            <div class="step-circle">2</div>
-            <div class="step-label">Detalhes</div>
-          </div>
-          <div class="step-item">
-            <div class="step-circle">3</div>
-            <div class="step-label">Confirmação</div>
-          </div>
-        </div>
-        <form id="multiStepForm" novalidate>
-          <!-- Step 1 -->
-          <div class="form-step active" data-step="1">
-            <div class="form-group"><label for="codigoTurma">Código da Turma:</label><input type="text" id="codigoTurma"
-                required></div>
-            <div class="form-group"><label for="curso">Curso:</label>
-              <select id="curso" required></select>
-            </div>
-            <div class="form-group"><label for="dataInicio">Data de Início:</label><input type="date" id="dataInicio"
-                required></div>
-            <div class="form-group"><label for="dataFim">Data de Término:</label><input type="date" id="dataFim"
-                required></div>
-          </div>
-          <!-- Step 2 -->
-          <div class="form-step" data-step="2">
-            <div class="form-group"><label for="turno">Turno:</label>
-              <select id="turno" required>
-                <option value="">Selecione</option>
-                <option value="MANHÃ">Manhã</option>
-                <option value="TARDE">Tarde</option>
-                <option value="NOITE">Noite</option>
-              </select>
-            </div>
-            <div class="form-group"><label for="numAlunos">Número de Alunos:</label><input type="number" id="numAlunos"
-                min="1" required></div>
-            <div class="form-group"><label for="instituicao">Instituição:</label>
-              <select id="instituicao" required></select>
-            </div>
-            <div class="form-group"><label for="calendario">Calendário:</label>
-              <select id="calendario" required></select>
-            </div>
-            <div class="form-group"><label for="empresa">Empresa:</label>
-              <select id="empresa" required></select>
-            </div>
-          </div>
-          <!-- Step 3 -->
-          <div class="form-step" data-step="3">
-            <div class="form-group"><label>Código da Turma:</label><input type="text" id="codigoTurmaConf" disabled>
-            </div>
-            <div class="form-group"><label>Curso:</label><input type="text" id="cursoConf" disabled></div>
-            <div class="form-group"><label>Categoria:</label><input type="text" id="categoriaConf" disabled>
-            </div>
-            <div class="form-group"><label>Modalidade:</label><input type="text" id="modalidadeConf" disabled></div>
-            <div class="form-group"><label>Tipo:</label><input type="text" id="tipoConf" disabled></div>
-            <div class="form-group"><label>Carga Horária:</label><input type="text" id="cargaHorariaConf" disabled>
-            </div>
-            <div class="form-group"><label>Eixo Tecnológico:</label><input type="text" id="eixoTecConf" disabled></div>
-            <div class="form-group"><label>Data de Início:</label><input type="date" id="dataInicioConf" disabled></div>
-            <div class="form-group"><label>Data de Término:</label><input type="date" id="dataFimConf" disabled></div>
-            <div class="form-group"><label>Turno:</label><input type="text" id="turnoConf" disabled></div>
-            <div class="form-group"><label>Nº de Alunos:</label><input type="number" id="numAlunosConf" disabled></div>
-            <div class="form-group"><label>Instituição:</label><input type="text" id="instituicaoConf" disabled></div>
-            <div class="form-group"><label>Calendário:</label><input type="text" id="calendarioConf" disabled></div>
-            <div class="form-group"><label>Empresa:</label><input type="text" id="empresaConf" disabled>
-            </div>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancelar</button>
-            <button type="button" class="btn btn-secondary" id="prevBtn" style="display:none;">Voltar</button>
-            <button type="button" class="btn btn-primary" id="nextBtn">Próximo</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div id="turmaViewModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloTurmaView" style="display:none;">
-  <div class="modal-content">
-    <header class="modal-header">
-      <h2 id="tituloTurmaView">Detalhes da Turma</h2>
-      <button class="close-button" id="closeTurmaViewBtn" aria-label="Fechar">&times;</button>
-    </header>
-      <div class="modal-body">
-        <dl class="detail-list">
-          <div>
-            <dt>Código da Turma</dt>
-            <dd id="vwCodigo">—</dd>
-          </div>
-          <div>
-            <dt>Curso</dt>
-            <dd id="vwCurso">—</dd>
-          </div>
-          <div>
-            <dt>Data de Início</dt>
-            <dd id="vwInicio">—</dd>
-          </div>
-          <div>
-            <dt>Data de Término</dt>
-            <dd id="vwFim">—</dd>
-          </div>
-          <div>
-            <dt>Turno</dt>
-            <dd id="vwTurno">—</dd>
-          </div>
-          <div>
-            <dt>Número de Alunos</dt>
-            <dd id="vwNumAlunos">—</dd>
-          </div>
-          <div>
-            <dt>Instituição</dt>
-            <dd id="vwInstituicao">—</dd>
-          </div>
-          <div>
-            <dt>Calendário</dt>
-            <dd id="vwCalendario">—</dd>
-          </div>
-          <div>
-            <dt>Empresa</dt>
-            <dd id="vwEmpresa">—</dd>
-          </div>
-          <div>
-            <dt>Status</dt>
-            <dd id="vwStatus">—</dd>
-          </div>
-        </dl>
-      </div>
-    </div>
-  </div>
-
-  <style>
-    /* Layout enxuto do "apenas texto" */
-    .detail-list {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: .5rem;
-    }
-
-    .detail-list dt {
-      font-weight: 600;
-      color: #6b7280;
-    }
-
-    .detail-list dd {
-      margin: 0;
-      font-weight: 500;
-    }
-
-    .detail-list>div {
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: .5rem;
-    }
-
-    @media (max-width: 520px) {
-      .detail-list>div {
-        grid-template-columns: 1fr;
+        let html = `
+          <div class="alert alert-info mb-3">Confira os dados antes de concluir.</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle summary-table">
+              <tbody>
+        `;
+        for (const [k, v] of Object.entries(data)) {
+          html += `
+            <tr>
+              <th class="bg-light">${k}</th>
+              <td>${v ? v : '<span class="text-muted">—</span>'}</td>
+            </tr>
+          `;
+        }
+        html += `</tbody></table></div>`;
+        summaryArea.innerHTML = html;
       }
-    }
-  </style>
 
-  <!-- MODAL UC -->
-  <div id="ucModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <header class="modal-header">
-        <h2>Cadastrar Unidades Curriculares na Turma</h2>
-        <button class="close-button" id="closeUcModalBtn">&times;</button>
-      </header>
-      <div class="modal-body">
-        <h3>Ordem das Unidades Curriculares da Turma</h3>
-        <div id="uc-rows-container"></div>
-        <div style="text-align:right;margin-top:10px;">
-          <button type="button" class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus"></i> Adicionar
-            UC</button>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="cancelUcBtn">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="saveUcBtn">Cadastrar Unidades Curriculares</button>
-      </div>
-    </div>
-  </div>
+      btnNext.addEventListener('click', () => {
+        if (current < total) {
+          if (!validateStep(current)) return;
+          if (current + 1 === total) buildSummary();
+          setActive(current + 1);
+        } else {
+          // Aqui você pode enviar dados para backend
+          turmaModal.hide();
+          setTimeout(() => alert('Cadastro concluído!'), 100);
+        }
+      });
 
-  <script src="script_turma.js"></script>
+      btnBack.addEventListener('click', () => setActive(current - 1));
 
+      // Navegar clicando no cabeçalho do stepper (opcional)
+      items.forEach(item => {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', () => {
+          const step = Number(item.dataset.step);
+          if (step === current) return;
+          if (step > current && !validateStep(current)) return;
+          if (step === total) buildSummary();
+          setActive(step);
+        });
+      });
 
-
-
-
+      // Sempre que abrir o modal, resetar para o passo 1
+      modalEl.addEventListener('show.bs.modal', () => {
+        setActive(1);
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      });
+    })();
+  </script>
 </body>
-
 </html>

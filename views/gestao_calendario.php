@@ -39,15 +39,15 @@
           <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
           <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
           <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-          <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
-
+          <li><a href="gestao_calendario.php" class="active"><i class="fas fa-calendar-alt"></i>Gestão de
+              Calendários</a></li>
           <li id="nav-relatorios" class="has-submenu">
             <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
               <span><i class="fas fa-file-alt"></i> Relatórios</span>
               <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
             </a>
             <ul class="submenu" id="submenu-relatorios">
-              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+              <li><a href="disponibilidade_instrutores.php">Disponibilidade de Instrutor</a></li>
             </ul>
           </li>
 
@@ -141,12 +141,12 @@
           <table class="data-table" aria-label="Tabela de Calendários">
             <thead>
               <tr>
-                <th>Descrição</th>
-                <th>Empresa/Parceiro</th>
-                <th>Data Inicial</th>
-                <th>Data Final</th>
-                <th>DATA/HORA DE CRIAÇÃO</th>
-                 <th>Status</th> <!-- NOVO -->
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Eixo</th>
+                <th>Nível</th>
+                <th>Criado em</th>
+                <th>Status</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -210,12 +210,7 @@
           <label for="calNome">Nome do Calendário:</label>
           <input type="text" id="calNome" name="nome" class="form-control" required autocomplete="off">
         </div>
-        <div class="form-group">
-          <label for="calEmpresa">Empresa/Parceiro:</label>
-          <select id="calEmpresa" name="empresa" class="form-control" required>
-            <option value="">Selecione</option>
-          </select>
-        </div>
+       
         <div class="form-group">
           <label for="calInicio">Início do Calendário:</label>
           <input type="date" id="calInicio" name="inicio_cal" class="form-control" required>
@@ -267,8 +262,11 @@
   </div>
 
   <!-- JS da página -->
+  <!-- JS da página -->
   <script src="../assets/js/geral.js"></script>
+  <script src="../assets/js/prefetch.js"></script>
   <script src="../assets/js/gestao_calendario.js"></script>
+
 </body>
 
 </html>

@@ -49,7 +49,7 @@ require_once("../config/verifica_login.php");
   <div class="dashboard-container">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo"/>
+        <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
         <h3>Menu Principal</h3>
       </div>
       <nav class="sidebar-nav">
@@ -60,12 +60,22 @@ require_once("../config/verifica_login.php");
           <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
           <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
           <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Calendário</a></li>
-          <li><a href="gestao_relatorios.php"><i class="fas fa-file-alt"></i>Relatórios</a></li>
+          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a></li>
+          <li id="nav-relatorios" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+              <span><i class="fas fa-file-alt"></i> Relatórios</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-relatorios">
+              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+            </ul>
+          </li>
+
           <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
     </aside>
+
 
     <main class="main-content">
       <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
@@ -94,7 +104,6 @@ require_once("../config/verifica_login.php");
                 <th>Nome</th>
                 <th>Categoria</th>
                 <th>Eixo Tecnológico</th>
-                <th>Empresa/Parceiro</th>
                 <th>Modalidade</th>
                 <th>Criado em</th>
                 <th>Status</th>
@@ -135,15 +144,8 @@ require_once("../config/verifica_login.php");
                 </div>
 
                 <div class="form-group">
-                  <label for="convenioSelect">Empresa/Parceiro:</label>
-                  <select id="convenioSelect" name="empresa" required>
-                    <option value="">Selecione</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
                   <label for="nomeCurso">Nome:</label>
-                  <input type="text" id="nomeCurso" name="nome" required/>
+                  <input type="text" id="nomeCurso" name="nome" style="text-transform: uppercase;" required/>
                 </div>
 
                 <div class="form-group">
