@@ -8,37 +8,12 @@ Ele utiliza **MongoDB Atlas** como banco de dados na nuvem, garantindo escalabil
 
 ---
 
-## Estrutura do Projeto
-```
-|- api/                       # Backend em Python (FastAPI)
-|   |-- auth_utils.py         # Funções JWT
-|   |-- auth.py               # Funções de hash de senha
-|   |-- curso.py              # Operações CRUD de cursos
-|   |-- db.py                 # Conexão com MongoDB
-|   |-- main.py               # Inicialização do FastAPI
-|   |-- models.py             # Modelos Pydantic
-|   |-- rotas_curso.py        # Rotas de cursos
-|   |-- rotas_empresa.py      # Rotas de empresas
-|   |-- rotas_instituicao.py  # Rotas de instituições
-|   |-- rotas_uc.py           # Rotas de unidades curriculares
-|   |-- rotas_usuario.py      # Rotas de login
-|   |-- usuario.py            # Operações de usuários
-|- backend/                   # Scripts PHP para operações
-|- config/
-|   |-- config.php            # Configurações gerais
-|- css/                       # Estilização
-|- views/                     # Páginas HTML/PHP do painel
-|- assets/                    # Imagens
-```
-
----
-
 ## Requisitos
 
 - **XAMPP**
 - **Python 3.10+**
 - **PHP 8.0+**
-- **MongoDB Atlas** (acessar site online) *acesso online, com o login e senha do criador. Entre em contato para solicitar o acesso
+- **MongoDB Atlas** 
 - **Bibliotecas Python**:
   - fastapi
   - uvicorn
@@ -75,8 +50,11 @@ python-dotenv
 
 # Execução do Projeto:
 
-#### Observação: Banco de Dados: O sistema usa MongoDB Atlas. No arquivo `api/db.py` a URL padrão já está configurada. A base de dados se chama "senai_betim_bd". Para acessar a base de dados é necessário fazer download do mongo e criar um cluster com o mesmo nome. Depois, é necessário carregar as coleções manualmente. Importante, é aconselhável que não faça esse processo, pois, pode gerar duplicidade e inconsistÊncia nos dados.
----
+#### Banco de Dados: O sistema usa MongoDB Atlas. No arquivo `api/db.py` a URL padrão já está configurada. A base de dados se chama "senai_betim_bd". Para acessar a base de dados é necessário:
+#### 1. fazer download do mongo 
+#### 2. criar um cluster com o nome "senai_betim_bd" 
+#### 3. Crie as coleções com os nomes: calendario, curso, empresa, instituicao, instrutor, turma, unidade_curricular, usuario.
+#### 4. Popule cada coleção clicando em 'Add Data'>'Import JSON or CSV file' e selecione o arquivo referente a coleção localizado na pasta 'base_dados_json'
 
 ## 1º Passo: Executando o Painel XAMPP
 1. Faça o clone do projeto ou baixe o arquivo .zip

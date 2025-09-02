@@ -1,0 +1,111 @@
+[{
+  "_id": {
+    "$oid": "688c045f57adff4a7272c555"
+  },
+  "nome": "Lorrany Batista de Amorim Marim",
+  "matricula": "09116122",
+  "telefone": "(31) 99851-5217",
+  "email": "lorrany.batista@fiemg.com.br",
+  "instituicao_id": "6872ebc05f2c070a0234219f",
+  "mapa_competencia": [
+    "688cefa696eba6f2c9b33f67",
+    "688cefb696eba6f2c9b33f6a",
+    "688cefe396eba6f2c9b33f6d",
+    "688ceffe96eba6f2c9b33f70",
+    "688cf01096eba6f2c9b33f73",
+    "688cf02896eba6f2c9b33f76",
+    "688cf04796eba6f2c9b33f79",
+    "688cf05796eba6f2c9b33f7c",
+    "688cf07a96eba6f2c9b33f7f",
+    "688cf0bd96eba6f2c9b33f82",
+    "688cf0e696eba6f2c9b33f8a",
+    "688cf0f596eba6f2c9b33f8d",
+    "688cf10796eba6f2c9b33f90",
+    "688cf11896eba6f2c9b33f93",
+    "688cf13096eba6f2c9b33f96",
+    "688cf14d96eba6f2c9b33f99",
+    "688cf15d96eba6f2c9b33f9c",
+    "688cf16f96eba6f2c9b33f9f",
+    "688cf1b196eba6f2c9b33fa2",
+    "688cf1c796eba6f2c9b33fa5",
+    "688cf1dc96eba6f2c9b33fa8",
+    "688cf20e96eba6f2c9b33fb4",
+    "688cf23096eba6f2c9b33fbd",
+    "688cf26996eba6f2c9b33fcb",
+    "688cf27496eba6f2c9b33fce",
+    "688cf28c96eba6f2c9b33fd1",
+    "688cf29c96eba6f2c9b33fd4",
+    "688cf2b196eba6f2c9b33fd7"
+  ],
+  "turnos": [
+    "Tarde",
+    "Noite"
+  ],
+  "carga_horaria": 40,
+  "data_criacao": "",
+  "status": "Ativo"
+},
+{
+  "_id": {
+    "$oid": "689e378e116906142c15ac53"
+  },
+  "nome": "sdf",
+  "matricula": "233324",
+  "telefone": "(34) 77565-6755",
+  "email": "sdfasdfsdf@aasd.com",
+  "instituicao_id": "6872ebc05f2c070a0234219f",
+  "turnos": [
+    "Tarde"
+  ],
+  "mapa_competencia": [
+    "688cf2b196eba6f2c9b33fd7"
+  ],
+  "carga_horaria": 40,
+  "data_criacao": {
+    "$date": "2025-08-14T19:22:54.545Z"
+  },
+  "status": "Ativo"
+},
+{
+  "_id": {
+    "$oid": "689e3d5bce1acc031a8a286b"
+  },
+  "nome": "joao",
+  "matricula": "1234567",
+  "telefone": "(23) 6788-3541",
+  "email": "sklsdkfn@sldkfjskd.com",
+  "instituicao_id": "6872ebc05f2c070a0234219f",
+  "turnos": [
+    "Noite"
+  ],
+  "mapa_competencia": [
+    "688cf2b196eba6f2c9b33fd7"
+  ],
+  "carga_horaria": 40,
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-08-14T19:47:39.964Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "689e72e5ce1acc031a8a289c"
+  },
+  "nome": "asdfg",
+  "matricula": "32145465",
+  "telefone": "(23) 54544-3334",
+  "email": "dffgggdf@wfdfsd.com",
+  "instituicao_id": "6872ebc05f2c070a0234219f",
+  "turnos": [
+    "Manhã",
+    "Noite"
+  ],
+  "mapa_competencia": [
+    "688cf2b196eba6f2c9b33fd7"
+  ],
+  "carga_horaria": 34,
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-08-14T23:36:05.950Z"
+  }
+}]
