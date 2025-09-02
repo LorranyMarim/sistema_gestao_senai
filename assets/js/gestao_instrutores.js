@@ -186,16 +186,20 @@
   // ===================== Select2 (form) =====================
   function initSelect2InModal() {
     if (!window.$?.fn?.select2) return;
-    const $parent = $('#instrutorModal .modal-content');
+const $modalParent = $('#instrutorModal');
 
     // Turnos (sempre local; opções já estão no HTML)
     if (turnosSelect?.length && !turnosSelect.hasClass('select2-hidden-accessible')) {
       turnosSelect.select2({
         width: '100%',
         placeholder: 'Selecione os Turnos',
-        dropdownParent: $parent,
+        dropdownParent:  $modalParent,
         closeOnSelect: false
       });
+      turnosSelect.on('select2:open', () => {
+    const $c = turnosSelect.data('select2').$container;
+       $c.removeClass('select2-container--above').addClass('select2-container--below');
+     });
     }
 
     // Mapa de Competências (AJAX)
@@ -203,7 +207,7 @@
       mapaCompetenciaSelect.select2({
         width: '100%',
         placeholder: 'Selecione as UCs',
-        dropdownParent: $parent,
+        dropdownParent: $modalParent,
         minimumInputLength: 0,
         ajax: {
           url: '../backend/processa_unidade_curricular.php',

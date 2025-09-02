@@ -238,6 +238,8 @@ require_once("../config/verifica_login.php");
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
+    <script src="../assets/js/geral.js"></script>
+  <script src="../assets/js/prefetch.js"></script>
   <script src="../assets/js/gestao_cursos.js"></script>
 </body>
 </html>
