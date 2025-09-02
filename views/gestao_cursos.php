@@ -3,33 +3,45 @@ require_once("../config/verifica_login.php");
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Cursos - SENAI</title>
 
-  <link rel="stylesheet" href="../assets/css/style_turmas.css"/>
+  <link rel="stylesheet" href="../assets/css/style_turmas.css" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" />
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
   <style>
-    body.modal-open { overflow: hidden; }
-    .main-content { position: relative; }
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .main-content {
+      position: relative;
+    }
+
     .modal {
       display: none;
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,.3);
+      background: rgba(0, 0, 0, .3);
       align-items: center;
       justify-content: center;
       z-index: 20;
     }
-    .modal.show { display: flex !important; }
+
+    .modal.show {
+      display: flex !important;
+    }
+
     .modal-content {
       background: #fff;
       border-radius: 10px;
@@ -38,13 +50,31 @@ require_once("../config/verifica_login.php");
       max-height: 80vh;
       overflow: auto;
       position: relative;
-      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
     }
-    .close-button { position: absolute; top: 12px; right: 16px; font-size: 1.6em; cursor: pointer; line-height: 1; }
-    .action-buttons { display: flex; gap: 6px; align-items: center; justify-content: center; }
-    .form-group label { font-weight: 600; }
+
+    .close-button {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 1.6em;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .form-group label {
+      font-weight: 600;
+    }
   </style>
 </head>
+
 <body>
   <div class="dashboard-container">
     <aside class="sidebar">
@@ -93,8 +123,98 @@ require_once("../config/verifica_login.php");
         <div class="filter-section" style="display:flex; flex-wrap:wrap; gap:12px; align-items:end;">
           <div class="filter-group">
             <label for="searchCurso">Buscar Curso:</label>
-            <input type="text" id="searchCurso" placeholder="Digite para filtrar..." class="search-input"/>
+            <input type="text" id="searchCurso" placeholder="Digite para filtrar..." class="search-input" />
           </div>
+          <!-- +++ NOVOS FILTROS +++ -->
+          <div class="filter-group">
+            <label for="filterInstituicao">Instituição:</label>
+            <select id="filterInstituicao" style="min-width:220px"></select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filterStatus">Status:</label>
+            <select id="filterStatus">
+              <option value="Todos">Todos</option>
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filterCategoria">Categoria:</label>
+            <select id="filterCategoria">
+              <option value="Todos">Todos</option>
+              <option value="C">C</option>
+              <option value="A">A</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filterEixo">Eixo Tecnológico:</label>
+            <select id="filterEixo">
+              <option value="Todos">Todos</option>
+              <option value="TI">TI</option>
+              <option value="Metal Mecânica">Metal Mecânica</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filterModalidade">Modalidade:</label>
+            <select id="filterModalidade">
+              <option value="Todos">Todos</option>
+              <option value="Técnico">Técnico</option>
+              <option value="Aperfeiçoamento">Aperfeiçoamento</option>
+              <option value="Qualificação">Qualificação</option>
+              <option value="Especialização">Especialização</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="filterTipo">Tipo:</label>
+            <select id="filterTipo">
+              <option value="Todos">Todos</option>
+              <option value="Presencial">Presencial</option>
+              <option value="EAD">EAD</option>
+              <option value="Semipresencial">Semipresencial</option>
+            </select>
+          </div>
+
+          <div class="filter-group" style="min-width:260px;">
+            <label for="filterUcs">Unidades Curriculares:</label>
+            <select id="filterUcs" multiple style="width:100%"></select>
+          </div>
+
+          <div class="filter-group">
+            <label for="sortBy">Ordenar por:</label>
+            <select id="sortBy">
+              <option value="created_desc">Criado em (recente→antigo)</option>
+              <option value="nome_asc">Nome (A→Z)</option>
+              <option value="status_asc">Status</option>
+              <option value="categoria_asc">Categoria</option>
+              <option value="eixo_asc">Eixo</option>
+              <option value="modalidade_asc">Modalidade</option>
+              <option value="tipo_asc">Tipo</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="pageSize">Itens/página:</label>
+            <select id="pageSize">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>&nbsp;</label>
+            <button id="btnClearFilters" class="btn btn-light" type="button" title="Limpar filtros" disabled>
+              <i class="fas fa-broom"></i> Limpar filtros
+            </button>
+          </div>
+          <!-- +++ FIM NOVOS FILTROS +++ -->
+
         </div>
 
         <div class="table-responsive">
@@ -113,6 +233,12 @@ require_once("../config/verifica_login.php");
             <tbody><!-- via JS --></tbody>
           </table>
         </div>
+        <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+  <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+  <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+  <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
+</div>
+
 
         <!-- Modal: Detalhe -->
         <div class="modal" id="modalDetalheCurso">
@@ -133,7 +259,7 @@ require_once("../config/verifica_login.php");
             <h2 id="modalCursoTitulo">Adicionar Novo Curso</h2>
 
             <form id="formCurso" autocomplete="off">
-              <input type="hidden" id="cursoId" name="id"/>
+              <input type="hidden" id="cursoId" name="id" />
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-group">
@@ -145,7 +271,7 @@ require_once("../config/verifica_login.php");
 
                 <div class="form-group">
                   <label for="nomeCurso">Nome:</label>
-                  <input type="text" id="nomeCurso" name="nome" style="text-transform: uppercase;" required/>
+                  <input type="text" id="nomeCurso" name="nome" style="text-transform: uppercase;" required />
                 </div>
 
                 <div class="form-group">
@@ -197,12 +323,13 @@ require_once("../config/verifica_login.php");
 
                 <div class="form-group">
                   <label for="cargaHoraria">Carga Horária (h):</label>
-                  <input type="number" id="cargaHoraria" name="carga_horaria" required min="1"/>
+                  <input type="number" id="cargaHoraria" name="carga_horaria" required min="1" />
                 </div>
 
                 <div class="form-group md:col-span-2">
                   <label for="ucsSelect">Unidades Curriculares:</label>
-                  <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;" required></select>
+                  <select class="form-select" id="ucsSelect" name="ucs[]" multiple style="width:100%;"
+                    required></select>
                 </div>
 
                 <div class="form-group md:col-span-2">
@@ -238,8 +365,9 @@ require_once("../config/verifica_login.php");
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
-    <script src="../assets/js/geral.js"></script>
+  <script src="../assets/js/geral.js"></script>
   <script src="../assets/js/prefetch.js"></script>
   <script src="../assets/js/gestao_cursos.js"></script>
 </body>
+
 </html>

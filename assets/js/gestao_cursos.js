@@ -2,15 +2,15 @@
 
 // ======================= Endpoints (via proxies PHP) =======================
 const API_CURSO = '../backend/processa_curso.php';
-const API_INST  = '../backend/processa_instituicao.php';
-const API_UC    = '../backend/processa_unidade_curricular.php';
+const API_INST = '../backend/processa_instituicao.php';
+const API_UC = '../backend/processa_unidade_curricular.php';
 
 // ======================= Domínio (conjuntos permitidos) =======================
-const TIPOS_SET   = new Set(['Presencial', 'EAD', 'Semipresencial']);
-const NIVEIS_SET  = new Set(['Técnico', 'Aperfeiçoamento', 'Qualificação', 'Especialização']);
-const STATUS_SET  = new Set(['Ativo', 'Inativo']);
-const CATEG_SET   = new Set(['C', 'A']);
-const EIXO_SET    = new Set(['TI', 'Metal Mecânica']);
+const TIPOS_SET = new Set(['Presencial', 'EAD', 'Semipresencial']);
+const NIVEIS_SET = new Set(['Técnico', 'Aperfeiçoamento', 'Qualificação', 'Especialização']);
+const STATUS_SET = new Set(['Ativo', 'Inativo']);
+const CATEG_SET = new Set(['C', 'A']);
+const EIXO_SET = new Set(['TI', 'Metal Mecânica']);
 
 // ======================= Cache/estado =======================
 let cursosCache = [];
@@ -19,6 +19,295 @@ let ucsCache = [];
 let ucDataMap = {};
 let cursoEditando = null;
 let modoEdicao = false;
+
+// ======================= Filtros (estado + persistência) =======================
+const LS_CURSOS_FILTERS = 'cursosFiltersLast';
+let filtros = {
+  text: '',
+  instituicao: '',
+  status: 'Todos',
+  categoria: 'Todos',
+  eixo: 'Todos',
+  modalidade: 'Todos', // mapeia nivel_curso
+  tipo: 'Todos',       // mapeia tipo
+  ucs: [],             // array de IDs
+  sortBy: 'created_desc',
+  pageSize: 10,
+  page: 1
+};
+
+const debounce = (fn, ms = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const strip = s => (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+function oidToDate(id){
+  if (!id || !/^[a-f\d]{24}$/i.test(String(id))) return null;
+  const ts = parseInt(String(id).slice(0, 8), 16);
+  return new Date(ts * 1000);
+}
+function getCreatedDate(c){
+  if (c?.data_criacao) {
+    const d = new Date(c.data_criacao);
+    if (!isNaN(+d)) return d;
+  }
+  return oidToDate(c?._id) || new Date(0);
+}
+
+
+function saveFiltros() { localStorage.setItem(LS_CURSOS_FILTERS, JSON.stringify(filtros)); }
+function loadFiltros() { try { filtros = { ...filtros, ...(JSON.parse(localStorage.getItem(LS_CURSOS_FILTERS) || '{}')) }; } catch { } }
+
+function hasAtivos() {
+  return !!(filtros.text ||
+    filtros.instituicao ||
+    filtros.status !== 'Todos' ||
+    filtros.categoria !== 'Todos' ||
+    filtros.eixo !== 'Todos' ||
+    filtros.modalidade !== 'Todos' ||
+    filtros.tipo !== 'Todos' ||
+    (Array.isArray(filtros.ucs) && filtros.ucs.length));
+}
+function updateClearBtn() {
+  const btn = document.getElementById('btnClearFilters');
+  if (btn) btn.disabled = !hasAtivos();
+}
+
+function initFilterUcsSelect2(){
+  if (!window.$?.fn?.select2) return;
+
+  const $ucs = $('#filterUcs');
+  if (!$ucs.length || $ucs.hasClass('select2-hidden-accessible')) return;
+
+  $ucs.select2({
+    theme: 'bootstrap-5',     // <- deixa com o visual Bootstrap 5
+    width: '100%',            // <- garante ocupar toda a largura
+    placeholder: 'Unidades Curriculares...',
+    allowClear: true,         // <- mostra o 'X' para limpar
+    closeOnSelect: false,     // <- não fecha a cada seleção (multi)
+    minimumInputLength: 0,
+    ajax: {
+      url: '../backend/processa_unidade_curricular.php',
+      dataType: 'json',
+      delay: 250,
+      cache: true,
+      data: params => ({
+        q: params.term || '',
+        page: params.page || 1,
+        page_size: 1000
+      }),
+      processResults: (data) => {
+        const items = Array.isArray(data) ? data : (data.items || []);
+        return {
+          results: items.map(uc => ({ id: uc._id || uc.id, text: uc.descricao || '' })),
+          pagination: { more: items.length >= 1000 }
+        };
+      }
+    }
+  });
+
+  // Se já houver UCs salvas em filtros.ucs, injeta as opções para aparecerem selecionadas
+  try {
+    (filtros.ucs || []).forEach(id => {
+      if (!$ucs.find(`option[value="${id}"]`).length) {
+        $ucs.append(new Option(ucDataMap[id] || id, id, true, true));
+      }
+    });
+    $ucs.trigger('change.select2');
+  } catch {}
+
+  // Atualiza o estado dos filtros quando mudar
+  $ucs.on('change', () => {
+    filtros.ucs = $ucs.val() || [];
+    filtros.page = 1;
+    saveFiltros();
+    applyFiltersAndRender();
+    updateClearBtn();
+  });
+}
+
+
+  // se já tínhamos UCs no estado, injeta opções para exibição imediata
+  try {
+    (filtros.ucs || []).forEach(id => {
+      if (!$ucs.find(`option[value="${id}"]`).length) {
+        const nome = ucDataMap[id] || id;
+        $ucs.append(new Option(nome, id, true, true));
+      }
+    });
+    $ucs.trigger('change.select2');
+  } catch { }
+
+function populateFilterInstituicao(){
+  const sel = document.getElementById('filterInstituicao');
+  if (!sel) return;
+  const current = sel.value || filtros.instituicao || '';
+  sel.innerHTML = `<option value="">Todas</option>`;
+  (instituicoesCache || []).forEach(inst => {
+    const id = inst._id || inst.id;
+    const nome = inst.razao_social || inst.nome || id;
+    const opt = document.createElement('option');
+    opt.value = id; opt.textContent = nome;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+  updateClearBtn(); // <— acrescentar
+}
+
+function reflectFiltrosToUI() {
+  const el = id => document.getElementById(id);
+  if (el('searchCurso')) el('searchCurso').value = filtros.text || '';
+  if (el('filterInstituicao')) el('filterInstituicao').value = filtros.instituicao || '';
+  if (el('filterStatus')) el('filterStatus').value = filtros.status || 'Todos';
+  if (el('filterCategoria')) el('filterCategoria').value = filtros.categoria || 'Todos';
+  if (el('filterEixo')) el('filterEixo').value = filtros.eixo || 'Todos';
+  if (el('filterModalidade')) el('filterModalidade').value = filtros.modalidade || 'Todos';
+  if (el('filterTipo')) el('filterTipo').value = filtros.tipo || 'Todos';
+  if (el('sortBy')) el('sortBy').value = filtros.sortBy || 'created_desc';
+  if (el('pageSize')) el('pageSize').value = String(filtros.pageSize || 10);
+
+  // filterUcs: já tratado no initFilterUcsSelect2 (pré-injeção)
+  updateClearBtn();
+}
+
+function wireFilterEvents() {
+  const el = id => document.getElementById(id);
+
+  // Busca textual
+  $('#searchCurso').off('input').on('input', debounce(() => {
+    filtros.text = $('#searchCurso').val() || '';
+    filtros.page = 1; saveFiltros(); applyFiltersAndRender(); updateClearBtn();
+  }, 250));
+
+  // selects simples
+  [['filterInstituicao', 'instituicao'], ['filterStatus', 'status'], ['filterCategoria', 'categoria'],
+  ['filterEixo', 'eixo'], ['filterModalidade', 'modalidade'], ['filterTipo', 'tipo']].forEach(([id, key]) => {
+    el(id)?.addEventListener('change', e => {
+      filtros[key] = e.target.value || (key === 'status' ? 'Todos' : '');
+      filtros.page = 1; saveFiltros(); applyFiltersAndRender(); updateClearBtn();
+    });
+  });
+
+  // Select2 de UCs (multi)
+  try {
+    $('#filterUcs').off('change').on('change', function () {
+      filtros.ucs = $(this).val() || [];
+      filtros.page = 1; saveFiltros(); applyFiltersAndRender(); updateClearBtn();
+    });
+  } catch { }
+
+  // Ordenação e paginação
+  el('sortBy')?.addEventListener('change', e => {
+    filtros.sortBy = e.target.value || 'created_desc';
+    filtros.page = 1; saveFiltros(); applyFiltersAndRender();
+  });
+  el('pageSize')?.addEventListener('change', e => {
+    filtros.pageSize = Number(e.target.value || 10) || 10;
+    filtros.page = 1; saveFiltros(); applyFiltersAndRender();
+  });
+
+  el('prevPage')?.addEventListener('click', () => {
+    if (filtros.page > 1) { filtros.page -= 1; saveFiltros(); applyFiltersAndRender(); }
+  });
+  el('nextPage')?.addEventListener('click', () => {
+    const { totalPages } = getFilteredAndSorted();
+    if (filtros.page < totalPages) { filtros.page += 1; saveFiltros(); applyFiltersAndRender(); }
+  });
+
+  // Limpar filtros
+  const btnClear = el('btnClearFilters');
+  if (btnClear && !btnClear._bound) {
+    btnClear.addEventListener('click', () => {
+      $('#searchCurso').val('');
+      el('filterInstituicao').value = '';
+      el('filterStatus').value = 'Todos';
+      el('filterCategoria').value = 'Todos';
+      el('filterEixo').value = 'Todos';
+      el('filterModalidade').value = 'Todos';
+      el('filterTipo').value = 'Todos';
+      try { $('#filterUcs').val([]).trigger('change'); } catch { }
+
+      filtros = {
+        ...filtros, text: '', instituicao: '', status: 'Todos', categoria: 'Todos', eixo: 'Todos',
+        modalidade: 'Todos', tipo: 'Todos', ucs: [], page: 1
+      };
+      saveFiltros(); applyFiltersAndRender(); updateClearBtn();
+    });
+    btnClear._bound = true;
+  }
+}
+function matchesText(c) {
+  const t = strip(filtros.text);
+  if (!t) return true;
+  const blob = strip([c.nome, c.categoria, c.eixo_tecnologico, c.nivel_curso, c.tipo, c.status].join(' '));
+  return blob.includes(t);
+}
+function matchesInstituicao(c) {
+  if (!filtros.instituicao) return true;
+  return String(c.instituicao_id || '') === String(filtros.instituicao);
+}
+function matchesStatus(c) {
+  if (filtros.status === 'Todos') return true;
+  return (String(normalizeStatus(c.status)) === filtros.status);
+}
+function matchesCategoria(c) {
+  if (filtros.categoria === 'Todos') return true;
+  return String(c.categoria || '') === filtros.categoria;
+}
+function matchesEixo(c) {
+  if (filtros.eixo === 'Todos') return true;
+  return String(c.eixo_tecnologico || '') === filtros.eixo;
+}
+function matchesModalidade(c) {
+  if (filtros.modalidade === 'Todos') return true;
+  return String(c.nivel_curso || '') === filtros.modalidade;
+}
+function matchesTipo(c) {
+  if (filtros.tipo === 'Todos') return true;
+  return String(c.tipo || '') === filtros.tipo;
+}
+function matchesUcs(c) {
+  const sel = filtros.ucs || [];
+  if (!sel.length) return true;
+  const ids = Array.isArray(c.ordem_ucs) ? c.ordem_ucs.map(u => String(u.id)) : [];
+  return sel.some(x => ids.includes(String(x)));
+}
+
+function compareBy(a, b) {
+  switch (filtros.sortBy) {
+    case 'nome_asc': return (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' });
+    case 'status_asc': return normalizeStatus(a.status).localeCompare(normalizeStatus(b.status), 'pt-BR', { sensitivity: 'base' });
+    case 'categoria_asc': return (a.categoria || '').localeCompare(b.categoria || '', 'pt-BR', { sensitivity: 'base' });
+    case 'eixo_asc': return (a.eixo_tecnologico || '').localeCompare(b.eixo_tecnologico || '', 'pt-BR', { sensitivity: 'base' });
+    case 'modalidade_asc': return (a.nivel_curso || '').localeCompare(b.nivel_curso || '', 'pt-BR', { sensitivity: 'base' });
+    case 'tipo_asc': return (a.tipo || '').localeCompare(b.tipo || '', 'pt-BR', { sensitivity: 'base' });
+    case 'created_desc':
+    default: return +getCreatedDate(b) - +getCreatedDate(a);
+  }
+}
+
+function getFilteredAndSorted() {
+  let list = (cursosCache || []).filter(c =>
+    matchesText(c) && matchesInstituicao(c) && matchesStatus(c) &&
+    matchesCategoria(c) && matchesEixo(c) && matchesModalidade(c) &&
+    matchesTipo(c) && matchesUcs(c)
+  );
+  list.sort(compareBy);
+
+  const total = list.length;
+  const pageSize = Math.max(1, filtros.pageSize || 10);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(1, filtros.page || 1), totalPages);
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+
+  return { pageItems: list.slice(start, end), total, page, totalPages, pageSize };
+}
+
+function applyFiltersAndRender() {
+  const { pageItems, total, page, totalPages } = getFilteredAndSorted();
+  renderCursosTable(pageItems);
+  const pageInfo = document.getElementById('pageInfo');
+  if (pageInfo) pageInfo.textContent = `Página ${page} de ${totalPages} • ${total} registros`;
+}
+
 
 // ======================= Utils UI =======================
 function setLoadingTable(on) {
@@ -125,8 +414,11 @@ $(document).ready(function () {
   bindFecharModal();
   bindAccordionDelegation();
   carregarCursos();
+  loadFiltros();
+  reflectFiltrosToUI();
+  wireFilterEvents();
 
-  $('#searchCurso').on('input', filtrarCursos);
+
 
   $('#btnAddCurso').on('click', () => {
     abrirModalCurso(false, null);
@@ -139,6 +431,17 @@ $(document).ready(function () {
   $('#formCurso').on('input change', 'input, select, textarea', function () {
     clearFieldError(this);
   });
+  $(document).on('click', '#cursosTable .btn-view, #cursosTable .btn-edit, #cursosTable .btn-delete', function () {
+  const id = $(this).data('id');
+  if ($(this).hasClass('btn-view')) {
+    mostrarDetalheCurso(id);
+  } else if ($(this).hasClass('btn-edit')) {
+    abrirModalCurso(true, id);
+  } else if ($(this).hasClass('btn-delete')) {
+    excluirCurso(id);
+  }
+});
+
 });
 
 // ======================= Carga inicial =======================
@@ -160,7 +463,10 @@ async function carregarCursos() {
     if (id) ucDataMap[id] = uc.descricao || '';
   });
 
-  renderCursosTable(cursosCache);
+  populateFilterInstituicao();
+  initFilterUcsSelect2();
+  applyFiltersAndRender();
+  updateClearBtn();
 }
 
 // ======================= Select2 =======================
@@ -234,20 +540,7 @@ function renderCursosTable(cursos) {
   });
 }
 
-function filtrarCursos() {
-  const termo = ($('#searchCurso').val() || '').toLowerCase().trim();
-  if (!termo) { renderCursosTable(cursosCache); return; }
 
-  const filtrados = cursosCache.filter(curso => {
-    const base = [
-      curso.nome, curso.categoria, curso.eixo_tecnologico,
-      curso.nivel_curso, curso.status
-    ].map(v => String(v || '').toLowerCase());
-    return base.some(v => v.includes(termo));
-  });
-
-  renderCursosTable(filtrados);
-}
 
 // ======================= Modais =======================
 function abrirModalCurso(edit = false, cursoId = null) {
@@ -288,7 +581,7 @@ function validarFormCurso() {
   let ok = true;
 
   // limpa erros
-  ['#instituicaoId','#nomeCurso','#nivelCurso','#tipoCurso','#statusCurso','#categoriaCurso','#eixoTecnologicoCurso','#cargaHoraria','#ucsSelect']
+  ['#instituicaoId', '#nomeCurso', '#nivelCurso', '#tipoCurso', '#statusCurso', '#categoriaCurso', '#eixoTecnologicoCurso', '#cargaHoraria', '#ucsSelect']
     .forEach(sel => clearFieldError(sel));
 
   const instituicao = $('#instituicaoId').val();
@@ -302,35 +595,35 @@ function validarFormCurso() {
   const ucs = $('#ucsSelect').val() || [];
 
   // obrigatórios
-  if (!instituicao) { setFieldError('#instituicaoId','Obrigatório'); ok = false; }
-  if (!nome || nome.length < 3 || nome.length > 100) { setFieldError('#nomeCurso','Entre 3 e 100 caracteres'); ok = false; }
-  if (!modalidade) { setFieldError('#nivelCurso','Obrigatório'); ok = false; }
-  if (!tipo) { setFieldError('#tipoCurso','Obrigatório'); ok = false; }
-  if (!status) { setFieldError('#statusCurso','Obrigatório'); ok = false; }
-  if (!categoria) { setFieldError('#categoriaCurso','Obrigatório'); ok = false; }
-  if (!eixo) { setFieldError('#eixoTecnologicoCurso','Obrigatório'); ok = false; }
+  if (!instituicao) { setFieldError('#instituicaoId', 'Obrigatório'); ok = false; }
+  if (!nome || nome.length < 3 || nome.length > 100) { setFieldError('#nomeCurso', 'Entre 3 e 100 caracteres'); ok = false; }
+  if (!modalidade) { setFieldError('#nivelCurso', 'Obrigatório'); ok = false; }
+  if (!tipo) { setFieldError('#tipoCurso', 'Obrigatório'); ok = false; }
+  if (!status) { setFieldError('#statusCurso', 'Obrigatório'); ok = false; }
+  if (!categoria) { setFieldError('#categoriaCurso', 'Obrigatório'); ok = false; }
+  if (!eixo) { setFieldError('#eixoTecnologicoCurso', 'Obrigatório'); ok = false; }
   if (!Number.isFinite(cargaHoraria) || !Number.isInteger(cargaHoraria) || cargaHoraria < 1) {
-    setFieldError('#cargaHoraria','Inteiro ≥ 1'); ok = false;
+    setFieldError('#cargaHoraria', 'Inteiro ≥ 1'); ok = false;
   }
-  if (!ucs.length) { setFieldError('#ucsSelect','Selecione ao menos uma UC'); ok = false; }
+  if (!ucs.length) { setFieldError('#ucsSelect', 'Selecione ao menos uma UC'); ok = false; }
 
   // domínio
-  if (modalidade && !NIVEIS_SET.has(modalidade)) { setFieldError('#nivelCurso','Valor inválido'); ok = false; }
-  if (tipo && !TIPOS_SET.has(tipo)) { setFieldError('#tipoCurso','Valor inválido'); ok = false; }
-  if (status && !STATUS_SET.has(status)) { setFieldError('#statusCurso','Valor inválido'); ok = false; }
-  if (categoria && !CATEG_SET.has(categoria)) { setFieldError('#categoriaCurso','Valor inválido'); ok = false; }
-  if (eixo && !EIXO_SET.has(eixo)) { setFieldError('#eixoTecnologicoCurso','Valor inválido'); ok = false; }
+  if (modalidade && !NIVEIS_SET.has(modalidade)) { setFieldError('#nivelCurso', 'Valor inválido'); ok = false; }
+  if (tipo && !TIPOS_SET.has(tipo)) { setFieldError('#tipoCurso', 'Valor inválido'); ok = false; }
+  if (status && !STATUS_SET.has(status)) { setFieldError('#statusCurso', 'Valor inválido'); ok = false; }
+  if (categoria && !CATEG_SET.has(categoria)) { setFieldError('#categoriaCurso', 'Valor inválido'); ok = false; }
+  if (eixo && !EIXO_SET.has(eixo)) { setFieldError('#eixoTecnologicoCurso', 'Valor inválido'); ok = false; }
 
   // referências
   const instOk = instituicoesCache.some(i => String(i._id || i.id) === String(instituicao));
-  if (instituicao && !instOk) { setFieldError('#instituicaoId','Instituição inexistente'); ok = false; }
+  if (instituicao && !instOk) { setFieldError('#instituicaoId', 'Instituição inexistente'); ok = false; }
 
   const ucSet = new Set(ucs);
   if (ucSet.size !== ucs.length) {
-    setFieldError('#ucsSelect','Remova duplicatas'); ok = false;
+    setFieldError('#ucsSelect', 'Remova duplicatas'); ok = false;
   }
   const allUcExist = ucs.every(id => ucsCache.some(u => String(u._id || u.id) === String(id)));
-  if (!allUcExist) { setFieldError('#ucsSelect','Alguma UC não existe'); ok = false; }
+  if (!allUcExist) { setFieldError('#ucsSelect', 'Alguma UC não existe'); ok = false; }
 
   if (!ok) {
     const $firstErr = $('.border-red-500').first();
@@ -463,12 +756,12 @@ function salvarUcsConfig() {
   forms.forEach(form => {
     const id = form.getAttribute('data-ucid');
 
-    const presencial_ch    = parseInt(form.querySelector('.presencial_ch').value, 10);
+    const presencial_ch = parseInt(form.querySelector('.presencial_ch').value, 10);
     const presencial_aulas = parseInt(form.querySelector('.presencial_aulas').value, 10);
-    const presencial_dias  = parseInt(form.querySelector('.presencial_dias').value, 10);
-    const ead_ch           = parseInt(form.querySelector('.ead_ch').value, 10);
-    const ead_aulas        = parseInt(form.querySelector('.ead_aulas').value, 10);
-    const ead_dias         = parseInt(form.querySelector('.ead_dias').value, 10);
+    const presencial_dias = parseInt(form.querySelector('.presencial_dias').value, 10);
+    const ead_ch = parseInt(form.querySelector('.ead_ch').value, 10);
+    const ead_aulas = parseInt(form.querySelector('.ead_aulas').value, 10);
+    const ead_dias = parseInt(form.querySelector('.ead_dias').value, 10);
 
     const fields = [presencial_ch, presencial_aulas, presencial_dias, ead_ch, ead_aulas, ead_dias];
     if (fields.some(v => Number.isNaN(v) || v < 0)) {
@@ -555,9 +848,7 @@ function mostrarDetalheCurso(cursoId) {
     <div class="popup-field"><span class="popup-label">Unidades Curriculares do Curso:</span></div>
     <div style="max-height:350px;overflow:auto;">${renderUCTable(curso.ordem_ucs)}</div>
 
-    <div class="mt-4">
-      <button class="btn btn-secondary" data-close="modalDetalheCurso">Fechar</button>
-    </div>
+   
   `;
 
   document.getElementById('detalheCursoConteudo').innerHTML = html;
