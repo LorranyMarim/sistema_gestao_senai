@@ -393,6 +393,47 @@
       }
     });
   }
+  // --- UX de intervalo de datas (filtros) ---
+function setupFiltroCriadoRange() {
+  if (!filterCriadoDe || !filterCriadoAte) return;
+
+  const sync = () => {
+    const hasStart = !!filterCriadoDe.value;
+    // habilita/desabilita o "até"
+    filterCriadoAte.disabled = !hasStart;
+
+    // restringe o mínimo do "até" para o mesmo "de"
+    filterCriadoAte.min = hasStart ? filterCriadoDe.value : '';
+
+    // se não houver "de", limpa o "até"
+    if (!hasStart) {
+      filterCriadoAte.value = '';
+    } else if (filterCriadoAte.value && filterCriadoAte.value < filterCriadoDe.value) {
+      // se o usuário já tinha algo menor, corrige
+      filterCriadoAte.value = filterCriadoDe.value;
+    }
+  };
+
+  // estado inicial
+  sync();
+
+  // quando alterar o "de", re-sincroniza e reaplica filtros
+  filterCriadoDe.addEventListener('input', async () => {
+    sync();
+    // (opcional) já dispara a busca ao mudar o "de"
+    STATE.pagination.page = 1;
+    applyFiltersFromUI();
+    await carregarUnidadesCurriculares();
+  });
+
+  // protege contra “até” < “de” caso o usuário force
+  filterCriadoAte.addEventListener('input', () => {
+    if (filterCriadoDe.value && filterCriadoAte.value < filterCriadoDe.value) {
+      filterCriadoAte.value = filterCriadoDe.value;
+    }
+  });
+}
+
 
   // ===================== Bootstrap =====================
   document.addEventListener('DOMContentLoaded', async () => {
@@ -403,6 +444,8 @@
       wireFormSubmit();
       wireTableActions();
       wireFilters();
+      setupFiltroCriadoRange();
+
 
       // filtros iniciais (Status = Todos)
       applyFiltersFromUI();
@@ -428,6 +471,7 @@
           $id('filterCriadoDe')   && ($id('filterCriadoDe').value = '');
           $id('filterCriadoAte')  && ($id('filterCriadoAte').value = '');
           // normalmente não resetamos "Itens por página"
+          setupFiltroCriadoRange();
         },
         onClear: async () => {
           STATE.filters = { q: '', instituicoes: [], status: [], created_from: '', created_to: '' };

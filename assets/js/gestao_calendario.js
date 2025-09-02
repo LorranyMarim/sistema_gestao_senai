@@ -2,104 +2,38 @@
 /* Requer: geral.js (expondo window.App) */
 if (!window.App) throw new Error('Carregue geral.js antes de gestao_calendario.js.');
 
-const { $, $$ } = App.dom;
-const { debounce, norm, toId } = App.utils;
+const { $, $$, runNowOrOnReady } = App.dom;
+const { debounce, norm, toId, dateMax, dateMin, dateClamp } = App.utils;
 const { fetchJSON } = App.net;
-const { attachDateRangeValidation } = App.ui;
+const { fmtBR, fmtDateTimeBR, parseIsoAssumindoUtc, oidToDate, normalizeStatus } = App.format;
+const { attachDateRangeValidation, setupClearFilters, bindSimplePagination, showModal, hideModal } = App.ui;
 
 // ===================== Config & State =====================
 const API = Object.freeze({
   calendario: "../backend/processa_calendario.php",
   empresa: "../backend/processa_empresa.php",
   instituicao: "../backend/processa_instituicao.php",
-  turma: "../backend/processa_turma.php"
 });
 
 const TZ = "America/Sao_Paulo";
-const FIX_OFFSET_MS = 3 * 60 * 60 * 1000; // ajuste -3h
 
 const STATE = {
   empresas: [],
   instituicoes: [],
   calendarios: [],
-  // mapa com TODOS os calendários (usado para regras do modal "Adicionar Evento")
   calendariosAllById: {},
 
   fc: null, // FullCalendar instance
   calEmEdicaoId: null,
   gerenciarEventosCalId: null,
-  // paginação/filtros
+
   pagination: { page: 1, pageSize: 10, total: 0 },
-  filters: { q: "", year: "", empresa: "", instituicao: "", status: "" }, // <-- status
+  filters: { q: "", year: "", empresa: "", instituicao: "", status: "" },
 };
+
+let pagerCtrl = null; // controlador da paginação (bindSimplePagination)
 
 // ===================== Utils específicos da view =====================
-function fmtBR(iso) {
-  if (!iso) return "";
-  const p = String(iso).slice(0, 10).split("-");
-  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
-}
-
-// ---- Datas/horários ----
-function parseIsoAssumindoUtc(v) {
-  if (!v) return null;
-  let iso = String(v);
-  // se vier sem offset, trate como UTC
-  if (/^\d{4}-\d{2}-\d{2}T/.test(iso) && !(/[zZ]|[+\-]\d{2}:?\d{2}$/.test(iso))) iso += "Z";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-function fmtDateTimeBR(v) {
-  if (!v) return "—";
-  const d = parseIsoAssumindoUtc(v);
-  if (!d) return "—";
-  // ajuste -3h solicitado
-  const corrigido = new Date(d.getTime() - FIX_OFFSET_MS);
-  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", year: "2-digit", month: "2-digit", day: "2-digit" }).format(corrigido);
-  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" }).format(corrigido);
-  return `${data} ${hora}`;
-}
-
-// Helpers de comparação de datas (YYYY-MM-DD)
-const dateMax = (a, b) => (!a ? b : !b ? a : (a > b ? a : b));
-const dateMin = (a, b) => (!a ? b : !b ? a : (a < b ? a : b));
-const dateClamp = (v, min, max) => {
-  if (!v) return v;
-  if (min && v < min) return min;
-  if (max && v > max) return max;
-  return v;
-};
-
-// timestamp do ObjectId (primeiros 4 bytes = epoch seconds)
-function tsFromObjectId(id) {
-  const s = String(id || "");
-  if (!/^[a-fA-F0-9]{24}$/.test(s)) return 0;
-  try {
-    const seconds = parseInt(s.substring(0, 8), 16);
-    return seconds * 1000;
-  } catch {
-    return 0;
-  }
-}
-
-// timestamp de criação para ordenação (desc)
-function tsCriacao(cal) {
-  // 1) data_criacao
-  const d = parseIsoAssumindoUtc(cal?.data_criacao);
-  if (d) return d.getTime() - FIX_OFFSET_MS; // manter coerência com exibição
-
-  // 2) timestamp embutido no _id (Mongo)
-  const id = toId(cal) || toId(cal?._id) || toId(cal?.id);
-  const tId = tsFromObjectId(id);
-  if (tId) return tId;
-
-  // 3) fallback: datas do período
-  const di = cal?.data_inicial ? Date.parse(cal.data_inicial) : 0;
-  const df = cal?.data_final ? Date.parse(cal.data_final) : 0;
-  return Math.max(di, df, 0);
-}
-
 function corParaCalendario(id) {
   if (!id) return "#e6f0ff";
   let hash = 0;
@@ -108,7 +42,6 @@ function corParaCalendario(id) {
   return `hsl(${h},70%,80%)`;
 }
 
-// ===================== Lookups (dependem do STATE) =====================
 function nomeEmpresa(id) {
   const e = STATE.empresas.find(x => toId(x) === id || toId(x._id) === id);
   return e?.razao_social || id || "";
@@ -118,19 +51,34 @@ function nomeInstituicao(id) {
   return i?.razao_social || id || "";
 }
 
-// ===================== Modais (específico desta view) =====================
+// timestamp de criação para ordenação (desc)
+function tsCriacao(cal) {
+  // 1) data_criacao explícita
+  const d = parseIsoAssumindoUtc(cal?.data_criacao);
+  if (d) return d.getTime();
+
+  // 2) ObjectId -> Date
+  const id = toId(cal) || toId(cal?._id) || toId(cal?.id);
+  const dOid = oidToDate(id);
+  if (dOid) return dOid.getTime();
+
+  // 3) fallback: datas do período
+  const di = cal?.data_inicial ? Date.parse(cal.data_inicial) : 0;
+  const df = cal?.data_final ? Date.parse(cal.data_final) : 0;
+  return Math.max(di, df, 0);
+}
+
+// ===================== Modais (view) =====================
 function openModal(id) {
   const el = document.getElementById(id);
-  if (el) el.style.display = "flex";
+  showModal(el);
 }
 function closeModal(id) {
   const el = document.getElementById(id);
-  if (!el) return;
-  el.style.display = "none";
+  hideModal(el);
 
   if (id === "modalCadastrarCalendario") {
     $("#formCadastrarCalendario")?.reset();
-    // Mantém status "Ativo" como padrão visual ao fechar
     const st = $("#calStatus");
     if (st) st.value = "Ativo";
     resetEdicaoCalendarioUI();
@@ -138,10 +86,9 @@ function closeModal(id) {
   if (id === "modalAdicionarEvento") {
     $("#formAdicionarEvento")?.reset();
     if ($("#eventoCalendario") && $("#eventoCalendario").classList.contains("select2-hidden-accessible")) {
-      try { $("#eventoCalendario").value = null; } catch (_) {}
+      try { $("#eventoCalendario").value = null; } catch (_) { }
       window.jQuery && window.jQuery("#eventoCalendario").val(null).trigger("change");
     }
-    // Desabilita e limpa limites dos inputs de data ao fechar o modal
     const ini = $("#eventoInicio");
     const fim = $("#eventoFim");
     if (ini && fim) {
@@ -155,54 +102,24 @@ function closeModal(id) {
 window.openModal = openModal;
 window.closeModal = closeModal;
 
-// Importante: o geral.js já fecha modais ao clicar no overlay .modal,
-// mas aqui garantimos o reset correto destes modais específicos.
-document.addEventListener("click", (ev) => {
+// (o geral.js já fecha modais ao clicar no overlay .modal)
+// aqui só garantimos o reset correto dos modais específicos.
+window.addEventListener("click", (ev) => {
   const tgt = ev.target;
   if (tgt?.classList?.contains("modal")) {
     const id = tgt.id;
     if (id === "modalCadastrarCalendario" || id === "modalAdicionarEvento" ||
-        id === "modalVisualizarCalendario" || id === "modalVisualizarCalendarioFull") {
+      id === "modalVisualizarCalendario" || id === "modalVisualizarCalendarioFull") {
       closeModal(id);
     }
   }
 });
 
-// ===================== Botão "Limpar filtros" =====================
-function updateClearBtn() {
-  const btn = $("#btnClearFilters");
-  if (!btn) return;
-  const { q, year, empresa, instituicao, status } = STATE.filters;
-  const hasFilters = !!(q || year || empresa || instituicao || status);
-  btn.disabled = !hasFilters;
-  btn.setAttribute("aria-disabled", String(!hasFilters));
-}
-
-async function clearFilters() {
-  STATE.filters = { q: "", year: "", empresa: "", instituicao: "", status: "" };
-  STATE.pagination.page = 1;
-
-  // zera inputs da UI
-  const $id = (s) => document.getElementById(s);
-  if ($id("filtroBusca")) $id("filtroBusca").value = "";
-  if ($id("filtroAno")) $id("filtroAno").value = "";
-  if ($id("filtroEmpresa")) $id("filtroEmpresa").value = "";
-  if ($id("filtroInstituicao")) $id("filtroInstituicao").value = "";
-  if ($id("filtroStatus")) $id("filtroStatus").value = ""; // Todas
-
-  updateClearBtn();
-  await carregarCalendarios();
-  await carregarEventosNoCalendario();
-}
-window.clearFilters = clearFilters;
-
 // ===================== Inicialização =====================
-document.addEventListener("DOMContentLoaded", async () => {
+runNowOrOnReady(async () => {
   initFullCalendar();
   await carregarDadosReferencia();
   popularFiltrosFixos();
-  await carregarCalendarios();
-  await carregarEventosNoCalendario(); // primeiro render
 
   const buscaInput = $("#filtroBusca");
   if (buscaInput) {
@@ -210,7 +127,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   $("#btnAbrirModalAdicionarEvento")?.addEventListener("click", async () => {
-    // prepara o formulário (desabilita datas até selecionar calendário)
     prepareAdicionarEventoForm();
     openModal("modalAdicionarEvento");
     await carregarListaCalendariosParaEvento();
@@ -218,47 +134,68 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   $("#btnAbrirModalCadastrarCalendario")?.addEventListener("click", async () => {
     openModal("modalCadastrarCalendario");
-    await carregarInstituicoesEmpresas();
+    await carregarInstituicoesEmpresas(); // sem includeEmpresaId (novo cadastro)
     if (STATE.filters.instituicao) $("#calInstituicao").value = STATE.filters.instituicao;
     if (STATE.filters.empresa) $("#calEmpresa").value = STATE.filters.empresa;
-    // status padrão ao abrir criação
     const st = $("#calStatus");
     if (st && !STATE.calEmEdicaoId) st.value = "Ativo";
   });
+
 
   $("#formCadastrarCalendario")?.addEventListener("submit", onSubmitCadastrarCalendario);
   $("#formAdicionarEvento")?.addEventListener("submit", onSubmitAdicionarEvento);
   $("#tbodyCalendarios")?.addEventListener("click", onClickTabelaCalendarios);
 
-  // Filtros e paginação
+  // Filtros (debounced)
   const debouncedBusca = debounce(async (val) => {
     STATE.filters.q = val.trim();
     STATE.pagination.page = 1;
-    updateClearBtn();
     await carregarCalendarios();
   }, 400);
 
   $("#filtroBusca")?.addEventListener("input", (e) => debouncedBusca(e.target.value));
-  $("#filtroAno")?.addEventListener("change", async (e) => { STATE.filters.year = e.target.value; STATE.pagination.page = 1; updateClearBtn(); await carregarCalendarios(); });
-  $("#filtroEmpresa")?.addEventListener("change", async (e) => { STATE.filters.empresa = e.target.value; STATE.pagination.page = 1; updateClearBtn(); await carregarCalendarios(); });
-  $("#filtroInstituicao")?.addEventListener("change", async (e) => { STATE.filters.instituicao = e.target.value; STATE.pagination.page = 1; updateClearBtn(); await carregarCalendarios(); });
-  $("#filtroStatus")?.addEventListener("change", async (e) => { STATE.filters.status = e.target.value; STATE.pagination.page = 1; updateClearBtn(); await carregarCalendarios(); });
+  $("#filtroAno")?.addEventListener("change", async (e) => { STATE.filters.year = e.target.value; STATE.pagination.page = 1; await carregarCalendarios(); });
+  $("#filtroEmpresa")?.addEventListener("change", async (e) => { STATE.filters.empresa = e.target.value; STATE.pagination.page = 1; await carregarCalendarios(); });
+  $("#filtroInstituicao")?.addEventListener("change", async (e) => { STATE.filters.instituicao = e.target.value; STATE.pagination.page = 1; await carregarCalendarios(); });
+  $("#filtroStatus")?.addEventListener("change", async (e) => { STATE.filters.status = e.target.value; STATE.pagination.page = 1; await carregarCalendarios(); });
   $("#pageSize")?.addEventListener("change", async (e) => { STATE.pagination.pageSize = parseInt(e.target.value || "10", 10); STATE.pagination.page = 1; await carregarCalendarios(); });
 
-  $("#btnPrevPage")?.addEventListener("click", async () => {
-    if (STATE.pagination.page > 1) { STATE.pagination.page--; await carregarCalendarios(); }
-  });
-  $("#btnNextPage")?.addEventListener("click", async () => {
-    const { page, pageSize, total } = STATE.pagination;
-    const maxPage = Math.max(1, Math.ceil(total / pageSize));
-    if (page < maxPage) { STATE.pagination.page++; await carregarCalendarios(); }
+  // Paginação (usa util centralizado)
+  pagerCtrl = bindSimplePagination({
+  prevSelector: '#btnPrevPage',
+  nextSelector: '#btnNextPage',
+  infoSelector: '#pageInfo',
+  getState: () => STATE.pagination,
+  onChange: async (newPage) => {
+    STATE.pagination.page = newPage;
+    await carregarCalendarios();
+  }
+});
+pagerCtrl.update();                // pinta "Página 1 de 1 • 0 registros"
+await carregarCalendarios();        // <— busca inicial (preenche tabela + totais)
+await carregarEventosNoCalendario();
+
+  // Botão "Limpar filtros" (centralizado no geral.js)
+  setupClearFilters({
+    buttonSelector: '#btnClearFilters',
+    getFiltersState: () => STATE.filters,
+    resetUI: async () => {
+      const id = (s) => document.getElementById(s);
+      id("filtroBusca") && (id("filtroBusca").value = "");
+      id("filtroAno") && (id("filtroAno").value = "");
+      id("filtroEmpresa") && (id("filtroEmpresa").value = "");
+      id("filtroInstituicao") && (id("filtroInstituicao").value = "");
+      id("filtroStatus") && (id("filtroStatus").value = "");
+    },
+    onClear: async () => {
+      STATE.filters = { q: "", year: "", empresa: "", instituicao: "", status: "" };
+      STATE.pagination.page = 1;
+      await carregarCalendarios();
+      await carregarEventosNoCalendario();
+    }
   });
 
-  // Botão "Limpar filtros"
-  $("#btnClearFilters")?.addEventListener("click", clearFilters);
-  updateClearBtn();
-
-  // Validações de intervalo (usando util do geral.js)
+  // Validações de intervalo (util centralizado)
   attachDateRangeValidation({
     formId: 'formCadastrarCalendario',
     startId: 'calInicio',
@@ -277,8 +214,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ===================== Regras do formulário "Adicionar Evento" =====================
-
-// Deixa inputs de data limpos/indisponíveis até escolher calendário
 function prepareAdicionarEventoForm() {
   const ini = $("#eventoInicio");
   const fim = $("#eventoFim");
@@ -289,33 +224,30 @@ function prepareAdicionarEventoForm() {
   ini.disabled = true; fim.disabled = true;
 }
 
-// Obtém ids selecionados no Select2
 function getSelectedEventoCalendarios() {
   const $select = window.jQuery && window.jQuery("#eventoCalendario");
   if (!$select) return [];
   return $select.val() || [];
 }
 
-// Calcula interseção do período dos calendários selecionados
-// (garante que o evento caiba em TODOS os calendários escolhidos)
+// Interseção do período dos calendários selecionados
 function computeSelectedCalendarsRange(ids) {
   if (!ids || !ids.length) return null;
   let startMax = null; // maior data_inicial
   let endMin = null;   // menor data_final
   ids.forEach(id => {
     const cal = STATE.calendariosAllById[id] ||
-                STATE.calendarios.find(c => (toId(c) || toId(c?._id) || toId(c?.id)) === id);
+      STATE.calendarios.find(c => (toId(c) || toId(c?._id) || toId(c?.id)) === id);
     if (!cal) return;
     const s = cal.data_inicial || null;
     const e = cal.data_final || null;
     if (s) startMax = dateMax(startMax, s);
-    if (e) endMin   = dateMin(endMin, e);
+    if (e) endMin = dateMin(endMin, e);
   });
   if (!startMax || !endMin || startMax > endMin) return { start: null, end: null, invalid: true };
   return { start: startMax, end: endMin, invalid: false };
 }
 
-// Aplica limites min/max nos inputs de data de acordo com a seleção
 function applyEventoDateBounds(range) {
   const ini = $("#eventoInicio");
   const fim = $("#eventoFim");
@@ -334,33 +266,26 @@ function applyEventoDateBounds(range) {
   ini.min = range.start;
   ini.max = range.end;
 
-  // mantém o início dentro do range
   ini.value = dateClamp(ini.value, range.start, range.end) || ini.value;
 
-  // fim >= início e dentro do range
   const minFim = dateMax(range.start, ini.value || range.start);
   fim.min = minFim;
   fim.max = range.end;
 
-  // se fim vazio ou fora do permitido, puxa para o início
   if (!fim.value || fim.value < minFim || fim.value > range.end) {
     fim.value = ini.value || minFim;
   }
 }
 
-// Encaixa mudanças do select e do início
 function wireEventoFormInteractions() {
-  // evita bind duplicado
   const ini = $("#eventoInicio");
   const fim = $("#eventoFim");
   if (ini && !ini.dataset.wired) {
     ini.dataset.wired = "1";
     ini.addEventListener("change", () => {
-      // Regra 1: ao escolher início, preenche fim automaticamente (se vazio ou menor)
       if (ini.value && (!fim.value || fim.value < ini.value)) {
         fim.value = ini.value;
       }
-      // Recalcula limites considerando seleção atual de calendários
       const ids = getSelectedEventoCalendarios();
       const range = computeSelectedCalendarsRange(ids);
       applyEventoDateBounds(range);
@@ -418,16 +343,20 @@ async function carregarDadosReferencia() {
 }
 
 function popularFiltrosFixos() {
-  // Empresa/Instituição
   const empSel = $("#filtroEmpresa");
   const instSel = $("#filtroInstituicao");
   if (empSel) {
-    empSel.innerHTML = `<option value="">Todas</option>` + STATE.empresas.map(e => `<option value="${toId(e)}">${e.razao_social || "(sem nome)"}</option>`).join("");
+    empSel.innerHTML = `<option value="">Todas</option>` +
+      STATE.empresas
+        .filter(e => normalizeStatus(e.status) === "Ativo")
+        .map(e => `<option value="${toId(e)}">${e.razao_social || "(sem nome)"}</option>`)
+        .join("");
+
   }
   if (instSel) {
-    instSel.innerHTML = `<option value="">Todas</option>` + STATE.instituicoes.map(i => `<option value="${toId(i)}">${i.razao_social || "(sem nome)"}</option>`).join("");
+    instSel.innerHTML = `<option value="">Todas</option>` +
+      STATE.instituicoes.map(i => `<option value="${toId(i)}">${i.razao_social || "(sem nome)"}</option>`).join("");
   }
-  // Ano (dinâmico)
   const anoSel = $("#filtroAno");
   if (anoSel) {
     const now = new Date().getFullYear();
@@ -435,7 +364,6 @@ function popularFiltrosFixos() {
     for (let a = now + 5; a >= now - 5; a--) anos.push(a);
     anoSel.innerHTML = `<option value="">Todos</option>` + anos.map(a => `<option value="${a}">${a}</option>`).join("");
   }
-  // Status
   const stSel = $("#filtroStatus");
   if (stSel) {
     stSel.innerHTML = `
@@ -474,20 +402,18 @@ async function carregarCalendarios() {
     if (year) qs.set("year", year);
     if (empresa) qs.set("id_empresa", empresa);
     if (instituicao) qs.set("id_instituicao", instituicao);
-    if (status) qs.set("status", status); // <-- filtro por status
+    if (status) qs.set("status", status);
 
     const res = await fetchJSON(`${API.calendario}?${qs.toString()}`);
-    // Back-end retorna {items, total}
     STATE.calendarios = res.items || [];
     STATE.pagination.total = res.total ?? STATE.calendarios.length;
 
     renderTabelaCalendarios(STATE.calendarios);
-    atualizarPaginacaoUI();
-    updateClearBtn(); // mantém o estado do botão coerente após carregar
+    pagerCtrl && pagerCtrl.update();
   } catch (e) {
     console.error("Falha ao carregar calendários:", e.message);
     const tb = $("#tbodyCalendarios");
-    if (tb) tb.innerHTML = '<tr><td colspan="7" style="text-align:center;">Erro ao carregar.</td></tr>'; // 7 colunas agora
+    if (tb) tb.innerHTML = '<tr><td colspan="7" style="text-align:center;">Erro ao carregar.</td></tr>';
   }
 }
 
@@ -502,11 +428,10 @@ async function carregarEventosNoCalendario() {
 async function carregarListaCalendariosParaEvento() {
   try {
     const res = await fetchJSON(`${API.calendario}?limit=1000&page=1`);
-    const lista = res.items || res; // compat
+    const lista = res.items || res;
     const $select = window.jQuery && window.jQuery("#eventoCalendario");
     if (!$select) return;
 
-    // atualiza mapa de todos os calendários
     STATE.calendariosAllById = {};
     (lista || []).forEach(cal => {
       const id = toId(cal) || toId(cal._id) || toId(cal.id);
@@ -514,7 +439,6 @@ async function carregarListaCalendariosParaEvento() {
       STATE.calendariosAllById[id] = cal;
     });
 
-    // popula select
     $select.empty();
     (lista || []).forEach(cal => {
       const id = toId(cal) || toId(cal._id) || toId(cal.id);
@@ -522,7 +446,6 @@ async function carregarListaCalendariosParaEvento() {
       $select.append(`<option value="${id}">${nome}</option>`);
     });
 
-    // (re)inicializa select2
     if ($select.hasClass("select2-hidden-accessible")) {
       $select.select2("destroy");
     }
@@ -532,25 +455,26 @@ async function carregarListaCalendariosParaEvento() {
       dropdownParent: window.jQuery("#modalAdicionarEvento .modal-content"),
     });
 
-    // regra 2: ao alterar seleção, restringe o range dos inputs de data
     $select.off("change.gestao").on("change.gestao", () => {
       const ids = getSelectedEventoCalendarios();
       const range = computeSelectedCalendarsRange(ids);
       applyEventoDateBounds(range);
     });
 
-    // dispara uma vez (útil quando abrimos via "Gerenciar" com um calendário pré-selecionado)
     $select.trigger("change");
   } catch (e) {
     console.error("Falha ao carregar lista de calendários para evento:", e.message);
   }
 }
 
-async function carregarInstituicoesEmpresas() {
+// Substituir função inteira
+async function carregarInstituicoesEmpresas(opts = {}) {
+  const { includeEmpresaId = "" } = opts; // permite incluir a empresa atual em edição mesmo se inativa
   const instSelect = $("#calInstituicao");
   const empSelect = $("#calEmpresa");
   if (!instSelect || !empSelect) return;
 
+  // Instituições (sem alteração)
   instSelect.innerHTML = '<option value="">Selecione</option>';
   STATE.instituicoes.forEach(i => {
     const opt = document.createElement("option");
@@ -559,19 +483,37 @@ async function carregarInstituicoesEmpresas() {
     instSelect.appendChild(opt);
   });
 
+  // Empresas (APENAS ativas: “ativo/ativa”, ignorando caixa)
   empSelect.innerHTML = '<option value="">Selecione</option>';
-  STATE.empresas.forEach(e => {
+  const empresasAtivas = STATE.empresas.filter(e => normalizeStatus(e.status) === "Ativo");
+  empresasAtivas.forEach(e => {
     const opt = document.createElement("option");
     opt.value = toId(e) || "";
     opt.textContent = e.razao_social || "(sem nome)";
     empSelect.appendChild(opt);
   });
+
+  // Caso esteja editando um calendário cujo parceiro esteja inativo,
+  // adiciona a opção específica para não “sumir” a seleção.
+  if (includeEmpresaId) {
+    const existe = Array.from(empSelect.options).some(o => o.value === includeEmpresaId);
+    if (!existe) {
+      const emp = STATE.empresas.find(x => toId(x) === includeEmpresaId);
+      if (emp) {
+        const opt = document.createElement("option");
+        opt.value = includeEmpresaId;
+        opt.textContent = `${emp.razao_social || "(sem nome)"} [INATIVA]`;
+        empSelect.appendChild(opt);
+      }
+    }
+  }
 }
+
 
 // ===================== Edição de calendário =====================
 async function abrirEdicaoCalendario(cal) {
   STATE.calEmEdicaoId = toId(cal) || toId(cal._id) || toId(cal.id);
-  await carregarInstituicoesEmpresas();
+  await carregarInstituicoesEmpresas({ includeEmpresaId: cal.id_empresa });
 
   $("#calIdEdicao").value = STATE.calEmEdicaoId;
   $("#calNome").value = cal.nome_calendario || "";
@@ -580,7 +522,6 @@ async function abrirEdicaoCalendario(cal) {
   $("#calInstituicao").value = cal.id_instituicao || "";
   $("#calEmpresa").value = cal.id_empresa || "";
 
-  // Status no modal de edição
   const st = $("#calStatus");
   if (st) st.value = cal.status || "Ativo";
 
@@ -604,11 +545,10 @@ function renderTabelaCalendarios(lista) {
   if (!tbody) return;
 
   if (!Array.isArray(lista) || lista.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Nenhum calendário cadastrado.</td></tr>'; // 7 colunas agora
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Nenhum calendário cadastrado.</td></tr>';
     return;
   }
 
-  // ORDENAR por mais recente (data_criacao DESC), com fallbacks
   const ordenada = [...lista].sort((a, b) => tsCriacao(b) - tsCriacao(a));
 
   const rows = ordenada.map(cal => {
@@ -617,11 +557,11 @@ function renderTabelaCalendarios(lista) {
     const empresa = nomeEmpresa(cal.id_empresa);
     const dtIni = cal.data_inicial ? fmtBR(cal.data_inicial) : "";
     const dtFim = cal.data_final ? fmtBR(cal.data_final) : "";
-    const criadoEm = fmtDateTimeBR(cal.data_criacao);
+    const criadoEm = fmtDateTimeBR(cal.data_criacao, TZ);
     const status = cal.status || "Ativo";
 
     return `
-      <tr class="calendario-row" data-calendario-id="${id}" style="cursor: pointer;">
+      <tr>
         <td>${nome}</td>
         <td>${empresa}</td>
         <td>${dtIni}</td>
@@ -643,38 +583,6 @@ function renderTabelaCalendarios(lista) {
   });
 
   tbody.innerHTML = rows.join("");
-  
-  // Adicionar event listeners para clique nas linhas
-  tbody.querySelectorAll('.calendario-row').forEach(row => {
-    row.addEventListener('click', async (e) => {
-      // Não executar se clicou em um botão de ação
-      if (e.target.closest('.actions button')) return;
-      
-      const calendarioId = row.dataset.calendarioId;
-      await exibirCalendarioComTurmas(calendarioId);
-    });
-  });
-  
-  // Adicionar event listeners para clique nas linhas
-  tbody.querySelectorAll('.calendario-row').forEach(row => {
-    row.addEventListener('click', async (e) => {
-      // Não executar se clicou em um botão de ação
-      if (e.target.closest('.actions button')) return;
-      
-      const calendarioId = row.dataset.calendarioId;
-      await exibirCalendarioComTurmas(calendarioId);
-    });
-  });
-}
-
-function atualizarPaginacaoUI() {
-  const { page, pageSize, total } = STATE.pagination;
-  const maxPage = Math.max(1, Math.ceil(total / pageSize));
-  $("#pageInfo").textContent = `Página ${page} de ${maxPage} • ${total} registros`;
-  const prev = $("#btnPrevPage");
-  const next = $("#btnNextPage");
-  if (prev) { prev.disabled = page <= 1; prev.setAttribute("aria-disabled", prev.disabled); }
-  if (next) { next.disabled = page >= maxPage; next.setAttribute("aria-disabled", next.disabled); }
 }
 
 // ===================== Handlers =====================
@@ -691,8 +599,8 @@ async function onSubmitCadastrarCalendario(ev) {
       id_empresa: $("#calEmpresa").value,
       data_inicial: $("#calInicio").value,
       data_final: $("#calFim").value,
-      status: statusEl ? (statusEl.value || "Ativo") : "Ativo", // <-- status no payload
-      dias_letivos: {}, // ignorado pelo backend; mantido por compat
+      status: statusEl ? (statusEl.value || "Ativo") : "Ativo",
+      dias_letivos: {}, // compat
     };
 
     if (!payload.id_instituicao || !payload.nome_calendario || !payload.id_empresa || !payload.data_inicial || !payload.data_final) {
@@ -732,7 +640,6 @@ async function onSubmitCadastrarCalendario(ev) {
 async function onSubmitAdicionarEvento(ev) {
   ev.preventDefault();
 
-  // Garante que constraints HTML5 (required, min/max) sejam respeitadas
   const form = $("#formAdicionarEvento");
   if (form && !form.checkValidity()) {
     form.reportValidity();
@@ -761,18 +668,15 @@ async function onSubmitAdicionarEvento(ev) {
       body: JSON.stringify(payload),
     });
 
-    // aceita chaves tanto do PHP quanto do FastAPI
     const adicionados = Array.isArray(res?.adicionados) ? res.adicionados : (res?.added || []);
-    const duplicados  = Array.isArray(res?.duplicados)  ? res.duplicados  : (res?.duplicated || []);
+    const duplicados = Array.isArray(res?.duplicados) ? res.duplicados : (res?.duplicated || []);
 
-    const fmt = (d) => fmtBR(d);
     let msg = res?.msg || "Evento cadastrado e dias não letivos registrados!";
-
     if (duplicados?.length) {
-      const listaDup = duplicados.map(fmt).join(", ");
+      const listaDup = duplicados.map(d => fmtBR(d)).join(", ");
       const qtdNovos = adicionados?.length || 0;
       msg = `Os dias ${listaDup} já eram não letivos. ` +
-            (qtdNovos > 0 ? `${qtdNovos} dia(s) novo(s) adicionado(s).` : "Nenhum novo dia foi adicionado.");
+        (qtdNovos > 0 ? `${qtdNovos} dia(s) novo(s) adicionado(s).` : "Nenhum novo dia foi adicionado.");
     }
 
     alert(msg);
@@ -787,8 +691,6 @@ async function onSubmitAdicionarEvento(ev) {
   }
 }
 
-
-// regra: só exclui calendário se NÃO houver dias_não_letivos
 function podeExcluirCalendario(cal) {
   const arr = cal?.dias_nao_letivos;
   return !(Array.isArray(arr) && arr.length > 0);
@@ -852,7 +754,7 @@ async function abrirVisualizarCalendarioFull(cal) {
     `<strong>Empresa/Parceiro:</strong> ${nomeEmpresa(cal.id_empresa)}<br>`,
     `<strong>Instituição:</strong> ${nomeInstituicao(cal.id_instituicao)}<br>`,
     `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}<br>`,
-    `<strong>Criado em:</strong> ${fmtDateTimeBR(cal.data_criacao)}`
+    `<strong>Criado em:</strong> ${fmtDateTimeBR(cal.data_criacao, TZ)}`
   ].join("");
   $("#detalhesCalendarioFull").innerHTML = resumoHTML;
 
@@ -889,7 +791,7 @@ async function abrirVisualizarCalendarioFull(cal) {
       await removerDiaNaoLetivo(calId, dataOriginal);
       await carregarCalendarios();
       await carregarEventosNoCalendario();
-      const atualizado = getCalendarioById(calId) || cal; // fallback
+      const atualizado = getCalendarioById(calId) || cal;
       abrirVisualizarCalendarioFull(atualizado);
     }
   };
@@ -909,14 +811,14 @@ function abrirGerenciarEventos(cal) {
     `<strong>Empresa/Parceiro:</strong> ${nomeEmpresa(cal.id_empresa)}<br>`,
     `<strong>Instituição:</strong> ${nomeInstituicao(cal.id_instituicao)}<br>`,
     `<strong>Período:</strong> ${cal.data_inicial ? fmtBR(cal.data_inicial) : ""} a ${cal.data_final ? fmtBR(cal.data_final) : ""}<br>`,
-    `<strong>Criado em:</strong> ${fmtDateTimeBR(cal.data_criacao)}<br><br>`,
+    `<strong>Criado em:</strong> ${fmtDateTimeBR(cal.data_criacao, TZ)}<br><br>`,
     `<strong>Dias Não Letivos:</strong>`,
     `<ul id="listaDnl" style="margin-top:6px;">`,
     ...(Array.isArray(cal.dias_nao_letivos) && cal.dias_nao_letivos.length
       ? cal.dias_nao_letivos
-          .slice()
-          .sort((a, b) => String(a.data).localeCompare(String(b.data)))
-          .map(d => `
+        .slice()
+        .sort((a, b) => String(a.data).localeCompare(String(b.data)))
+        .map(d => `
             <li data-data="${d.data}">
               <span class="dnl-data">${fmtBR(d.data)}</span> - <span class="dnl-desc">${d.descricao || ""}</span>
               <button class="btn btn-icon btn-delete" title="Excluir" data-acao="remover" aria-label="Excluir dia" style="${delBtnStyle}">
@@ -954,7 +856,6 @@ function abrirGerenciarEventos(cal) {
   const btnRapido = $("#btnAdicionarEventoRapido");
   if (btnRapido) {
     btnRapido.addEventListener("click", async () => {
-      // prepara o form, abre, carrega lista e pré-seleciona este calendário
       prepareAdicionarEventoForm();
       openModal("modalAdicionarEvento");
       await carregarListaCalendariosParaEvento();
@@ -1003,242 +904,4 @@ function visualizarCalendario(cal) {
 
   $("#detalhesCalendario").innerHTML = html;
   openModal("modalVisualizarCalendario");
-}
-
-// Nova função para carregar turmas por calendário
-async function carregarTurmasPorCalendario(calendarioId) {
-  try {
-    const response = await fetch(`../backend/processa_turma.php`);
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-    
-    const turmas = await response.json();
-    
-    // Filtrar turmas pelo calendário
-    return turmas.filter(turma => turma.id_calendario === calendarioId);
-  } catch (error) {
-    console.error('Erro ao carregar turmas:', error);
-    return [];
-  }
-}
-
-// Nova função para exibir calendário com turmas
-async function exibirCalendarioComTurmas(calendarioId) {
-  try {
-    const calendario = getCalendarioById(calendarioId);
-    if (!calendario) {
-      alert('Calendário não encontrado.');
-      return;
-    }
-    
-    // Carregar turmas associadas ao calendário
-    const turmas = await carregarTurmasPorCalendario(calendarioId);
-    
-    // Limpar eventos existentes no FullCalendar
-    if (STATE.fc) {
-      STATE.fc.removeAllEvents();
-    }
-    
-    // Adicionar dias não letivos do calendário
-    if (Array.isArray(calendario.dias_nao_letivos)) {
-      calendario.dias_nao_letivos.forEach(dia => {
-        if (STATE.fc && dia.data) {
-          STATE.fc.addEvent({
-            id: `nao-letivo-${dia.data}`,
-            title: dia.descricao || 'Dia não letivo',
-            start: dia.data,
-            allDay: true,
-            backgroundColor: '#ff6b6b',
-            borderColor: '#ff5252',
-            textColor: '#ffffff'
-          });
-        }
-      });
-    }
-    
-    // Adicionar turmas como eventos
-    turmas.forEach(turma => {
-      if (STATE.fc && turma.data_inicio) {
-        const endDate = turma.data_fim || turma.data_inicio;
-        
-        STATE.fc.addEvent({
-          id: `turma-${turma._id || turma.id}`,
-          title: `${turma.codigo} - ${turma.turno}`,
-          start: turma.data_inicio,
-          end: endDate,
-          allDay: true,
-          backgroundColor: '#4CAF50',
-          borderColor: '#45a049',
-          textColor: '#ffffff',
-          extendedProps: {
-            tipo: 'turma',
-            turma: turma
-          }
-        });
-      }
-    });
-    
-    // Navegar para o período do calendário
-    if (STATE.fc && calendario.data_inicial) {
-      STATE.fc.gotoDate(calendario.data_inicial);
-    }
-    
-    // Mostrar informações do calendário selecionado
-    const infoDiv = document.createElement('div');
-    infoDiv.id = 'calendario-info';
-    infoDiv.innerHTML = `
-      <div style="background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #007bff;">
-        <h3 style="margin: 0 0 10px 0; color: #333;">📅 ${calendario.nome_calendario || 'Calendário'}</h3>
-        <p style="margin: 5px 0; color: #666;"><strong>Empresa:</strong> ${nomeEmpresa(calendario.id_empresa)}</p>
-        <p style="margin: 5px 0; color: #666;"><strong>Período:</strong> ${fmtBR(calendario.data_inicial)} até ${fmtBR(calendario.data_final)}</p>
-        <p style="margin: 5px 0; color: #666;"><strong>Turmas associadas:</strong> ${turmas.length}</p>
-        ${turmas.length > 0 ? `
-          <details style="margin-top: 10px;">
-            <summary style="cursor: pointer; color: #007bff;">Ver turmas (${turmas.length})</summary>
-            <ul style="margin: 10px 0 0 20px;">
-              ${turmas.map(t => `<li>${t.codigo} - ${t.turno} (${t.num_alunos || 0} alunos)</li>`).join('')}
-            </ul>
-          </details>
-        ` : ''}
-      </div>
-    `;
-    
-    // Remover info anterior se existir
-    const existingInfo = document.getElementById('calendario-info');
-    if (existingInfo) {
-      existingInfo.remove();
-    }
-    
-    // Inserir antes do calendário
-    const calendarEl = document.getElementById('calendar');
-    if (calendarEl) {
-      calendarEl.parentNode.insertBefore(infoDiv, calendarEl);
-    }
-    
-    console.log(`Calendário ${calendario.nome_calendario} carregado com ${turmas.length} turmas`);
-    
-  } catch (error) {
-    console.error('Erro ao exibir calendário com turmas:', error);
-    alert('Erro ao carregar calendário e turmas.');
-  }
-}
-
-// Nova função para carregar turmas por calendário
-async function carregarTurmasPorCalendario(calendarioId) {
-  try {
-    const response = await fetch(`../backend/processa_turma.php`);
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-    
-    const turmas = await response.json();
-    
-    // Filtrar turmas pelo calendário
-    return turmas.filter(turma => turma.id_calendario === calendarioId);
-  } catch (error) {
-    console.error('Erro ao carregar turmas:', error);
-    return [];
-  }
-}
-
-// Nova função para exibir calendário com turmas
-async function exibirCalendarioComTurmas(calendarioId) {
-  try {
-    const calendario = getCalendarioById(calendarioId);
-    if (!calendario) {
-      alert('Calendário não encontrado.');
-      return;
-    }
-    
-    // Carregar turmas associadas ao calendário
-    const turmas = await carregarTurmasPorCalendario(calendarioId);
-    
-    // Limpar eventos existentes no FullCalendar
-    if (STATE.fc) {
-      STATE.fc.removeAllEvents();
-    }
-    
-    // Adicionar dias não letivos do calendário
-    if (Array.isArray(calendario.dias_nao_letivos)) {
-      calendario.dias_nao_letivos.forEach(dia => {
-        if (STATE.fc && dia.data) {
-          STATE.fc.addEvent({
-            id: `nao-letivo-${dia.data}`,
-            title: dia.descricao || 'Dia não letivo',
-            start: dia.data,
-            allDay: true,
-            backgroundColor: '#ff6b6b',
-            borderColor: '#ff5252',
-            textColor: '#ffffff'
-          });
-        }
-      });
-    }
-    
-    // Adicionar turmas como eventos
-    turmas.forEach(turma => {
-      if (STATE.fc && turma.data_inicio) {
-        const endDate = turma.data_fim || turma.data_inicio;
-        
-        STATE.fc.addEvent({
-          id: `turma-${turma._id || turma.id}`,
-          title: `${turma.codigo} - ${turma.turno}`,
-          start: turma.data_inicio,
-          end: endDate,
-          allDay: true,
-          backgroundColor: '#4CAF50',
-          borderColor: '#45a049',
-          textColor: '#ffffff',
-          extendedProps: {
-            tipo: 'turma',
-            turma: turma
-          }
-        });
-      }
-    });
-    
-    // Navegar para o período do calendário
-    if (STATE.fc && calendario.data_inicial) {
-      STATE.fc.gotoDate(calendario.data_inicial);
-    }
-    
-    // Mostrar informações do calendário selecionado
-    const infoDiv = document.createElement('div');
-    infoDiv.id = 'calendario-info';
-    infoDiv.innerHTML = `
-      <div style="background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #007bff;">
-        <h3 style="margin: 0 0 10px 0; color: #333;">📅 ${calendario.nome_calendario || 'Calendário'}</h3>
-        <p style="margin: 5px 0; color: #666;"><strong>Empresa:</strong> ${nomeEmpresa(calendario.id_empresa)}</p>
-        <p style="margin: 5px 0; color: #666;"><strong>Período:</strong> ${fmtBR(calendario.data_inicial)} até ${fmtBR(calendario.data_final)}</p>
-        <p style="margin: 5px 0; color: #666;"><strong>Turmas associadas:</strong> ${turmas.length}</p>
-        ${turmas.length > 0 ? `
-          <details style="margin-top: 10px;">
-            <summary style="cursor: pointer; color: #007bff;">Ver turmas (${turmas.length})</summary>
-            <ul style="margin: 10px 0 0 20px;">
-              ${turmas.map(t => `<li>${t.codigo} - ${t.turno} (${t.num_alunos || 0} alunos)</li>`).join('')}
-            </ul>
-          </details>
-        ` : ''}
-      </div>
-    `;
-    
-    // Remover info anterior se existir
-    const existingInfo = document.getElementById('calendario-info');
-    if (existingInfo) {
-      existingInfo.remove();
-    }
-    
-    // Inserir antes do calendário
-    const calendarEl = document.getElementById('calendar');
-    if (calendarEl) {
-      calendarEl.parentNode.insertBefore(infoDiv, calendarEl);
-    }
-    
-    console.log(`Calendário ${calendario.nome_calendario} carregado com ${turmas.length} turmas`);
-    
-  } catch (error) {
-    console.error('Erro ao exibir calendário com turmas:', error);
-    alert('Erro ao carregar calendário e turmas.');
-  }
 }

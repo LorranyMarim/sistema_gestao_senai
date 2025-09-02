@@ -1,164 +1,384 @@
+// assets/js/dashboard.js
+(() => {
+  'use strict';
 
-// Função para normalizar o turno
-function normalizeTurno(turno) {
-    switch (turno.toUpperCase()) {
-        case 'MANHA': return 'Manhã';
-        case 'TARDE': return 'Tarde';
-        case 'NOITE': return 'Noite';
-        case 'INTEGRAL':
-        case 'TARDE/NOITE': return 'Integral';
-        default: return 'Indefinido';
-    }
-}
+  // ===== Helpers mínimos (funcionam mesmo sem geral.js, mas usam se existir) =====
+  const App = window.App || {};
+  const Dom = App.dom || {};
+  const $ = Dom.$ || ((sel, root = document) => root.querySelector(sel));
+  const runNowOrOnReady =
+    Dom.runNowOrOnReady ||
+    (fn => (document.readyState !== 'loading'
+      ? fn()
+      : document.addEventListener('DOMContentLoaded', fn, { once: true })));
 
-// Função para obter a área do curso
-function getAreaFromCourse(curso) {
-    const normalizedCourse = curso.toUpperCase();
-    for (const key in courseAreaMapping) {
-        if (normalizedCourse.includes(key.toUpperCase())) {
-            return courseAreaMapping[key];
-        }
-    }
-    return 'Outros'; // Área padrão se não encontrar correspondência
-}
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val);
+  }
 
-async function fetchTurmasData() {
-    try {
-
-        const response = await fetch('dados_dash.php');
-        if (!response.ok) {
-            throw new Error(`Erro HTTP! status: ${response.status}`);
-        }
-        turmasData = await response.json();
-        renderDashboard(); // Renderiza o dashboard após carregar os dados
-    } catch (error) {
-        console.error("Erro ao buscar dados das turmas:", error);
-        // Exibir uma mensagem de erro no dashboard, se necessário
-        document.getElementById('totalTurmas').textContent = 'Erro';
-        document.getElementById('totalAlunos').textContent = 'Erro';
-        document.getElementById('turmasAtivas').textContent = 'Erro';
-        document.getElementById('turmasIncompletas').textContent = 'Erro';
-    }
-}
-
-function renderDashboard() {
-    let totalTurmas = turmasData.length;
-    let totalAlunos = 0;
-    let turmasAtivasCount = 0;
-    let turmasIncompletasCount = 0;
-    let distribuicaoTurno = {};
-    let distribuicaoArea = {};
-    let proximasTurmas = [];
-    let turmasComDadosVazios = [];
-
-    const today = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(today.getDate() + 30);
-
-    turmasData.forEach(turma => {
-        // Total de alunos
-        const numAlunos = parseInt(turma.num_alunos);
-        if (!isNaN(numAlunos)) {
-            totalAlunos += numAlunos;
-        }
-
-        // Distribuição por Turno
-        const turnoNormalizado = normalizeTurno(turma.turno);
-        distribuicaoTurno[turnoNormalizado] = (distribuicaoTurno[turnoNormalizado] || 0) + 1;
-
-        // Distribuição por Área
-        const area = getAreaFromCourse(turma.curso);
-        distribuicaoArea[area] = (distribuicaoArea[area] || 0) + 1;
-
-        // Turmas com dados incompletos
-        if (turma.data_inicio === '' || turma.data_termino === '' || turma.num_alunos === '') {
-            turmasIncompletasCount++;
-            turmasComDadosVazios.push(turma);
-        }
-
-        // Turmas Ativas e Próximas Turmas
-        if (turma.data_inicio) {
-            const startDate = new Date(turma.data_inicio);
-            const endDate = turma.data_termino ? new Date(turma.data_termino) : null;
-
-            // Turmas Ativas (simplificado: iniciaram e ainda não terminaram, ou sem data de término)
-            if (startDate <= today && (!endDate || endDate >= today)) {
-                turmasAtivasCount++;
-            }
-
-            // Próximas Turmas (iniciando nos próximos 30 dias)
-            if (startDate > today && startDate <= thirtyDaysFromNow) {
-                proximasTurmas.push(turma);
-            }
-        }
+  // Normaliza status vindo como booleano / string
+  const normalizeStatus =
+    App.format?.normalizeStatus ||
+    (v => {
+      if (typeof v === 'boolean') return v ? 'Ativo' : 'Inativo';
+      const t = String(v || '').trim().toLowerCase();
+      if (t === 'ativo' || t === 'ativa' || t === 'true' || t === '1') return 'Ativo';
+      if (t === 'inativo' || t === 'inativa' || t === 'false' || t === '0') return 'Inativo';
+      return t ? t[0].toUpperCase() + t.slice(1) : '—';
     });
 
-    // Atualizar os cartões de resumo
-    document.getElementById('totalTurmas').textContent = totalTurmas;
-    document.getElementById('totalAlunos').textContent = totalAlunos;
-    document.getElementById('turmasAtivas').textContent = turmasAtivasCount;
-    document.getElementById('turmasIncompletas').textContent = turmasIncompletasCount;
+  // ====== Fallbacks de obtenção de métricas ======
+  async function getMetricsFromPrefetch() {
+    const metrics =
+      (await App.prefetch?.getWithRevalidate?.('dashboard_metrics')) ||
+      (await App.prefetch?.get?.('dashboard_metrics'));
+    return metrics || null;
+  }
 
-    // Atualizar Distribuição por Turno
-    const distribuicaoTurnoEl = document.getElementById('distribuicaoTurno');
-    distribuicaoTurnoEl.innerHTML = '';
-    for (const turno in distribuicaoTurno) {
-        distribuicaoTurnoEl.innerHTML += `<p class="text-gray-700">${turno}: <span class="font-bold">${distribuicaoTurno[turno]}</span></p>`;
+  async function getMetricsFromPhp() {
+    try {
+      const res = await fetch('processa_dashboard.php?action=metrics', {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json().catch(() => null);
+      const data = json?.data || json;
+      if (!data) return null;
+      const { total_turmas, total_alunos, turmas_ativas, turmas_incompletas } = data;
+      if ([total_turmas, total_alunos, turmas_ativas].some(v => v == null)) return null;
+      return {
+        total_turmas,
+        total_alunos,
+        turmas_ativas,
+        turmas_incompletas: Number.isFinite(turmas_incompletas) ? turmas_incompletas : 0
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // Busca lista de turmas do cache do prefetch (já normalizada para array)
+  async function getTurmasFromPrefetch() {
+    if (App.prefetch?.forView) {
+      await App.prefetch.forView('dashboard');
+    }
+    const turmas =
+      (await App.prefetch?.getWithRevalidate?.('turmas')) ||
+      (await App.cache?.get?.('turmas')) ||
+      null;
+    return Array.isArray(turmas) ? turmas : null;
+  }
+
+  // Controla concorrência para buscar detalhes das turmas (para somar num_alunos e ucs sem instrutor)
+  async function scanDetailsAndAggregate(turmas, {
+    baseUrl = 'http://localhost:8000/api/turmas',
+    maxConcurrency = 6,
+    maxItems = 300,
+    timeoutMs = 15000
+  } = {}) {
+    const items = turmas.slice(0, maxItems);
+
+    const controller = new AbortController();
+    const kill = setTimeout(() => controller.abort(), timeoutMs);
+    let idx = 0, active = 0;
+
+    let totalAlunos = 0;
+    let ucsSemInstrutor = 0;
+
+    return await new Promise((resolve) => {
+      const next = () => {
+        if (idx >= items.length && active === 0) {
+          clearTimeout(kill);
+          resolve({ totalAlunos, ucsSemInstrutor });
+          return;
+        }
+        while (active < maxConcurrency && idx < items.length) {
+          const t = items[idx++];
+          const id = t?.id || t?._id || t?.id_turma;
+          if (!id) continue;
+          active++;
+          fetch(`${baseUrl}/${encodeURIComponent(id)}`, {
+            signal: controller.signal,
+            credentials: 'include',
+            headers: { 'Accept': 'application/json' }
+          })
+            .then(r => r.ok ? r.json() : null)
+            .then(doc => {
+              const n = Number(doc?.num_alunos);
+              if (!Number.isNaN(n) && n > 0) totalAlunos += n;
+
+              const ucs = Array.isArray(doc?.unidades_curriculares) ? doc.unidades_curriculares : [];
+              for (const uc of ucs) {
+                const v = uc?.id_instrutor;
+                if (v === undefined || v === null || v === '') {
+                  ucsSemInstrutor += 1;
+                }
+              }
+            })
+            .catch(() => { /* ignora falhas individuais */ })
+            .finally(() => { active--; next(); });
+        }
+      };
+      next();
+    });
+  }
+
+  async function computeMetricsFromTurmas() {
+    const turmas = await getTurmasFromPrefetch();
+    if (!turmas) return null;
+
+    const total_turmas = turmas.length;
+
+    let turmas_ativas = 0;
+    for (const t of turmas) {
+      if (normalizeStatus(t?.status) === 'Ativo') turmas_ativas++;
     }
 
-    // Atualizar Distribuição por Área
-    const distribuicaoAreaEl = document.getElementById('distribuicaoArea');
-    distribuicaoAreaEl.innerHTML = '';
-    for (const area in distribuicaoArea) {
-        distribuicaoAreaEl.innerHTML += `<p class="text-gray-700">${area}: <span class="font-bold">${distribuicaoArea[area]}</span></p>`;
+    const { totalAlunos, ucsSemInstrutor } =
+      await scanDetailsAndAggregate(turmas).catch(() => ({ totalAlunos: 0, ucsSemInstrutor: 0 }));
+
+    return {
+      total_turmas,
+      total_alunos: totalAlunos,
+      turmas_ativas,
+      turmas_incompletas: ucsSemInstrutor
+    };
+  }
+
+  async function loadMetrics() {
+    try {
+      let metrics = await getMetricsFromPrefetch();
+      if (!metrics) metrics = await getMetricsFromPhp();
+      if (!metrics) metrics = await computeMetricsFromTurmas();
+
+      const {
+        total_turmas = 0,
+        total_alunos = 0,
+        turmas_ativas = 0,
+        turmas_incompletas = 0,
+      } = metrics || {};
+
+      setText('totalTurmas', total_turmas);
+      setText('totalAlunos', total_alunos);
+      setText('turmasAtivas', turmas_ativas);
+      setText('turmasIncompletas', turmas_incompletas);
+    } catch (err) {
+      console.error('Erro ao carregar métricas do dashboard:', err);
+      setText('totalTurmas', '—');
+      setText('totalAlunos', '—');
+      setText('turmasAtivas', '—');
+      setText('turmasIncompletas', '—');
     }
+  }
 
-    // Atualizar Próximas Turmas
-    const proximasTurmasEl = document.getElementById('proximasTurmas');
-    proximasTurmasEl.innerHTML = '';
-    if (proximasTurmas.length > 0) {
-        document.getElementById('noProximasTurmas').classList.add('hidden');
-        proximasTurmas.forEach(turma => {
-            proximasTurmasEl.innerHTML += `<li>${turma.codigo_turma} - ${turma.curso} (Início: ${turma.data_inicio})</li>`;
-        });
-    } else {
-        document.getElementById('noProximasTurmas').classList.remove('hidden');
-    }
+  function setupMenuToggle() {
+    const menuToggle = $('#menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const container = document.querySelector('.dashboard-container');
 
-    // Atualizar Turmas com Dados Vazios
-    const turmasComDadosVaziosEl = document.getElementById('turmasComDadosVazios');
-    turmasComDadosVaziosEl.innerHTML = '';
-    if (turmasComDadosVazios.length > 0) {
-        document.getElementById('noTurmasComDadosVazios').classList.add('hidden');
-        turmasComDadosVazios.forEach(turma => {
-            let missingFields = [];
-            if (turma.data_inicio === '') missingFields.push('Data de Início');
-            if (turma.data_termino === '') missingFields.push('Data de Término');
-            if (turma.num_alunos === '') missingFields.push('Número de Alunos');
-            turmasComDadosVaziosEl.innerHTML += `<li>${turma.codigo_turma} - ${turma.curso} (Faltando: ${missingFields.join(', ')})</li>`;
-        });
-    } else {
-        document.getElementById('noTurmasComDadosVazios').classList.remove('hidden');
-    }
-}
+    if (!menuToggle || !sidebar || !container) return;
 
-// Renderiza o dashboard quando o DOM estiver completamente carregado
-document.addEventListener('DOMContentLoaded', fetchTurmasData); // Chama a função para buscar os dados
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+      container.classList.toggle('sidebar-active');
+    });
 
-const menuToggle = document.getElementById('menu-toggle');
-const sidebar = document.querySelector('.sidebar');
-const dashboardContainer = document.querySelector('.dashboard-container');
-
-// Função para abrir/fechar o menu
-menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('active');
-    dashboardContainer.classList.toggle('sidebar-active');
-});
-
-// Função para fechar o menu ao clicar fora dele
-dashboardContainer.addEventListener('click', (event) => {
-    if (dashboardContainer.classList.contains('sidebar-active') && !sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+    container.addEventListener('click', (ev) => {
+      if (
+        container.classList.contains('sidebar-active') &&
+        !sidebar.contains(ev.target) &&
+        !menuToggle.contains(ev.target)
+      ) {
         sidebar.classList.remove('active');
-        dashboardContainer.classList.remove('sidebar-active');
+        container.classList.remove('sidebar-active');
+      }
+    });
+  }
+
+  // ==================== GRÁFICOS ====================
+  let __chartTurnosInstance = null;
+  let __chartEixosInstance = null;
+
+  // Barras: alunos por turno (mantido como está)
+  async function chartTurnos() {
+    try {
+      const res = await fetch('http://localhost:8000/api/dashboard/alunos_por_turno', {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // garante canvas dentro do card
+      const container = document.getElementById('distribuicaoTurno');
+      if (!container) return;
+      let canvas = document.getElementById('chartjs-bar');
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'chartjs-bar';
+        canvas.height = 120;
+        container.innerHTML = '';
+        container.appendChild(canvas);
+      }
+
+      if (__chartTurnosInstance?.destroy) {
+        __chartTurnosInstance.destroy();
+        __chartTurnosInstance = null;
+      }
+
+      __chartTurnosInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: ["Manhã", "Tarde", "Noite"],
+          datasets: [{
+            label: "Alunos",
+            backgroundColor: window.theme?.primary || "#2c93a5ff",
+            borderColor: window.theme?.primary || "#2c93a5ff",
+            hoverBackgroundColor: window.theme?.primary || "#1d616dff",
+            hoverBorderColor: window.theme?.primary || "#1d616dff",
+            data: [data["Manhã"] || 0, data["Tarde"] || 0, data["Noite"] || 0],
+            barPercentage: .75,
+            categoryPercentage: .5
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    } catch (err) {
+      console.error("Erro ao carregar gráfico de turnos:", err);
     }
-});
+  }
+
+  // ---------- Helper: tenta múltiplas URLs até obter {labels, data} válido ----------
+  function extractLabelsValues(anyPayload) {
+    // 1) Se veio como array de agregação: [{ _id, qtd_turmas }, ...]
+    if (Array.isArray(anyPayload)) {
+      const labels = anyPayload.map(r => (r && (r._id ?? r.id ?? '(Sem eixo)')));
+      const values = anyPayload.map(r => Number(r?.qtd_turmas ?? r?.qtd ?? r?.count ?? 0));
+      if (labels.length && values.length) return { labels, values };
+    }
+    // 2) Se veio embrulhado: { data: { labels, data } } OU { labels, data }
+    const obj = anyPayload?.data || anyPayload || {};
+    if (Array.isArray(obj.labels) && Array.isArray(obj.data)) {
+      return { labels: obj.labels, values: obj.data };
+    }
+    // 3) Se veio como { items: [...] } no formato de agregação
+    if (Array.isArray(obj.items)) {
+      const labels = obj.items.map(r => (r && (r._id ?? r.id ?? '(Sem eixo)')));
+      const values = obj.items.map(r => Number(r?.qtd_turmas ?? r?.qtd ?? r?.count ?? 0));
+      if (labels.length && values.length) return { labels, values };
+    }
+    return { labels: [], values: [] };
+  }
+
+  async function tryFetchPie(url, fetchOpts) {
+    const res = await fetch(url, fetchOpts);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = await res.json().catch(() => null);
+    const { labels, values } = extractLabelsValues(payload);
+    if (labels.length && values.length) return { labels, values };
+    throw new Error('payload vazio');
+  }
+
+  // Pie: turmas ativas por eixo_tecnologico (com fallback robusto)
+  async function chartEixos() {
+    try {
+      const attempts = [
+        // 1) usa o proxy PHP que EXISTE
+        { url: 'processa_dashboard.php?action=eixos_tecnologicos', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
+        // 2) tenta direto na API (se CORS permitir)
+        { url: 'http://localhost:8000/api/dashboard/eixos_tecnologicos_pie', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
+        // 3) (opcional) se você criar a action eixos_tecnologicos_pie no PHP
+        { url: 'processa_dashboard.php?action=eixos_tecnologicos_pie', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
+        // 4) endpoint alternativo, se existir
+        { url: 'http://localhost:8000/api/dashboard/eixos_tecnologicos', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
+      ];
+      let labels = [], values = [];
+      for (const a of attempts) {
+        try {
+          const r = await tryFetchPie(a.url, a.opts);
+          labels = r.labels; values = r.values;
+          console.debug('[pie] usando', a.url, { labels, values }); // <— opcional
+          break;
+        } catch (e){
+          console.debug('[pie] falhou', a.url, e); // <— opcional
+         }
+      }
+      if (!labels.length || !values.length) {
+        labels = ['Sem dados'];
+        values = [1];
+      }
+
+      const container = document.getElementById('distribuicaoArea');
+      if (!container) return;
+
+      let canvas = document.getElementById('chartjs-pie');
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'chartjs-pie';
+        canvas.style.minHeight = '240px';
+        container.innerHTML = '';
+        container.appendChild(canvas);
+      }
+
+      if (__chartEixosInstance?.destroy) {
+        __chartEixosInstance.destroy();
+        __chartEixosInstance = null;
+      }
+
+      const basePalette = [
+        window.theme?.primary || '#4F46E5',
+        window.theme?.success || '#22C55E',
+        window.theme?.warning || '#F59E0B',
+        window.theme?.info || '#0EA5E9',
+        window.theme?.danger || '#EF4444',
+        '#8B5CF6', '#10B981', '#EAB308', '#06B6D4', '#F97316', '#84CC16'
+      ];
+      const colors = labels.map((_, i) => basePalette[i % basePalette.length]);
+
+      __chartEixosInstance = new Chart(canvas, {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderColor: 'transparent'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const total = values.reduce((a, b) => a + (Number(b) || 0), 0) || 0;
+                  const val = Number(ctx.raw) || 0;
+                  const pct = total ? ((val / total) * 100).toFixed(1) : '0.0';
+                  return `${ctx.label}: ${val} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (err) {
+      console.error('Erro ao carregar gráfico de eixos:', err);
+    }
+  }
+
+  // ===== bootstrap =====
+  runNowOrOnReady(async () => {
+    setupMenuToggle();
+    await loadMetrics();
+    await chartTurnos();
+    await chartEixos(); // <-- mantenha só estas duas chamadas
+  });
+})();

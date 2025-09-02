@@ -2880,3 +2880,9 @@ body.modal-open {
 #btnClearFilters{
     background-color: #DCDCDC;
 }
+#btnClearFilters.is-disabled,
+#btnClearFilters:disabled {
+  opacity: .5;
+  pointer-events: none;
+  cursor: not-allowed;
+}

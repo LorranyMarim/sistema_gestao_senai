@@ -1,7 +1,8 @@
 # rotas_usuario.py
 from fastapi import APIRouter, HTTPException, Response, Request, status
 from db import get_mongo_db
-from auth_utils import create_access_token
+from auth import verificar_senha
+from auth_utils import criar_token
 from pydantic import BaseModel, validator
 import re
 import time
@@ -53,25 +54,29 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
                 # Libera login após lock
                 login_attempts[ip] = {'count': 0, 'last_time': now}
 
-    # Verificação simplificada: apenas aceita admin/admin
-    if dados.user_name != "admin" or dados.senha != "admin":
+    db = get_mongo_db()
+    usuario = db["usuario"].find_one({"user_name": dados.user_name})
+
+    # Mensagem genérica para falha
+    erro_login = HTTPException(status_code=401, detail="Usuário ou senha incorretos.")
+
+    if not usuario or not verificar_senha(dados.senha, usuario['senha']):
         login_attempts[ip]['count'] += 1
         login_attempts[ip]['last_time'] = now
-        raise HTTPException(status_code=401, detail="Usuário ou senha incorretos.")
+        raise erro_login
 
     # Reset tentativas ao sucesso
     login_attempts[ip] = {'count': 0, 'last_time': now}
 
     # Gera token (sessão curta de 30 minutos)
     from datetime import timedelta
-    token = create_access_token({"sub": "admin"}, expires_delta=timedelta(minutes=30))
+    token = criar_token({"sub": usuario["user_name"]}, expires_delta=timedelta(minutes=30))
     response.set_cookie(key="session_token", value=token, httponly=True, max_age=30*60)
 
-    # Retorna dados fixos do usuário admin
     return {
-        "id": "admin_id",
-        "nome": "Administrador",
-        "tipo_acesso": "admin",
-        "user_name": "admin",
-        "instituicao_id": "senai_betim"
+        "id": str(usuario["_id"]),
+        "nome": usuario.get("nome"),
+        "tipo_acesso": usuario.get("tipo_acesso"),
+        "user_name": usuario.get("user_name"),
+        "instituicao_id": usuario.get("instituicao_id")
     }

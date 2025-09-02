@@ -24,7 +24,7 @@ class TurmaCreate(BaseModel):
     id_instituicao: str
     id_calendario: str
     id_empresa: str
-    status: Optional[bool] = True  # <<< NOVO: nasce ativa por padrão
+    status: Optional[bool] = True  # nasce ativa por padrão
     unidades_curriculares: List[UnidadeCurricularTurma]
 
 def _to_oid(value: str, field: str) -> ObjectId:
@@ -34,9 +34,8 @@ def _to_oid(value: str, field: str) -> ObjectId:
         raise HTTPException(status_code=400, detail=f"Campo '{field}' inválido")
 
 def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
-    """Serialização enxuta para listagem"""
+    """Serialização enxuta para listagem (usada no /api/turmas)."""
     out = {
-        "_id": str(doc.get("_id")),  # Adicionar _id para compatibilidade
         "id": str(doc.get("_id")),
         "codigo": doc.get("codigo", ""),
         "data_inicio": doc.get("data_inicio", ""),
@@ -49,7 +48,7 @@ def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 def _serialize_full(doc: Dict[str, Any]) -> Dict[str, Any]:
-    """Serialização completa para /{id}"""
+    """Serialização completa para /api/turmas/{id} (detalhe)."""
     doc = dict(doc)
     doc["id"] = str(doc.pop("_id"))
     for f in ["id_curso", "id_instituicao", "id_calendario", "id_empresa"]:
@@ -73,15 +72,20 @@ def criar_turma(turma: TurmaCreate):
     if doc.get("status") is None:
         doc["status"] = True
 
-    # IDs
+    # IDs para ObjectId
     doc["id_curso"]       = _to_oid(doc["id_curso"], "id_curso")
     doc["id_instituicao"] = _to_oid(doc["id_instituicao"], "id_instituicao")
     doc["id_calendario"]  = _to_oid(doc["id_calendario"], "id_calendario")
     doc["id_empresa"]     = _to_oid(doc["id_empresa"], "id_empresa")
 
     for uc in doc["unidades_curriculares"]:
-        uc["id_uc"]        = _to_oid(uc["id_uc"], "unidades_curriculares[].id_uc")
-        uc["id_instrutor"] = _to_oid(uc["id_instrutor"], "unidades_curriculares[].id_instrutor")
+        uc["id_uc"] = _to_oid(uc["id_uc"], "unidades_curriculares[].id_uc")
+        id_instr = uc.get("id_instrutor")
+        if id_instr is None or str(id_instr).strip() == "":
+         uc["id_instrutor"] = ""   # mantém vazio
+        else:
+         uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
+
 
     res = db["turma"].insert_one(doc)
     return {"msg": "Turma cadastrada com sucesso", "id": str(res.inserted_id)}
@@ -100,8 +104,9 @@ def listar_turmas(
 ):
     """
     Retorna {items, page, page_size, total}
-    Projeta campos necessários para a listagem:
-    codigo, data_inicio, data_fim, turno, status, id_empresa, id_curso
+
+    Projeta os campos necessários para a listagem no frontend:
+      codigo, data_inicio, data_fim, turno, status, id_empresa, id_curso
     """
     db = get_mongo_db()
     coll = db["turma"]
@@ -141,10 +146,10 @@ def listar_turmas(
                 "codigo": 1,
                 "data_inicio": 1,
                 "data_fim": 1,
-                "turno": 1,      # <<< necessário para coluna TURNO
-                "status": 1,     # <<< necessário para coluna STATUS
-                "id_empresa": 1, # <<< necessário para mapear EMPRESA no front
-                "id_curso": 1,   # <<< necessário para mapear CURSO no front
+                "turno": 1,      # necessário para coluna TURNO
+                "status": 1,     # necessário para coluna STATUS
+                "id_empresa": 1, # necessário para mapear EMPRESA no front
+                "id_curso": 1,   # necessário para mapear CURSO no front
             },
         )
         .sort(sort_key, sort_val)
@@ -184,8 +189,12 @@ def atualizar_turma(turma_id: str, turma: TurmaCreate):
     doc["id_empresa"]     = _to_oid(doc["id_empresa"], "id_empresa")
 
     for uc in doc["unidades_curriculares"]:
-        uc["id_uc"]        = _to_oid(uc["id_uc"], "unidades_curriculares[].id_uc")
-        uc["id_instrutor"] = _to_oid(uc["id_instrutor"], "unidades_curriculares[].id_instrutor")
+        uc["id_uc"] = _to_oid(uc["id_uc"], "unidades_curriculares[].id_uc")
+        id_instr = uc.get("id_instrutor")
+        if id_instr is None or str(id_instr).strip() == "":
+         uc["id_instrutor"] = ""   # mantém vazio
+        else:
+         uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
 
     res = db["turma"].update_one({"_id": _id}, {"$set": doc})
     if res.matched_count == 0:

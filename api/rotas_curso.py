@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body, status
-from pydantic import BaseModel, Field, conint, constr, validator
+from pydantic import BaseModel, conint, constr, validator
 from enum import Enum
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from bson import ObjectId
 import re
@@ -34,7 +34,6 @@ class EixoEnum(str, Enum):
     TI = "TI"
     MetalMecanica = "Metal Mecânica"
 
-
 # ========================= Submodelos UC =========================
 class ModalidadeCarga(BaseModel):
     carga_horaria: conint(ge=0) = 0
@@ -47,12 +46,9 @@ class OrdemUC(BaseModel):
     presencial: ModalidadeCarga = ModalidadeCarga()
     ead: ModalidadeCarga = ModalidadeCarga()
 
-
 # ========================= Modelos Curso =========================
 class CursoIn(BaseModel):
     instituicao_id: constr(min_length=1)
-    # empresa pode ser 1 id (string) ou lista de ids
-    empresa: Union[constr(min_length=1), List[constr(min_length=1)]]
     nome: constr(min_length=3, max_length=100)
     nivel_curso: NivelEnum
     tipo: TipoEnum
@@ -72,10 +68,8 @@ class CursoIn(BaseModel):
             raise ValueError("Existem UCs duplicadas na lista.")
         return v
 
-# PUT recebe a mesma estrutura (frontend envia tudo),
-# mas poderíamos aceitar parciais. Mantemos CursoIn para validação forte.
+# PUT recebe a mesma estrutura (frontend envia tudo)
 CursoUpdate = CursoIn
-
 
 # ========================= Utils =========================
 HEX24 = re.compile(r"^[0-9a-fA-F]{24}$")
@@ -91,7 +85,6 @@ def _to_obj_id(v: Any):
 def _strip_tags(s: Optional[str]) -> Optional[str]:
     if s is None:
         return None
-    # remove HTML simples e normaliza espaços
     s = re.sub(r"<[^>]*>", "", s or "")
     return re.sub(r"\s+", " ", s).strip()
 
@@ -104,22 +97,15 @@ def _normalize(doc: dict) -> dict:
     # instituicao_id -> str
     if isinstance(doc.get("instituicao_id"), ObjectId):
         doc["instituicao_id"] = str(doc["instituicao_id"])
-    # empresa pode ser lista ou único
-    if "empresa" in doc:
-        if isinstance(doc["empresa"], list):
-            doc["empresa"] = [str(x) for x in doc["empresa"]]
-        elif isinstance(doc["empresa"], ObjectId):
-            doc["empresa"] = str(doc["empresa"])
     # data_criacao -> ISO UTC string
     dt = doc.get("data_criacao")
     if isinstance(dt, datetime):
         doc["data_criacao"] = dt.astimezone(timezone.utc).isoformat()
     return doc
 
-
 def _check_refs(db, curso: CursoIn) -> Dict[str, str]:
     """
-    Verifica se instituicao_id, empresa(s) e cada UC existem.
+    Verifica se instituicao_id e cada UC existem.
     Retorna dict {campo: "mensagem"} com erros; vazio se ok.
     """
     errors: Dict[str, str] = {}
@@ -129,14 +115,6 @@ def _check_refs(db, curso: CursoIn) -> Dict[str, str]:
     if not db["instituicao"].find_one({"_id": inst_id}):
         errors["instituicao_id"] = "Instituição não encontrada."
 
-    # Empresa(s) – aceitar único ou lista
-    emp_val = curso.empresa
-    emp_ids = emp_val if isinstance(emp_val, list) else [emp_val]
-    for idx, e in enumerate(emp_ids):
-        oid = _to_obj_id(e)
-        if not db["empresa"].find_one({"_id": oid}):
-            errors[f"empresa[{idx}]"] = "Empresa/Parceiro não encontrado."
-
     # UCs
     for idx, uc in enumerate(curso.ordem_ucs):
         oid = _to_obj_id(uc.id)
@@ -145,11 +123,9 @@ def _check_refs(db, curso: CursoIn) -> Dict[str, str]:
 
     return errors
 
-
 def _conflict_exists(db, curso: CursoIn, exclude_id: Optional[str] = None) -> bool:
     """
-    Conflito: mesmo nome + instituicao_id + categoria.
-    Busca case-insensitive pelo nome.
+    Conflito: mesmo nome + instituicao_id + categoria (case-insensitive no nome).
     """
     filtro: Dict[str, Any] = {
         "instituicao_id": curso.instituicao_id,
@@ -163,7 +139,6 @@ def _conflict_exists(db, curso: CursoIn, exclude_id: Optional[str] = None) -> bo
 
     return db["curso"].find_one(filtro) is not None
 
-
 # ========================= Rotas =========================
 @router.get("/api/cursos")
 def listar_cursos():
@@ -171,31 +146,18 @@ def listar_cursos():
     itens = list(db["curso"].find({}).sort([("data_criacao", -1), ("_id", -1)]))
     return [_normalize(x) for x in itens]
 
-
 @router.post("/api/cursos", status_code=status.HTTP_201_CREATED)
 def criar_curso(payload: dict = Body(...)):
     db = get_mongo_db()
 
     # Sanitização suave (strings)
-    if "nome" in payload:
-        payload["nome"] = _strip_tags(payload.get("nome"))
-    if "observacao" in payload:
-        payload["observacao"] = _strip_tags(payload.get("observacao"))
-    if "categoria" in payload:
-        payload["categoria"] = _strip_tags(payload.get("categoria"))
-    if "eixo_tecnologico" in payload:
-        payload["eixo_tecnologico"] = _strip_tags(payload.get("eixo_tecnologico"))
-    if "tipo" in payload:
-        payload["tipo"] = _strip_tags(payload.get("tipo"))
-    if "nivel_curso" in payload:
-        payload["nivel_curso"] = _strip_tags(payload.get("nivel_curso"))
-    if "status" in payload:
-        payload["status"] = _strip_tags(payload.get("status"))
+    for field in ("nome", "observacao", "categoria", "eixo_tecnologico", "tipo", "nivel_curso", "status"):
+        if field in payload:
+            payload[field] = _strip_tags(payload.get(field))
 
     try:
         curso = CursoIn(**payload)
     except Exception as e:
-        # pydantic já informa o campo
         raise HTTPException(status_code=422, detail=str(e))
 
     # Refs
@@ -208,15 +170,11 @@ def criar_curso(payload: dict = Body(...)):
         raise HTTPException(status_code=409, detail="Esta combinação de nome + instituição + categoria já existe.")
 
     data = curso.dict()
-
-    # Garante que data_criacao seja definida pelo servidor (ignora a do cliente)
     data["data_criacao"] = datetime.now(timezone.utc)
 
-    # Insere
     inserted = db["curso"].insert_one(data)
     saved = db["curso"].find_one({"_id": inserted.inserted_id})
     return _normalize(saved)
-
 
 @router.put("/api/cursos/{id}")
 def atualizar_curso(id: str, payload: dict = Body(...)):
@@ -225,10 +183,9 @@ def atualizar_curso(id: str, payload: dict = Body(...)):
         raise HTTPException(status_code=404, detail="Curso não encontrado")
 
     # Sanitização suave
-    if "nome" in payload:
-        payload["nome"] = _strip_tags(payload.get("nome"))
-    if "observacao" in payload:
-        payload["observacao"] = _strip_tags(payload.get("observacao"))
+    for field in ("nome", "observacao"):
+        if field in payload:
+            payload[field] = _strip_tags(payload.get(field))
 
     # Nunca permitir alteração de data_criacao
     payload.pop("data_criacao", None)
@@ -239,16 +196,13 @@ def atualizar_curso(id: str, payload: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    # Verifica existência do curso
     if not db["curso"].find_one({"_id": ObjectId(id)}):
         raise HTTPException(status_code=404, detail="Curso não encontrado")
 
-    # Refs
     ref_errors = _check_refs(db, curso)
     if ref_errors:
         raise HTTPException(status_code=422, detail=ref_errors)
 
-    # Duplicidade (exclui o próprio id)
     if _conflict_exists(db, curso, exclude_id=id):
         raise HTTPException(status_code=409, detail="Esta combinação de nome + instituição + categoria já existe.")
 
@@ -257,7 +211,6 @@ def atualizar_curso(id: str, payload: dict = Body(...)):
         updated = db["curso"].find_one({"_id": ObjectId(id)})
         return _normalize(updated)
     raise HTTPException(status_code=404, detail="Curso não encontrado")
-
 
 @router.delete("/api/cursos/{id}")
 def deletar_curso(id: str):

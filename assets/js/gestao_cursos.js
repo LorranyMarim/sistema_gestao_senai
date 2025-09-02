@@ -4,7 +4,6 @@
 const API_CURSO = '../backend/processa_curso.php';
 const API_INST  = '../backend/processa_instituicao.php';
 const API_UC    = '../backend/processa_unidade_curricular.php';
-const API_EMP   = '../backend/processa_empresa.php';
 
 // ======================= Domínio (conjuntos permitidos) =======================
 const TIPOS_SET   = new Set(['Presencial', 'EAD', 'Semipresencial']);
@@ -14,7 +13,6 @@ const CATEG_SET   = new Set(['C', 'A']);
 const EIXO_SET    = new Set(['TI', 'Metal Mecânica']);
 
 // ======================= Cache/estado =======================
-let empresasCache = [];
 let cursosCache = [];
 let instituicoesCache = [];
 let ucsCache = [];
@@ -26,14 +24,13 @@ let modoEdicao = false;
 function setLoadingTable(on) {
   const $tbody = $('#cursosTable tbody');
   if (on) {
-    $tbody.html('<tr><td colspan="8">Carregando...</td></tr>');
+    $tbody.html('<tr><td colspan="7">Carregando...</td></tr>');
   } else if (!$tbody.children().length) {
-    $tbody.html('<tr><td colspan="8">Nenhum curso encontrado.</td></tr>');
+    $tbody.html('<tr><td colspan="7">Nenhum curso encontrado.</td></tr>');
   }
 }
 
 function showToast(msg, type = 'info') {
-  // Simples: use alert. Se houver biblioteca de toasts, troque aqui.
   alert(msg);
 }
 
@@ -132,29 +129,11 @@ $(document).ready(function () {
   $('#searchCurso').on('input', filtrarCursos);
 
   $('#btnAddCurso').on('click', () => {
-    preencherSelectConvenios();
     abrirModalCurso(false, null);
   });
 
   $('#formCurso').on('submit', salvarCurso);
   $('#saveAllUcsBtn').on('click', salvarUcsConfig);
-
-  // Event listeners para os botões de ação da tabela
-  $(document).on('click', '.btn-view', function() {
-    const cursoId = $(this).data('id');
-    mostrarDetalheCurso(cursoId);
-  });
-
-  $(document).on('click', '.btn-edit', function() {
-    const cursoId = $(this).data('id');
-    preencherSelectConvenios();
-    abrirModalCurso(true, cursoId);
-  });
-
-  $(document).on('click', '.btn-delete', function() {
-    const cursoId = $(this).data('id');
-    excluirCurso(cursoId);
-  });
 
   // limpar erros inline ao digitar
   $('#formCurso').on('input change', 'input, select, textarea', function () {
@@ -165,17 +144,15 @@ $(document).ready(function () {
 // ======================= Carga inicial =======================
 async function carregarCursos() {
   setLoadingTable(true);
-  const [cursos, insts, emps] = await Promise.all([
+  const [cursos, insts] = await Promise.all([
     fetchJson(API_CURSO, []),
     fetchJson(API_INST, []),
-    fetchJson(API_EMP, [])
   ]);
   const ucs = await fetchAllUCs(1000);
 
   cursosCache = cursos || [];
   instituicoesCache = insts || [];
   ucsCache = ucs || [];
-  empresasCache = emps || [];
 
   ucDataMap = {};
   ucsCache.forEach(uc => {
@@ -188,7 +165,7 @@ async function carregarCursos() {
 
 // ======================= Select2 =======================
 function inicializarSelects() {
-  $('#ucsSelect, #convenioSelect').select2({ theme: 'bootstrap-5', width: '100%' });
+  $('#ucsSelect').select2({ theme: 'bootstrap-5', width: '100%' });
 }
 
 function bindFecharModal() {
@@ -226,47 +203,22 @@ function preencherSelectUCs(selectedUcs = []) {
   $sel.val(selectedUcs || []).trigger('change');
 }
 
-function preencherSelectConvenios(selected = []) {
-  const $sel = $('#convenioSelect');
-  $sel.empty().append('<option value="">Selecione</option>');
-  empresasCache.forEach(emp => {
-    const id = emp._id || emp.id;
-    const nome = emp.razao_social || emp.nome_fantasia || id;
-    $sel.append(`<option value="${id}">${nome}</option>`);
-  });
-  const val = Array.isArray(selected) ? selected[0] : selected;
-  $sel.val(val || '').trigger('change');
-}
-
 // ======================= Tabela =======================
 function renderCursosTable(cursos) {
   const $tbody = $('#cursosTable tbody');
   $tbody.empty();
 
   if (!Array.isArray(cursos) || !cursos.length) {
-    $tbody.append('<tr><td colspan="8">Nenhum curso encontrado.</td></tr>');
+    $tbody.append('<tr><td colspan="7">Nenhum curso encontrado.</td></tr>');
     return;
   }
 
   cursos.forEach(curso => {
-    let empresaNome = '';
-    const v = curso.empresa;
-    if (Array.isArray(v)) {
-      empresaNome = v.map(empId => {
-        const emp = empresasCache.find(e => String(e._id || e.id) === String(empId));
-        return emp ? (emp.razao_social || emp.nome_fantasia) : empId;
-      }).join(', ');
-    } else if (v) {
-      const emp = empresasCache.find(e => String(e._id || e.id) === String(v));
-      empresaNome = emp ? (emp.razao_social || emp.nome_fantasia) : v;
-    }
-
     $tbody.append(`
       <tr>
         <td>${curso.nome || ''}</td>
         <td>${curso.categoria || ''}</td>
         <td>${curso.eixo_tecnologico || ''}</td>
-        <td>${empresaNome || ''}</td>
         <td>${curso.nivel_curso || ''}</td>
         <td>${fmtDateBR(curso.data_criacao)}</td>
         <td>${normalizeStatus(curso.status)}</td>
@@ -303,7 +255,6 @@ function abrirModalCurso(edit = false, cursoId = null) {
   cursoEditando = edit ? cursosCache.find(c => String(c._id) === String(cursoId)) : null;
 
   preencherSelectInstituicao(edit ? cursoEditando?.instituicao_id : '');
-  preencherSelectConvenios(edit ? (cursoEditando?.empresa ?? '') : '');
   preencherSelectUCs(
     edit && Array.isArray(cursoEditando?.ordem_ucs)
       ? cursoEditando.ordem_ucs.map(u => u.id)
@@ -337,11 +288,10 @@ function validarFormCurso() {
   let ok = true;
 
   // limpa erros
-  ['#instituicaoId','#convenioSelect','#nomeCurso','#nivelCurso','#tipoCurso','#statusCurso','#categoriaCurso','#eixoTecnologicoCurso','#cargaHoraria','#ucsSelect']
+  ['#instituicaoId','#nomeCurso','#nivelCurso','#tipoCurso','#statusCurso','#categoriaCurso','#eixoTecnologicoCurso','#cargaHoraria','#ucsSelect']
     .forEach(sel => clearFieldError(sel));
 
   const instituicao = $('#instituicaoId').val();
-  const empresaSel = $('#convenioSelect').val();
   const nome = ($('#nomeCurso').val() || '').trim();
   const modalidade = $('#nivelCurso').val();
   const tipo = $('#tipoCurso').val();
@@ -353,7 +303,6 @@ function validarFormCurso() {
 
   // obrigatórios
   if (!instituicao) { setFieldError('#instituicaoId','Obrigatório'); ok = false; }
-  if (!empresaSel) { setFieldError('#convenioSelect','Obrigatório'); ok = false; }
   if (!nome || nome.length < 3 || nome.length > 100) { setFieldError('#nomeCurso','Entre 3 e 100 caracteres'); ok = false; }
   if (!modalidade) { setFieldError('#nivelCurso','Obrigatório'); ok = false; }
   if (!tipo) { setFieldError('#tipoCurso','Obrigatório'); ok = false; }
@@ -376,9 +325,6 @@ function validarFormCurso() {
   const instOk = instituicoesCache.some(i => String(i._id || i.id) === String(instituicao));
   if (instituicao && !instOk) { setFieldError('#instituicaoId','Instituição inexistente'); ok = false; }
 
-  const empOk = empresasCache.some(e => String(e._id || e.id) === String(empresaSel));
-  if (empresaSel && !empOk) { setFieldError('#convenioSelect','Empresa inexistente'); ok = false; }
-
   const ucSet = new Set(ucs);
   if (ucSet.size !== ucs.length) {
     setFieldError('#ucsSelect','Remova duplicatas'); ok = false;
@@ -387,7 +333,6 @@ function validarFormCurso() {
   if (!allUcExist) { setFieldError('#ucsSelect','Alguma UC não existe'); ok = false; }
 
   if (!ok) {
-    // foca no primeiro com erro
     const $firstErr = $('.border-red-500').first();
     if ($firstErr.length) $firstErr.focus();
   }
@@ -412,7 +357,6 @@ function salvarCurso(e) {
     categoria: $('#categoriaCurso').val(),
     eixo_tecnologico: $('#eixoTecnologicoCurso').val(),
     carga_horaria: Number($('#cargaHoraria').val()),
-    empresa: $('#convenioSelect').val(),
     instituicao_id: $('#instituicaoId').val(),
     observacao: ($('#observacao').val() || '').slice(0, 1000),
     ordem_ucs: selectedUcs.map(id => ({ id, descricao: ucDataMap[id] || '' }))
@@ -532,12 +476,12 @@ function salvarUcsConfig() {
       return;
     }
 
-    const totalCH = presencial_ch + ead_ch;
-    somaTotalCH += totalCH;
+    somaTotalCH += (presencial_ch + ead_ch);
 
+    const nomeUC = form.querySelectorAll('input[readonly]')[1].value;
     ucsToSave.push({
       id,
-      descricao: ucDataMap[id] || '',
+      unidade_curricular: nomeUC,
       presencial: {
         carga_horaria: presencial_ch,
         quantidade_aulas_45min: presencial_aulas,
@@ -596,18 +540,6 @@ function mostrarDetalheCurso(cursoId) {
 
   const instNome = (instituicoesCache.find(i => String(i._id || i.id) === String(curso.instituicao_id))?.razao_social) || curso.instituicao_id || '';
 
-  let empresaNome = '';
-  const val = curso.empresa;
-  if (Array.isArray(val)) {
-    empresaNome = val.map(empId => {
-      const emp = empresasCache.find(e => String(e._id || e.id) === String(empId));
-      return emp ? (emp.razao_social || emp.nome_fantasia) : empId;
-    }).join(', ');
-  } else if (val) {
-    const emp = empresasCache.find(e => String(e._id || e.id) === String(val));
-    empresaNome = emp ? (emp.razao_social || emp.nome_fantasia) : val;
-  }
-
   const html = `
     <div class="popup-field"><span class="popup-label">ID:</span> ${curso._id}</div>
     <div class="popup-field"><span class="popup-label">Nome:</span> ${curso.nome || ''}</div>
@@ -616,8 +548,8 @@ function mostrarDetalheCurso(cursoId) {
     <div class="popup-field"><span class="popup-label">Categoria:</span> ${curso.categoria || ''}</div>
     <div class="popup-field"><span class="popup-label">Eixo Tecnológico:</span> ${curso.eixo_tecnologico || ''}</div>
     <div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria ?? ''}</div>
-    <div class="popup-field"><span class="popup-label">Empresa/Parceiro:</span> ${empresaNome || ''}</div>
     <div class="popup-field"><span class="popup-label">Status:</span> ${normalizeStatus(curso.status)}</div>
+    <div class="popup-field"><span class="popup-label">Instituição:</span> ${instNome}</div>
     <div class="popup-field"><span class="popup-label">Criado em:</span> ${fmtDateBR(curso.data_criacao)}</div>
 
     <div class="popup-field"><span class="popup-label">Unidades Curriculares do Curso:</span></div>
@@ -654,51 +586,40 @@ function excluirCurso(cursoId) {
 
 // ======================= Render tabela de UCs (detalhe) =======================
 function renderUCTable(ucs = []) {
-  if (!Array.isArray(ucs) || ucs.length === 0) {
-    $('#ucTableContainer').html('<p>Nenhuma UC encontrada.</p>');
-    return;
-  }
+  if (!Array.isArray(ucs) || !ucs.length) return '-';
 
-  let tableHtml = `
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>UC</th>
-          <th>CH Presencial</th>
-          <th>Aulas Presencial</th>
-          <th>Dias Presencial</th>
-          <th>CH EAD</th>
-          <th>Aulas EAD</th>
-          <th>Dias EAD</th>
-          <th>CH Total</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  ucs.forEach(uc => {
-    const presencial = uc.presencial || {};
-    const ead = uc.ead || {};
-    const chTotal = (presencial.carga_horaria || 0) + (ead.carga_horaria || 0);
-
-    tableHtml += `
+  let html = `<table class="uc-table">
+    <thead>
       <tr>
-        <td>${uc.descricao || uc.id || 'N/A'}</td>
-        <td>${presencial.carga_horaria || 0}h</td>
-        <td>${presencial.quantidade_aulas_45min || 0}</td>
-        <td>${presencial.dias_letivos || 0}</td>
-        <td>${ead.carga_horaria || 0}h</td>
-        <td>${ead.quantidade_aulas_45min || 0}</td>
-        <td>${ead.dias_letivos || 0}</td>
-        <td>${chTotal}h</td>
+        <th>#</th>
+        <th>UC</th>
+        <th>Presencial (CH/Aulas/Dias)</th>
+        <th>EAD (CH/Aulas/Dias)</th>
       </tr>
-    `;
+    </thead>
+    <tbody>`;
+
+  ucs.forEach((uc, idx) => {
+    html += `<tr>
+      <td>${idx + 1}</td>
+      <td>${uc.unidade_curricular || ucDataMap[uc.id] || '-'}</td>
+      <td>
+        ${uc.presencial ? `
+          CH: ${uc.presencial.carga_horaria ?? '-'}<br>
+          Aulas: ${uc.presencial.quantidade_aulas_45min ?? '-'}<br>
+          Dias: ${uc.presencial.dias_letivos ?? '-'}
+        ` : '-'}
+      </td>
+      <td>
+        ${uc.ead ? `
+          CH: ${uc.ead.carga_horaria ?? '-'}<br>
+          Aulas: ${uc.ead.quantidade_aulas_45min ?? '-'}<br>
+          Dias: ${uc.ead.dias_letivos ?? '-'}
+        ` : '-'}
+      </td>
+    </tr>`;
   });
 
-  tableHtml += `
-      </tbody>
-    </table>
-  `;
-
-  $('#ucTableContainer').html(tableHtml);
+  html += `</tbody></table>`;
+  return html;
 }
