@@ -19,12 +19,13 @@ function curl_json($method, $url, $payload = null) {
     $opts = [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CUSTOMREQUEST  => $method,
-        CURLOPT_CONNECTTIMEOUT => 3,   // timeout de conexão
-        CURLOPT_TIMEOUT        => 10,  // timeout total
+        CURLOPT_CONNECTTIMEOUT => 3,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
     ];
     if ($payload !== null) {
-        $opts[CURLOPT_HTTPHEADER] = ['Content-Type: application/json'];
-        $opts[CURLOPT_POSTFIELDS] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/json';
+        $opts[CURLOPT_POSTFIELDS]   = json_encode($payload, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
     }
     curl_setopt_array($ch, $opts);
 
@@ -65,20 +66,30 @@ switch ($method) {
         }
         break;
 
-    case 'POST':
+    case 'POST': {
+        // remove qualquer referência a "empresa" do payload
         $data = getRequestData() ?? [];
+        if (array_key_exists('empresa', $data)) {
+            unset($data['empresa']);
+        }
         curl_json('POST', $api_url, $data);
         break;
+    }
 
-    case 'PUT':
+    case 'PUT': {
         if ($id === '') {
             http_response_code(400);
             echo json_encode(['error' => 'ID não informado'], JSON_UNESCAPED_UNICODE);
             exit;
         }
+        // remove "empresa" também em updates
         $data = getRequestData() ?? [];
+        if (array_key_exists('empresa', $data)) {
+            unset($data['empresa']);
+        }
         curl_json('PUT', $api_url . '/' . rawurlencode($id), $data);
         break;
+    }
 
     case 'DELETE':
         if ($id === '') {

@@ -1,66 +1,13 @@
 <?php
 header('Content-Type: application/json');
 
-// Suportar GET e POST
-if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
+// Apenas POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Método inválido']);
     exit;
 }
 
-// Se for GET, listar turmas
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $apiUrl = 'http://localhost:8000/api/turmas/';
-    $ch = curl_init($apiUrl);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER  => true,
-        CURLOPT_HTTPHEADER      => [
-            'Accept: application/json'
-        ],
-        CURLOPT_CONNECTTIMEOUT  => 5,
-        CURLOPT_TIMEOUT         => 15,
-        CURLOPT_FOLLOWLOCATION  => false,
-        CURLOPT_MAXREDIRS       => 0,
-    ]);
-    
-    $result   = curl_exec($ch);
-    $httpcode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlErr  = curl_error($ch);
-    curl_close($ch);
-    
-    // Falha de transporte
-    if ($result === false) {
-        http_response_code(502);
-        echo json_encode([
-            'success' => false,
-            'error'   => 'Falha ao conectar na API de turmas',
-            'detail'  => $curlErr
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    
-    // Resposta da API
-    $resp = json_decode($result, true);
-    
-    // Sucesso
-    if ($httpcode === 200) {
-        // Retornar apenas os dados das turmas
-        echo json_encode($resp['data'] ?? [], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    
-    // Erro da API
-    http_response_code($httpcode);
-    echo json_encode([
-        'success' => false,
-        'error'   => 'Erro ao listar turmas',
-        'status'  => $httpcode,
-        'api_raw' => $resp ?? $result,
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// Se for POST, criar turma
 // Lê JSON
 $raw  = file_get_contents('php://input');
 $data = json_decode($raw, true);
