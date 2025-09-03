@@ -5,49 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gestão de Turmas - SENAI</title>
 
-  <!-- Tailwind (já usava) -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome (já usava) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
 
-  <!-- Bootstrap CSS (novo, necessário para o modal/stepper) -->
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
-  <!-- Seu CSS -->
+  <!-- Seu CSS (mantido para layout da página) -->
   <link rel="stylesheet" href="../assets/css/style_turmas.css" />
 
+  <!-- ===== Fixes anti-conflito com o Bootstrap Modal =====
+       Se o CSS antigo definia .modal/.modal-backdrop/.modal * com regras
+       de overlay personalizado, isso atrapalha o Bootstrap.
+       Os overrides abaixo restauram o comportamento padrão do Bootstrap.
+  -->
   <style>
-    /* ---------------------------------------------------------
-       IMPORTANTE: Seu CSS antigo usava .modal (conflito com Bootstrap).
-       Renomeei/escopi para .app-modal-* só se você ainda precisar
-       daquele modal custom (não-Bootstrap). Se não precisar, pode remover.
-       --------------------------------------------------------- */
-    body.app-modal-open { overflow: hidden; }
-    .main-content { position: relative; }
-    .app-modal-overlay {
-      display: none;
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,.3);
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-    }
-    .app-modal-overlay.show { display: flex !important; }
-    .app-modal-content {
-      background: #fff;
-      border-radius: 10px;
-      padding: 30px;
-      width: min(720px, 92%);
-      max-height: 80vh;
-      overflow: auto;
-      position: relative;
-      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    /* Z-index padrão do Bootstrap p/ modal (acima de sidebars, etc.) */
+    :root { --bs-modal-zindex: 1055; --bs-backdrop-zindex: 1050; }
+
+    /* Força o .modal a se comportar como o do Bootstrap (caso CSS legado tenha alterado) */
+    .modal {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      overflow: hidden !important;
+      z-index: var(--bs-modal-zindex) !important;
+      /* o Bootstrap controla display/opacity via classes .show */
     }
 
-    /* ====== Estilos do Stepper (para o modal Bootstrap) ====== */
+    /* Libera interação mesmo se houver pointer-events:none no CSS legado */
+    .modal, .modal * { pointer-events: auto !important; }
+
+    /* Backdrop acima do conteúdo e abaixo do modal */
+    .modal-backdrop {
+      position: fixed !important;
+      z-index: var(--bs-backdrop-zindex) !important;
+      /* deixa o Bootstrap controlar a opacidade via .show */
+    }
+
+    /* Garante que cliques funcionem dentro da caixa do diálogo */
+    .modal-dialog { pointer-events: auto !important; }
+    
+#addTurmaModal .modal-content {
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Define explicitamente a largura-base do modal e um teto por viewport */
+#addTurmaModal .modal-dialog {
+  --bs-modal-width: 1280px;                    /* ajuste aqui a base do XL */
+  width: auto !important;
+  max-width: min(98vw, var(--bs-modal-width)) !important;
+}
+
+/* Se você quer +5% sobre a base (em vez de fixar 1280) */
+#addTurmaModal .modal-dialog.is-plus-5 {
+  max-width: min(98vw, calc(var(--bs-modal-width) * 1.50)) !important;
+}
+    /* ====== Estilos do Stepper (usado dentro do modal) ====== */
     .stepper-container { position: relative; padding: 10px 8px 0 8px; }
     .steper-box { position: relative; z-index: 2; gap: 6px; }
     .progress-line {
@@ -76,6 +97,7 @@
     .form-label { font-weight: 600; }
     .summary-table th { width: 30%; white-space: nowrap; }
     .summary-table td, .summary-table th { vertical-align: top; }
+  
   </style>
 </head>
 
@@ -94,7 +116,7 @@
           <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
           <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
           <li><a href="gestao_unidades_curriculares.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a></li>
+          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Gestão de Calendários</a></li>
           <li id="nav-relatorios" class="has-submenu">
             <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
               <span><i class="fas fa-file-alt"></i> Relatórios</span>
@@ -112,15 +134,16 @@
     <main class="main-content">
       <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
 
-      <header class="main-header">
-        <h1>Gestão de Turmas</h1>
-        <!-- ESTE BOTÃO ABRIRÁ O MODAL BOOTSTRAP -->
-        <button class="btn btn-primary" id="addTurmaBtn">
+      <header class="main-header d-flex align-items-center justify-content-between">
+        <h1 class="m-0">Gestão de Turmas</h1>
+        <!-- Botão usa data attributes do Bootstrap -->
+        <button type="button" class="btn btn-primary" id="addTurmaBtn"
+                data-bs-toggle="modal" data-bs-target="#addTurmaModal">
           <i class="fas fa-plus-circle"></i> Adicionar Nova Turma
         </button>
       </header>
 
-      <section class="table-section">
+      <section class="table-section mt-3">
         <h2>Turmas Cadastradas</h2>
 
         <div class="table-responsive">
@@ -129,17 +152,17 @@
               <tr>
                 <th>Código</th>
                 <th>Turno</th>
-                <th>Eixo Tecnologico</th>
+                <th>Eixo Tecnológico</th>
                 <th>Empresa/Parceiro</th>
-                <th>STATUS</th>
-                <th>CRIADO EM</th>
+                <th>Status</th>
+                <th>Criado em</th>
                 <th class="actions">Ações</th>
               </tr>
             </thead>
             <tbody><!-- preenchido via JS --></tbody>
           </table>
 
-          <div class="pagination-bar" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+          <div class="pagination-bar d-flex align-items-center gap-2 mt-2">
             <button class="btn btn-secondary" id="prevPage">Anterior</button>
             <span id="pageInfo">Página 1 de 1 • 0 registros</span>
             <button class="btn btn-secondary" id="nextPage">Próximo</button>
@@ -151,7 +174,7 @@
 
   <!-- ======================= MODAL BOOTSTRAP COM STEPPER ======================= -->
   <div class="modal fade" id="addTurmaModal" tabindex="-1" aria-labelledby="stepperModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
 
         <div class="modal-header">
@@ -265,7 +288,7 @@
               </div>
             </div>
 
-            <!-- Passo 4 (com Instrutor) -->
+            <!-- Passo 4 -->
             <div class="step-pane" data-step="4">
               <div class="row g-3 align-items-end">
                 <div class="col-md-6">
@@ -293,7 +316,7 @@
               </small>
             </div>
 
-            <!-- Passo 5 (Confirmação com resumo) -->
+            <!-- Passo 5 (Confirmação) -->
             <div class="step-pane" data-step="5">
               <h5 class="mb-3">Confirmação</h5>
               <div id="summaryArea"><!-- Preenchido via JS --></div>
@@ -312,6 +335,8 @@
 
   <!-- Bootstrap JS (necessário para Modal) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Seus scripts -->
   <script src="../assets/js/geral.js"></script>
   <script src="../assets/js/prefetch.js"></script>
   <script src="../assets/js/gestao_turmas.js"></script>
