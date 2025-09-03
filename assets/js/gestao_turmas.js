@@ -5,25 +5,30 @@
   // ===== Helpers rápidos =====
   const $  = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-  function on(el, ev, fn, opts) {
-    if (!el) return;
-    el.addEventListener(ev, fn, opts);
-  }
+  const on = (el, ev, fn, opts) => el && el.addEventListener(ev, fn, opts);
+  const getVal = (sel) => $(sel)?.value?.trim() || "";
+  const getNum = (sel, def = 0) => {
+    const v = Number(getVal(sel));
+    return Number.isFinite(v) ? v : def;
+  };
+  const getOptText = (sel) => {
+    const el = $(sel);
+    if (!el) return "";
+    const idx = el.selectedIndex;
+    return idx >= 0 ? (el.options[idx]?.text || "") : "";
+  };
 
   function addInvalid(el, msg) {
     if (!el) return;
     el.classList.add('is-invalid');
     if (msg) el.setAttribute('title', msg);
   }
-
   function clearInvalid(el) {
     if (!el) return;
     el.classList.remove('is-invalid');
     el.removeAttribute('title');
   }
 
-  // ===== Bootstrap Modal =====
   document.addEventListener('DOMContentLoaded', () => {
     const modalEl = $('#addTurmaModal');
     if (!modalEl) return;
@@ -39,39 +44,20 @@
     }
 
     // ===== Stepper =====
-    const header         = $('#stepperHeader');
-    const items          = $$('.stepper-item', header);
-    const panes          = $$('.step-pane');
-    const progress       = $('#progressLine');
-    const btnNext        = $('#btn-next');
-    const btnBack        = $('#btn-back');
-    const summaryArea    = $('#summaryArea');
+    const header      = $('#stepperHeader');
+    const items       = $$('.stepper-item', header);
+    const panes       = $$('.step-pane');
+    const btnNext     = $('#btn-next');
+    const btnBack     = $('#btn-back');
+    const summaryArea = $('#summaryArea');
 
     const total = items.length;
     let current = 1;
 
-    // Mapa de campos (para resumo e payload)
-    const fields = {
-      instituicaoTurma : () => $('#instituicaoTurma')?.value.trim(),
-      codigoTurma      : () => $('#codigoTurma')?.value.trim(),
-      cursoTurma       : () => $('#cursoTurma')?.value.trim(),
-      empresaTurma     : () => $('#empresaTurma')?.value.trim(),
-      calendarioTurma  : () => $('#calendarioTurma')?.value.trim(),
-      dataInicio       : () => $('#dataInicio')?.value.trim(),
-      dataFim          : () => $('#dataFim')?.value.trim(),
-      turnoTurma       : () => $('#turnoTurma')?.value.trim(),
-      quantidadeAlunos : () => $('#quantidadeAlunos')?.value.trim(),
-      statusTurma      : () => $('#statusTurma')?.value.trim(),
-      ucTurma1         : () => $('#ucTurma1')?.value.trim(),
-      instrutorTurma1  : () => $('#instrutorTurma1')?.value.trim(),
-    };
-
     // Barra de progresso via ::after
     const styleEl = document.createElement('style');
     document.head.appendChild(styleEl);
-    function setProgressPct(pct) {
-      styleEl.textContent = `#progressLine::after{width:${pct}%;}`;
-    }
+    const setProgressPct = (pct) => { styleEl.textContent = `#progressLine::after{width:${pct}%;}`; };
 
     function setActive(step) {
       current = Math.min(Math.max(step, 1), total);
@@ -80,7 +66,6 @@
         const n = Number(el.dataset.step);
         el.classList.toggle('active', n === current);
         el.classList.toggle('completed', n < current);
-        // acessibilidade básica
         el.setAttribute('aria-current', n === current ? 'step' : 'false');
       });
 
@@ -95,9 +80,9 @@
 
       btnBack.disabled = current === 1;
       btnNext.textContent = current === total ? 'Concluir' : 'Próximo';
-      // foca primeiro campo visível
+
       const firstInput = panes.find(p => Number(p.dataset.step) === current)?.querySelector('input,select,textarea,button');
-      if (firstInput && typeof firstInput.focus === 'function') firstInput.focus();
+      firstInput?.focus?.();
     }
 
     // ===== Validação por etapa =====
@@ -119,8 +104,7 @@
       const i = $('#dataInicio');
       const f = $('#dataFim');
       if (!i || !f) return true;
-      const vi = i.value;
-      const vf = f.value;
+      const vi = i.value, vf = f.value;
       if (vi && vf && new Date(vf) < new Date(vi)) {
         addInvalid(f, 'Data de fim não pode ser anterior ao início');
         on(f, 'change', () => clearInvalid(f), { once: true });
@@ -133,7 +117,7 @@
     function validateNumericMin(el, min = 1) {
       if (!el) return true;
       const v = Number(el.value);
-      if (Number.isNaN(v) || v < min) {
+      if (!Number.isFinite(v) || v < min) {
         addInvalid(el, `Valor mínimo: ${min}`);
         on(el, 'input', () => clearInvalid(el), { once: true });
         el.focus?.();
@@ -146,17 +130,12 @@
       const pane = panes.find(p => Number(p.dataset.step) === step);
       if (!pane) return true;
 
-      // 1) campos required
       if (!validateRequiredIn(pane)) return false;
 
-      // 2) validações específicas por etapa
       switch (step) {
         case 1: {
           const codigo = $('#codigoTurma');
-          if (codigo) {
-            // força maiúsculas de forma amigável
-            codigo.value = codigo.value.toUpperCase();
-          }
+          if (codigo) codigo.value = (codigo.value || '').toUpperCase();
           break;
         }
         case 2: {
@@ -164,32 +143,65 @@
           break;
         }
         case 3: {
-          const qtd = $('#quantidadeAlunos');
-          if (!validateNumericMin(qtd, 1)) return false;
+          if (!validateNumericMin($('#quantidadeAlunos'), 1)) return false;
           break;
         }
-        default:
-          break;
+        default: break;
       }
       return true;
     }
 
-    // ===== Resumo (antes de concluir) =====
+    // ===== Carregar instituições (AGORA no escopo certo) =====
+    async function carregarInstituicoes() {
+      const sel = $('#instituicaoTurma');
+      if (!sel) return;
+
+      const keep = sel.value || "";
+      sel.innerHTML = '<option value="">Carregando instituições...</option>';
+      sel.disabled = true;
+
+      try {
+        // Direto na API (ajuste a URL conforme seu deploy/CORS):
+        const resp = await fetch('/api/instituicoes');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+
+        // aceita {items:[...]} ou [...]
+        const items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
+        sel.innerHTML = '<option value="">Selecione</option>';
+
+        items.forEach(it => {
+          const opt = new Option(it.razao_social || '(sem razão social)', it.id);
+          sel.add(opt);
+        });
+
+        if (keep && [...sel.options].some(o => o.value === keep)) {
+          sel.value = keep;
+        }
+      } catch (e) {
+        console.error('Erro ao carregar instituições', e);
+        sel.innerHTML = '<option value="">Falha ao carregar. Tente novamente.</option>';
+      } finally {
+        sel.disabled = false;
+      }
+    }
+
+    // ===== Resumo (usa o TEXTO visível do select) =====
     function buildSummary() {
       if (!summaryArea) return;
       const data = {
-        'Instituição'           : fields.instituicaoTurma(),
-        'Código da Turma'       : fields.codigoTurma(),
-        'Curso'                 : fields.cursoTurma(),
-        'Empresa/Parceiro'      : fields.empresaTurma(),
-        'Calendário'            : fields.calendarioTurma(),
-        'Data de Início'        : fields.dataInicio(),
-        'Data de Fim'           : fields.dataFim(),
-        'Turno'                 : fields.turnoTurma(),
-        'Quantidade de Alunos'  : fields.quantidadeAlunos(),
-        'Status da Turma'       : fields.statusTurma(),
-        'Unidade Curricular'    : fields.ucTurma1(),
-        'Instrutor'             : fields.instrutorTurma1(),
+        'Instituição'          : getOptText('#instituicaoTurma'), // mostra razão social
+        'Código da Turma'      : getVal('#codigoTurma'),
+        'Curso'                : getOptText('#cursoTurma'),
+        'Empresa/Parceiro'     : getOptText('#empresaTurma'),
+        'Calendário'           : getOptText('#calendarioTurma'),
+        'Data de Início'       : getVal('#dataInicio'),
+        'Data de Fim'          : getVal('#dataFim'),
+        'Turno'                : getOptText('#turnoTurma') || getVal('#turnoTurma'),
+        'Quantidade de Alunos' : getVal('#quantidadeAlunos'),
+        'Status da Turma'      : getOptText('#statusTurma') || getVal('#statusTurma'),
+        'Unidade Curricular'   : getOptText('#ucTurma1'),
+        'Instrutor'            : getOptText('#instrutorTurma1'),
       };
 
       let html = `
@@ -210,23 +222,25 @@
       summaryArea.innerHTML = html;
     }
 
-    // ===== Payload final (exemplo) =====
+    // ===== Payload final (NOMES que o backend espera) =====
     function buildPayload() {
       return {
-        instituicao   : fields.instituicaoTurma(),
-        codigo        : fields.codigoTurma(),
-        curso         : fields.cursoTurma(),
-        empresa       : fields.empresaTurma(),
-        calendario    : fields.calendarioTurma(),
-        data_inicio   : fields.dataInicio(),
-        data_fim      : fields.dataFim(),
-        turno         : fields.turnoTurma(),
-        qtd_alunos    : Number(fields.quantidadeAlunos() || 0),
-        status        : fields.statusTurma(),
-        ucs: [
+        codigo        : getVal('#codigoTurma'),
+        id_curso      : getVal('#cursoTurma'),       // precisa ser o ID no value do select
+        data_inicio   : getVal('#dataInicio'),
+        data_fim      : getVal('#dataFim'),
+        turno         : getVal('#turnoTurma'),
+        num_alunos    : getNum('#quantidadeAlunos', 0),
+        id_instituicao: getVal('#instituicaoTurma'), // ID da instituição
+        id_calendario : getVal('#calendarioTurma'),  // ID do calendário
+        id_empresa    : getVal('#empresaTurma'),     // ID da empresa
+        status        : (getVal('#statusTurma') || 'ativo').toLowerCase() === 'ativo',
+        unidades_curriculares: [
           {
-            uc        : fields.ucTurma1(),
-            instrutor : fields.instrutorTurma1()
+            id_uc:        getVal('#ucTurma1'),       // ID da UC
+            id_instrutor: getVal('#instrutorTurma1'),// ID do instrutor (ou "" se vazio)
+            data_inicio:  getVal('#dataInicio'),     // ajuste se for diferente da turma
+            data_fim:     getVal('#dataFim')
           }
         ]
       };
@@ -239,23 +253,19 @@
         if (current + 1 === total) buildSummary();
         setActive(current + 1);
       } else {
-        // Concluir: aqui você integra com seu backend (ex.: fetch POST)
         const payload = buildPayload();
         console.log('[Turma] payload:', payload);
 
-        // Exemplo de envio (descomente/ajuste a rota conforme seu backend):
+        // Exemplo de envio:
         // fetch('../backend/processa_turma.php', {
         //   method: 'POST',
         //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ acao: 'criar', dados: payload })
+        //   body: JSON.stringify(payload)
         // })
         // .then(r => r.json())
-        // .then(resp => {
-        //   // tratar resposta, atualizar tabela, fechar modal etc.
-        // })
+        // .then(resp => { /* tratar resposta */ })
         // .catch(err => console.error(err));
 
-        // Fecha modal e dá feedback
         if (bsModal) bsModal.hide();
         setTimeout(() => alert('Cadastro concluído!'), 120);
       }
@@ -263,7 +273,7 @@
 
     on(btnBack, 'click', () => setActive(current - 1));
 
-    // Navegar clicando no cabeçalho (com validação ao avançar)
+    // Navegar clicando no cabeçalho
     items.forEach(item => {
       item.style.cursor = 'pointer';
       on(item, 'click', () => {
@@ -275,11 +285,10 @@
       });
     });
 
-    // Enter avança (quando apropriado)
+    // Enter avança
     panes.forEach(pane => {
       on(pane, 'keydown', (e) => {
         if (e.key === 'Enter') {
-          // evita submit acidental e respeita selects
           const tag = (e.target.tagName || '').toLowerCase();
           if (['select', 'textarea'].includes(tag)) return;
           e.preventDefault();
@@ -288,26 +297,21 @@
       });
     });
 
-    // Reset a cada abertura
+    // Reset + carregar instituições ao abrir
     on(modalEl, 'show.bs.modal', () => {
       current = 1;
       setActive(1);
       $$('.is-invalid').forEach(clearInvalid);
-
-      // restaura valores default se desejar
-      // $$('#addTurmaModal input, #addTurmaModal select').forEach(el => el.value = '');
+      carregarInstituicoes(); // <<< agora funciona
     });
 
-    // UX: transformar código da turma em maiúsculas enquanto digita
+    // UX: código da turma em maiúsculas
     const codigoTurma = $('#codigoTurma');
-    if (codigoTurma) {
-      on(codigoTurma, 'input', () => {
-        const pos = codigoTurma.selectionStart;
-        codigoTurma.value = (codigoTurma.value || '').toUpperCase();
-        // tenta manter o cursor
-        try { codigoTurma.setSelectionRange(pos, pos); } catch (_) {}
-      });
-    }
+    on(codigoTurma, 'input', () => {
+      const pos = codigoTurma.selectionStart;
+      codigoTurma.value = (codigoTurma.value || '').toUpperCase();
+      try { codigoTurma.setSelectionRange(pos, pos); } catch (_) {}
+    });
 
   }); // DOMContentLoaded
 })();

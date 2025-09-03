@@ -1,31 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Turmas - SENAI</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Font Awesome -->
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <!-- Seu CSS (mantido para layout da página) -->
   <link rel="stylesheet" href="../assets/css/style_turmas.css" />
-
-  <!-- ===== Fixes anti-conflito com o Bootstrap Modal =====
-       Se o CSS antigo definia .modal/.modal-backdrop/.modal * com regras
-       de overlay personalizado, isso atrapalha o Bootstrap.
-       Os overrides abaixo restauram o comportamento padrão do Bootstrap.
-  -->
   <style>
     /* Z-index padrão do Bootstrap p/ modal (acima de sidebars, etc.) */
-    :root { --bs-modal-zindex: 1055; --bs-backdrop-zindex: 1050; }
+    :root {
+      --bs-modal-zindex: 1055;
+      --bs-backdrop-zindex: 1050;
+    }
 
     /* Força o .modal a se comportar como o do Bootstrap (caso CSS legado tenha alterado) */
     .modal {
@@ -40,7 +37,10 @@
     }
 
     /* Libera interação mesmo se houver pointer-events:none no CSS legado */
-    .modal, .modal * { pointer-events: auto !important; }
+    .modal,
+    .modal * {
+      pointer-events: auto !important;
+    }
 
     /* Backdrop acima do conteúdo e abaixo do modal */
     .modal-backdrop {
@@ -50,54 +50,127 @@
     }
 
     /* Garante que cliques funcionem dentro da caixa do diálogo */
-    .modal-dialog { pointer-events: auto !important; }
-    
-#addTurmaModal .modal-content {
-  width: auto !important;
-  max-width: none !important;
-}
+    .modal-dialog {
+      pointer-events: auto !important;
+    }
 
-/* Define explicitamente a largura-base do modal e um teto por viewport */
-#addTurmaModal .modal-dialog {
-  --bs-modal-width: 1280px;                    /* ajuste aqui a base do XL */
-  width: auto !important;
-  max-width: min(98vw, var(--bs-modal-width)) !important;
-}
+    #addTurmaModal .modal-content {
+      width: auto !important;
+      max-width: none !important;
+    }
 
-/* Se você quer +5% sobre a base (em vez de fixar 1280) */
-#addTurmaModal .modal-dialog.is-plus-5 {
-  max-width: min(98vw, calc(var(--bs-modal-width) * 1.50)) !important;
-}
+    /* Define explicitamente a largura-base do modal e um teto por viewport */
+    #addTurmaModal .modal-dialog {
+      --bs-modal-width: 1280px;
+      /* ajuste aqui a base do XL */
+      width: auto !important;
+      max-width: min(98vw, var(--bs-modal-width)) !important;
+    }
+
+    /* Se você quer +5% sobre a base (em vez de fixar 1280) */
+    #addTurmaModal .modal-dialog.is-plus-5 {
+      max-width: min(98vw, calc(var(--bs-modal-width) * 1.50)) !important;
+    }
+
     /* ====== Estilos do Stepper (usado dentro do modal) ====== */
-    .stepper-container { position: relative; padding: 10px 8px 0 8px; }
-    .steper-box { position: relative; z-index: 2; gap: 6px; }
+    .stepper-container {
+      position: relative;
+      padding: 10px 8px 0 8px;
+    }
+
+    .steper-box {
+      position: relative;
+      z-index: 2;
+      gap: 6px;
+    }
+
     .progress-line {
-      position: absolute; top: 27px; left: 16px; right: 16px; height: 4px;
-      background: #e9ecef; z-index: 1; border-radius: 999px; overflow: hidden;
+      position: absolute;
+      top: 27px;
+      left: 16px;
+      right: 16px;
+      height: 4px;
+      background: #e9ecef;
+      z-index: 1;
+      border-radius: 999px;
+      overflow: hidden;
     }
+
     .progress-line::after {
-      content: ""; display: block; height: 100%; width: 0%;
-      background: #0d6efd; transition: width 220ms ease;
+      content: "";
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: #0d6efd;
+      transition: width 220ms ease;
     }
-    .stepper-item { display: grid; justify-items: center; text-align: center; min-width: 70px; }
+
+    .stepper-item {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      min-width: 70px;
+    }
+
     .stepper-circle {
-      width: 34px; height: 34px; border-radius: 50%; border: 2px solid #adb5bd;
-      display: grid; place-items: center; font-weight: 600; color: #6c757d; background: #fff;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #adb5bd;
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      color: #6c757d;
+      background: #fff;
       transition: all 180ms ease;
     }
-    .stepper-title { margin-top: 6px; font-size: 0.85rem; color: #6c757d; max-width: 120px; }
-    .stepper-item.active .stepper-circle {
-      border-color: #0d6efd; color: #0d6efd; box-shadow: 0 0 0 4px rgba(13,110,253,.12);
+
+    .stepper-title {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: #6c757d;
+      max-width: 120px;
     }
-    .stepper-item.completed .stepper-circle { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+
+    .stepper-item.active .stepper-circle {
+      border-color: #0d6efd;
+      color: #0d6efd;
+      box-shadow: 0 0 0 4px rgba(13, 110, 253, .12);
+    }
+
+    .stepper-item.completed .stepper-circle {
+      background: #0d6efd;
+      border-color: #0d6efd;
+      color: #fff;
+    }
+
     .stepper-item.active .stepper-title,
-    .stepper-item.completed .stepper-title { color: #212529; font-weight: 600; }
-    .step-pane { display: none; }
-    .step-pane.active { display: block; }
-    .form-label { font-weight: 600; }
-    .summary-table th { width: 30%; white-space: nowrap; }
-    .summary-table td, .summary-table th { vertical-align: top; }
-  
+    .stepper-item.completed .stepper-title {
+      color: #212529;
+      font-weight: 600;
+    }
+
+    .step-pane {
+      display: none;
+    }
+
+    .step-pane.active {
+      display: block;
+    }
+
+    .form-label {
+      font-weight: 600;
+    }
+
+    .summary-table th {
+      width: 30%;
+      white-space: nowrap;
+    }
+
+    .summary-table td,
+    .summary-table th {
+      vertical-align: top;
+    }
   </style>
 </head>
 
@@ -137,8 +210,8 @@
       <header class="main-header d-flex align-items-center justify-content-between">
         <h1 class="m-0">Gestão de Turmas</h1>
         <!-- Botão usa data attributes do Bootstrap -->
-        <button type="button" class="btn btn-primary" id="addTurmaBtn"
-                data-bs-toggle="modal" data-bs-target="#addTurmaModal">
+        <button type="button" class="btn btn-primary" id="addTurmaBtn" data-bs-toggle="modal"
+          data-bs-target="#addTurmaModal">
           <i class="fas fa-plus-circle"></i> Adicionar Nova Turma
         </button>
       </header>
@@ -215,11 +288,11 @@
             <!-- Passo 1 -->
             <div class="step-pane active" data-step="1">
               <div class="mb-3">
-                <label for="instituicaoTurma" class="form-label">Instituição</label>
-                <select id="instituicaoTurma" class="form-select" required>
-                  <option value="">Selecione</option>
-                  <option>Instituição A</option>
-                  <option>Instituição B</option>
+               <label for="instituicaoTurma" class="form-label">Instituição</label>
+<select id="instituicaoTurma" class="form-select" required>
+  <option value="">Carregando...</option>
+</select>
+
                 </select>
               </div>
               <div class="mb-3">
@@ -341,4 +414,5 @@
   <script src="../assets/js/prefetch.js"></script>
   <script src="../assets/js/gestao_turmas.js"></script>
 </body>
+
 </html>
