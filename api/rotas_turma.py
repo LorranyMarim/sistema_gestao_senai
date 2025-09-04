@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from bson import ObjectId
 from db import get_mongo_db
+from datetime import datetime, timezone  
 
 router = APIRouter(prefix="/api/turmas", tags=["Turmas"])
 
@@ -37,6 +38,11 @@ class TurmaCreate(BaseModel):
     id_calendario: str
     id_empresa: str
     status: Optional[str] = "Ativo"   # <- string
+    eixo_tecnologico: Optional[str] = None
+    nivel_curso: Optional[str] = None
+    tipo: Optional[str] = None
+    categoria: Optional[str] = None
+    observacoes: Optional[str] = None
     unidades_curriculares: List[UnidadeCurricularTurma]
 
 def _to_oid(value: str, field: str) -> ObjectId:
@@ -99,6 +105,7 @@ def criar_turma(turma: TurmaCreate):
         else:
             uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
 
+    doc["data_hora_criacao"] = datetime.utcnow()
     res = db["turma"].insert_one(doc)
     return {"msg": "Turma cadastrada com sucesso", "id": str(res.inserted_id)}
 

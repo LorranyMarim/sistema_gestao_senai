@@ -462,6 +462,15 @@
             const want = String(id || '');
             return (cursosCache || []).find(c => String(c._id || c.id) === want);
         }
+        function getCursoMetaById(id) {
+            const c = getCursoById(id) || {};
+            return {
+                eixo_tecnologico: c.eixo_tecnologico || c.eixo || '',
+                nivel_curso: c.nivel_curso || c.nivel || '',
+                tipo: c.tipo || '',
+                categoria: c.categoria || '',
+            };
+        }
         async function carregarInstrutoresLista() {
             if (instrutoresCache.length) return instrutoresCache; // já carregado
 
@@ -733,67 +742,76 @@
 
         // ===== Resumo (usa o TEXTO visível do select) =====
         function buildSummary() {
-            if (!summaryArea) return;
+  if (!summaryArea) return;
 
-            // 1) Infos gerais (como já fazia)
-            const data = {
-                'Instituição': getOptText('#instituicaoTurma'),
-                'Código da Turma': getVal('#codigoTurma'),
-                'Curso': getOptText('#cursoTurma'),
-                'Empresa/Parceiro': getOptText('#empresaTurma'),
-                'Calendário': getOptText('#calendarioTurma'),
-                'Data de Início': fmtBR(getVal('#dataInicio')),
-                'Data de Fim': fmtBR(getVal('#dataFim')),
-                'Turno': getOptText('#turnoTurma') || getVal('#turnoTurma'),
-                'Quantidade de Alunos': getVal('#quantidadeAlunos'),
-                'Status da Turma': getOptText('#statusTurma') || getVal('#statusTurma'),
-            };
+  // meta do curso (com fallback)
+  const meta = (typeof getCursoMetaById === 'function'
+    ? getCursoMetaById(getVal('#cursoTurma'))
+    : null) || {};
 
-            // 2) Monta linhas das UCs a partir do passo 4/5
-            const ucRows = [];
-            $$('#ucsContainer [data-uc-row]').forEach((row, idx) => {
-                const ucId = row.dataset.ucId || '';
-                const desc = row.querySelector('.uc-name')?.textContent?.trim() || '(sem nome)';
-                const di = row.querySelector('[data-uc-inicio]')?.value || '';
-                const df = row.querySelector('[data-uc-fim]')?.value || '';
+  // 1) Infos gerais
+  const data = {
+    'Instituição': getOptText('#instituicaoTurma'),
+    'Código da Turma': getVal('#codigoTurma'),
+    'Curso': getOptText('#cursoTurma'),
+    'Eixo Tecnológico': meta.eixo_tecnologico || '—',
+    'Nível do Curso': meta.nivel_curso || '—',
+    'Tipo': meta.tipo || '—',
+    'Categoria': meta.categoria || '—',
+    'Empresa/Parceiro': getOptText('#empresaTurma'),
+    'Calendário': getOptText('#calendarioTurma'),
+    'Data de Início': fmtBR(getVal('#dataInicio')),
+    'Data de Fim': fmtBR(getVal('#dataFim')),
+    'Turno': getOptText('#turnoTurma') || getVal('#turnoTurma'),
+    'Quantidade de Alunos': getVal('#quantidadeAlunos'),
+    'Status da Turma': getOptText('#statusTurma') || getVal('#statusTurma'),
+  };
 
-                // instrutor selecionado no passo 5
-                const sel = document.querySelector(`#ucsInstrutoresContainer select[data-uc-id="${ucId}"]`);
-                let instrutor = '—';
-                if (sel) {
-                    const opt = sel.options[sel.selectedIndex];
-                    if (opt && opt.value) instrutor = opt.text || '—';
-                }
+  // 2) Linhas das UCs (step 4/5)
+  const ucRows = [];
+  $$('#ucsContainer [data-uc-row]').forEach((row, idx) => {
+    const ucId = row.dataset.ucId || '';
+    const desc = row.querySelector('.uc-name')?.textContent?.trim() || '(sem nome)';
+    const di = row.querySelector('[data-uc-inicio]')?.value || '';
+    const df = row.querySelector('[data-uc-fim]')?.value || '';
 
-                ucRows.push({
-                    ordem: idx + 1,
-                    descricao: desc,
-                    inicio: di ? fmtBR(di) : '—',
-                    fim: df ? fmtBR(df) : '—',
-                    instrutor
-                });
-            });
+    // instrutor no step 5
+    const sel = $(`#ucsInstrutoresContainer select[data-uc-id="${ucId}"]`);
+    let instrutor = '—';
+    if (sel) {
+      const opt = sel.options[sel.selectedIndex];
+      if (opt && opt.value) instrutor = opt.text || '—';
+    }
 
-            // 3) HTML da tabela de resumo
-            let html = `
+    ucRows.push({
+      ordem: idx + 1,
+      descricao: desc,
+      inicio: di ? fmtBR(di) : '—',
+      fim: df ? fmtBR(df) : '—',
+      instrutor
+    });
+  });
+
+  // 3) Montagem HTML
+  let html = `
     <div class="alert alert-info mb-3">Confira os dados antes de concluir.</div>
     <div class="table-responsive">
       <table class="table table-sm table-bordered align-middle summary-table">
         <tbody>
   `;
 
-            for (const [k, v] of Object.entries(data)) {
-                html += `
+  for (const [k, v] of Object.entries(data)) {
+    html += `
       <tr>
         <th class="bg-light">${k}</th>
         <td>${v ? v : '<span class="text-muted">—</span>'}</td>
       </tr>`;
-            }
+  }
 
-            // 4) Bloco "Unidades Curriculares" como TABELA
-            let ucTable = '<span class="text-muted">—</span>';
-            if (ucRows.length) {
-                ucTable = `
+  // Tabela de UCs
+  let ucTable = '<span class="text-muted">—</span>';
+  if (ucRows.length) {
+    ucTable = `
       <div class="table-responsive">
         <table class="table table-sm table-striped mb-0">
           <thead>
@@ -819,20 +837,36 @@
         </table>
       </div>
     `;
-            }
+  }
 
-            html += `
+  html += `
       <tr>
         <th class="bg-light">Unidades Curriculares</th>
         <td>${ucTable}</td>
       </tr>
+
+      <tr>
+        <th class="bg-light">Observações</th>
+        <td><span id="obsPreview"></span></td>
+      </tr>
+
     </tbody></table>
   </div>`;
 
-            summaryArea.innerHTML = html;
-        }
-        // dentro do seu arquivo gestao_turmas.js
+  summaryArea.innerHTML = html;
 
+  // Sincroniza o preview de Observações
+  const obs = $('#observacoesTurma');
+  const obsPreview = $('#obsPreview');
+  const setPreview = () => {
+    const v = (obs?.value || '').trim();
+    obsPreview.textContent = v || '—';
+  };
+  setPreview();
+  if (obs) on(obs, 'input', setPreview);
+}
+
+    
 
         // no clique de concluir (último passo)
         on(btnNext, 'click', async () => {
@@ -871,6 +905,7 @@
 
         // ===== Payload final (NOMES que o backend espera) =====
         function buildPayload() {
+            const meta = getCursoMetaById(getVal('#cursoTurma'));
             return {
                 codigo: getVal('#codigoTurma'),
                 id_curso: getVal('#cursoTurma'),
@@ -884,7 +919,11 @@
 
                 // ➜ Envie a string exatamente como quer no banco (“Ativo” | “Inativo”)
                 status: getOptText('#statusTurma') || getVal('#statusTurma') || 'Ativo',
-
+                eixo_tecnologico: meta.eixo_tecnologico,
+                nivel_curso: meta.nivel_curso,
+                tipo: meta.tipo,
+                categoria: meta.categoria,
+                observacoes: getVal('#observacoesTurma'),
                 unidades_curriculares: (() => {
                     const instrutorByUc = {};
                     $$('#ucsInstrutoresContainer select[data-uc-instrutor]').forEach(sel => {

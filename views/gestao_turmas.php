@@ -380,6 +380,11 @@
             <div class="step-pane" data-step="6">
               <h5 class="mb-3">Confirmação</h5>
               <div id="summaryArea"><!-- Preenchido via JS --></div>
+              <!-- Novo campo: Observações -->
+              <div class="mb-3 mt-3">
+                <label for="observacoesTurma" class="form-label">Observações</label>
+                <textarea id="observacoesTurma" class="form-control" rows="3" placeholder="Opcional"></textarea>
+              </div>
             </div>
           </div>
         </div>
