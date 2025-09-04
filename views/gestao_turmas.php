@@ -59,6 +59,15 @@
       max-width: none !important;
     }
 
+    #ucsContainer .uc-name {
+      white-space: normal;
+      /* permite quebrar linha */
+      overflow: visible;
+      /* opcional: reduzir um pouco a fonte para caber mais texto */
+      /* font-size: 0.95rem; */
+    }
+
+
     /* Define explicitamente a largura-base do modal e um teto por viewport */
     #addTurmaModal .modal-dialog {
       --bs-modal-width: 1280px;
@@ -69,7 +78,7 @@
 
     /* Se você quer +5% sobre a base (em vez de fixar 1280) */
     #addTurmaModal .modal-dialog.is-plus-5 {
-      max-width: min(98vw, calc(var(--bs-modal-width) * 1.50)) !important;
+      max-width: min(98vw, calc(var(--bs-modal-width) * 2.50)) !important;
     }
 
     /* ====== Estilos do Stepper (usado dentro do modal) ====== */
@@ -247,7 +256,7 @@
 
   <!-- ======================= MODAL BOOTSTRAP COM STEPPER ======================= -->
   <div class="modal fade" id="addTurmaModal" tabindex="-1" aria-labelledby="stepperModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable is-plus-5">
       <div class="modal-content">
 
         <div class="modal-header">
@@ -262,22 +271,26 @@
             <div class="d-flex justify-content-between align-items-center steper-box" id="stepperHeader">
               <div class="stepper-item active" data-step="1">
                 <div class="stepper-circle">1</div>
-                <div class="stepper-title">Dados do Curso</div>
+                <div class="stepper-title">Dados</div>
               </div>
               <div class="stepper-item" data-step="2">
                 <div class="stepper-circle">2</div>
-                <div class="stepper-title">Datas/Calendários</div>
+                <div class="stepper-title">Datas</div>
               </div>
               <div class="stepper-item" data-step="3">
                 <div class="stepper-circle">3</div>
-                <div class="stepper-title">Informações Gerais</div>
+                <div class="stepper-title">Detalhes</div>
               </div>
               <div class="stepper-item" data-step="4">
                 <div class="stepper-circle">4</div>
-                <div class="stepper-title">Instrutor por UCs</div>
+                <div class="stepper-title">Datas UCs</div>
               </div>
               <div class="stepper-item" data-step="5">
                 <div class="stepper-circle">5</div>
+                <div class="stepper-title">Instrutor UCs</div>
+              </div>
+              <div class="stepper-item" data-step="6">
+                <div class="stepper-circle">6</div>
                 <div class="stepper-title">Confirmação</div>
               </div>
             </div>
@@ -288,11 +301,9 @@
             <!-- Passo 1 -->
             <div class="step-pane active" data-step="1">
               <div class="mb-3">
-               <label for="instituicaoTurma" class="form-label">Instituição</label>
-<select id="instituicaoTurma" class="form-select" required>
-  <option value="">Carregando...</option>
-</select>
-
+                <label for="instituicaoTurma" class="form-label">Instituição</label>
+                <select id="instituicaoTurma" class="form-select" required>
+                  <option value="">Selecione</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -303,16 +314,12 @@
                 <label for="cursoTurma" class="form-label">Curso</label>
                 <select id="cursoTurma" class="form-select" required>
                   <option value="">Selecione</option>
-                  <option>Desenvolvimento de Sistemas</option>
-                  <option>Eletrotécnica</option>
                 </select>
               </div>
               <div class="mb-3">
                 <label for="empresaTurma" class="form-label">Empresa/Parceiro</label>
                 <select id="empresaTurma" class="form-select" required>
                   <option value="">Selecione</option>
-                  <option>Empresa X</option>
-                  <option>Empresa Y</option>
                 </select>
               </div>
             </div>
@@ -323,8 +330,6 @@
                 <label for="calendarioTurma" class="form-label">Calendário Acadêmico</label>
                 <select id="calendarioTurma" class="form-select" required>
                   <option value="">Selecione</option>
-                  <option>2025 - Regular</option>
-                  <option>2025 - Intensivo</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -363,34 +368,16 @@
 
             <!-- Passo 4 -->
             <div class="step-pane" data-step="4">
-              <div class="row g-3 align-items-end">
-                <div class="col-md-6">
-                  <label for="ucTurma1" class="form-label">Unidade Curricular</label>
-                  <select id="ucTurma1" class="form-select" required>
-                    <option value="">Selecione...</option>
-                    <option>Lógica de Programação</option>
-                    <option>Banco de Dados</option>
-                    <option>Desenvolvimento Web</option>
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label for="instrutorTurma1" class="form-label">Instrutor</label>
-                  <select id="instrutorTurma1" class="form-select" required>
-                    <option value="">Selecione...</option>
-                    <option>Juliano</option>
-                    <option>Cassio</option>
-                    <option>Priscila</option>
-                    <option>Edson</option>
-                  </select>
-                </div>
-              </div>
-              <small class="text-muted d-block mt-2">
-                * Neste exemplo há um único pareamento UC → Instrutor.
-              </small>
+              <div id="ucsContainer" class="container-fluid p-0"></div>
             </div>
 
-            <!-- Passo 5 (Confirmação) -->
+
+            <!-- Passo 5 -->
             <div class="step-pane" data-step="5">
+              <div id="ucsInstrutoresContainer" class="container-fluid p-0"></div>
+            </div>
+            <!-- Passo 6 (Confirmação) -->
+            <div class="step-pane" data-step="6">
               <h5 class="mb-3">Confirmação</h5>
               <div id="summaryArea"><!-- Preenchido via JS --></div>
             </div>

@@ -6,6 +6,18 @@ from db import get_mongo_db
 
 router = APIRouter(prefix="/api/turmas", tags=["Turmas"])
 
+# --- helper novo ---
+def _norm_status(val) -> bool:
+    if val is None:
+        return True
+    if isinstance(val, bool):
+        return val
+    s = str(val).strip().lower()
+    if s in ("ativo", "true", "1", "on", "yes", "sim"):
+        return True
+    if s in ("inativo", "false", "0", "off", "no", "nao", "não"):
+        return False
+    raise HTTPException(status_code=400, detail="Campo 'status' inválido")
 # ===================== MODELOS =====================
 
 class UnidadeCurricularTurma(BaseModel):
@@ -24,7 +36,7 @@ class TurmaCreate(BaseModel):
     id_instituicao: str
     id_calendario: str
     id_empresa: str
-    status: Optional[bool] = True  # nasce ativa por padrão
+    status: Optional[str] = "Ativo"   # <- string
     unidades_curriculares: List[UnidadeCurricularTurma]
 
 def _to_oid(value: str, field: str) -> ObjectId:
@@ -62,15 +74,13 @@ def _serialize_full(doc: Dict[str, Any]) -> Dict[str, Any]:
     return doc
 
 # ===================== ROTAS =====================
-
 @router.post("/", status_code=201)
+@router.post("", status_code=201, include_in_schema=False)   # aceita sem "/"
 def criar_turma(turma: TurmaCreate):
     db = get_mongo_db()
     doc = turma.dict()
 
-    # Garantir status default true
-    if doc.get("status") is None:
-        doc["status"] = True
+
 
     # IDs para ObjectId
     doc["id_curso"]       = _to_oid(doc["id_curso"], "id_curso")
@@ -78,134 +88,45 @@ def criar_turma(turma: TurmaCreate):
     doc["id_calendario"]  = _to_oid(doc["id_calendario"], "id_calendario")
     doc["id_empresa"]     = _to_oid(doc["id_empresa"], "id_empresa")
 
+    # UCs
+    if not doc.get("unidades_curriculares"):
+        raise HTTPException(status_code=400, detail="'unidades_curriculares' não pode ser vazio")
     for uc in doc["unidades_curriculares"]:
         uc["id_uc"] = _to_oid(uc["id_uc"], "unidades_curriculares[].id_uc")
         id_instr = uc.get("id_instrutor")
         if id_instr is None or str(id_instr).strip() == "":
-         uc["id_instrutor"] = ""   # mantém vazio
+            uc["id_instrutor"] = None
         else:
-         uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
-
+            uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
 
     res = db["turma"].insert_one(doc)
     return {"msg": "Turma cadastrada com sucesso", "id": str(res.inserted_id)}
 
-@router.get("/")
-def listar_turmas(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1, le=200),
-    sort_by: str = Query("data_inicio"),
-    sort_dir: str = Query("asc"),
-    q: Optional[str] = None,
-    id_curso: Optional[str] = None,
-    turno: Optional[str] = None,
-    inicio: Optional[str] = None,  # YYYY-MM-DD
-    fim: Optional[str] = None,     # YYYY-MM-DD
-):
-    """
-    Retorna {items, page, page_size, total}
-
-    Projeta os campos necessários para a listagem no frontend:
-      codigo, data_inicio, data_fim, turno, status, id_empresa, id_curso
-    """
-    db = get_mongo_db()
-    coll = db["turma"]
-
-    # --- Filtros ---
-    filtros: Dict[str, Any] = {}
-    if q:
-        filtros["codigo"] = {"$regex": q, "$options": "i"}
-    if id_curso:
-        filtros["id_curso"] = _to_oid(id_curso, "id_curso")
-    if turno:
-        filtros["turno"] = turno
-    if inicio or fim:
-        rng: Dict[str, Any] = {}
-        if inicio:
-            rng["$gte"] = inicio
-        if fim:
-            rng["$lte"] = fim
-        filtros["data_inicio"] = rng
-
-    # --- Ordenação (whitelist) ---
-    allow = {
-        "codigo": "codigo",
-        "data_inicio": "data_inicio",
-        "data_fim": "data_fim",
-        "turno": "turno",
-        "status": "status",
-    }
-    sort_key = allow.get(sort_by, "data_inicio")
-    sort_val = 1 if sort_dir.lower() == "asc" else -1
-
-    total = coll.count_documents(filtros)
-    cur = (
-        coll.find(
-            filtros,
-            {
-                "codigo": 1,
-                "data_inicio": 1,
-                "data_fim": 1,
-                "turno": 1,      # necessário para coluna TURNO
-                "status": 1,     # necessário para coluna STATUS
-                "id_empresa": 1, # necessário para mapear EMPRESA no front
-                "id_curso": 1,   # necessário para mapear CURSO no front
-            },
-        )
-        .sort(sort_key, sort_val)
-        .skip((page - 1) * page_size)
-        .limit(page_size)
-    )
-
-    items = [_serialize(d) for d in cur]
-    return {
-        "items": items,
-        "page": page,
-        "page_size": page_size,
-        "total": total,
-    }
-
-@router.get("/{turma_id}")
-def obter_turma(turma_id: str):
-    db = get_mongo_db()
-    _id = _to_oid(turma_id, "turma_id")
-    doc = db["turma"].find_one({"_id": _id})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Turma não encontrada")
-    return _serialize_full(doc)
-
 @router.put("/{turma_id}")
+@router.put("/{turma_id}/", include_in_schema=False)         # aceita "/"
 def atualizar_turma(turma_id: str, turma: TurmaCreate):
     db = get_mongo_db()
     _id = _to_oid(turma_id, "turma_id")
     doc = turma.dict()
 
-    if doc.get("status") is None:
-        doc["status"] = True
+   
 
     doc["id_curso"]       = _to_oid(doc["id_curso"], "id_curso")
     doc["id_instituicao"] = _to_oid(doc["id_instituicao"], "id_instituicao")
     doc["id_calendario"]  = _to_oid(doc["id_calendario"], "id_calendario")
     doc["id_empresa"]     = _to_oid(doc["id_empresa"], "id_empresa")
 
+    if not doc.get("unidades_curriculares"):
+        raise HTTPException(status_code=400, detail="'unidades_curriculares' não pode ser vazio")
     for uc in doc["unidades_curriculares"]:
         uc["id_uc"] = _to_oid(uc["id_uc"], "unidades_curriculares[].id_uc")
         id_instr = uc.get("id_instrutor")
         if id_instr is None or str(id_instr).strip() == "":
-         uc["id_instrutor"] = ""   # mantém vazio
+            uc["id_instrutor"] = None
         else:
-         uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
+            uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
 
     res = db["turma"].update_one({"_id": _id}, {"$set": doc})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Turma não encontrada")
     return {"msg": "Turma atualizada com sucesso", "id": turma_id}
-
-@router.delete("/{turma_id}", status_code=204)
-def excluir_turma(turma_id: str):
-    db = get_mongo_db()
-    _id = _to_oid(turma_id, "turma_id")
-    res = db["turma"].delete_one({"_id": _id})
-    if res.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Turma não encontrada")
-    return Response(status_code=204)

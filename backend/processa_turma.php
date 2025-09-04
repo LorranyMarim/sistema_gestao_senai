@@ -37,17 +37,15 @@ if (!is_array($data['unidades_curriculares']) || count($data['unidades_curricula
 // Normalizações
 $data['num_alunos'] = (int)$data['num_alunos'];
 
-// status: default true; coerção p/ boolean se vier do front
-if (!array_key_exists('status', $data)) {
-    $data['status'] = true;
-} else {
-    // aceita true/false, "true"/"false", 1/0
-    $val = filter_var($data['status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-    $data['status'] = ($val === null) ? true : $val;
-}
+/*  ❌ Removido: conversão de status para boolean
+    Queremos "ativo"|"inativo" como string, do jeito que veio do front.
+    if (!array_key_exists('status', $data)) { ... }
+*/
 
-/* ===== Chama a API FastAPI ===== */
-$apiUrl = 'http://localhost:8000/api/turmas/'; // mantém a barra final
+// ===== Chama a API FastAPI =====
+// IMPORTANTE: sem barra final para evitar redirect (ou ligue FOLLOWLOCATION)
+$apiUrl = 'http://localhost:8000/api/turmas';
+
 $ch = curl_init($apiUrl);
 curl_setopt_array($ch, [
     CURLOPT_POST            => 1,
@@ -59,8 +57,8 @@ curl_setopt_array($ch, [
     CURLOPT_POSTFIELDS      => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
     CURLOPT_CONNECTTIMEOUT  => 5,
     CURLOPT_TIMEOUT         => 15,
-    CURLOPT_FOLLOWLOCATION  => false,
-    CURLOPT_MAXREDIRS       => 0,
+    CURLOPT_FOLLOWLOCATION  => true,   // ✅ segue redirect se houver
+    CURLOPT_MAXREDIRS       => 2,
 ]);
 
 $result   = curl_exec($ch);
@@ -82,9 +80,9 @@ if ($result === false) {
 // Resposta da API
 $resp = json_decode($result, true);
 
-// Sucesso
-if ($httpcode === 201) {
-    http_response_code(201);
+// Sucesso (aceita 200 ou 201)
+if ($httpcode === 201 || $httpcode === 200) {
+    http_response_code($httpcode);
     echo json_encode(['success' => true, 'api' => $resp ?: []], JSON_UNESCAPED_UNICODE);
     exit;
 }
