@@ -2,12 +2,167 @@
 (() => {
     'use strict';
 
-    // ===== Helpers rápidos =====
-    let cursosCache = []; // mantém cursos com 'ordem_ucs' para uso no passo 4
-    let instrutoresCache = []; // cache global dos instrutores
+
+    let cursosCache = [];
+    let instrutoresCache = [];
+    let allTurmas = [];
+    const state = { page: 1, pageSize: 25, sort: 'created_desc' };
+
+
+    const esc = (s = '') => String(s).replace(/[&<>"'`=\/]/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+    }[c]));
+    function getTurmaId(t) {
+        return t?.id ?? t?._id ?? t?.id_turma ?? t?.uuid ?? t?.codigo ?? '';
+    }
+
+
+    const distinct = arr => [...new Set(arr.filter(Boolean))];
+
+
+    async function ensureCursosCache() {
+        if (Array.isArray(cursosCache) && cursosCache.length) return;
+        try {
+            const resp = await fetch('../backend/processa_curso.php');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            let items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+            cursosCache = items.filter(statusAtivo);
+        } catch (e) {
+            console.error('Falha ao carregar cursos para viewer:', e);
+            cursosCache = [];
+        }
+    }
+
+
+    function getUcNomeByCurso(cursoId, ucId) {
+        if (!cursoId || !ucId) return '';
+        const curso = getCursoById(cursoId);
+        const lista = Array.isArray(curso?.ordem_ucs) ? curso.ordem_ucs : [];
+        const uc = lista.find(u => String(u.id || u._id || u.id_uc) === String(ucId));
+        return uc?.nome || uc?.unidade_curricular || uc?.titulo || '';
+    }
+
+    function getInstrutorNomeById(instrutorId) {
+        if (!instrutorId) return 'Sem instrutor';
+        const i = (instrutoresCache || []).find(x => String(x.id) === String(instrutorId));
+        return i?.nome || 'Sem instrutor';
+    }
+
+
+    function buildTurmaSummaryHTMLFromObject(turma) {
+
+        const cursoNome =
+            turma.curso_nome ||
+            getCursoById(turma.id_curso)?.nome ||
+            '—';
+
+        const empresaNome =
+            turma.empresa_razao_social ||
+            empresasMap.get(String(turma.id_empresa)) ||
+            '—';
+
+        const instituicaoNome =
+            turma.instituicao_nome || turma.instituicao_razao_social || '—';
+
+        const calendarioNome =
+            turma.calendario_nome || '—';
+
+
+        const dataObj = {
+            'Instituição': instituicaoNome,
+            'Código da Turma': turma.codigo || '—',
+            'Curso': cursoNome,
+            'Eixo Tecnológico': turma.eixo_tecnologico || '—',
+            'Nível do Curso': turma.nivel_curso || '—',
+            'Tipo': turma.tipo || '—',
+            'Categoria': turma.categoria || '—',
+            'Empresa/Parceiro': empresaNome,
+            'Calendário': calendarioNome,
+            'Data de Início': turma.data_inicio ? fmtBR(turma.data_inicio) : '—',
+            'Data de Fim': turma.data_fim ? fmtBR(turma.data_fim) : '—',
+            'Turno': turma.turno || '—',
+            'Quantidade de Alunos': (turma.num_alunos ?? '') || '—',
+            'Status da Turma': turma.status || '—',
+        };
+
+
+        const ucs = Array.isArray(turma.unidades_curriculares) ? turma.unidades_curriculares : [];
+        const ucRows = ucs.map((uc, idx) => {
+            const nomeUc = getUcNomeByCurso(turma.id_curso, uc.id_uc) || '(sem nome)';
+            const instrutor = getInstrutorNomeById(uc.id_instrutor);
+            return {
+                ordem: idx + 1,
+                descricao: nomeUc,
+                inicio: uc.data_inicio ? fmtBR(uc.data_inicio) : '—',
+                fim: uc.data_fim ? fmtBR(uc.data_fim) : '—',
+                instrutor
+            };
+        });
+
+        let html = `
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle summary-table">
+        <tbody>
+  `;
+
+        for (const [k, v] of Object.entries(dataObj)) {
+            html += `
+      <tr>
+        <th class="bg-light">${k}</th>
+        <td>${v ? esc(v) : '<span class="text-muted">—</span>'}</td>
+      </tr>
+    `;
+        }
+
+
+        let ucTable = '<span class="text-muted">—</span>';
+        if (ucRows.length) {
+            ucTable = `
+      <div class="table-responsive">
+        <table class="table table-sm table-striped mb-0">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Ordem</th>
+              <th>Descrição</th>
+              <th style="width: 120px;">Início</th>
+              <th style="width: 120px;">Fim</th>
+              <th style="width: 220px;">Instrutor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ucRows.map(r => `
+              <tr>
+                <td>${r.ordem}º</td>
+                <td>${esc(r.descricao)}</td>
+                <td>${esc(r.inicio)}</td>
+                <td>${esc(r.fim)}</td>
+                <td>${esc(r.instrutor)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+        }
+
+        html += `
+    <tr>
+      <th class="bg-light">Unidades Curriculares</th>
+      <td>${ucTable}</td>
+    </tr>
+    <tr>
+      <th class="bg-light">Observações</th>
+      <td>${turma.observacoes ? esc(turma.observacoes) : '<span class="text-muted">—</span>'}</td>
+    </tr>
+    </tbody></table>
+  </div>`;
+
+        return html;
+    }
 
     function fmtBR(iso) {
-        // "2025-01-05" -> "05/01/2025"
+
         if (!iso) return '';
         const [y, m, d] = iso.split('-');
         if (!y || !m || !d) return iso;
@@ -26,14 +181,13 @@
             if (!i || !f) return;
 
             if (idx === 0) {
-                // 1ª UC: apenas respeita o intervalo da turma (o bindUcDateRules já cuida do Fim >= Início)
+
                 if (turmaStart) i.min = turmaStart;
                 if (turmaEnd) { i.max = turmaEnd; f.max = turmaEnd; }
-                i.disabled = false; // primeira nunca depende de anterior
+                i.disabled = false;
                 return;
             }
 
-            // Para as demais, dependem do FIM da UC anterior
             const prev = rows[idx - 1];
             const prevF = prev.querySelector('[data-uc-fim]');
 
@@ -41,7 +195,7 @@
                 const prevDf = (prevF?.value || '').trim();
 
                 if (!prevDf) {
-                    // Trava até o FIM anterior ser definido
+
                     i.value = '';
                     f.value = '';
                     i.disabled = true;
@@ -52,29 +206,86 @@
                     return;
                 }
 
-                // Libera e define limites: Início >= Fim anterior e dentro do intervalo da turma
+
                 i.disabled = false;
                 i.min = prevDf;
                 if (turmaStart && i.min < turmaStart) i.min = turmaStart;
                 if (turmaEnd) { i.max = turmaEnd; f.max = turmaEnd; }
 
-                // Se o valor atual do início violar o mínimo, corrige
+
                 if (i.value && i.value < i.min) {
                     i.value = i.min;
                 }
 
-                // Dispara o "update" já ligado em bindUcDateRules para habilitar/ajustar o FIM
+
                 i.dispatchEvent(new Event('input', { bubbles: true }));
             };
 
-            // Atualiza quando o fim da UC anterior mudar
+
             on(prevF, 'input', applyFromPrev);
             on(prevF, 'change', applyFromPrev);
 
-            // Estado inicial
+
             applyFromPrev();
         });
     }
+
+
+
+    function fmtDateHoraBR(v) {
+        if (!v) return '—';
+        try {
+            const d = new Date(v);
+            if (isNaN(+d)) return String(v);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mi = String(d.getMinutes()).padStart(2, '0');
+            return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+        } catch { return String(v); }
+    }
+
+
+    let empresasMap = new Map();
+    async function carregarEmpresasParaMapa() {
+        try {
+            const resp = await fetch('../backend/processa_empresa.php');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+            empresasMap = new Map(items.map(it => [
+                String(it.id || it._id),
+                it.razao_social || it.nome || it.nome_fantasia || '(sem nome)'
+            ]));
+        } catch (e) {
+            console.error('Falha ao carregar empresas p/ tabela:', e);
+            empresasMap = new Map();
+        }
+    }
+
+    async function carregarTurmas() {
+        const tbody = document.querySelector('#turmasTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Carregando…</td></tr>`;
+
+        try {
+            const resp = await fetch('http://localhost:8000/api/turmas');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+
+            allTurmas = Array.isArray(data?.items) ? data.items : [];
+            populateFilterOptions(allTurmas);
+            renderFiltered();
+        } catch (e) {
+            console.error('Falha ao buscar turmas:', e);
+            tbody.innerHTML = `<tr><td colspan="7" class="text-danger">Erro ao carregar turmas.</td></tr>`;
+        }
+    }
+
+
+
+
 
 
     const $ = (sel, root = document) => root.querySelector(sel);
@@ -91,6 +302,14 @@
         const idx = el.selectedIndex;
         return idx >= 0 ? (el.options[idx]?.text || "") : "";
     };
+    function statusAtivo(rec) {
+        const raw = rec?.status ?? rec?.situacao ?? rec?.ativo ?? rec?.estado;
+        if (typeof raw === 'boolean') return raw === true;
+        const s = String(raw ?? '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().trim();
+        return s === 'ativo' || s === 'ativa' || s === 'true' || s === '1';
+    }
 
     function addInvalid(el, msg) {
         if (!el) return;
@@ -103,21 +322,229 @@
         el.removeAttribute('title');
     }
 
+    async function ensureCursosCache() {
+        if (Array.isArray(cursosCache) && cursosCache.length) return;
+        try {
+            const resp = await fetch('../backend/processa_curso.php');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            let items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+            cursosCache = items.filter(statusAtivo);
+        } catch (e) {
+            console.error('Falha ao carregar cursos para viewer:', e);
+            cursosCache = [];
+        }
+    }
+
+
+    function getUcNomeByCurso(cursoId, ucId) {
+        if (!cursoId || !ucId) return '';
+        const curso = getCursoById(cursoId);
+        const lista = Array.isArray(curso?.ordem_ucs) ? curso.ordem_ucs : [];
+        const uc = lista.find(u => String(u.id || u._id || u.id_uc) === String(ucId));
+        return uc?.nome || uc?.unidade_curricular || uc?.titulo || '';
+    }
+
+
+    function getInstrutorNomeById(instrutorId) {
+        if (!instrutorId) return 'Sem instrutor';
+        const i = (instrutoresCache || []).find(x => String(x.id) === String(instrutorId));
+        return i?.nome || 'Sem instrutor';
+    }
+
+
+    function buildTurmaSummaryHTMLFromObject(turma) {
+
+        const cursoNome =
+            turma.curso_nome ||
+            getCursoById(turma.id_curso)?.nome ||
+            '—';
+
+        const empresaNome =
+            turma.empresa_razao_social ||
+            empresasMap.get(String(turma.id_empresa)) ||
+            '—';
+
+        const instituicaoNome =
+            turma.instituicao_nome || turma.instituicao_razao_social || '—';
+
+        const calendarioNome =
+            turma.calendario_nome || '—';
+
+
+        const dataObj = {
+            'Instituição': instituicaoNome,
+            'Código da Turma': turma.codigo || '—',
+            'Curso': cursoNome,
+            'Eixo Tecnológico': turma.eixo_tecnologico || '—',
+            'Nível do Curso': turma.nivel_curso || '—',
+            'Tipo': turma.tipo || '—',
+            'Categoria': turma.categoria || '—',
+            'Empresa/Parceiro': empresaNome,
+            'Calendário': calendarioNome,
+            'Data de Início': turma.data_inicio ? fmtBR(turma.data_inicio) : '—',
+            'Data de Fim': turma.data_fim ? fmtBR(turma.data_fim) : '—',
+            'Turno': turma.turno || '—',
+            'Quantidade de Alunos': (turma.num_alunos ?? '') || '—',
+            'Status da Turma': turma.status || '—',
+        };
+
+
+        const ucs = Array.isArray(turma.unidades_curriculares) ? turma.unidades_curriculares : [];
+        const ucRows = ucs.map((uc, idx) => {
+            const nomeUc = getUcNomeByCurso(turma.id_curso, uc.id_uc) || '(sem nome)';
+            const instrutor = getInstrutorNomeById(uc.id_instrutor);
+            return {
+                ordem: idx + 1,
+                descricao: nomeUc,
+                inicio: uc.data_inicio ? fmtBR(uc.data_inicio) : '—',
+                fim: uc.data_fim ? fmtBR(uc.data_fim) : '—',
+                instrutor
+            };
+        });
+
+        let html = `
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle summary-table">
+        <tbody>
+  `;
+
+        for (const [k, v] of Object.entries(dataObj)) {
+            html += `
+      <tr>
+        <th class="bg-light">${k}</th>
+        <td>${v ? esc(v) : '<span class="text-muted">—</span>'}</td>
+      </tr>
+    `;
+        }
+
+
+        let ucTable = '<span class="text-muted">—</span>';
+        if (ucRows.length) {
+            ucTable = `
+      <div class="table-responsive">
+        <table class="table table-sm table-striped mb-0">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Ordem</th>
+              <th>Descrição</th>
+              <th style="width: 120px;">Início</th>
+              <th style="width: 120px;">Fim</th>
+              <th style="width: 220px;">Instrutor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ucRows.map(r => `
+              <tr>
+                <td>${r.ordem}º</td>
+                <td>${esc(r.descricao)}</td>
+                <td>${esc(r.inicio)}</td>
+                <td>${esc(r.fim)}</td>
+                <td>${esc(r.instrutor)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+        }
+
+        html += `
+    <tr>
+      <th class="bg-light">Unidades Curriculares</th>
+      <td>${ucTable}</td>
+    </tr>
+    <tr>
+      <th class="bg-light">Observações</th>
+      <td>${turma.observacoes ? esc(turma.observacoes) : '<span class="text-muted">—</span>'}</td>
+    </tr>
+    </tbody></table>
+  </div>`;
+
+        return html;
+    }
+    async function openTurmaViewer(turmaId) {
+        const modalEl = $('#viewTurmaModal');
+        const bodyEl = $('#viewTurmaBody');
+        const subEl = $('#viewTurmaSubTitle');
+
+        if (!modalEl || !bodyEl) return;
+
+        if (!turmaId) {
+            console.warn('btn-view sem data-id');
+            return;
+        }
+        let turma = allTurmas.find(t => String(t.id) === String(turmaId));
+        if (!turma) {
+            try {
+                const resp = await fetch(`http://localhost:8000/api/turmas/${encodeURIComponent(turmaId)}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    turma = data?.item || data; // 
+                }
+            } catch (e) {
+                console.error('Falha ao buscar turma por id:', e);
+            }
+        }
+        if (!turma) {
+            alert('Não foi possível localizar esta turma.');
+            return;
+        }
+
+
+        await Promise.all([
+            ensureCursosCache(),
+            carregarInstrutoresLista().catch(() => { }),
+            carregarEmpresasParaMapa().catch(() => { }),
+        ]);
+
+
+        if (subEl) {
+            const empresaNome = turma.empresa_razao_social || empresasMap.get(String(turma.id_empresa)) || '';
+            const pedacoEmpresa = empresaNome ? ` • ${empresaNome}` : '';
+            subEl.textContent = `${turma.codigo || ''}${pedacoEmpresa}`;
+        }
+
+
+        bodyEl.innerHTML = buildTurmaSummaryHTMLFromObject(turma);
+
+        const inst = (window.bootstrap && bootstrap.Modal)
+            ? bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static', keyboard: true })
+            : null;
+        if (inst) inst.show();
+    }
+
+
     document.addEventListener('DOMContentLoaded', () => {
         const modalEl = $('#addTurmaModal');
+        attachFilterHandlers();
+        carregarEmpresasFiltro().catch(console.error);
+        carregarTurmas().catch(console.error);
+
+        const table = $('#turmasTable');
+        if (table) {
+            table.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-view');
+                if (!btn) return;
+                const turmaId = btn.dataset.id;
+                console.debug('[viewer] clique no olho, id =', turmaId);
+                if (turmaId) openTurmaViewer(turmaId);
+            });
+        }
+
         if (!modalEl) return;
 
         const bsModal = (window.bootstrap && bootstrap.Modal)
             ? new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false })
             : null;
 
-        // Abre via JS apenas se o botão NÃO usar data-bs-*
+
         const addBtn = $('#addTurmaBtn');
         if (addBtn && !addBtn.hasAttribute('data-bs-toggle')) {
             on(addBtn, 'click', () => bsModal && bsModal.show());
         }
 
-        // ===== Stepper =====
+
         const header = $('#stepperHeader');
         const items = $$('.stepper-item', header);
         const panes = $$('.step-pane');
@@ -128,7 +555,7 @@
         const total = items.length;
         let current = 1;
 
-        // Barra de progresso via ::after
+
         const styleEl = document.createElement('style');
         document.head.appendChild(styleEl);
         const setProgressPct = (pct) => { styleEl.textContent = `#progressLine::after{width:${pct}%;}`; };
@@ -159,7 +586,7 @@
             firstInput?.focus?.();
         }
 
-        // ===== Validação por etapa =====
+
         function validateRequiredIn(pane) {
             const required = $$('[required]', pane);
             for (const el of required) {
@@ -168,7 +595,7 @@
                     addInvalid(el, 'Campo obrigatório');
                     const handler = () => clearInvalid(el);
                     on(el, 'input', handler, { once: true });
-                    on(el, 'change', handler, { once: true }); // <— adiciona
+                    on(el, 'change', handler, { once: true });
                     el.focus?.();
                     return false;
                 }
@@ -243,20 +670,9 @@
                     break;
                 }
                 case 5: {
-                    const selects = $$('#ucsInstrutoresContainer select[data-uc-instrutor]');
-                    if (!selects.length) {
-                        alert('Selecione um curso com UCs no passo 1.');
-                        return false;
-                    }
-                    for (const sel of selects) {
-                        if (!sel.value) {
-                            addInvalid(sel, 'Selecione um instrutor');
-                            sel.focus();
-                            return false;
-                        }
-                    }
-                    break;
+
                 }
+
 
 
                 default: break;
@@ -264,31 +680,29 @@
             return true;
         }
 
-        // ===== Carregar instituições (AGORA no escopo certo) =====
-        // ===== Carregar instituições (CORRIGIDO) =====
+
         async function carregarInstituicoes() {
             const sel = $('#instituicaoTurma');
             if (!sel) return;
 
-            // UX: desabilita e mostra placeholder temporário
+
             const keep = sel.value;
             sel.disabled = true;
             sel.innerHTML = '<option value="">Carregando...</option>';
 
             try {
-                // Chame a API FastAPI diretamente ou via proxy PHP
-                // Ex.: const resp = await fetch('../backend/processa_instituicao.php');
+
                 const resp = await fetch('../backend/processa_instituicao.php');
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const data = await resp.json();
 
-                // aceita { items:[...] } ou [...]
+
                 const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
 
-                // Monta opções
+
                 sel.innerHTML = '<option value="">Selecione</option>';
                 for (const it of items) {
-                    const value = it.id || it._id || ""; // suporta id ou _id
+                    const value = it.id || it._id || "";
                     const label =
                         it.razao_social ||
                         it.nome ||
@@ -300,7 +714,7 @@
                     if (value) sel.add(new Option(label, value));
                 }
 
-                // Restaura seleção anterior se ainda existir
+
                 if (keep && [...sel.options].some(o => o.value === keep)) {
                     sel.value = keep;
                 }
@@ -312,8 +726,7 @@
             }
         }
 
-        // ===== Carregar cursos =====
-        // ===== Carregar cursos (com ordenação, dedupe e cancelamento) =====
+
         async function carregarCursos() {
             const sel = $('#cursoTurma');
             if (!sel) return;
@@ -322,13 +735,13 @@
             sel.disabled = true;
             sel.innerHTML = '<option value="">Carregando...</option>';
 
-            // AbortController para evitar corrida se o modal fechar
+
             const ctrl = new AbortController();
             const onHide = () => ctrl.abort();
             $('#addTurmaModal')?.addEventListener('hide.bs.modal', onHide, { once: true });
 
             try {
-                // Use o que fizer sentido no seu deploy:
+
                 const resp = await fetch('../backend/processa_curso.php', { signal: ctrl.signal });
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const data = await resp.json();
@@ -336,7 +749,8 @@
 
                 let items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
 
-                // Dedup por id/_id
+                items = items.filter(statusAtivo);
+
                 const seen = new Set();
                 items = items.filter(it => {
                     const id = it.id || it._id;
@@ -345,9 +759,9 @@
                     return true;
                 });
 
-                // Ordenar por nome (case-insensitive)
+
                 items.sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' }));
-                cursosCache = items; // <-- adicione esta linha
+                cursosCache = items;
 
                 sel.innerHTML = '<option value="">Selecione</option>';
                 for (const it of items) {
@@ -369,41 +783,29 @@
             }
         }
 
+
         async function carregarEmpresas() {
             const sel = $('#empresaTurma');
             if (!sel) return;
 
-            // UX: desabilita e mostra placeholder temporário
             const keep = sel.value;
             sel.disabled = true;
             sel.innerHTML = '<option value="">Carregando...</option>';
 
             try {
-                // Chame a API FastAPI diretamente ou via proxy PHP
-                // Ex.: const resp = await fetch('../backend/processa_instituicao.php');
                 const resp = await fetch('../backend/processa_empresa.php');
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const data = await resp.json();
+                const itemsRaw = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+                const items = itemsRaw.filter(statusAtivo);
 
-                // aceita { items:[...] } ou [...]
-                const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-
-                // Monta opções
                 sel.innerHTML = '<option value="">Selecione</option>';
                 for (const it of items) {
-                    const value = it.id || it._id || ""; // suporta id ou _id
-                    const label =
-                        it.razao_social ||
-                        it.nome ||
-                        it.nome_fantasia ||
-                        it.fantasia ||
-                        it.cnpj_razao ||
-                        '(sem nome)';
-
+                    const value = it.id || it._id || "";
+                    const label = it.razao_social || it.nome || it.nome_fantasia || it.fantasia || it.cnpj_razao || '(sem nome)';
                     if (value) sel.add(new Option(label, value));
                 }
 
-                // Restaura seleção anterior se ainda existir
                 if (keep && [...sel.options].some(o => o.value === keep)) {
                     sel.value = keep;
                 }
@@ -415,29 +817,245 @@
             }
         }
 
+        async function carregarEmpresasFiltro() {
+            const sel = $('#filterEmpresa');
+            if (!sel) return;
+
+            const keep = sel.value || 'Todos';
+            sel.disabled = true;
+            sel.innerHTML = '<option value="Todos">Carregando…</option>';
+
+            try {
+                const resp = await fetch('../backend/processa_empresa.php');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const data = await resp.json();
+
+                const itemsRaw = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+
+                const ativos = itemsRaw.filter(statusAtivo);
+
+
+                let nomes = ativos.map(it =>
+                    it.razao_social || it.nome || it.nome_fantasia || it.fantasia || it.cnpj_razao || '(sem nome)'
+                ).filter(Boolean);
+
+
+                nomes = [...new Set(nomes)];
+                nomes.sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+
+
+                sel.innerHTML = '<option value="Todos">Todos</option>' +
+                    nomes.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+
+
+                if ([...sel.options].some(o => o.value === keep)) {
+                    sel.value = keep;
+                } else {
+                    sel.value = 'Todos';
+                }
+
+                sel.dataset.filled = '1';
+            } catch (e) {
+                console.error('Erro ao carregar empresas para filtro:', e);
+                sel.innerHTML = '<option value="Todos">Falha ao carregar</option>';
+                sel.value = 'Todos';
+            } finally {
+                sel.disabled = false;
+
+            }
+        }
+
+
+        function populateFilterOptions(items) {
+            const selEmp = document.querySelector('#filterEmpresa');
+            const selEixo = document.querySelector('#filterEixo');
+            const selTurno = document.querySelector('#filterTurno');
+
+            if (selEmp && !selEmp.dataset.filled) {
+                const empresas = distinct(items.map(i => i.empresa_razao_social));
+                selEmp.innerHTML = `<option value="Todos">Todos</option>` +
+                    empresas.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+                selEmp.dataset.filled = '1';
+            }
+            if (selEixo && !selEixo.dataset.filled) {
+                const eixos = distinct(items.map(i => i.eixo_tecnologico));
+                selEixo.innerHTML = `<option value="Todos">Todos</option>` +
+                    eixos.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+                selEixo.dataset.filled = '1';
+            }
+            if (selTurno && !selTurno.dataset.hardcoded) {
+                selTurno.dataset.hardcoded = '1';
+            }
+        }
+        function readFilters() {
+            return {
+                q: (document.querySelector('#searchTurma')?.value || '').trim().toLowerCase(),
+                empresa: document.querySelector('#filterEmpresa')?.value || 'Todos',
+                status: document.querySelector('#filterStatus')?.value || 'Todos',
+                turno: document.querySelector('#filterTurno')?.value || 'Todos',
+                eixo: document.querySelector('#filterEixo')?.value || 'Todos',
+                pageSize: Number(document.querySelector('#pageSize')?.value || 25),
+            };
+        }
+
+
+        function applyFilters(items, f) {
+            return items.filter(t => {
+
+                if (f.empresa !== 'Todos' && (t.empresa_razao_social || '—') !== f.empresa) return false;
+
+
+                if (f.status !== 'Todos') {
+                    const st = (typeof t.status === 'boolean')
+                        ? (t.status ? 'Ativo' : 'Inativo')
+                        : String(t.status || '').trim();
+                    if (st.toLowerCase() !== f.status.toLowerCase()) return false;
+                }
+
+
+                if (f.turno !== 'Todos' && String(t.turno || '').toUpperCase() !== f.turno.toUpperCase()) return false;
+
+
+                if (f.eixo !== 'Todos' && String(t.eixo_tecnologico || '') !== f.eixo) return false;
+
+
+                if (f.q) {
+                    const hay = `${t.codigo || ''} ${t.eixo_tecnologico || ''} ${t.empresa_razao_social || ''}`.toLowerCase();
+                    if (!hay.includes(f.q)) return false;
+                }
+                return true;
+            });
+        }
+
+        const sorters = {
+            'created_desc': (a, b) => new Date(b.data_hora_criacao || 0) - new Date(a.data_hora_criacao || 0),
+            'created_asc': (a, b) => new Date(a.data_hora_criacao || 0) - new Date(b.data_hora_criacao || 0),
+            'codigo_asc': (a, b) => (a.codigo || '').localeCompare(b.codigo || '', 'pt-BR', { sensitivity: 'base' }),
+            'codigo_desc': (a, b) => (b.codigo || '').localeCompare(a.codigo || '', 'pt-BR', { sensitivity: 'base' }),
+            'empresa_asc': (a, b) => (a.empresa_razao_social || '').localeCompare(b.empresa_razao_social || '', 'pt-BR', { sensitivity: 'base' }),
+            'eixo_asc': (a, b) => (a.eixo_tecnologico || '').localeCompare(b.eixo_tecnologico || '', 'pt-BR', { sensitivity: 'base' }),
+            'status_asc': (a, b) => (a.status || '').localeCompare(b.status || '', 'pt-BR', { sensitivity: 'base' }),
+            'turno_asc': (a, b) => (a.turno || '').localeCompare(b.turno || '', 'pt-BR', { sensitivity: 'base' }),
+        };
+        function renderFiltered() {
+            const f = readFilters();
+            state.pageSize = f.pageSize;
+
+            let rows = applyFilters(allTurmas, f);
+
+
+            const sorter = sorters['created_desc'];
+            rows.sort(sorter);
+
+            const total = rows.length;
+            const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+            if (state.page > totalPages) state.page = totalPages;
+            if (state.page < 1) state.page = 1;
+
+            const start = (state.page - 1) * state.pageSize;
+            const pageRows = rows.slice(start, start + state.pageSize);
+
+            const tbody = document.querySelector('#turmasTable tbody');
+            if (!tbody) return;
+
+            if (!pageRows.length) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Nenhum registro encontrado.</td></tr>`;
+            } else {
+                tbody.innerHTML = pageRows.map(t => {
+                    const statusTxt = (typeof t.status === 'boolean') ? (t.status ? 'Ativo' : 'Inativo') : (t.status || '—');
+                    const criadoEm = fmtDateHoraBR(t.data_hora_criacao || t.criado_em);
+                    const empresaNome = t.empresa_razao_social || '—';
+                    const tid = getTurmaId(t);
+                    return `
+  <tr data-id="${esc(tid)}">
+    <td>${esc(t.codigo || '')}</td>
+    <td>${esc(t.turno || '')}</td>
+    <td>${esc(t.eixo_tecnologico || '')}</td>
+    <td>${esc(empresaNome)}</td>
+    <td>${esc(statusTxt)}</td>
+    <td>${esc(criadoEm)}</td>
+    <td class="actions">
+      <button type="button" class="btn btn-icon btn-view" title="Visualizar" data-id="${esc(tid)}">
+        <i class="fas fa-eye"></i>
+      </button>
+      <button type="button" class="btn btn-icon btn-edit"  title="Editar" data-id="${esc(tid)}">
+        <i class="fas fa-edit"></i>
+      </button>
+    </td>
+  </tr>`;
+                }).join('');
+            }
+
+            const pageInfo = document.querySelector('#pageInfo');
+            if (pageInfo) pageInfo.textContent = `Página ${state.page} de ${totalPages} • ${total} registros`;
+
+            const prev = document.querySelector('#prevPage');
+            const next = document.querySelector('#nextPage');
+            if (prev) prev.disabled = state.page <= 1;
+            if (next) next.disabled = state.page >= totalPages;
+
+
+            const hasFilters = !!(f.q || f.empresa !== 'Todos' || f.status !== 'Todos' ||
+                f.turno !== 'Todos' || f.eixo !== 'Todos');
+            const btnClear = document.querySelector('#btnClearFilters');
+            if (btnClear) btnClear.disabled = !hasFilters;
+        }
+
+        function attachFilterHandlers() {
+            const ids = ['searchTurma', 'filterEmpresa', 'filterStatus', 'filterTurno',
+                'filterEixo', 'pageSize'];
+            ids.forEach(id => {
+                const el = document.querySelector('#' + id);
+                if (!el) return;
+                el.addEventListener('input', () => { state.page = 1; renderFiltered(); });
+                el.addEventListener('change', () => { state.page = 1; renderFiltered(); });
+            });
+
+            const btnClear = document.querySelector('#btnClearFilters');
+            if (btnClear) btnClear.addEventListener('click', () => {
+
+                const setVal = (id, v) => { const el = document.querySelector('#' + id); if (el) el.value = v; };
+                setVal('searchTurma', '');
+                setVal('filterEmpresa', 'Todos');
+                setVal('filterStatus', 'Todos');
+                setVal('filterTurno', 'Todos');
+                setVal('filterEixo', 'Todos');
+                state.page = 1;
+                renderFiltered();
+            });
+
+            const prev = document.querySelector('#prevPage');
+            const next = document.querySelector('#nextPage');
+            if (prev) prev.addEventListener('click', () => { if (state.page > 1) { state.page--; renderFiltered(); } });
+            if (next) next.addEventListener('click', () => { state.page++; renderFiltered(); });
+        }
+
+
         async function carregaCalendarios() {
             const sel = $('#calendarioTurma');
             if (!sel) return;
 
-            // UX: desabilita e mostra placeholder temporário
+
             const keep = sel.value;
             sel.disabled = true;
             sel.innerHTML = '<option value="">Carregando...</option>';
 
             try {
-                // Chame a API FastAPI diretamente ou via proxy PHP
-                // Ex.: const resp = await fetch('../backend/processa_instituicao.php');
+
                 const resp = await fetch('../backend/processa_calendario.php');
                 if (!resp.ok) throw new Error('HTTP ' + resp.status);
                 const data = await resp.json();
 
-                // aceita { items:[...] } ou [...]
-                const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
 
-                // Monta opções
+                let items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+
+
+                items = items.filter(statusAtivo);
+
+
                 sel.innerHTML = '<option value="">Selecione</option>';
                 for (const it of items) {
-                    const value = it.id || it._id || ""; // suporta id ou _id
+                    const value = it.id || it._id || "";
                     const label =
                         it.nome_calendario ||
                         it.nome ||
@@ -447,7 +1065,7 @@
                     if (value) sel.add(new Option(label, value));
                 }
 
-                // Restaura seleção anterior se ainda existir
+
                 if (keep && [...sel.options].some(o => o.value === keep)) {
                     sel.value = keep;
                 }
@@ -472,28 +1090,40 @@
             };
         }
         async function carregarInstrutoresLista() {
-            if (instrutoresCache.length) return instrutoresCache; // já carregado
+            if (instrutoresCache.length) return instrutoresCache;
 
             const resp = await fetch('../backend/processa_instrutor.php');
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();
             const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
 
-            instrutoresCache = items.map(it => ({
-                id: it.id || it._id || '',
-                nome: it.nome || it.nome_completo || '(sem nome)'
-            })).filter(x => x.id);
+            instrutoresCache = items.map(it => {
+                const rawMapa = Array.isArray(it.mapa_competencia) ? it.mapa_competencia : [];
+                return {
+                    id: it.id || it._id || '',
+                    nome: it.nome || it.nome_completo || '(sem nome)',
+                    status_ok: statusAtivo(it),
+                    mapa_competencia: rawMapa.map(v => String(v)).filter(Boolean)
+                };
+            }).filter(x => x.id);
 
             return instrutoresCache;
         }
 
+
         function popularSelectInstrutores(sel) {
             if (!sel) return;
-            const keep = sel.value;
-            sel.innerHTML = '<option value="">Selecione</option>';
-            instrutoresCache.forEach(it => sel.add(new Option(it.nome, it.id)));
-            if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+            sel.innerHTML = '';
+
+
+            sel.add(new Option('Sem instrutor', '', true, true));
+
+
+            const ativos = instrutoresCache.filter(it => it.status_ok);
+            ativos.forEach(it => sel.add(new Option(it.nome, it.id)));
         }
+
+
 
 
         function applyTurmaDatesToUc() {
@@ -535,14 +1165,14 @@
             on(i, 'input', update);
             on(i, 'change', update);
 
-            // respeita limites da turma (passo 2), se já preenchidos
+
             const turmaStart = $('#dataInicio')?.value;
             const turmaEnd = $('#dataFim')?.value;
             if (turmaStart) i.min = turmaStart;
             if (turmaEnd) { i.max = turmaEnd; f.max = turmaEnd; }
 
             update();
-            // após update(); acrescente:
+
             const ucId = row.dataset.ucId;
             const syncPeriod = () => updatePeriodForUc(ucId);
             on(row.querySelector('[data-uc-inicio]'), 'input', syncPeriod);
@@ -621,7 +1251,6 @@
       </div>
     `;
 
-                // ⬇️ Agora o .uc-name EXISTE; podemos preencher
                 row.querySelector('.uc-name').textContent =
                     (uc.nome || uc.unidade_curricular || uc.titulo || '(sem nome)');
 
@@ -652,23 +1281,24 @@
                 return;
             }
 
-            // garante lista de instrutores
-            try { await carregarInstrutoresLista(); } catch (e) {
+
+            try {
+                await carregarInstrutoresLista();
+            } catch (e) {
                 console.error('Erro ao carregar instrutores', e);
             }
 
             ucs.forEach((uc, idx) => {
-                const ucId = (uc.id || uc._id || uc.id_uc || '');
-                const nomeUc = (uc.nome || uc.unidade_curricular || uc.titulo || '(sem nome)');
+                const ucId = String(uc.id || uc._id || uc.id_uc || '');
+                const nomeUc = uc.nome || uc.unidade_curricular || uc.titulo || '(sem nome)';
                 const { di, df } = getUcDatesFromStep4(ucId);
                 const periodoTxt = (di && df) ? `${fmtBR(di)} - ${fmtBR(df)}` : '—';
 
                 const row = document.createElement('div');
                 row.className = 'row g-3 align-items-end mb-2';
-                row.dataset.ucId = ucId; // ajuda na sincronização
+                row.dataset.ucId = ucId;
 
                 row.innerHTML = `
-      <!-- UC (cinza não-editável) -->
       <div class="col-12 col-lg-6">
         <label class="form-label d-flex align-items-center">
           <span class="badge bg-secondary me-2">${idx + 1}º</span> Unidade Curricular
@@ -677,27 +1307,29 @@
              role="textbox" aria-disabled="true">${nomeUc}</div>
       </div>
 
-      <!-- Período (texto único, cinza) -->
       <div class="col-6 col-lg-3">
         <label class="form-label">Período</label>
-        <input type="text" class="form-control bg-body-secondary text-body-secondary"
-               data-uc-period value="${periodoTxt}" disabled readonly />
+        <input type="text"
+               class="form-control bg-body-secondary text-body-secondary"
+               data-uc-period
+               value="${periodoTxt}"
+               disabled
+               readonly />
       </div>
 
-      <!-- Select de Instrutor -->
       <div class="col-6 col-lg-3">
         <label class="form-label">Instrutor</label>
-        <select class="form-select" data-uc-instrutor data-uc-id="${ucId}">
-          <option value="">Selecione</option>
-        </select>
+        <select class="form-select" data-uc-instrutor data-uc-id="${ucId}"></select>
       </div>
     `;
 
                 wrap.appendChild(row);
-                // popular select com cache
-                popularSelectInstrutores(row.querySelector('select[data-uc-instrutor]'));
+
+                const sel = row.querySelector('select[data-uc-instrutor]');
+                popularSelectInstrutores(sel);
             });
         }
+
 
 
         function aplicarRegraDatas() {
@@ -709,7 +1341,7 @@
                 const vi = (i.value || '').trim();
 
                 if (!vi) {
-                    // sem início: fim desabilitado e limpo
+
                     f.value = '';
                     f.disabled = true;
                     f.removeAttribute('min');
@@ -717,22 +1349,21 @@
                     return;
                 }
 
-                // com início: fim habilita e ganha min
                 f.disabled = false;
                 f.min = vi;
 
-                // se já houver fim selecionado anterior ao início, ajusta para o início
+
                 if (f.value && f.value < vi) {
-                    f.value = vi; // garante fim >= início (permite fim == início)
+                    f.value = vi;
                     clearInvalid(f);
                 }
             };
 
-            // estado inicial
+
             f.disabled = true;
             update();
 
-            // evita listeners duplicados em reaberturas do modal
+
             if (!i.dataset.boundInicioFim) {
                 on(i, 'input', update);
                 on(i, 'change', update);
@@ -740,78 +1371,80 @@
             }
         }
 
-        // ===== Resumo (usa o TEXTO visível do select) =====
+
         function buildSummary() {
-  if (!summaryArea) return;
+            if (!summaryArea) return;
 
-  // meta do curso (com fallback)
-  const meta = (typeof getCursoMetaById === 'function'
-    ? getCursoMetaById(getVal('#cursoTurma'))
-    : null) || {};
 
-  // 1) Infos gerais
-  const data = {
-    'Instituição': getOptText('#instituicaoTurma'),
-    'Código da Turma': getVal('#codigoTurma'),
-    'Curso': getOptText('#cursoTurma'),
-    'Eixo Tecnológico': meta.eixo_tecnologico || '—',
-    'Nível do Curso': meta.nivel_curso || '—',
-    'Tipo': meta.tipo || '—',
-    'Categoria': meta.categoria || '—',
-    'Empresa/Parceiro': getOptText('#empresaTurma'),
-    'Calendário': getOptText('#calendarioTurma'),
-    'Data de Início': fmtBR(getVal('#dataInicio')),
-    'Data de Fim': fmtBR(getVal('#dataFim')),
-    'Turno': getOptText('#turnoTurma') || getVal('#turnoTurma'),
-    'Quantidade de Alunos': getVal('#quantidadeAlunos'),
-    'Status da Turma': getOptText('#statusTurma') || getVal('#statusTurma'),
-  };
+            const meta = (typeof getCursoMetaById === 'function'
+                ? getCursoMetaById(getVal('#cursoTurma'))
+                : null) || {};
 
-  // 2) Linhas das UCs (step 4/5)
-  const ucRows = [];
-  $$('#ucsContainer [data-uc-row]').forEach((row, idx) => {
-    const ucId = row.dataset.ucId || '';
-    const desc = row.querySelector('.uc-name')?.textContent?.trim() || '(sem nome)';
-    const di = row.querySelector('[data-uc-inicio]')?.value || '';
-    const df = row.querySelector('[data-uc-fim]')?.value || '';
 
-    // instrutor no step 5
-    const sel = $(`#ucsInstrutoresContainer select[data-uc-id="${ucId}"]`);
-    let instrutor = '—';
-    if (sel) {
-      const opt = sel.options[sel.selectedIndex];
-      if (opt && opt.value) instrutor = opt.text || '—';
-    }
+            const data = {
+                'Instituição': getOptText('#instituicaoTurma'),
+                'Código da Turma': getVal('#codigoTurma'),
+                'Curso': getOptText('#cursoTurma'),
+                'Eixo Tecnológico': meta.eixo_tecnologico || '—',
+                'Nível do Curso': meta.nivel_curso || '—',
+                'Tipo': meta.tipo || '—',
+                'Categoria': meta.categoria || '—',
+                'Empresa/Parceiro': getOptText('#empresaTurma'),
+                'Calendário': getOptText('#calendarioTurma'),
+                'Data de Início': fmtBR(getVal('#dataInicio')),
+                'Data de Fim': fmtBR(getVal('#dataFim')),
+                'Turno': getOptText('#turnoTurma') || getVal('#turnoTurma'),
+                'Quantidade de Alunos': getVal('#quantidadeAlunos'),
+                'Status da Turma': getOptText('#statusTurma') || getVal('#statusTurma'),
+            };
 
-    ucRows.push({
-      ordem: idx + 1,
-      descricao: desc,
-      inicio: di ? fmtBR(di) : '—',
-      fim: df ? fmtBR(df) : '—',
-      instrutor
-    });
-  });
 
-  // 3) Montagem HTML
-  let html = `
+            const ucRows = [];
+            $$('#ucsContainer [data-uc-row]').forEach((row, idx) => {
+                const ucId = row.dataset.ucId || '';
+                const desc = row.querySelector('.uc-name')?.textContent?.trim() || '(sem nome)';
+                const di = row.querySelector('[data-uc-inicio]')?.value || '';
+                const df = row.querySelector('[data-uc-fim]')?.value || '';
+
+
+                const sel = document.querySelector(`#ucsInstrutoresContainer select[data-uc-id="${ucId}"]`);
+
+
+                let instrutor = 'Sem instrutor';
+                if (sel) {
+                    const opt = sel.options[sel.selectedIndex];
+                    if (opt && opt.value) instrutor = opt.text || 'Sem instrutor';
+                }
+
+                ucRows.push({
+                    ordem: idx + 1,
+                    descricao: desc,
+                    inicio: di ? fmtBR(di) : '—',
+                    fim: df ? fmtBR(df) : '—',
+                    instrutor
+                });
+            });
+
+
+            let html = `
     <div class="alert alert-info mb-3">Confira os dados antes de concluir.</div>
     <div class="table-responsive">
       <table class="table table-sm table-bordered align-middle summary-table">
         <tbody>
   `;
 
-  for (const [k, v] of Object.entries(data)) {
-    html += `
+            for (const [k, v] of Object.entries(data)) {
+                html += `
       <tr>
         <th class="bg-light">${k}</th>
         <td>${v ? v : '<span class="text-muted">—</span>'}</td>
       </tr>`;
-  }
+            }
 
-  // Tabela de UCs
-  let ucTable = '<span class="text-muted">—</span>';
-  if (ucRows.length) {
-    ucTable = `
+
+            let ucTable = '<span class="text-muted">—</span>';
+            if (ucRows.length) {
+                ucTable = `
       <div class="table-responsive">
         <table class="table table-sm table-striped mb-0">
           <thead>
@@ -837,9 +1470,9 @@
         </table>
       </div>
     `;
-  }
+            }
 
-  html += `
+            html += `
       <tr>
         <th class="bg-light">Unidades Curriculares</th>
         <td>${ucTable}</td>
@@ -853,22 +1486,20 @@
     </tbody></table>
   </div>`;
 
-  summaryArea.innerHTML = html;
+            summaryArea.innerHTML = html;
 
-  // Sincroniza o preview de Observações
-  const obs = $('#observacoesTurma');
-  const obsPreview = $('#obsPreview');
-  const setPreview = () => {
-    const v = (obs?.value || '').trim();
-    obsPreview.textContent = v || '—';
-  };
-  setPreview();
-  if (obs) on(obs, 'input', setPreview);
-}
 
-    
+            const obs = $('#observacoesTurma');
+            const obsPreview = $('#obsPreview');
+            const setPreview = () => {
+                const v = (obs?.value || '').trim();
+                obsPreview.textContent = v || '—';
+            };
+            setPreview();
+            if (obs) on(obs, 'input', setPreview);
+        }
 
-        // no clique de concluir (último passo)
+
         on(btnNext, 'click', async () => {
             if (current < total) {
                 if (!validateStep(current)) return;
@@ -893,7 +1524,10 @@
                     const data = JSON.parse(txt);
                     console.log('Turma criada:', data);
                     if (bsModal) bsModal.hide();
+
+                    await carregarTurmas();
                     setTimeout(() => alert('Cadastro concluído!'), 120);
+
                 } catch (e) {
                     console.error('Falha ao salvar:', e);
                     alert('Falha ao salvar a turma. Veja o console para detalhes.');
@@ -903,7 +1537,6 @@
 
 
 
-        // ===== Payload final (NOMES que o backend espera) =====
         function buildPayload() {
             const meta = getCursoMetaById(getVal('#cursoTurma'));
             return {
@@ -917,7 +1550,7 @@
                 id_calendario: getVal('#calendarioTurma'),
                 id_empresa: getVal('#empresaTurma'),
 
-                // ➜ Envie a string exatamente como quer no banco (“Ativo” | “Inativo”)
+
                 status: getOptText('#statusTurma') || getVal('#statusTurma') || 'Ativo',
                 eixo_tecnologico: meta.eixo_tecnologico,
                 nivel_curso: meta.nivel_curso,
@@ -955,14 +1588,13 @@
         on(btnBack, 'click', () => setActive(current - 1));
         on($('#cursoTurma'), 'change', async () => {
             renderUcsParaCurso();
-            await carregarInstrutoresLista(); // pre-carrega para não piscar
+            await carregarInstrutoresLista(); // 
             renderUcsInstrutores();
         });
         on($('#dataInicio'), 'change', applyTurmaDatesToUc);
         on($('#dataFim'), 'change', applyTurmaDatesToUc);
 
 
-        // Navegar clicando no cabeçalho
         items.forEach(item => {
             item.style.cursor = 'pointer';
             on(item, 'click', () => {
@@ -974,7 +1606,7 @@
             });
         });
 
-        // Enter avança
+
         panes.forEach(pane => {
             on(pane, 'keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -986,7 +1618,7 @@
             });
         });
 
-        // Reset + carregar instituições ao abrir
+
         on(modalEl, 'show.bs.modal', async () => {
             current = 1;
             setActive(1);
@@ -994,22 +1626,24 @@
 
             aplicarRegraDatas();
 
-            // Carregamentos em paralelo (cada um é async)
+
             await Promise.all([
                 carregarInstituicoes(),
                 carregarEmpresas(),
                 carregaCalendarios(),
-                carregarCursos(),          // precisa antes de renderizar UCs
-                carregarInstrutoresLista() // se você usa o passo 5 dinâmico
+                carregarCursos(),
+                carregarInstrutoresLista()
             ]);
 
             if (getVal('#cursoTurma')) {
                 renderUcsParaCurso();
                 renderUcsInstrutores();
+
+
             }
         });
 
-        // UX: código da turma em maiúsculas
+
         const codigoTurma = $('#codigoTurma');
         on(codigoTurma, 'input', () => {
             const pos = codigoTurma.selectionStart;
@@ -1017,5 +1651,5 @@
             try { codigoTurma.setSelectionRange(pos, pos); } catch (_) { }
         });
 
-    }); // DOMContentLoaded
+    });
 })();

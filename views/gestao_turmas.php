@@ -227,6 +227,67 @@
 
       <section class="table-section mt-3">
         <h2>Turmas Cadastradas</h2>
+        <div class="filter-section" style="display:flex; flex-wrap:wrap; gap:12px; align-items:end;">
+
+  <div class="filter-group">
+    <label for="searchTurma">Buscar:</label>
+    <input type="text" id="searchTurma" placeholder="Código, Empresa ou Eixo..." class="search-input" />
+  </div>
+
+  <div class="filter-group">
+    <label for="filterEmpresa">Empresa/Parceiro:</label>
+    <select id="filterEmpresa" style="min-width:220px">
+      <option value="Todos">Todos</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="filterStatus">Status:</label>
+    <select id="filterStatus">
+      <option value="Todos">Todos</option>
+      <option value="Ativo">Ativo</option>
+      <option value="Inativo">Inativo</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="filterTurno">Turno:</label>
+    <select id="filterTurno">
+      <option value="Todos">Todos</option>
+      <option value="MANHÃ">Manhã</option>
+      <option value="TARDE">Tarde</option>
+      <option value="NOITE">Noite</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="filterEixo">Eixo Tecnológico:</label>
+    <select id="filterEixo" style="min-width:220px">
+      <option value="Todos">Todos</option>
+              <option value="TI">TI</option>
+              <option value="Metal Mecânica">Metal Mecânica</option>
+    </select>
+  </div>
+
+
+  <div class="filter-group">
+    <label for="pageSize">Itens/página:</label>
+    <select id="pageSize">
+      <option value="10">10</option>
+      <option value="25" selected>25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label>&nbsp;</label>
+    <button id="btnClearFilters" class="btn btn-light" type="button" title="Limpar filtros" disabled>
+      <i class="fas fa-broom"></i> Limpar filtros
+    </button>
+  </div>
+
+</div>
 
         <div class="table-responsive">
           <table class="data-table" id="turmasTable">
@@ -397,6 +458,25 @@
     </div>
   </div>
   <!-- ===================== /MODAL BOOTSTRAP ===================== -->
+   <!-- Modal: Visualização da Turma (sem stepper) -->
+<div class="modal fade" id="viewTurmaModal" tabindex="-1" aria-hidden="true" aria-labelledby="viewTurmaTitle">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable is-plus-5">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewTurmaTitle">
+          Visualizar turma
+          <small class="text-muted ms-2" id="viewTurmaSubTitle"></small>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" id="viewTurmaBody">Carregando…</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
   <!-- Bootstrap JS (necessário para Modal) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
