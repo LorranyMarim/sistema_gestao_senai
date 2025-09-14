@@ -1,92 +1,90 @@
 <?php
 session_start();
 
-// Limite tentativas (opcional)
-if (!isset($_SESSION['login_attempts'])) {
-    $_SESSION['login_attempts'] = 0;
-    $_SESSION['last_attempt_time'] = time();
-}
-$lock_minutes = 5;
-$max_attempts = 5;
+// (Opcional) limites de tentativas: garanta inicialização antes de usar
+$_SESSION['login_attempts']   = $_SESSION['login_attempts']   ?? 0;
+$_SESSION['last_attempt_time'] = $_SESSION['last_attempt_time'] ?? time();
 
-if ($_SESSION['login_attempts'] >= $max_attempts) {
-    $time_since_last = time() - $_SESSION['last_attempt_time'];
-    if ($time_since_last < $lock_minutes * 60) {
-        header("Location: ../views/index.php?erro=1");
-        exit();
-    } else {
-        $_SESSION['login_attempts'] = 0;
-    }
-}
-
-// Checa campos recebidos
 if (!isset($_POST['username']) || !isset($_POST['password'])) {
     header("Location: ../views/index.php?erro=1");
     exit();
 }
 
-$user = trim($_POST['username']);
-$pass = trim($_POST['password']);
-
-// Sanitiza (proteção básica)
-$user = htmlentities($user, ENT_QUOTES, 'UTF-8');
+$user = trim($_POST['username']);   // OK: FastAPI faz strip no user_name
+$pass = $_POST['password'];         // ⚠️ NÃO dar trim na senha!
 
 if (strlen($user) < 4 || strlen($user) > 50 || strlen($pass) < 4 || strlen($pass) > 50) {
     header("Location: ../views/index.php?erro=1");
     exit();
 }
 
-// Faz requisição para API FastAPI
 $api_url = "http://localhost:8000/api/login";
-$dados = array("user_name" => $user, "senha" => $pass);
+$dados = ["user_name" => $user, "senha" => $pass];
 
-$options = array(
-    "http" => array(
-        "header"  => "Content-type: application/json\r\n",
-        "method"  => "POST",
-        "content" => json_encode($dados),
-        "ignore_errors" => true // permite capturar resposta 401, etc.
-    )
-);
+$ch = curl_init($api_url);
+curl_setopt_array($ch, [
+    CURLOPT_POST            => true,
+    CURLOPT_HTTPHEADER      => ['Content-Type: application/json', 'Accept: application/json'],
+    CURLOPT_POSTFIELDS      => json_encode($dados, JSON_UNESCAPED_UNICODE),
+    CURLOPT_RETURNTRANSFER  => true,
+    CURLOPT_HEADER          => true,   // para separar cabeçalhos e corpo
+    CURLOPT_TIMEOUT         => 10,
+    CURLOPT_CONNECTTIMEOUT  => 5,
+]);
+$response = curl_exec($ch);
 
-$context  = stream_context_create($options);
-$result = file_get_contents($api_url, false, $context);
-$http_code = null;
-
-// Captura código HTTP (disponível no $http_response_header)
-if (isset($http_response_header)) {
-    foreach ($http_response_header as $header) {
-        if (preg_match('#HTTP/\d+\.\d+ (\d+)#', $header, $matches)) {
-            $http_code = intval($matches[1]);
-            break;
-        }
-    }
-}
-
-// Se login falhou
-if ($http_code !== 200 || $result === false) {
+if ($response === false) {
+    // (Opcional) log de erro interno
+    // error_log("Login cURL error: " . curl_error($ch));
     $_SESSION['login_attempts'] += 1;
     $_SESSION['last_attempt_time'] = time();
     header("Location: ../views/index.php?erro=1");
     exit();
 }
 
-// Login OK: salva dados na sessão PHP
+$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+$http_code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$body        = substr($response, $header_size);
+curl_close($ch);
+
+// Trate mensagens específicas (melhora UX)
+if ($http_code === 422) {
+    header("Location: ../views/index.php?erro=valid"); // dados inválidos
+    exit();
+}
+if ($http_code === 429) {
+    header("Location: ../views/index.php?erro=limite"); // muitas tentativas
+    exit();
+}
+if ($http_code !== 200) {
+    $_SESSION['login_attempts'] += 1;
+    $_SESSION['last_attempt_time'] = time();
+    header("Location: ../views/index.php?erro=1");
+    exit();
+}
+
+// Decodifica e valida o corpo
+$user_data = json_decode($body, true);
+if (!is_array($user_data) || !isset($user_data['id'])) {
+    // 200 sem JSON esperado → trate como erro
+    $_SESSION['login_attempts'] += 1;
+    $_SESSION['last_attempt_time'] = time();
+    header("Location: ../views/index.php?erro=1");
+    exit();
+}
+
+// Sucesso de login: fortaleça a sessão
+session_regenerate_id(true);
 $_SESSION['login_attempts'] = 0;
 $_SESSION['loggedin'] = true;
 $_SESSION['start'] = time();
-$_SESSION['expire'] = $_SESSION['start'] + (30 * 60); // 30 min
+$_SESSION['expire'] = $_SESSION['start'] + (30 * 60);
 
-// Decodifica resposta da API para pegar info do usuário (opcional)
-$user_data = json_decode($result, true);
-if (isset($user_data['id'])) {
-    $_SESSION['user_id'] = $user_data['id'];
-    $_SESSION['nome'] = $user_data['nome'];
-    $_SESSION['tipo_acesso'] = $user_data['tipo_acesso'];
-    $_SESSION['user_name'] = $user_data['user_name'];
-    $_SESSION['instituicao_id'] = $user_data['instituicao_id'];
-}
+$_SESSION['user_id']        = $user_data['id'];
+$_SESSION['nome']           = $user_data['nome'] ?? null;
+$_SESSION['tipo_acesso']    = $user_data['tipo_acesso'] ?? null;
+$_SESSION['user_name']      = $user_data['user_name'] ?? null;
+$_SESSION['instituicao_id'] = $user_data['instituicao_id'] ?? null;
 
 header("Location: ../views/dashboard.php");
 exit();
-?>

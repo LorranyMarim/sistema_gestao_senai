@@ -6,9 +6,12 @@
   "tipo_acesso": "admin",
   "user_name": "admin",
   "senha": "$2b$12$5aqsM8X9/b4nhDmpoAH34.2Q0x45vxBF7Dt/vHE0NG7CX7hx88rhW",
-  "instituicao_id": "6872ebc05f2c070a0234219f",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
   "data_criacao": {
     "$date": "2025-07-20T02:00:00.000Z"
   },
-  "status": "Ativo"
+  "status": "Ativo",
+  "user_name_lc": "admin"
 }]

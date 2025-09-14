@@ -236,6 +236,64 @@
     }
   }
 
+    function initConfigDropdown() {
+    const configLi = document.getElementById('nav-config');
+    if (!configLi) return;
+
+    const toggle = configLi.querySelector('.submenu-toggle');
+    const submenu = configLi.querySelector('.submenu');
+    if (!toggle || !submenu) return;
+    if (toggle.dataset.wired === '1') return;
+    toggle.dataset.wired = '1';
+
+    if (!submenu.id) submenu.id = 'submenu-config';
+    if (!toggle.hasAttribute('aria-controls')) {
+      toggle.setAttribute('aria-controls', submenu.id);
+    }
+
+    toggle.setAttribute('aria-expanded', String(configLi.classList.contains('open')));
+    submenu.setAttribute('aria-hidden', String(!configLi.classList.contains('open')));
+
+    const doToggle = (e) => {
+      e.preventDefault();
+      const isOpen = configLi.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      submenu.setAttribute('aria-hidden', String(!isOpen));
+
+      document.querySelectorAll('.sidebar-nav li.has-submenu.open').forEach(li => {
+        if (li !== configLi) {
+          li.classList.remove('open');
+          const t  = li.querySelector('.submenu-toggle');
+          const sm = li.querySelector('.submenu');
+          t  && t.setAttribute('aria-expanded', 'false');
+          sm && sm.setAttribute('aria-hidden', 'true');
+        }
+      });
+    };
+
+    toggle.addEventListener('click', doToggle);
+    toggle.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') doToggle(ev);
+    });
+
+    const current = location.pathname.split('/').pop() || '';
+    const isConfigSection = [
+      'configuracao.php',
+      'configuracao_usuarios.php'
+    ].includes(current);
+
+    if (isConfigSection) {
+      configLi.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+      submenu.setAttribute('aria-hidden', 'false');
+
+      if (current === 'configuracao_usuarios.php') {
+        const link = configLi.querySelector('.submenu a[href$="configuracao_usuarios.php"]');
+        link && link.classList.add('active');
+      }
+    }
+  }
+
   // 2) Hamburger da sidebar (se existir na view)
   function initSidebarHamburger() {
     const menuToggle = $('#menu-toggle');
@@ -469,6 +527,7 @@ function setupClearFilters({
   App.ui    = {
     initRelatoriosDropdown,
     initSidebarHamburger,
+    initConfigDropdown,
     enableModalOverlayClose,
     attachDateRangeValidation,
     setupClearFilters,
@@ -480,6 +539,7 @@ function setupClearFilters({
   runNowOrOnReady(() => {
     App.ui.initRelatoriosDropdown();
     App.ui.initSidebarHamburger();
+    App.ui.initConfigDropdown();
     App.ui.enableModalOverlayClose();
   });
 

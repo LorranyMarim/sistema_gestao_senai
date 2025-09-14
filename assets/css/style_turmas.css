@@ -187,13 +187,12 @@ button[type="submit"]:hover {
 }
 
 .sidebar-nav li {
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 .sidebar-nav li a {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
     color: #ffffff;
     text-decoration: none;
     font-size: 1em;
@@ -201,6 +200,8 @@ button[type="submit"]:hover {
     transition: background-color 0.3s ease, color 0.3s ease;
     border-radius: 5px;
     margin: 0 10px;
+    padding: 8px 16px;    /* era 12px 20px */
+    line-height: 1.30; 
 }
 
 .sidebar-nav li a i {
@@ -208,6 +209,7 @@ button[type="submit"]:hover {
     font-size: 1.1em;
     width: 20px;
     text-align: center;
+    margin-right: 10px;
 }
 
 /* Estado de Hover */
@@ -224,7 +226,7 @@ button[type="submit"]:hover {
     font-weight: bold;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     border-left: 5px solid #FFC107;
-    padding-left: 15px;
+    padding-left: 11px;
 }
 
 /* Estilo para o item "Sair" ou ações secundárias */
@@ -2097,7 +2099,7 @@ body.modal-open {
 
     .sidebar-nav li a {
         /* MUDANÇA: Reduz o padding para que os itens ocupem menos espaço vertical */
-        padding: 10px 15px;
+        padding: 8px 12px; 
     }
 
     /* Remove a margem do conteúdo principal em telas menores */
@@ -2839,7 +2841,7 @@ body.modal-open {
 /* Submenu básico */
 .sidebar-nav li.has-submenu > .submenu {
   display: none;
-  padding-left: 1.75rem; /* recuo do submenu */
+  padding-left: 1.25rem;
 }
 
 .sidebar-nav li.has-submenu.open > .submenu {
@@ -2849,12 +2851,16 @@ body.modal-open {
 /* Submenu: fechado/aberto */
 .sidebar-nav li.has-submenu > .submenu {
   display: none;
-  padding-left: 1.75rem;
+  padding-left: 1.25rem;
 }
 .sidebar-nav li.has-submenu.open > .submenu {
   display: block;
 }
 
+.sidebar-nav li.has-submenu > .submenu li a {
+  padding: 6px 16px; 
+  line-height: 1.1;
+}
 /* Toggle com caret (direita -> baixo quando abre) */
 .sidebar-nav .submenu-toggle {
   display: flex;
@@ -2885,4 +2891,16 @@ body.modal-open {
   opacity: .5;
   pointer-events: none;
   cursor: not-allowed;
+}
+
+/* Linha branca 50% abaixo de cada item */
+.sidebar-nav ul > li:not(:last-child) > a {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.139);
+  padding-bottom: 8px; /* dá respiro entre o texto e a linha */
+}
+
+/* Submenu (um pouco mais suave) */
+.sidebar-nav ul > li.has-submenu .submenu > li:not(:last-child) > a {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.347);
+  padding-bottom: 6px;
 }
