@@ -6,7 +6,7 @@
   const App = (window.App = window.App || {});
 
   // ===================== DOM helpers =====================
-  const $  = (sel, root = document) => root.querySelector(sel);
+  const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   // Helper para rodar agora ou quando o DOM estiver pronto
@@ -50,8 +50,8 @@
   }
 
   // Comparadores/limites simples de datas (YYYY-MM-DD)
-  const dateMax   = (a, b) => (!a ? b : !b ? a : (a > b ? a : b));
-  const dateMin   = (a, b) => (!a ? b : !b ? a : (a < b ? a : b));
+  const dateMax = (a, b) => (!a ? b : !b ? a : (a > b ? a : b));
+  const dateMin = (a, b) => (!a ? b : !b ? a : (a < b ? a : b));
   const dateClamp = (v, min, max) => {
     if (!v) return v;
     if (min && v < min) return min;
@@ -137,14 +137,14 @@
 
   // ===================== Validações & máscaras =====================
   const FORBIDDEN = /[<>"';{}]/g;
-  const EMAIL_RE  = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   const MATRICULA_RE = /^[A-Za-z0-9._-]{3,20}$/;
 
   const sanitizeSpaces = (s = '') => s.replace(/\s+/g, ' ').trim();
-  const onlyDigits     = (s = '') => s.replace(/\D+/g, '');
+  const onlyDigits = (s = '') => s.replace(/\D+/g, '');
 
   function isValidEmail(s = '') { return EMAIL_RE.test(String(s).trim()); }
-  function isValidMatricula(s='') { return MATRICULA_RE.test(String(s).trim()); }
+  function isValidMatricula(s = '') { return MATRICULA_RE.test(String(s).trim()); }
 
   // Máscara amigável de telefone brasileiro
   function maskPhone(value = '') {
@@ -167,7 +167,7 @@
 
   // ===================== Storage simples (LocalStorage JSON) =====================
   function saveJSON(key, obj) {
-    try { localStorage.setItem(key, JSON.stringify(obj)); } catch {}
+    try { localStorage.setItem(key, JSON.stringify(obj)); } catch { }
   }
   function loadJSON(key, fallback = null) {
     try {
@@ -205,9 +205,9 @@
       document.querySelectorAll('.sidebar-nav li.has-submenu.open').forEach(li => {
         if (li !== relatoriosLi) {
           li.classList.remove('open');
-          const t  = li.querySelector('.submenu-toggle');
+          const t = li.querySelector('.submenu-toggle');
           const sm = li.querySelector('.submenu');
-          t  && t.setAttribute('aria-expanded', 'false');
+          t && t.setAttribute('aria-expanded', 'false');
           sm && sm.setAttribute('aria-hidden', 'true');
         }
       });
@@ -236,7 +236,7 @@
     }
   }
 
-    function initConfigDropdown() {
+  function initConfigDropdown() {
     const configLi = document.getElementById('nav-config');
     if (!configLi) return;
 
@@ -263,9 +263,9 @@
       document.querySelectorAll('.sidebar-nav li.has-submenu.open').forEach(li => {
         if (li !== configLi) {
           li.classList.remove('open');
-          const t  = li.querySelector('.submenu-toggle');
+          const t = li.querySelector('.submenu-toggle');
           const sm = li.querySelector('.submenu');
-          t  && t.setAttribute('aria-expanded', 'false');
+          t && t.setAttribute('aria-expanded', 'false');
           sm && sm.setAttribute('aria-hidden', 'true');
         }
       });
@@ -373,6 +373,59 @@
     });
     validate();
   }
+  function safe(name, fn) { try { fn(); } catch (e) { console.error(`[init] ${name} falhou:`, e); } }
+
+  // 1) Wiring genérico p/ qualquer li.has-submenu
+  function initSidebarSubmenusGeneric() {
+    const nav = document.querySelector('.sidebar-nav');
+    if (!nav) return;
+
+    nav.querySelectorAll('li.has-submenu').forEach((li) => {
+      const toggle = li.querySelector('.submenu-toggle');
+      const submenu = li.querySelector('.submenu');
+      if (!toggle || !submenu) return;
+
+      // --- Guards contra “duplo wire” (cobre seu padrão atual e o novo)
+      if (li.dataset.wired === '1' || toggle.dataset.wired === '1') return;
+      li.dataset.wired = '1';
+      toggle.dataset.wired = '1';
+
+      // ARIA / id
+      if (!submenu.id) submenu.id = `submenu-${Math.random().toString(36).slice(2)}`;
+      if (!toggle.hasAttribute('aria-controls')) toggle.setAttribute('aria-controls', submenu.id);
+
+      const sync = () => {
+        const open = li.classList.contains('open');
+        toggle.setAttribute('aria-expanded', String(open));
+        submenu.setAttribute('aria-hidden', String(!open));
+      };
+
+      const doToggle = (e) => {
+        e.preventDefault();
+        const isOpen = li.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        submenu.setAttribute('aria-hidden', String(!isOpen));
+
+        // Fecha outros abertos
+        nav.querySelectorAll('li.has-submenu.open').forEach((other) => {
+          if (other === li) return;
+          other.classList.remove('open');
+          const t = other.querySelector('.submenu-toggle');
+          const sm = other.querySelector('.submenu');
+          t && t.setAttribute('aria-expanded', 'false');
+          sm && sm.setAttribute('aria-hidden', 'true');
+        });
+      };
+
+      toggle.addEventListener('click', doToggle);
+      toggle.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') doToggle(ev);
+      });
+
+      // Estado inicial alinhado
+      sync();
+    });
+  }
 
   // 6) Botão genérico "Limpar filtros"
   /**
@@ -384,88 +437,88 @@
    * })
    */
   // 6) Botão genérico "Limpar filtros"
-function setupClearFilters({
-  buttonSelector = '#btnClearFilters',
-  getFiltersState,
-  resetUI,
-  onClear,
-  watchSelectors // <- NOVO: seletores de campos que devem disparar update
-} = {}) {
-  const btn = document.querySelector(buttonSelector);
-  if (!btn) return;
+  function setupClearFilters({
+    buttonSelector = '#btnClearFilters',
+    getFiltersState,
+    resetUI,
+    onClear,
+    watchSelectors // <- NOVO: seletores de campos que devem disparar update
+  } = {}) {
+    const btn = document.querySelector(buttonSelector);
+    if (!btn) return;
 
-  if (btn.dataset.wired === '1') return;
-  btn.dataset.wired = '1';
+    if (btn.dataset.wired === '1') return;
+    btn.dataset.wired = '1';
 
-  // container padrão (retrocompatível)
-  const container =
-    btn.closest('.filter-section') ||
-    btn.closest('.table-section') ||
-    document.body;
+    // container padrão (retrocompatível)
+    const container =
+      btn.closest('.filter-section') ||
+      btn.closest('.table-section') ||
+      document.body;
 
-  function hasAnyFilter(state) {
-    if (!state || typeof state !== 'object') return false;
-    for (const k of Object.keys(state)) {
-      const v = state[k];
-      if (v == null) continue;
-      if (typeof v === 'string' && v.trim() !== '') return true;
-      if (Array.isArray(v) && v.some(x => (typeof x === 'string' ? x.trim() !== '' : x != null))) return true;
-      if (typeof v === 'number' && !Number.isNaN(v) && v !== 0) return true;
-      if (typeof v === 'boolean' && v) return true;
-      if (typeof v === 'object' && Object.keys(v).length > 0) return true;
+    function hasAnyFilter(state) {
+      if (!state || typeof state !== 'object') return false;
+      for (const k of Object.keys(state)) {
+        const v = state[k];
+        if (v == null) continue;
+        if (typeof v === 'string' && v.trim() !== '') return true;
+        if (Array.isArray(v) && v.some(x => (typeof x === 'string' ? x.trim() !== '' : x != null))) return true;
+        if (typeof v === 'number' && !Number.isNaN(v) && v !== 0) return true;
+        if (typeof v === 'boolean' && v) return true;
+        if (typeof v === 'object' && Object.keys(v).length > 0) return true;
+      }
+      return false;
     }
-    return false;
-  }
 
-  const updateBtn = () => {
-    const state = (typeof getFiltersState === 'function') ? (getFiltersState() || {}) : {};
-    const active = hasAnyFilter(state);
+    const updateBtn = () => {
+      const state = (typeof getFiltersState === 'function') ? (getFiltersState() || {}) : {};
+      const active = hasAnyFilter(state);
 
-    // Se for <button>, dá para usar disabled nativo
-    if (btn.tagName === 'BUTTON') {
-      btn.disabled = !active;
-    }
-    btn.setAttribute('aria-disabled', String(!active));
-    btn.classList.toggle('is-disabled', !active);
-  };
+      // Se for <button>, dá para usar disabled nativo
+      if (btn.tagName === 'BUTTON') {
+        btn.disabled = !active;
+      }
+      btn.setAttribute('aria-disabled', String(!active));
+      btn.classList.toggle('is-disabled', !active);
+    };
 
-  const debouncedUpdate = App.utils?.debounce ? App.utils.debounce(updateBtn, 120) : updateBtn;
+    const debouncedUpdate = App.utils?.debounce ? App.utils.debounce(updateBtn, 120) : updateBtn;
 
-  // 1) Listeners pelo container (retrocompatível)
-  container.addEventListener('input', debouncedUpdate, { passive: true });
-  container.addEventListener('change', debouncedUpdate, { passive: true });
+    // 1) Listeners pelo container (retrocompatível)
+    container.addEventListener('input', debouncedUpdate, { passive: true });
+    container.addEventListener('change', debouncedUpdate, { passive: true });
 
-  // 2) Listeners diretos nos campos informados (NOVO e decisivo no seu caso)
-  if (Array.isArray(watchSelectors) && watchSelectors.length) {
-    watchSelectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
-        el.addEventListener('input', debouncedUpdate, { passive: true });
-        el.addEventListener('change', debouncedUpdate, { passive: true });
+    // 2) Listeners diretos nos campos informados (NOVO e decisivo no seu caso)
+    if (Array.isArray(watchSelectors) && watchSelectors.length) {
+      watchSelectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          el.addEventListener('input', debouncedUpdate, { passive: true });
+          el.addEventListener('change', debouncedUpdate, { passive: true });
+        });
       });
-    });
-  }
-
-  btn.addEventListener('click', async () => {
-    // respeita disabled nativo ou aria
-    const isDisabled = (btn.tagName === 'BUTTON') ? btn.disabled : (btn.getAttribute('aria-disabled') === 'true');
-    if (isDisabled) return;
-
-    btn.setAttribute('aria-busy', 'true');
-    try {
-      if (typeof resetUI === 'function') await resetUI();
-      if (typeof onClear === 'function')  await onClear();
-    } catch (e) {
-      console.error('[setupClearFilters] onClear/resetUI error:', e);
-    } finally {
-      btn.removeAttribute('aria-busy');
-      updateBtn();
     }
-  });
 
-  updateBtn();
-  btn._updateClearFiltersBtn = updateBtn;
-  return { update: updateBtn };
-}
+    btn.addEventListener('click', async () => {
+      // respeita disabled nativo ou aria
+      const isDisabled = (btn.tagName === 'BUTTON') ? btn.disabled : (btn.getAttribute('aria-disabled') === 'true');
+      if (isDisabled) return;
+
+      btn.setAttribute('aria-busy', 'true');
+      try {
+        if (typeof resetUI === 'function') await resetUI();
+        if (typeof onClear === 'function') await onClear();
+      } catch (e) {
+        console.error('[setupClearFilters] onClear/resetUI error:', e);
+      } finally {
+        btn.removeAttribute('aria-busy');
+        updateBtn();
+      }
+    });
+
+    updateBtn();
+    btn._updateClearFiltersBtn = updateBtn;
+    return { update: updateBtn };
+  }
 
 
   // 7) Paginação simples: atualiza texto e estado dos botões
@@ -504,14 +557,14 @@ function setupClearFilters({
   }
 
   // ===================== Export =====================
-  App.dom   = { $, $$, runNowOrOnReady };
+  App.dom = { $, $$, runNowOrOnReady };
   App.utils = {
     debounce, norm, toId,
     toIsoStartOfDayLocal, toIsoEndOfDayLocal,
     dateMax, dateMin, dateClamp,
     sanitizeSpaces
   };
-  App.net   = { fetchJSON, safeFetch: fetchJSON, fetchWithTimeout };
+  App.net = { fetchJSON, safeFetch: fetchJSON, fetchWithTimeout };
   App.format = {
     fmtBR, fmtDateBR, fmtDateTimeBR,
     parseIsoAssumindoUtc,
@@ -524,7 +577,7 @@ function setupClearFilters({
     onlyDigits, maskPhone
   };
   App.store = { saveJSON, loadJSON };
-  App.ui    = {
+  App.ui = {
     initRelatoriosDropdown,
     initSidebarHamburger,
     initConfigDropdown,
@@ -532,15 +585,20 @@ function setupClearFilters({
     attachDateRangeValidation,
     setupClearFilters,
     bindSimplePagination,
-    showModal, hideModal
+    showModal, hideModal,
+    initSidebarSubmenusGeneric,
   };
 
   // ===================== Auto-init básico =====================
   runNowOrOnReady(() => {
-    App.ui.initRelatoriosDropdown();
-    App.ui.initSidebarHamburger();
-    App.ui.initConfigDropdown();
-    App.ui.enableModalOverlayClose();
+    safe('Relatorios', App.ui.initRelatoriosDropdown);
+    safe('SidebarHamburger', App.ui.initSidebarHamburger);
+    safe('Config', App.ui.initConfigDropdown);
+    safe('OverlayClose', App.ui.enableModalOverlayClose);
+
+    // Wiring genérico cobre casos em que o Config não “ficou wired”
+    safe('SubmenusGeneric', App.ui.initSidebarSubmenusGeneric);
+
   });
 
 })();

@@ -50,7 +50,15 @@
               <li><a href="disponibilidade_instrutores.php">Disponibilidade de Instrutor</a></li>
             </ul>
           </li>
-
+          <li id="nav-config" class="has-submenu">
+                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
+                            <span><i class="fas fa-tools"></i> Configuração</span>
+                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                        </a>
+                        <ul class="submenu" id="submenu-config">
+                            <li><a href="configuracao_usuarios.php"> Usuários</a></li>
+                        </ul>
+                    </li>
           <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
