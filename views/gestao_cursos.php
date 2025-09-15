@@ -149,15 +149,6 @@ require_once("../config/verifica_login.php");
           </div>
 
           <div class="filter-group">
-            <label for="filterCategoria">Categoria:</label>
-            <select id="filterCategoria">
-              <option value="Todos">Todos</option>
-              <option value="C">C</option>
-              <option value="A">A</option>
-            </select>
-          </div>
-
-          <div class="filter-group">
             <label for="filterEixo">Eixo Tecnológico:</label>
             <select id="filterEixo">
               <option value="Todos">Todos</option>
@@ -198,7 +189,6 @@ require_once("../config/verifica_login.php");
               <option value="created_desc">Criado em (recente→antigo)</option>
               <option value="nome_asc">Nome (A→Z)</option>
               <option value="status_asc">Status</option>
-              <option value="categoria_asc">Categoria</option>
               <option value="eixo_asc">Eixo</option>
               <option value="modalidade_asc">Modalidade</option>
               <option value="tipo_asc">Tipo</option>
@@ -230,7 +220,6 @@ require_once("../config/verifica_login.php");
             <thead>
               <tr>
                 <th>Nome</th>
-                <th>Categoria</th>
                 <th>Eixo Tecnológico</th>
                 <th>Modalidade</th>
                 <th>Criado em</th>
@@ -311,15 +300,7 @@ require_once("../config/verifica_login.php");
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <label for="categoriaCurso">Categoria:</label>
-                  <select id="categoriaCurso" name="categoria" required>
-                    <option value="">Selecione</option>
-                    <option value="C">C</option>
-                    <option value="A">A</option>
-                  </select>
-                </div>
-
+                
                 <div class="form-group">
                   <label for="eixoTecnologicoCurso">Eixo Tecnológico:</label>
                   <select id="eixoTecnologicoCurso" name="eixo_tecnologico" required>

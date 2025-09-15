@@ -26,7 +26,6 @@ let filtros = {
   text: '',
   instituicao: '',
   status: 'Todos',
-  categoria: 'Todos',
   eixo: 'Todos',
   modalidade: 'Todos', // mapeia nivel_curso
   tipo: 'Todos',       // mapeia tipo
@@ -59,7 +58,6 @@ function hasAtivos() {
   return !!(filtros.text ||
     filtros.instituicao ||
     filtros.status !== 'Todos' ||
-    filtros.categoria !== 'Todos' ||
     filtros.eixo !== 'Todos' ||
     filtros.modalidade !== 'Todos' ||
     filtros.tipo !== 'Todos' ||
@@ -156,7 +154,6 @@ function reflectFiltrosToUI() {
   if (el('searchCurso')) el('searchCurso').value = filtros.text || '';
   if (el('filterInstituicao')) el('filterInstituicao').value = filtros.instituicao || '';
   if (el('filterStatus')) el('filterStatus').value = filtros.status || 'Todos';
-  if (el('filterCategoria')) el('filterCategoria').value = filtros.categoria || 'Todos';
   if (el('filterEixo')) el('filterEixo').value = filtros.eixo || 'Todos';
   if (el('filterModalidade')) el('filterModalidade').value = filtros.modalidade || 'Todos';
   if (el('filterTipo')) el('filterTipo').value = filtros.tipo || 'Todos';
@@ -177,7 +174,7 @@ function wireFilterEvents() {
   }, 250));
 
   // selects simples
-  [['filterInstituicao', 'instituicao'], ['filterStatus', 'status'], ['filterCategoria', 'categoria'],
+  [['filterInstituicao', 'instituicao'], ['filterStatus', 'status'],
   ['filterEixo', 'eixo'], ['filterModalidade', 'modalidade'], ['filterTipo', 'tipo']].forEach(([id, key]) => {
     el(id)?.addEventListener('change', e => {
       filtros[key] = e.target.value || (key === 'status' ? 'Todos' : '');
@@ -218,14 +215,13 @@ function wireFilterEvents() {
       $('#searchCurso').val('');
       el('filterInstituicao').value = '';
       el('filterStatus').value = 'Todos';
-      el('filterCategoria').value = 'Todos';
       el('filterEixo').value = 'Todos';
       el('filterModalidade').value = 'Todos';
       el('filterTipo').value = 'Todos';
       try { $('#filterUcs').val([]).trigger('change'); } catch { }
 
       filtros = {
-        ...filtros, text: '', instituicao: '', status: 'Todos', categoria: 'Todos', eixo: 'Todos',
+        ...filtros, text: '', instituicao: '', status: 'Todos', eixo: 'Todos',
         modalidade: 'Todos', tipo: 'Todos', ucs: [], page: 1
       };
       saveFiltros(); applyFiltersAndRender(); updateClearBtn();
@@ -236,7 +232,7 @@ function wireFilterEvents() {
 function matchesText(c) {
   const t = strip(filtros.text);
   if (!t) return true;
-  const blob = strip([c.nome, c.categoria, c.eixo_tecnologico, c.nivel_curso, c.tipo, c.status].join(' '));
+  const blob = strip([c.nome, c.eixo_tecnologico, c.nivel_curso, c.tipo, c.status].join(' '));
   return blob.includes(t);
 }
 function matchesInstituicao(c) {
@@ -246,10 +242,6 @@ function matchesInstituicao(c) {
 function matchesStatus(c) {
   if (filtros.status === 'Todos') return true;
   return (String(normalizeStatus(c.status)) === filtros.status);
-}
-function matchesCategoria(c) {
-  if (filtros.categoria === 'Todos') return true;
-  return String(c.categoria || '') === filtros.categoria;
 }
 function matchesEixo(c) {
   if (filtros.eixo === 'Todos') return true;
@@ -274,7 +266,6 @@ function compareBy(a, b) {
   switch (filtros.sortBy) {
     case 'nome_asc': return (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' });
     case 'status_asc': return normalizeStatus(a.status).localeCompare(normalizeStatus(b.status), 'pt-BR', { sensitivity: 'base' });
-    case 'categoria_asc': return (a.categoria || '').localeCompare(b.categoria || '', 'pt-BR', { sensitivity: 'base' });
     case 'eixo_asc': return (a.eixo_tecnologico || '').localeCompare(b.eixo_tecnologico || '', 'pt-BR', { sensitivity: 'base' });
     case 'modalidade_asc': return (a.nivel_curso || '').localeCompare(b.nivel_curso || '', 'pt-BR', { sensitivity: 'base' });
     case 'tipo_asc': return (a.tipo || '').localeCompare(b.tipo || '', 'pt-BR', { sensitivity: 'base' });
@@ -285,8 +276,7 @@ function compareBy(a, b) {
 
 function getFilteredAndSorted() {
   let list = (cursosCache || []).filter(c =>
-    matchesText(c) && matchesInstituicao(c) && matchesStatus(c) &&
-    matchesCategoria(c) && matchesEixo(c) && matchesModalidade(c) &&
+    matchesText(c) && matchesInstituicao(c) && matchesStatus(c) && matchesEixo(c) && matchesModalidade(c) &&
     matchesTipo(c) && matchesUcs(c)
   );
   list.sort(compareBy);
@@ -523,7 +513,6 @@ function renderCursosTable(cursos) {
     $tbody.append(`
       <tr>
         <td>${curso.nome || ''}</td>
-        <td>${curso.categoria || ''}</td>
         <td>${curso.eixo_tecnologico || ''}</td>
         <td>${curso.nivel_curso || ''}</td>
         <td>${fmtDateBR(curso.data_criacao)}</td>
@@ -560,7 +549,6 @@ function abrirModalCurso(edit = false, cursoId = null) {
   $('#cargaHoraria').val(edit ? (cursoEditando?.carga_horaria ?? '') : '');
   $('#cursoId').val(edit ? (cursoEditando?._id || '') : '');
   $('#nomeCurso').val(edit ? (cursoEditando?.nome || '') : '');
-  $('#categoriaCurso').val(edit ? (cursoEditando?.categoria || '') : '');
   $('#eixoTecnologicoCurso').val(edit ? (cursoEditando?.eixo_tecnologico || '') : '');
   $('#observacao').val(edit ? (cursoEditando?.observacao || '') : '');
 
@@ -581,7 +569,7 @@ function validarFormCurso() {
   let ok = true;
 
   // limpa erros
-  ['#instituicaoId', '#nomeCurso', '#nivelCurso', '#tipoCurso', '#statusCurso', '#categoriaCurso', '#eixoTecnologicoCurso', '#cargaHoraria', '#ucsSelect']
+  ['#instituicaoId', '#nomeCurso', '#nivelCurso', '#tipoCurso', '#statusCurso', '#eixoTecnologicoCurso', '#cargaHoraria', '#ucsSelect']
     .forEach(sel => clearFieldError(sel));
 
   const instituicao = $('#instituicaoId').val();
@@ -589,7 +577,6 @@ function validarFormCurso() {
   const modalidade = $('#nivelCurso').val();
   const tipo = $('#tipoCurso').val();
   const status = $('#statusCurso').val();
-  const categoria = $('#categoriaCurso').val();
   const eixo = $('#eixoTecnologicoCurso').val();
   const cargaHoraria = Number($('#cargaHoraria').val());
   const ucs = $('#ucsSelect').val() || [];
@@ -600,7 +587,6 @@ function validarFormCurso() {
   if (!modalidade) { setFieldError('#nivelCurso', 'Obrigatório'); ok = false; }
   if (!tipo) { setFieldError('#tipoCurso', 'Obrigatório'); ok = false; }
   if (!status) { setFieldError('#statusCurso', 'Obrigatório'); ok = false; }
-  if (!categoria) { setFieldError('#categoriaCurso', 'Obrigatório'); ok = false; }
   if (!eixo) { setFieldError('#eixoTecnologicoCurso', 'Obrigatório'); ok = false; }
   if (!Number.isFinite(cargaHoraria) || !Number.isInteger(cargaHoraria) || cargaHoraria < 1) {
     setFieldError('#cargaHoraria', 'Inteiro ≥ 1'); ok = false;
@@ -611,7 +597,6 @@ function validarFormCurso() {
   if (modalidade && !NIVEIS_SET.has(modalidade)) { setFieldError('#nivelCurso', 'Valor inválido'); ok = false; }
   if (tipo && !TIPOS_SET.has(tipo)) { setFieldError('#tipoCurso', 'Valor inválido'); ok = false; }
   if (status && !STATUS_SET.has(status)) { setFieldError('#statusCurso', 'Valor inválido'); ok = false; }
-  if (categoria && !CATEG_SET.has(categoria)) { setFieldError('#categoriaCurso', 'Valor inválido'); ok = false; }
   if (eixo && !EIXO_SET.has(eixo)) { setFieldError('#eixoTecnologicoCurso', 'Valor inválido'); ok = false; }
 
   // referências
@@ -647,7 +632,6 @@ function salvarCurso(e) {
     tipo: $('#tipoCurso').val(),
     nivel_curso: $('#nivelCurso').val(),
     status: $('#statusCurso').val(),
-    categoria: $('#categoriaCurso').val(),
     eixo_tecnologico: $('#eixoTecnologicoCurso').val(),
     carga_horaria: Number($('#cargaHoraria').val()),
     instituicao_id: $('#instituicaoId').val(),
@@ -838,7 +822,6 @@ function mostrarDetalheCurso(cursoId) {
     <div class="popup-field"><span class="popup-label">Nome:</span> ${curso.nome || ''}</div>
     <div class="popup-field"><span class="popup-label">Tipo:</span> ${curso.tipo || ''}</div>
     <div class="popup-field"><span class="popup-label">Modalidade:</span> ${curso.nivel_curso || ''}</div>
-    <div class="popup-field"><span class="popup-label">Categoria:</span> ${curso.categoria || ''}</div>
     <div class="popup-field"><span class="popup-label">Eixo Tecnológico:</span> ${curso.eixo_tecnologico || ''}</div>
     <div class="popup-field"><span class="popup-label">Carga Horária:</span> ${curso.carga_horaria ?? ''}</div>
     <div class="popup-field"><span class="popup-label">Status:</span> ${normalizeStatus(curso.status)}</div>
