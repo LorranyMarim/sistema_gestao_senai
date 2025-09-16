@@ -16,6 +16,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../assets/css/style.css">
+
     <script>
         // Validações avançadas de formulário
         document.addEventListener("DOMContentLoaded", function () {
@@ -26,6 +27,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             errorDiv.className = "error-message";
             errorDiv.style.color = "#d9534f";
             errorDiv.style.marginTop = "10px";
+
 
             // Restrições configuráveis
             const minLen = 4;
@@ -93,6 +95,14 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     <div class="login-container">
         <img src="../assets/logo_azul.png" alt="Logo" class="senai-logo">
         <form action="../backend/login.php" method="POST" autocomplete="off" novalidate>
+
+            <div class="input-group">
+                <label for="instituicao">Instituição:</label>
+                <select id="instituicao" name="instituicao_id" required>
+                    <option value="">Carregando instituições...</option>
+                </select>
+            </div>
+
             <div class="input-group">
                 <label for="username">Usuário:</label>
                 <input type="text" id="username" name="username" required minlength="4" maxlength="50" pattern="^[^<>'\"
@@ -112,6 +122,56 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             ?>
         </form>
     </div>
+    <script>
+
+        document.addEventListener("DOMContentLoaded", async function () {
+            const instSelect = document.getElementById("instituicao");
+
+            // 1) Carrega instituições (rota pública enxuta no FastAPI; ver seção 3)
+            async function carregarInstituicoes() {
+                try {
+                    const res = await fetch("http://localhost:8000/api/instituicoes");
+                    if (!res.ok) throw new Error("HTTP " + res.status);
+                    const lista = await res.json(); // [{_id, nome}]
+                    instSelect.innerHTML = '<option value="">Selecione...</option>';
+                    lista.forEach(i => {
+                        const opt = document.createElement("option");
+                        opt.value = i._id;
+                        opt.textContent = i.nome || "(sem nome)";
+                        instSelect.appendChild(opt);
+                    });
+                } catch (e) {
+                    instSelect.innerHTML = '<option value="">(erro ao carregar)</option>';
+                    console.error("Falha ao carregar instituições:", e);
+                }
+            }
+            carregarInstituicoes();
+
+            // 2) Validação simples (integra com seu validador atual)
+            const form = document.querySelector("form");
+            form.addEventListener("submit", function (e) {
+                if (!instSelect.value) {
+                    e.preventDefault();
+                    const old = form.querySelector(".error-message");
+                    if (old) old.remove();
+                    const err = document.createElement("p");
+                    err.className = "error-message";
+                    err.style.color = "#d9534f";
+                    err.style.marginTop = "10px";
+                    err.textContent = "Selecione uma instituição.";
+                    form.appendChild(err);
+                    instSelect.focus();
+                }
+            });
+
+            instSelect.addEventListener("change", () => {
+                const old = document.querySelector(".error-message");
+                if (old) old.remove();
+            });
+        });
+    </script>
+
+
 </body>
 
 </html>

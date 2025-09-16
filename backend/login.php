@@ -5,13 +5,14 @@ session_start();
 $_SESSION['login_attempts']   = $_SESSION['login_attempts']   ?? 0;
 $_SESSION['last_attempt_time'] = $_SESSION['last_attempt_time'] ?? time();
 
-if (!isset($_POST['username']) || !isset($_POST['password'])) {
+if (!isset($_POST['username']) || !isset($_POST['password']) || !isset($_POST['instituicao_id'])) {
     header("Location: ../views/index.php?erro=1");
     exit();
 }
 
 $user = trim($_POST['username']);   // OK: FastAPI faz strip no user_name
 $pass = $_POST['password'];         // ⚠️ NÃO dar trim na senha!
+$inst = $_POST['instituicao_id'];
 
 if (strlen($user) < 4 || strlen($user) > 50 || strlen($pass) < 4 || strlen($pass) > 50) {
     header("Location: ../views/index.php?erro=1");
@@ -19,7 +20,7 @@ if (strlen($user) < 4 || strlen($user) > 50 || strlen($pass) < 4 || strlen($pass
 }
 
 $api_url = "http://localhost:8000/api/login";
-$dados = ["user_name" => $user, "senha" => $pass];
+$dados = ["user_name" => $user, "senha" => $pass, "instituicao_id" => $inst];
 
 $ch = curl_init($api_url);
 curl_setopt_array($ch, [
@@ -84,7 +85,7 @@ $_SESSION['user_id']        = $user_data['id'];
 $_SESSION['nome']           = $user_data['nome'] ?? null;
 $_SESSION['tipo_acesso']    = $user_data['tipo_acesso'] ?? null;
 $_SESSION['user_name']      = $user_data['user_name'] ?? null;
-$_SESSION['instituicao_id'] = $user_data['instituicao_id'] ?? null;
+$_SESSION['instituicao_id'] = $inst ?: ($user_data['instituicao_id'] ?? null);
 
 header("Location: ../views/dashboard.php");
 exit();

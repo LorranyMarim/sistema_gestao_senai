@@ -16,6 +16,7 @@ MAX_ATTEMPTS = 5
 class UsuarioLogin(BaseModel):
     user_name: str
     senha: str
+    instituicao_id: str | None = None
 
     @validator('user_name')
     def validar_user(cls, v):
@@ -65,17 +66,36 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
     response.set_cookie(key="session_token", value=token, httponly=True, max_age=30*60)
 
     # ⚠️ Converta ObjectId -> str
-    inst_id = usuario.get("instituicao_id")
-    if inst_id is not None:
+    # Determina a instituição válida:
+    # - se o usuário tiver lista de instituições (multi), exija que a escolhida esteja na lista
+    # - se o usuário tiver uma única (campo instituicao_id), aceite a escolhida se coincidir; senão force a dele
+    inst_id_user = usuario.get("instituicao_id")
+    if inst_id_user is not None:
         try:
-            inst_id = str(inst_id)
+            inst_id_user = str(inst_id_user)
         except Exception:
-            inst_id = None
+            inst_id_user = None
+
+    insts_user = usuario.get("instituicoes_ids") or []
+    insts_user = [str(x) for x in insts_user if x is not None]
+
+    chosen = (dados.instituicao_id or "").strip()
+    if insts_user:
+        if not chosen or chosen not in insts_user:
+            raise HTTPException(status_code=403, detail="Instituição não permitida para este usuário.")
+        inst_final = chosen
+    elif inst_id_user:
+        # usuário de 1 instituição só: se o cliente mandou outra, ignore/force a dele
+        inst_final = inst_id_user if not chosen or chosen == inst_id_user else inst_id_user
+    else:
+         # usuário sem instituição configurada (caso raro): aceite a escolhida se existir
+        inst_exists = db["instituicao"].find_one({"_id": {"$in": [inst_id_user]}}) if chosen else None
+        inst_final = chosen if inst_exists else None
 
     return {
         "id": str(usuario.get("_id")),
         "nome": usuario.get("nome"),
         "tipo_acesso": usuario.get("tipo_acesso"),
         "user_name": usuario.get("user_name"),
-        "instituicao_id": inst_id
+        "instituicao_id": inst_final
     }
