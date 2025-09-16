@@ -151,7 +151,7 @@
               <tr>
                 <th>Nome</th>
                 <th>Categoria</th>
-                <th>Eixo</th>
+                <th>Área</th>
                 <th>Nível</th>
                 <th>Criado em</th>
                 <th>Status</th>

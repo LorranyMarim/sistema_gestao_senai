@@ -20,12 +20,12 @@
     status: 'Todos',        // Todos | Ativo | Inativo
     turnos: [],             // multiselect
     ucs: [],                // multiselect por ID
-    comSemUcs: 'Todos',     // Todos | Com | Sem
+    categoria: 'Todos',   // Todos | A | C
     sortBy: 'created_desc', // created_desc | nome_asc | matricula_asc | carga_asc | status_asc
     pageSize: 10,
     page: 1
   };
-
+  const getMultiValues = (sel) => Array.from((sel?.selectedOptions || [])).map(o => o.value);
   // ===================== DOM =====================
   // Modais (cadastro/edição)
   const instrutorModal = document.getElementById('instrutorModal');
@@ -52,9 +52,11 @@
   const mapaCompetenciaSelect = window.$ ? window.$('#mapaCompetencia') : null; // select2 (multi)
   const turnosSelect = window.$ ? window.$('#turnosInstrutor') : null; // select2 (multi)
   const cargaHorariaInput = document.getElementById('cargaHoraria');
+  const categoriaInstrutor = document.getElementById('categoriaInstrutor');
 
   // Modal Visualizar
   const visualizarInstrutorModal = document.getElementById('visualizarInstrutorModal');
+  const viewCategoria = document.getElementById('viewCategoria');
   const closeVisualizarInstrutor = document.getElementById('closeVisualizarInstrutor');
   const fecharVisualizarInstrutor = document.getElementById('fecharVisualizarInstrutor');
   const viewInstituicao = document.getElementById('viewInstituicao');
@@ -138,6 +140,7 @@
     instrutorForm?.reset();
     if (mapaCompetenciaSelect?.length) mapaCompetenciaSelect.val(null).trigger('change');
     if (turnosSelect?.length) turnosSelect.val(null).trigger('change');
+    if (categoriaInstrutor) [...categoriaInstrutor.options].forEach(o => (o.selected = false));
     if (statusSelect) statusSelect.value = 'Ativo';  // default
     if (modalTitle) modalTitle.textContent = 'Adicionar Novo Instrutor';
     if (instrutorIdInput) instrutorIdInput.value = '';
@@ -186,20 +189,20 @@
   // ===================== Select2 (form) =====================
   function initSelect2InModal() {
     if (!window.$?.fn?.select2) return;
-const $modalParent = $('#instrutorModal');
+    const $modalParent = $('#instrutorModal');
 
     // Turnos (sempre local; opções já estão no HTML)
     if (turnosSelect?.length && !turnosSelect.hasClass('select2-hidden-accessible')) {
       turnosSelect.select2({
         width: '100%',
         placeholder: 'Selecione os Turnos',
-        dropdownParent:  $modalParent,
+        dropdownParent: $modalParent,
         closeOnSelect: false
       });
       turnosSelect.on('select2:open', () => {
-    const $c = turnosSelect.data('select2').$container;
-       $c.removeClass('select2-container--above').addClass('select2-container--below');
-     });
+        const $c = turnosSelect.data('select2').$container;
+        $c.removeClass('select2-container--above').addClass('select2-container--below');
+      });
     }
 
     // Mapa de Competências (AJAX)
@@ -366,15 +369,15 @@ const $modalParent = $('#instrutorModal');
   <select id="filterUcs" multiple style="min-width:260px"></select>
 `));
 
-    // Com/sem UCs
+
     row2.appendChild(mkGroup(`
-  <label for="filterComSemUcs">Com/sem UCs:</label>
-  <select id="filterComSemUcs">
-    <option value="Todos">Todos</option>
-    <option value="Com">Com UCs</option>
-    <option value="Sem">Sem UCs</option>
-  </select>
-`));
+ <label for="filterCategoria">Categoria:</label>
+   <select id="filterCategoria">
+     <option value="Todos">Todos</option>
+     <option value="A">A</option>
+     <option value="C">C</option>
+   </select>
+ `));
 
     // ======= LINHA 3: Ordenar por | Itens/página | Limpar filtros =======
     row3.appendChild(mkGroup(`
@@ -471,19 +474,19 @@ const $modalParent = $('#instrutorModal');
   }
 
   function populateFilterInstituicao() {
-  const sel = document.getElementById('filterInstituicao');
-  if (!sel) return;
-  const current = sel.value || filters.instituicao || '';
-  sel.innerHTML = `<option value="">Todas</option>`;
-  Object.entries(instituicoesMap).forEach(([id, nome]) => {
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = nome;
-    sel.appendChild(opt);
-  });
-  sel.value = current;
-  updateClearBtn(); // <- ADICIONE ESTA LINHA
-}
+    const sel = document.getElementById('filterInstituicao');
+    if (!sel) return;
+    const current = sel.value || filters.instituicao || '';
+    sel.innerHTML = `<option value="">Todas</option>`;
+    Object.entries(instituicoesMap).forEach(([id, nome]) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = nome;
+      sel.appendChild(opt);
+    });
+    sel.value = current;
+    updateClearBtn(); // <- ADICIONE ESTA LINHA
+  }
 
   // Lê o estado ATUAL da UI (sem depender do objeto filters)
   function getUIFilterState() {
@@ -492,7 +495,7 @@ const $modalParent = $('#instrutorModal');
       text: ($('searchInstrutor')?.value || '').trim(),
       instituicao: $('filterInstituicao')?.value || '',
       status: $('filterStatus')?.value || 'Todos',
-      comSemUcs: $('filterComSemUcs')?.value || 'Todos',
+      categoria: $('filterCategoria')?.value || 'Todos',
       turnos: (window.$ ? (window.$('#filterTurnos').val() || []) : []),
       ucs: (window.$ ? (window.$('#filterUcs').val() || []) : []),
     };
@@ -504,7 +507,7 @@ const $modalParent = $('#instrutorModal');
       s.text ||
       s.instituicao ||
       (s.status !== 'Todos') ||
-      (s.comSemUcs !== 'Todos') ||
+      (s.categoria !== 'Todos') ||
       (s.turnos && s.turnos.length) ||
       (s.ucs && s.ucs.length)
     );
@@ -517,122 +520,122 @@ const $modalParent = $('#instrutorModal');
 
 
   function wireFilterEvents() {
-  const el = (id) => document.getElementById(id);
+    const el = (id) => document.getElementById(id);
 
-  // Busca textual — debounce
-  if (searchInstrutorInput) {
-    searchInstrutorInput.addEventListener('input', debounce(() => {
-      filters.text = searchInstrutorInput.value || '';
-      filters.page = 1;
-      persistLastFilter();
-      applyFiltersAndRender();
-      updateClearBtn();
-    }, 250));
-  }
-
-  el('filterInstituicao')?.addEventListener('change', (e) => {
-    filters.instituicao = e.target.value || '';
-    filters.page = 1;
-    persistLastFilter();
-    applyFiltersAndRender();
-    updateClearBtn();
-  });
-
-  el('filterStatus')?.addEventListener('change', (e) => {
-    filters.status = e.target.value || 'Todos';
-    filters.page = 1;
-    persistLastFilter();
-    applyFiltersAndRender();
-    updateClearBtn();
-  });
-
-  el('filterComSemUcs')?.addEventListener('change', (e) => {
-    filters.comSemUcs = e.target.value || 'Todos';
-    filters.page = 1;
-    persistLastFilter();
-    applyFiltersAndRender();
-    updateClearBtn();
-  });
-
-  // Select2
-  try {
-    $('#filterTurnos').on('change', function () {
-      filters.turnos = $(this).val() || [];
-      filters.page = 1;
-      persistLastFilter();
-      applyFiltersAndRender();
-      updateClearBtn();
-    });
-    $('#filterUcs').on('change', function () {
-      filters.ucs = $(this).val() || [];
-      filters.page = 1;
-      persistLastFilter();
-      applyFiltersAndRender();
-      updateClearBtn();
-    });
-  } catch { }
-  const btnClear = document.getElementById('btnClearFilters');
-  if (btnClear && !btnClear._bound) {
-    btnClear.addEventListener('click', () => {
-      const $ = (id) => document.getElementById(id);
-      if ($('searchInstrutor'))   $('searchInstrutor').value = '';
-      if ($('filterInstituicao')) $('filterInstituicao').value = '';
-      if ($('filterStatus'))      $('filterStatus').value = 'Todos';
-      if ($('filterComSemUcs'))   $('filterComSemUcs').value = 'Todos';
-      try { window.$ && window.$('#filterTurnos').val([]).trigger('change'); } catch {}
-      try { window.$ && window.$('#filterUcs').val([]).trigger('change'); } catch {}
-
-      filters = {
-        ...filters,
-        text: '',
-        instituicao: '',
-        status: 'Todos',
-        turnos: [],
-        ucs: [],
-        comSemUcs: 'Todos',
-        page: 1
-      };
-      persistLastFilter();
-      applyFiltersAndRender();
-      updateClearBtn(); // volta a desabilitar
-    });
-    btnClear._bound = true; // evita listeners duplicados
-  }
-
-  // *** sortBy / pageSize / paginação NÃO interferem no botão ***
-  el('sortBy')?.addEventListener('change', (e) => {
-    filters.sortBy = e.target.value || 'created_desc';
-    filters.page = 1;
-    persistLastFilter();
-    applyFiltersAndRender();
-    // não chama updateClearBtn()
-  });
-
-  el('pageSize')?.addEventListener('change', (e) => {
-    filters.pageSize = Number(e.target.value || 10);
-    filters.page = 1;
-    persistLastFilter();
-    applyFiltersAndRender();
-    // não chama updateClearBtn()
-  });
-
-  el('prevPage')?.addEventListener('click', () => {
-    if (filters.page > 1) {
-      filters.page -= 1;
-      persistLastFilter();
-      applyFiltersAndRender();
+    // Busca textual — debounce
+    if (searchInstrutorInput) {
+      searchInstrutorInput.addEventListener('input', debounce(() => {
+        filters.text = searchInstrutorInput.value || '';
+        filters.page = 1;
+        persistLastFilter();
+        applyFiltersAndRender();
+        updateClearBtn();
+      }, 250));
     }
-  });
 
-  el('nextPage')?.addEventListener('click', () => {
-    const { totalPages } = getFilteredAndSorted();
-    if (filters.page < totalPages) {
-      filters.page += 1;
+    el('filterInstituicao')?.addEventListener('change', (e) => {
+      filters.instituicao = e.target.value || '';
+      filters.page = 1;
       persistLastFilter();
       applyFiltersAndRender();
+      updateClearBtn();
+    });
+
+    el('filterStatus')?.addEventListener('change', (e) => {
+      filters.status = e.target.value || 'Todos';
+      filters.page = 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+      updateClearBtn();
+    });
+
+    el('filterCategoria')?.addEventListener('change', (e) => {
+      filters.categoria = e.target.value || 'Todos';
+      filters.page = 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+      updateClearBtn();
+    });
+
+    // Select2
+    try {
+      $('#filterTurnos').on('change', function () {
+        filters.turnos = $(this).val() || [];
+        filters.page = 1;
+        persistLastFilter();
+        applyFiltersAndRender();
+        updateClearBtn();
+      });
+      $('#filterUcs').on('change', function () {
+        filters.ucs = $(this).val() || [];
+        filters.page = 1;
+        persistLastFilter();
+        applyFiltersAndRender();
+        updateClearBtn();
+      });
+    } catch { }
+    const btnClear = document.getElementById('btnClearFilters');
+    if (btnClear && !btnClear._bound) {
+      btnClear.addEventListener('click', () => {
+        const $ = (id) => document.getElementById(id);
+        if ($('searchInstrutor')) $('searchInstrutor').value = '';
+        if ($('filterInstituicao')) $('filterInstituicao').value = '';
+        if ($('filterStatus')) $('filterStatus').value = 'Todos';
+        if ($('filterCategoria'))   $('filterCategoria').value = 'Todos';
+        try { window.$ && window.$('#filterTurnos').val([]).trigger('change'); } catch { }
+        try { window.$ && window.$('#filterUcs').val([]).trigger('change'); } catch { }
+
+        filters = {
+          ...filters,
+          text: '',
+          instituicao: '',
+          status: 'Todos',
+          turnos: [],
+          ucs: [],
+          comSemUcs: 'Todos',
+          page: 1
+        };
+        persistLastFilter();
+        applyFiltersAndRender();
+        updateClearBtn(); // volta a desabilitar
+      });
+      btnClear._bound = true; // evita listeners duplicados
     }
-  });
-}
+
+    // *** sortBy / pageSize / paginação NÃO interferem no botão ***
+    el('sortBy')?.addEventListener('change', (e) => {
+      filters.sortBy = e.target.value || 'created_desc';
+      filters.page = 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+      // não chama updateClearBtn()
+    });
+
+    el('pageSize')?.addEventListener('change', (e) => {
+      filters.pageSize = Number(e.target.value || 10);
+      filters.page = 1;
+      persistLastFilter();
+      applyFiltersAndRender();
+      // não chama updateClearBtn()
+    });
+
+    el('prevPage')?.addEventListener('click', () => {
+      if (filters.page > 1) {
+        filters.page -= 1;
+        persistLastFilter();
+        applyFiltersAndRender();
+      }
+    });
+
+    el('nextPage')?.addEventListener('click', () => {
+      const { totalPages } = getFilteredAndSorted();
+      if (filters.page < totalPages) {
+        filters.page += 1;
+        persistLastFilter();
+        applyFiltersAndRender();
+      }
+    });
+  }
 
 
   function persistLastFilter() {
@@ -649,7 +652,7 @@ const $modalParent = $('#instrutorModal');
     if (searchInstrutorInput) searchInstrutorInput.value = filters.text || '';
     if (el('filterInstituicao')) el('filterInstituicao').value = filters.instituicao || '';
     if (el('filterStatus')) el('filterStatus').value = filters.status || 'Todos';
-    if (el('filterComSemUcs')) el('filterComSemUcs').value = filters.comSemUcs || 'Todos';
+    if (el('filterCategoria')) el('filterCategoria').value = filters.categoria || 'Todos';
     if (el('sortBy')) el('sortBy').value = filters.sortBy || 'created_desc';
     if (el('pageSize')) el('pageSize').value = String(filters.pageSize || 10);
 
@@ -666,7 +669,7 @@ const $modalParent = $('#instrutorModal');
         }
       });
       $ucs.trigger('change.select2');
-    } catch {}
+    } catch { }
 
   }
 
@@ -689,12 +692,14 @@ const $modalParent = $('#instrutorModal');
     const arr = Array.isArray(instru.mapa_competencia) ? instru.mapa_competencia : [];
     return arr.some(id => filters.ucs.includes(id));
   }
-  function matchesComSemUcs(instru) {
-    const n = Array.isArray(instru.mapa_competencia) ? instru.mapa_competencia.length : 0;
-    if (filters.comSemUcs === 'Com') return n > 0;
-    if (filters.comSemUcs === 'Sem') return n === 0;
-    return true;
-  }
+  function matchesCategoria(instru) {
+  const sel = filters.categoria || 'Todos';
+  if (sel === 'Todos') return true;
+    const cats = Array.isArray(instru.categoria)
+      ? instru.categoria
+      : (instru.categoria ? [instrutor.categoria] : []);
+    return cats.includes(sel);
+}
   function matchesText(instru) {
     const term = strip(filters.text || '');
     if (!term) return true;
@@ -725,7 +730,7 @@ const $modalParent = $('#instrutorModal');
       matchesStatus(i) &&
       matchesTurnos(i) &&
       matchesUcs(i) &&
-      matchesComSemUcs(i)
+      matchesCategoria(i)
     );
 
     filtered.sort(compareBy);
@@ -756,11 +761,12 @@ const $modalParent = $('#instrutorModal');
     if (!rows.length) {
       const tr = document.createElement('tr');
       // 10 dados + 1 ações
-      tr.innerHTML = `<td colspan="11">Nenhum Instrutor encontrado com os filtros aplicados.</td>`;
+      tr.innerHTML = `<td colspan="12">Nenhum Instrutor encontrado com os filtros aplicados.</td>`;
       dataTableBody.appendChild(tr);
     } else {
       rows.forEach(instrutor => {
         const turnosNomes = Array.isArray(instrutor.turnos) ? instrutor.turnos.join(', ') : '';
+        const cats = Array.isArray(instrutor.categoria) ? instrutor.categoria.join(', ') : (instrutor.categoria || '');
         const created = getCreatedDate(instrutor);
         const tr = document.createElement('tr');
 
@@ -774,6 +780,7 @@ const $modalParent = $('#instrutorModal');
           instrutor.email || '',
           instituicoesMap[instrutor.instituicao_id] || '',
           turnosNomes,
+          cats,
           (instrutor.carga_horaria ?? ''),
           normalizeStatus(instrutor.status),
           fmtDateBR(created)
@@ -844,6 +851,9 @@ const $modalParent = $('#instrutorModal');
     viewTelefone.value = instrutor.telefone || '';
     viewEmail.value = instrutor.email || '';
 
+    const catsView = Array.isArray(instrutor.categoria) ? instrutor.categoria.join(', ') : (instrutor.categoria || '');
+    if (viewCategoria) viewCategoria.value = catsView;
+
     const ucs = Array.isArray(instrutor.mapa_competencia) ? instrutor.mapa_competencia : [];
     viewMapaCompetenciaList.innerHTML = ucs.length
       ? ucs.map(id => `<div>${ucsMap[id] || id}</div>`).join('')
@@ -860,6 +870,14 @@ const $modalParent = $('#instrutorModal');
   async function openEditModal(id) {
     const instrutor = instrutoresData.find(e => e._id === id);
     if (!instrutor) return;
+    if (categoriaInstrutor) {
+      const currentCats = Array.isArray(instrutor.categoria)
+        ? instrutor.categoria
+        : (instrutor.categoria ? [instrutor.categoria] : []);
+      [...categoriaInstrutor.options].forEach(opt => {
+        opt.selected = currentCats.includes(opt.value);
+      });
+    }
 
     modalTitle.textContent = 'Editar Instrutor';
     instrutorIdInput.value = instrutor._id || '';
@@ -984,7 +1002,7 @@ const $modalParent = $('#instrutorModal');
     return true;
   }
 
-  [nomeInstrutorInput, matriculaInstrutorInput, instrutorTelefoneInput, instrutorEmailInput, instituicaoSelect, cargaHorariaInput, statusSelect]
+  [nomeInstrutorInput, matriculaInstrutorInput, instrutorTelefoneInput, instrutorEmailInput, instituicaoSelect, cargaHorariaInput, categoriaInstrutor, statusSelect]
     .forEach(el => el?.addEventListener('input', clearAlert));
 
   instrutorTelefoneInput?.addEventListener('input', (e) => {
@@ -1008,6 +1026,7 @@ const $modalParent = $('#instrutorModal');
       turnos: (turnosSelect?.length ? turnosSelect.val() : []) || [],
       mapa_competencia: (mapaCompetenciaSelect?.length ? mapaCompetenciaSelect.val() : []) || [],
       carga_horaria: Number(cargaHorariaInput?.value || 0) || 0,
+      categoria: getMultiValues(categoriaInstrutor),
       status: statusSelect?.value || 'Ativo'   // salva status
       // data_criacao é definido no backend
     };

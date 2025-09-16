@@ -199,7 +199,7 @@
 
   // ==================== GRÁFICOS ====================
   let __chartTurnosInstance = null;
-  let __chartEixosInstance = null;
+  let __chartAreasInstance = null;
 
   // Barras: alunos por turno (mantido como está)
   async function chartTurnos() {
@@ -258,7 +258,7 @@
   function extractLabelsValues(anyPayload) {
     // 1) Se veio como array de agregação: [{ _id, qtd_turmas }, ...]
     if (Array.isArray(anyPayload)) {
-      const labels = anyPayload.map(r => (r && (r._id ?? r.id ?? '(Sem eixo)')));
+      const labels = anyPayload.map(r => (r && (r._id ?? r.id ?? '(Sem área)')));
       const values = anyPayload.map(r => Number(r?.qtd_turmas ?? r?.qtd ?? r?.count ?? 0));
       if (labels.length && values.length) return { labels, values };
     }
@@ -269,7 +269,7 @@
     }
     // 3) Se veio como { items: [...] } no formato de agregação
     if (Array.isArray(obj.items)) {
-      const labels = obj.items.map(r => (r && (r._id ?? r.id ?? '(Sem eixo)')));
+      const labels = obj.items.map(r => (r && (r._id ?? r.id ?? '(Sem área)')));
       const values = obj.items.map(r => Number(r?.qtd_turmas ?? r?.qtd ?? r?.count ?? 0));
       if (labels.length && values.length) return { labels, values };
     }
@@ -285,18 +285,18 @@
     throw new Error('payload vazio');
   }
 
-  // Pie: turmas ativas por eixo_tecnologico (com fallback robusto)
-  async function chartEixos() {
+  // Pie: turmas ativas por area_tecnologica (com fallback robusto)
+  async function chartAreas() {
     try {
       const attempts = [
         // 1) usa o proxy PHP que EXISTE
-        { url: 'processa_dashboard.php?action=eixos_tecnologicos', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
+        { url: 'processa_dashboard.php?action=areas_tecnologicas', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
         // 2) tenta direto na API (se CORS permitir)
-        { url: 'http://localhost:8000/api/dashboard/eixos_tecnologicos_pie', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
-        // 3) (opcional) se você criar a action eixos_tecnologicos_pie no PHP
-        { url: 'processa_dashboard.php?action=eixos_tecnologicos_pie', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
+        { url: 'http://localhost:8000/api/dashboard/areas_tecnologicas_pie', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
+        // 3) (opcional) se você criar a action areas_tecnologicas_pie no PHP
+        { url: 'processa_dashboard.php?action=areas_tecnologicas_pie', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
         // 4) endpoint alternativo, se existir
-        { url: 'http://localhost:8000/api/dashboard/eixos_tecnologicos', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
+        { url: 'http://localhost:8000/api/dashboard/areas_tecnologicas', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
       ];
       let labels = [], values = [];
       for (const a of attempts) {
@@ -326,9 +326,9 @@
         container.appendChild(canvas);
       }
 
-      if (__chartEixosInstance?.destroy) {
-        __chartEixosInstance.destroy();
-        __chartEixosInstance = null;
+      if (__chartAreasInstance?.destroy) {
+        __chartAreasInstance.destroy();
+        __chartAreasInstance = null;
       }
 
       const basePalette = [
@@ -341,7 +341,7 @@
       ];
       const colors = labels.map((_, i) => basePalette[i % basePalette.length]);
 
-      __chartEixosInstance = new Chart(canvas, {
+      __chartAreasInstance = new Chart(canvas, {
         type: 'pie',
         data: {
           labels,
@@ -370,7 +370,7 @@
         }
       });
     } catch (err) {
-      console.error('Erro ao carregar gráfico de eixos:', err);
+      console.error('Erro ao carregar gráfico de áreas:', err);
     }
   }
 
@@ -379,6 +379,6 @@
     setupMenuToggle();
     await loadMetrics();
     await chartTurnos();
-    await chartEixos(); // <-- mantenha só estas duas chamadas
+    await chartAreas(); // <-- mantenha só estas duas chamadas
   });
 })();

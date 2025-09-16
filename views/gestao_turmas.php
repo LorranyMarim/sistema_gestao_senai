@@ -240,7 +240,7 @@
 
   <div class="filter-group">
     <label for="searchTurma">Buscar:</label>
-    <input type="text" id="searchTurma" placeholder="Código, Empresa ou Eixo..." class="search-input" />
+    <input type="text" id="searchTurma" placeholder="Código, Empresa ou Área..." class="search-input" />
   </div>
 
   <div class="filter-group">
@@ -270,8 +270,8 @@
   </div>
 
   <div class="filter-group">
-    <label for="filterEixo">Eixo Tecnológico:</label>
-    <select id="filterEixo" style="min-width:220px">
+    <label for="filterArea">Área Tecnológica:</label>
+    <select id="filterArea" style="min-width:220px">
       <option value="Todos">Todos</option>
               <option value="TI">TI</option>
               <option value="Metal Mecânica">Metal Mecânica</option>
@@ -304,7 +304,7 @@
               <tr>
                 <th>Código</th>
                 <th>Turno</th>
-                <th>Eixo Tecnológico</th>
+                <th>Área Tecnológica</th>
                 <th>Empresa/Parceiro</th>
                 <th>Status</th>
                 <th>Criado em</th>

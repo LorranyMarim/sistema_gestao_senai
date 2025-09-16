@@ -149,8 +149,8 @@ require_once("../config/verifica_login.php");
           </div>
 
           <div class="filter-group">
-            <label for="filterEixo">Eixo Tecnológico:</label>
-            <select id="filterEixo">
+            <label for="filterArea">Área Tecnológica:</label>
+            <select id="filterArea">
               <option value="Todos">Todos</option>
               <option value="TI">TI</option>
               <option value="Metal Mecânica">Metal Mecânica</option>
@@ -162,6 +162,7 @@ require_once("../config/verifica_login.php");
             <select id="filterModalidade">
               <option value="Todos">Todos</option>
               <option value="Técnico">Técnico</option>
+              <option value="Aprendizagem">Aprendizagem</option>
               <option value="Aperfeiçoamento">Aperfeiçoamento</option>
               <option value="Qualificação">Qualificação</option>
               <option value="Especialização">Especialização</option>
@@ -189,7 +190,7 @@ require_once("../config/verifica_login.php");
               <option value="created_desc">Criado em (recente→antigo)</option>
               <option value="nome_asc">Nome (A→Z)</option>
               <option value="status_asc">Status</option>
-              <option value="eixo_asc">Eixo</option>
+              <option value="area_asc">Área</option>
               <option value="modalidade_asc">Modalidade</option>
               <option value="tipo_asc">Tipo</option>
             </select>
@@ -220,7 +221,7 @@ require_once("../config/verifica_login.php");
             <thead>
               <tr>
                 <th>Nome</th>
-                <th>Eixo Tecnológico</th>
+                <th>Área Tecnológica</th>
                 <th>Modalidade</th>
                 <th>Criado em</th>
                 <th>Status</th>
@@ -276,6 +277,7 @@ require_once("../config/verifica_login.php");
                   <select id="nivelCurso" name="nivel_curso" required>
                     <option value="">Selecione</option>
                     <option value="Técnico">Técnico</option>
+                    <option value="Técnico">Aprendizagem</option>
                     <option value="Aperfeiçoamento">Aperfeiçoamento</option>
                     <option value="Qualificação">Qualificação</option>
                     <option value="Especialização">Especialização</option>
@@ -302,8 +304,8 @@ require_once("../config/verifica_login.php");
 
                 
                 <div class="form-group">
-                  <label for="eixoTecnologicoCurso">Eixo Tecnológico:</label>
-                  <select id="eixoTecnologicoCurso" name="eixo_tecnologico" required>
+                  <label for="areaTecnologicaCurso">Área Tecnológica:</label>
+                  <select id="areaTecnologicaCurso" name="area_tecnologica" required>
                     <option value="">Selecione</option>
                     <option value="TI">TI</option>
                     <option value="Metal Mecânica">Metal Mecânica</option>

@@ -193,21 +193,21 @@ switch ($ACTION) {
         output(200, $res);
         break;
     }
-    case 'eixos_tecnologicos': {
-        list($e1, $code1, $body1) = http_json('GET', $FASTAPI_BASE . '/api/dashboard/eixos_tecnologicos_pie');
+    case 'areas_tecnologicas': {
+        list($e1, $code1, $body1) = http_json('GET', $FASTAPI_BASE . '/api/dashboard/areas_tecnologicas_pie');
         if ($e1 === 0 && $code1 >= 200 && $code1 < 300 && $body1) {
             output($code1, $body1);
         }
         // Se quiser, pode devolver algo vazio para não quebrar o front
-        output(502, ['error' => 'Falha ao obter eixos_tecnologicos da API']);
+        output(502, ['error' => 'Falha ao obter areas_tecnologicas da API']);
         break;
     }
-    case 'eixos_tecnologicos_pie': {
-        list($e1, $code1, $body1) = http_json('GET', $FASTAPI_BASE . '/api/dashboard/eixos_tecnologicos_pie');
+    case 'areas_tecnologicas_pie': {
+        list($e1, $code1, $body1) = http_json('GET', $FASTAPI_BASE . '/api/dashboard/areas_tecnologicas_pie');
         if ($e1 === 0 && $code1 >= 200 && $code1 < 300 && $body1) {
             output($code1, $body1);
         }
-        output(502, ['error' => 'Falha ao obter eixos_tecnologicos_pie da API']);
+        output(502, ['error' => 'Falha ao obter areas_tecnologicas_pie da API']);
         break;
     }
 

@@ -138,15 +138,15 @@ def alunos_por_turno():
     return result
 
 # ==============================
-# Pie chart por eixo_tecnologico (lookup em _id e filtro de status normalizado)
+# Pie chart por area_tecnologica (lookup em _id e filtro de status normalizado)
 # ==============================
-@router.get("/eixos_tecnologicos_pie")
-def eixos_tecnologicos_pie():
+@router.get("/areas_tecnologicas_pie")
+def areas_tecnologicas_pie():
     """
-    Pie: quantidade de TURMAS por eixo_tecnologico, considerando apenas turmas ATIVAS.
+    Pie: quantidade de TURMAS por area_tecnologica, considerando apenas turmas ATIVAS.
     - turma.id_curso: ObjectId
     - curso._id: ObjectId
-    - curso.eixo_tecnologico: string (rótulo da área)
+    - curso.area_tecnologica: string (rótulo da área)
     """
     db = get_mongo_db()
     turma = db["turma"]
@@ -176,9 +176,9 @@ def eixos_tecnologicos_pie():
         }},
         # 3) Exige curso resolvido
         {"$unwind": {"path": "$curso", "preserveNullAndEmptyArrays": False}},
-        # 4) Agrupa por eixo_tecnologico contando TURMAS
+        # 4) Agrupa por area_tecnologica contando TURMAS
         {"$group": {
-            "_id": {"$ifNull": ["$curso.eixo_tecnologico", "(Sem eixo)"]},
+            "_id": {"$ifNull": ["$curso.area_tecnologica", "(Sem área)"]},
             "qtd_turmas": {"$sum": 1}
         }},
         {"$sort": {"qtd_turmas": -1, "_id": 1}}
@@ -189,12 +189,12 @@ def eixos_tecnologicos_pie():
     data = [int(row["qtd_turmas"]) for row in ag]
     return {"labels": labels, "data": data}
 
-@router.get("/eixos_tecnologicos")
-def eixos_tecnologicos():
+@router.get("/areas_tecnologicas")
+def areas_tecnologicas():
     """
-    Retorna {labels: [...], data: [...]} para o gráfico de pizza por eixo_tecnologico,
+    Retorna {labels: [...], data: [...]} para o gráfico de pizza por area_tecnologica,
     considerando apenas turmas ATIVAS (True | 'ativo' | 'ativa' | 'true' | '1').
-    Métrica: quantidade de TURMAS por eixo.
+    Métrica: quantidade de TURMAS por área.
     """
     db = get_mongo_db()
     turma = db["turma"]
@@ -223,7 +223,7 @@ def eixos_tecnologicos():
         }},
         {"$unwind": {"path": "$curso", "preserveNullAndEmptyArrays": False}},
         {"$group": {
-            "_id": {"$ifNull": ["$curso.eixo_tecnologico", "(Sem eixo)"]},
+            "_id": {"$ifNull": ["$curso.area_tecnologica", "(Sem área)"]},
             "qtd_turmas": {"$sum": 1}
         }},
         {"$sort": {"qtd_turmas": -1, "_id": 1}}

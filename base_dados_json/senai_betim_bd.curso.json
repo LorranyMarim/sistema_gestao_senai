@@ -6,7 +6,7 @@
   "tipo": "Presencial",
   "nivel_curso": "Técnico",
   "categoria": "C",
-  "eixo_tecnologico": "TI",
+  "area_tecnologica": "TI",
   "carga_horaria": 1200,
   "empresa": "688d2365ec59660d2d1b30cf",
   "instituicao_id": "6872ebc05f2c070a0234219f",
@@ -235,7 +235,7 @@
   "tipo": "Presencial",
   "status": "Ativo",
   "categoria": "C",
-  "eixo_tecnologico": "TI",
+  "area_tecnologica": "TI",
   "carga_horaria": 1200,
   "ordem_ucs": [
     {
@@ -268,7 +268,7 @@
   "tipo": "Presencial",
   "status": "Ativo",
   "categoria": "C",
-  "eixo_tecnologico": "Metal Mecânica",
+  "area_tecnologica": "Metal Mecânica",
   "carga_horaria": 1200,
   "ordem_ucs": [
     {

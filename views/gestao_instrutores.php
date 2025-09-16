@@ -211,6 +211,14 @@
            title="Letras, números, ponto, hífen e underline (3–20).">
   </div>
 
+  <div class="form-group">
+    <label for="categoriaInstrutor">Categoria do Instrutor:</label>
+    <select id="categoriaInstrutor" multiple="multiple" style="width: 100%" required>
+      <option value="A">A</option>
+      <option value="C">C</option>
+    </select>
+  </div>
+
   <!-- 4) Carga Horária -->
   <div class="form-group">
     <label for="cargaHoraria">Carga Horária (horas):</label>
@@ -286,6 +294,10 @@
         <div class="form-group">
           <label>Carga Horária:</label>
           <input type="text" id="viewCargaHoraria" readonly>
+        </div>
+        <div class="form-group">
+          <label>Categoria do Instrutor:</label>
+          <input type="text" id="viewCategoria" readonly>
         </div>
         <div class="form-group">
           <label>Telefone:</label>

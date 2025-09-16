@@ -112,7 +112,7 @@
   const getCursoMetaById = (id) => {
     const c = getCursoById(id) || {};
     return {
-      eixo_tecnologico: c.eixo_tecnologico || c.eixo || '',
+      area_tecnologica: c.area_tecnologica || c.area || '',
       nivel_curso: c.nivel_curso || c.nivel || '',
       tipo: c.tipo || '',
       categoria: c.categoria || '',
@@ -176,17 +176,17 @@
   // ========================= LISTAGEM / FILTROS =========================
   function populateFilterOptions(items) {
     const selEmp = $('#filterEmpresa');
-    const selEixo = $('#filterEixo');
+    const selArea = $('#filterArea');
 
     if (selEmp && !selEmp.dataset.filled) {
       const empresas = distinct(items.map(i => i.empresa_razao_social));
       selEmp.innerHTML = `<option value="Todos">Todos</option>` + empresas.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
       selEmp.dataset.filled = '1';
     }
-    if (selEixo && !selEixo.dataset.filled) {
-      const eixos = distinct(items.map(i => i.eixo_tecnologico));
-      selEixo.innerHTML = `<option value="Todos">Todos</option>` + eixos.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
-      selEixo.dataset.filled = '1';
+    if (selArea && !selArea.dataset.filled) {
+      const areas = distinct(items.map(i => i.area_tecnologica));
+      selArea.innerHTML = `<option value="Todos">Todos</option>` + areas.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+      selArea.dataset.filled = '1';
     }
   }
 
@@ -195,7 +195,7 @@
     empresa: $('#filterEmpresa')?.value || 'Todos',
     status: $('#filterStatus')?.value || 'Todos',
     turno: $('#filterTurno')?.value || 'Todos',
-    eixo: $('#filterEixo')?.value || 'Todos',
+    area: $('#filterArea')?.value || 'Todos',
     pageSize: Number($('#pageSize')?.value || 25),
   });
 
@@ -209,10 +209,10 @@
       }
 
       if (f.turno !== 'Todos' && String(t.turno || '').toUpperCase() !== f.turno.toUpperCase()) return false;
-      if (f.eixo !== 'Todos' && String(t.eixo_tecnologico || '') !== f.eixo) return false;
+      if (f.area !== 'Todos' && String(t.area_tecnologica || '') !== f.area) return false;
 
       if (f.q) {
-        const hay = `${t.codigo || ''} ${t.eixo_tecnologico || ''} ${t.empresa_razao_social || ''}`.toLowerCase();
+        const hay = `${t.codigo || ''} ${t.area_tecnologica || ''} ${t.empresa_razao_social || ''}`.toLowerCase();
         if (!hay.includes(f.q)) return false;
       }
       return true;
@@ -225,7 +225,7 @@
     'codigo_asc': (a, b) => (a.codigo || '').localeCompare(b.codigo || '', 'pt-BR', { sensitivity: 'base' }),
     'codigo_desc': (a, b) => (b.codigo || '').localeCompare(a.codigo || '', 'pt-BR', { sensitivity: 'base' }),
     'empresa_asc': (a, b) => (a.empresa_razao_social || '').localeCompare(b.empresa_razao_social || '', 'pt-BR', { sensitivity: 'base' }),
-    'eixo_asc': (a, b) => (a.eixo_tecnologico || '').localeCompare(b.eixo_tecnologico || '', 'pt-BR', { sensitivity: 'base' }),
+    'area_asc': (a, b) => (a.area_tecnologica || '').localeCompare(b.area_tecnologica || '', 'pt-BR', { sensitivity: 'base' }),
     'status_asc': (a, b) => (a.status || '').localeCompare(b.status || '', 'pt-BR', { sensitivity: 'base' }),
     'turno_asc': (a, b) => (a.turno || '').localeCompare(b.turno || '', 'pt-BR', { sensitivity: 'base' }),
   };
@@ -239,7 +239,7 @@
       <tr data-id="${esc(tid)}">
         <td>${esc(t.codigo || '')}</td>
         <td>${esc(t.turno || '')}</td>
-        <td>${esc(t.eixo_tecnologico || '')}</td>
+        <td>${esc(t.area_tecnologica || '')}</td>
         <td>${esc(empresaNome)}</td>
         <td>${esc(statusTxt)}</td>
         <td>${esc(criadoEm)}</td>
@@ -280,7 +280,7 @@
     if (prev) prev.disabled = state.page <= 1;
     if (next) next.disabled = state.page >= totalPages;
 
-    const hasFilters = !!(f.q || f.empresa !== 'Todos' || f.status !== 'Todos' || f.turno !== 'Todos' || f.eixo !== 'Todos');
+    const hasFilters = !!(f.q || f.empresa !== 'Todos' || f.status !== 'Todos' || f.turno !== 'Todos' || f.area !== 'Todos');
     const btnClear = $('#btnClearFilters');
     if (btnClear) btnClear.disabled = !hasFilters;
   }
@@ -301,7 +301,7 @@
   }
 
   function attachFilterHandlers() {
-    ['searchTurma', 'filterEmpresa', 'filterStatus', 'filterTurno', 'filterEixo', 'pageSize'].forEach(id => {
+    ['searchTurma', 'filterEmpresa', 'filterStatus', 'filterTurno', 'filterArea', 'pageSize'].forEach(id => {
       const el = $('#' + id);
       if (!el) return;
       on(el, 'input', () => { state.page = 1; renderFiltered(); });
@@ -315,7 +315,7 @@
       setVal('filterEmpresa', 'Todos');
       setVal('filterStatus', 'Todos');
       setVal('filterTurno', 'Todos');
-      setVal('filterEixo', 'Todos');
+      setVal('filterArea', 'Todos');
       state.page = 1;
       renderFiltered();
     });
@@ -350,7 +350,7 @@
       'Instituição': instituicaoNome,
       'Código da Turma': turma.codigo || '—',
       'Curso': cursoNome,
-      'Eixo Tecnológico': turma.eixo_tecnologico || '—',
+      'Área Tecnológica': turma.area_tecnologica || '—',
       'Nível do Curso': turma.nivel_curso || '—',
       'Tipo': turma.tipo || '—',
       'Categoria': turma.categoria || '—',
@@ -827,7 +827,7 @@
       'Instituição': getOptText('#instituicaoTurma'),
       'Código da Turma': getVal('#codigoTurma'),
       'Curso': getOptText('#cursoTurma'),
-      'Eixo Tecnológico': meta.eixo_tecnologico || '—',
+      'Área Tecnológica': meta.area_tecnologica || '—',
       'Nível do Curso': meta.nivel_curso || '—',
       'Tipo': meta.tipo || '—',
       'Categoria': meta.categoria || '—',
@@ -926,7 +926,7 @@
       id_calendario: getVal('#calendarioTurma'),
       id_empresa: getVal('#empresaTurma'),
       status: getOptText('#statusTurma') || getVal('#statusTurma') || 'Ativo',
-      eixo_tecnologico: meta.eixo_tecnologico,
+      area_tecnologica: meta.area_tecnologica,
       nivel_curso: meta.nivel_curso,
       tipo: meta.tipo,
       categoria: meta.categoria,

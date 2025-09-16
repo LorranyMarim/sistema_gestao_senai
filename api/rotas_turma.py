@@ -39,7 +39,7 @@ class TurmaCreate(BaseModel):
     id_calendario: str
     id_empresa: str
     status: Optional[str] = "Ativo"   # <- string
-    eixo_tecnologico: Optional[str] = None
+    area_tecnologica: Optional[str] = None
     nivel_curso: Optional[str] = None
     tipo: Optional[str] = None
     categoria: Optional[str] = None
@@ -62,7 +62,7 @@ def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
         "status": doc.get("status", ""),  # <- string, não boolean
         "id_empresa": str(doc["id_empresa"]) if isinstance(doc.get("id_empresa"), ObjectId) else doc.get("id_empresa"),
         "id_curso": str(doc["id_curso"]) if isinstance(doc.get("id_curso"), ObjectId) else doc.get("id_curso"),
-        "eixo_tecnologico": doc.get("eixo_tecnologico", ""),  # <- novo
+        "area_tecnologica": doc.get("area_tecnologica", ""),  # <- novo
         "data_hora_criacao": (
             doc["data_hora_criacao"].isoformat()
             if isinstance(doc.get("data_hora_criacao"), datetime)
@@ -165,7 +165,7 @@ def listar_turmas(
         "codigo": "codigo",
         "turno": "turno",
         "status": "status",
-        "eixo_tecnologico": "eixo_tecnologico",
+        "area_tecnologica": "area_tecnologica",
         "data_hora_criacao": "data_hora_criacao",
         "data_inicio": "data_inicio",
         "data_fim": "data_fim",
@@ -192,7 +192,7 @@ def listar_turmas(
                 "codigo": 1,
                 "turno": 1,
                 "status": 1,
-                "eixo_tecnologico": 1,
+                "area_tecnologica": 1,
                 "id_empresa": 1,
                 "data_hora_criacao": 1,
                 "empresa_razao_social": "$empresa.razao_social",
@@ -208,7 +208,7 @@ def listar_turmas(
             "codigo": d.get("codigo", ""),
             "turno": d.get("turno", ""),
             "status": d.get("status", ""),  # mantenha como string
-            "eixo_tecnologico": d.get("eixo_tecnologico", ""),
+            "area_tecnologica": d.get("area_tecnologica", ""),
             "id_empresa": (
                 str(d["id_empresa"]) if isinstance(d.get("id_empresa"), ObjectId)
                 else (d.get("id_empresa") or "")

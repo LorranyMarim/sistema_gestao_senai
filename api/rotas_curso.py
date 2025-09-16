@@ -30,7 +30,7 @@ class CategoriaEnum(str, Enum):
     C = "C"
     A = "A"
 
-class EixoEnum(str, Enum):
+class AreaEnum(str, Enum):
     TI = "TI"
     MetalMecanica = "Metal Mecânica"
 
@@ -54,7 +54,7 @@ class CursoIn(BaseModel):
     tipo: TipoEnum
     status: StatusEnum = StatusEnum.Ativo
     categoria: CategoriaEnum
-    eixo_tecnologico: EixoEnum
+    area_tecnologica: AreaEnum
     carga_horaria: conint(ge=1)
     ordem_ucs: List[OrdemUC]
     observacao: Optional[constr(max_length=1000)] = None
@@ -151,7 +151,7 @@ def criar_curso(payload: dict = Body(...)):
     db = get_mongo_db()
 
     # Sanitização suave (strings)
-    for field in ("nome", "observacao", "categoria", "eixo_tecnologico", "tipo", "nivel_curso", "status"):
+    for field in ("nome", "observacao", "categoria", "area_tecnologica", "tipo", "nivel_curso", "status"):
         if field in payload:
             payload[field] = _strip_tags(payload.get(field))
 

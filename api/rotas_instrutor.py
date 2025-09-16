@@ -1,18 +1,31 @@
 from fastapi import APIRouter, HTTPException
 from db import get_mongo_db
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 from datetime import datetime, timezone
 
 router = APIRouter()
 
 # -------------------------- Helpers --------------------------
 
+def _as_list_str(v):
+    """Garante lista[str] a partir de list/str/None."""
+    if v is None:
+        return []
+    if isinstance(v, list):
+        return [str(x) for x in v if x is not None]
+    # se vier string única
+    return [str(v)]
+
+def _coerce_carga(v, default=0, minv=0, maxv=10**9):
+    try:
+        n = int(v)
+    except Exception:
+        return default
+    n = max(minv, min(n, maxv))
+    return n
+
 def _normalize_status(value):
-    """
-    Normaliza o campo status para string 'Ativo' ou 'Inativo'.
-    Aceita booleanos (True/False) e strings em qualquer caixa.
-    Padrão: 'Ativo'.
-    """
     if value is None or value == "":
         return "Ativo"
     if isinstance(value, bool):
@@ -22,15 +35,13 @@ def _normalize_status(value):
         return "Ativo"
     if s in ("inativo", "in", "i", "0", "false", "falso", "no", "nao", "não"):
         return "Inativo"
-    # Qualquer outro valor: força para 'Ativo' para manter consistência
     return "Ativo"
 
-
-def _normalize_instrutor(doc):
+def _normalize_instrutor(doc: dict):
     if not doc:
         return doc
 
-    # _id e fallback para data_criacao
+    # _id e fallback de data
     oid = doc.get("_id")
     if isinstance(oid, ObjectId):
         gen_time = oid.generation_time.astimezone(timezone.utc)
@@ -38,20 +49,29 @@ def _normalize_instrutor(doc):
     else:
         gen_time = None
 
-    # instituicao_id -> string
+    # instituicao_id como string
     inst = doc.get("instituicao_id")
     if isinstance(inst, ObjectId):
         doc["instituicao_id"] = str(inst)
+    elif inst is None:
+        doc["instituicao_id"] = ""
+    else:
+        doc["instituicao_id"] = str(inst)
 
-    # coleções e campos numéricos
-    doc["mapa_competencia"] = [str(x) for x in doc.get("mapa_competencia", [])]
-    doc["turnos"] = doc.get("turnos", [])
-    doc["carga_horaria"] = doc.get("carga_horaria", 0)
+    # coleções e números
+    doc["mapa_competencia"] = _as_list_str(doc.get("mapa_competencia"))
+    doc["turnos"] = _as_list_str(doc.get("turnos"))
+    doc["carga_horaria"] = _coerce_carga(doc.get("carga_horaria"), default=0)
 
-    # status normalizado
+    # categoria compat (sempre lista[str])
+    cat = doc.get("categoria", doc.get("categoriaInstrutor", []))
+    doc["categoria"] = _as_list_str(cat)
+    doc.pop("categoriaInstrutor", None)
+
+    # status
     doc["status"] = _normalize_status(doc.get("status"))
 
-    # data_criacao em ISO-8601 (UTC), com fallback para _id
+    # data_criacao ISO UTC (fallback _id)
     dt = doc.get("data_criacao")
     if isinstance(dt, datetime):
         doc["data_criacao"] = dt.astimezone(timezone.utc).isoformat()
@@ -60,6 +80,32 @@ def _normalize_instrutor(doc):
 
     return doc
 
+def _whitelist_payload(instrutor: dict, partial: bool = False) -> dict:
+    """Aceita apenas chaves permitidas; se partial=True, não obriga presença."""
+    allow = {
+        "nome", "matricula", "telefone", "email",
+        "instituicao_id", "turnos", "mapa_competencia",
+        "carga_horaria", "categoria", "status"
+    }
+    clean = {k: instrutor[k] for k in list(instrutor.keys()) if k in allow}
+
+    # Força tipos
+    clean["instituicao_id"] = str(clean.get("instituicao_id", "") or "")
+    clean["turnos"] = _as_list_str(clean.get("turnos"))
+    clean["mapa_competencia"] = _as_list_str(clean.get("mapa_competencia"))
+    clean["categoria"] = _as_list_str(clean.get("categoria"))
+    clean["carga_horaria"] = _coerce_carga(clean.get("carga_horaria"), default=0, minv=0, maxv=60)
+
+    if "status" in clean:
+        clean["status"] = _normalize_status(clean.get("status"))
+
+    return clean
+
+def _oid_or_400(id_str: str) -> ObjectId:
+    try:
+        return ObjectId(id_str)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="ID inválido")
 
 # -------------------------- Rotas --------------------------
 
@@ -67,8 +113,6 @@ def _normalize_instrutor(doc):
 def listar_instrutores():
     db = get_mongo_db()
     col = db["instrutor"]
-
-    # Ordena por data_criacao (ou _id como fallback) do mais recente ao mais antigo
     pipeline = [
         {"$addFields": {"sortKey": {"$ifNull": ["$data_criacao", {"$toDate": "$_id"}]}}},
         {"$sort": {"sortKey": -1}},
@@ -77,62 +121,52 @@ def listar_instrutores():
     itens = list(col.aggregate(pipeline))
     return [_normalize_instrutor(x) for x in itens]
 
-
 @router.post("/api/instrutores")
 def criar_instrutor(instrutor: dict):
     db = get_mongo_db()
     instrutor = dict(instrutor or {})
-
-    # _id sempre gerado pelo Mongo
-    if "_id" in instrutor:
-        instrutor.pop("_id", None)
-
-    # Força/garante tipos básicos
-    instrutor["mapa_competencia"] = instrutor.get("mapa_competencia", [])
-    instrutor["turnos"] = instrutor.get("turnos", [])
-    instrutor["carga_horaria"] = instrutor.get("carga_horaria", 0)
-
-    # Normaliza status (default 'Ativo')
-    instrutor["status"] = _normalize_status(instrutor.get("status"))
-
-    # Não aceitar data_criacao do cliente
+    instrutor.pop("_id", None)
     instrutor.pop("data_criacao", None)
-    instrutor["data_criacao"] = datetime.now(timezone.utc)
 
-    result = db["instrutor"].insert_one(instrutor)
+    clean = _whitelist_payload(instrutor, partial=False)
+    clean["status"] = _normalize_status(clean.get("status"))
+    clean["data_criacao"] = datetime.now(timezone.utc)
+
+    result = db["instrutor"].insert_one(clean)
     saved = db["instrutor"].find_one({"_id": result.inserted_id})
     return _normalize_instrutor(saved)
-
 
 @router.put("/api/instrutores/{id}")
 def atualizar_instrutor(id: str, instrutor: dict):
     db = get_mongo_db()
+    oid = _oid_or_400(id)
     instrutor = dict(instrutor or {})
-
-    # Nunca permitir alteração de data_criacao e _id
-    instrutor.pop("data_criacao", None)
     instrutor.pop("_id", None)
+    instrutor.pop("data_criacao", None)
 
-    # Força/garante tipos básicos
-    instrutor["mapa_competencia"] = instrutor.get("mapa_competencia", [])
-    instrutor["turnos"] = instrutor.get("turnos", [])
-    instrutor["carga_horaria"] = instrutor.get("carga_horaria", 0)
+    clean = _whitelist_payload(instrutor, partial=True)
+    # Normaliza status somente se veio no payload
+    if "status" in clean:
+        clean["status"] = _normalize_status(clean.get("status"))
 
-    # Normaliza status (se vier no payload; se não vier, não altera)
-    if "status" in instrutor:
-      instrutor["status"] = _normalize_status(instrutor.get("status"))
+    if not clean:
+        # nada para atualizar
+        updated = db["instrutor"].find_one({"_id": oid})
+        if not updated:
+            raise HTTPException(status_code=404, detail="Instrutor não encontrado")
+        return _normalize_instrutor(updated)
 
-    result = db["instrutor"].update_one({"_id": ObjectId(id)}, {"$set": instrutor})
+    result = db["instrutor"].update_one({"_id": oid}, {"$set": clean})
     if result.matched_count:
-        updated = db["instrutor"].find_one({"_id": ObjectId(id)})
+        updated = db["instrutor"].find_one({"_id": oid})
         return _normalize_instrutor(updated)
     raise HTTPException(status_code=404, detail="Instrutor não encontrado")
-
 
 @router.delete("/api/instrutores/{id}")
 def remover_instrutor(id: str):
     db = get_mongo_db()
-    result = db["instrutor"].delete_one({"_id": ObjectId(id)})
+    oid = _oid_or_400(id)
+    result = db["instrutor"].delete_one({"_id": oid})
     if result.deleted_count:
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="Instrutor não encontrado")
