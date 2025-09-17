@@ -16,10 +16,10 @@ def criar_token(data: dict, expires_delta: timedelta = None):
 def verificar_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_name: str = payload.get("sub")
-        if user_name is None:
+        sub = payload.get("sub")
+        if not sub:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
-        return user_name
+        return payload  # <- devolve dict com sub, exp, inst
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
 
@@ -28,3 +28,4 @@ def autenticar_usuario(request: Request):
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Não autenticado")
     return verificar_token(token)
+

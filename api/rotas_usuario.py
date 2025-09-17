@@ -9,6 +9,8 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import re
 import time
+from datetime import timedelta
+
 
 router = APIRouter()
 
@@ -44,6 +46,10 @@ def _oid_or_400(s: str) -> ObjectId:
     except (InvalidId, TypeError):
         raise HTTPException(status_code=400, detail="Instituição inválida")
 
+@router.post("/api/logout")
+def api_logout(response: Response):
+    response.delete_cookie("session_token", path="/")  # expira o cookie
+    return {"ok": True}
 
 @router.post("/api/login")
 def login(dados: UsuarioLogin, response: Response, request: Request):
@@ -104,12 +110,21 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
 
     # Cookie só após tudo validado
     token = criar_token({"sub": usuario.get("user_name")}, expires_delta=timedelta(minutes=30))
-    response.set_cookie(key="session_token", value=token, httponly=True, max_age=30*60)
+    response.set_cookie(
+        key="session_token", 
+        value=token, 
+        httponly=True, 
+        max_age=30*60, 
+        samesite="lax",
+         # secure=True     # ative em produção HTTPS
+         )
+    
 
     return {
         "id": str(usuario.get("_id")),
         "nome": usuario.get("nome"),
         "tipo_acesso": usuario.get("tipo_acesso"),
         "user_name": usuario.get("user_name"),
-        "instituicao_id": inst_final
+        "instituicao_id": inst_final,
+        "token": token 
     }

@@ -11,6 +11,8 @@ from rotas_calendario import router as calendario_router
 from rotas_instrutor import router as instrutor_router
 from rotas_turma import router as turma_router
 from rotas_dashboard import router as dashboard_router
+from fastapi.middleware.gzip import GZipMiddleware
+from bootstrap import router as bootstrap_router
 
 
 
@@ -48,7 +50,9 @@ app.include_router(calendario_router)
 app.include_router(instrutor_router)
 app.include_router(turma_router)      # /api/turmas -> rotas_turma.py
 app.include_router(dashboard_router)
+app.include_router(bootstrap_router)
 
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 # -----------------------------------------------------------------------------
 # Healthcheck

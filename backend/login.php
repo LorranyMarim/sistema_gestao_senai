@@ -48,33 +48,58 @@ $http_code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $body        = substr($response, $header_size);
 curl_close($ch);
 
-// Trate mensagens específicas (melhora UX)
+// ...
 if ($http_code === 422) {
-    header("Location: ../views/index.php?erro=valid"); // dados inválidos
+    header("Location: ../views/index.php?erro=valid"); // dados inválidos (pydantic)
     exit();
 }
 if ($http_code === 429) {
     header("Location: ../views/index.php?erro=limite"); // muitas tentativas
     exit();
 }
+if ($http_code === 401) {
+    header("Location: ../views/index.php?erro=auth");   // usuário/senha incorretos
+    exit();
+}
+if ($http_code === 403) {
+    header("Location: ../views/index.php?erro=inst");    // instituição não permitida
+    exit();
+}
+if ($http_code === 400) {
+    header("Location: ../views/index.php?erro=inst_invalida"); // id malformado/inválido
+    exit();
+}
 if ($http_code !== 200) {
+    // fallback genérico
     $_SESSION['login_attempts'] += 1;
     $_SESSION['last_attempt_time'] = time();
     header("Location: ../views/index.php?erro=1");
     exit();
 }
+
 
 // Decodifica e valida o corpo
 $user_data = json_decode($body, true);
 if (!is_array($user_data) || !isset($user_data['id'])) {
-    // 200 sem JSON esperado → trate como erro
     $_SESSION['login_attempts'] += 1;
     $_SESSION['last_attempt_time'] = time();
     header("Location: ../views/index.php?erro=1");
     exit();
 }
+if (!empty($user_data['token'])) {
+    setcookie(
+        'session_token',
+        $user_data['token'],
+        [
+            'expires'  => time() + (30 * 60), // 30min, igual ao FastAPI
+            'path'     => '/',                // disponível no site todo
+            'secure'   => false,              // coloque true em produção (HTTPS)
+            'httponly' => true,               // não acessível via JS
+            'samesite' => 'Lax',              // suficiente para localhost
+        ]
+    );
+}
 
-// Sucesso de login: fortaleça a sessão
 session_regenerate_id(true);
 $_SESSION['login_attempts'] = 0;
 $_SESSION['loggedin'] = true;

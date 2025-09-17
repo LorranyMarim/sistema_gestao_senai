@@ -1,177 +1,199 @@
 <?php
-// index.php dentro da pasta /views/
+// views/index.php
 session_start();
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-    header("Location: dashboard.php"); // ou dashboard.php se usar sessão
+    header("Location: dashboard.php");
     exit();
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SENAI</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../assets/css/style.css">
-
-    <script>
-        // Validações avançadas de formulário
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.querySelector("form");
-            const usernameInput = document.getElementById("username");
-            const passwordInput = document.getElementById("password");
-            const errorDiv = document.createElement("p");
-            errorDiv.className = "error-message";
-            errorDiv.style.color = "#d9534f";
-            errorDiv.style.marginTop = "10px";
-
-
-            // Restrições configuráveis
-            const minLen = 4;
-            const maxLen = 50;
-            const forbiddenChars = /[<>'"]/;
-
-            form.addEventListener("submit", function (e) {
-                let msg = "";
-
-                // Usuário
-                const user = usernameInput.value.trim();
-                if (!user) {
-                    msg = "Preencha o campo usuário.";
-                } else if (user.length < minLen) {
-                    msg = "Usuário deve ter no mínimo " + minLen + " caracteres.";
-                } else if (user.length > maxLen) {
-                    msg = "Usuário deve ter no máximo " + maxLen + " caracteres.";
-                } else if (forbiddenChars.test(user)) {
-                    msg = "Usuário contém caracteres inválidos.";
-                }
-
-                // Senha
-                const pass = passwordInput.value;
-                if (!msg) {
-                    if (!pass) {
-                        msg = "Preencha o campo senha.";
-                    } else if (pass.length < minLen) {
-                        msg = "Senha deve ter no mínimo " + minLen + " caracteres.";
-                    } else if (pass.length > maxLen) {
-                        msg = "Senha deve ter no máximo " + maxLen + " caracteres.";
-                    } else if (forbiddenChars.test(pass)) {
-                        msg = "Senha contém caracteres inválidos.";
-                    }
-                }
-
-                // Exibe erro e impede envio se inválido
-                if (msg) {
-                    e.preventDefault();
-                    // Remove mensagem anterior, se houver
-                    const oldError = form.querySelector(".error-message");
-                    if (oldError) oldError.remove();
-                    errorDiv.textContent = msg;
-                    form.appendChild(errorDiv);
-                    // Foca no campo problemático
-                    if (msg.toLowerCase().includes("usuário")) {
-                        usernameInput.focus();
-                    } else if (msg.toLowerCase().includes("senha")) {
-                        passwordInput.focus();
-                    }
-                }
-            });
-
-            // Limpa mensagem de erro ao digitar
-            [usernameInput, passwordInput].forEach(function (input) {
-                input.addEventListener("input", function () {
-                    const oldError = form.querySelector(".error-message");
-                    if (oldError) oldError.remove();
-                });
-            });
-        });
-    </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - SENAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
-
 <body>
-    <div class="login-container">
-        <img src="../assets/logo_azul.png" alt="Logo" class="senai-logo">
-        <form action="../backend/login.php" method="POST" autocomplete="off" novalidate>
+  <div class="login-container">
+    <img src="../assets/logo_azul.png" alt="Logo" class="senai-logo">
 
-            <div class="input-group">
-                <label for="instituicao">Instituição:</label>
-                <select id="instituicao" name="instituicao_id" required>
-                    <option value="">Carregando instituições...</option>
-                </select>
-            </div>
+    <form action="../backend/login.php" method="POST" autocomplete="off" novalidate>
+      <!-- Erros (JS injeta aqui) -->
+      <p id="form-error" class="error-message" style="display:none;color:#d9534f;margin-bottom:10px;"></p>
 
-            <div class="input-group">
-                <label for="username">Usuário:</label>
-                <input type="text" id="username" name="username" required minlength="4" maxlength="50" pattern="^[^<>'\"
-                    ]+$" autocomplete="username">
-            </div>
-            <div class="input-group">
-                <label for="password">Senha:</label>
-                <input type="password" id="password" name="password" required minlength="4" maxlength="50"
-                    autocomplete="current-password">
-            </div>
-            <button type="submit">Entrar</button>
-            <?php
-            // Exibe a mensagem de erro se houver (backend)
-            if (isset($_GET['erro'])) {
-                echo '<p class="error-message">Usuário ou senha inválidos.</p>';
-            }
-            ?>
-        </form>
-    </div>
-    <script>
+      <div class="input-group">
+        <label for="instituicao">Instituição:</label>
+        <select id="instituicao" name="instituicao_id" required disabled>
+          <option value="">Carregando instituições...</option>
+        </select>
+      </div>
 
-        document.addEventListener("DOMContentLoaded", async function () {
-            const instSelect = document.getElementById("instituicao");
+      <div class="input-group">
+        <label for="username">Usuário:</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          required
+          minlength="4"
+          maxlength="50"
+          pattern="^[^<>'\"]+$"
+          autocomplete="username"
+        >
+      </div>
 
-            // 1) Carrega instituições (rota pública enxuta no FastAPI; ver seção 3)
-            async function carregarInstituicoes() {
-                try {
-                    const res = await fetch("http://localhost:8000/api/instituicoes");
-                    if (!res.ok) throw new Error("HTTP " + res.status);
-                    const lista = await res.json(); // [{_id, nome}]
-                    instSelect.innerHTML = '<option value="">Selecione...</option>';
-                    lista.forEach(i => {
-                        const opt = document.createElement("option");
-                        opt.value = i._id;
-                        opt.textContent = i.nome || "(sem nome)";
-                        instSelect.appendChild(opt);
-                    });
-                } catch (e) {
-                    instSelect.innerHTML = '<option value="">(erro ao carregar)</option>';
-                    console.error("Falha ao carregar instituições:", e);
-                }
-            }
-            carregarInstituicoes();
+      <div class="input-group">
+        <label for="password">Senha:</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          required
+          minlength="4"
+          maxlength="50"
+          autocomplete="current-password"
+        >
+      </div>
 
-            // 2) Validação simples (integra com seu validador atual)
-            const form = document.querySelector("form");
-            form.addEventListener("submit", function (e) {
-                if (!instSelect.value) {
-                    e.preventDefault();
-                    const old = form.querySelector(".error-message");
-                    if (old) old.remove();
-                    const err = document.createElement("p");
-                    err.className = "error-message";
-                    err.style.color = "#d9534f";
-                    err.style.marginTop = "10px";
-                    err.textContent = "Selecione uma instituição.";
-                    form.appendChild(err);
-                    instSelect.focus();
-                }
-            });
+      <button id="btn-submit" type="submit" disabled>Entrar</button>
 
-            instSelect.addEventListener("change", () => {
-                const old = document.querySelector(".error-message");
-                if (old) old.remove();
-            });
-        });
-    </script>
+      <?php
+        // Passa o código de erro (se houver) para o JS ler
+        if (isset($_GET['erro'])) {
+          echo '<input type="hidden" id="errcode" value="'.htmlspecialchars($_GET['erro']).'">';
+        }
+      ?>
+    </form>
+  </div>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const API_INST_URL = "http://localhost:8000/api/instituicoes";
 
+      const form = document.querySelector("form");
+      const instSelect = document.getElementById("instituicao");
+      const userInput = document.getElementById("username");
+      const passInput = document.getElementById("password");
+      const submitBtn = document.getElementById("btn-submit");
+      const errP = document.getElementById("form-error");
+
+      const minLen = 4;
+      const maxLen = 50;
+      const forbidden = /[<>'"]/;
+
+      function showError(msg) {
+        errP.textContent = msg;
+        errP.style.display = "block";
+      }
+      function clearError() {
+        errP.textContent = "";
+        errP.style.display = "none";
+      }
+
+      // ERROS vindos do backend (?erro=)
+      (function handleBackendError() {
+        const code = document.getElementById("errcode")?.value ||
+                     new URLSearchParams(location.search).get("erro");
+        if (!code) return;
+        const map = {
+          valid: "Dados inválidos.",
+          limite: "Muitas tentativas. Tente novamente em alguns minutos.",
+          auth: "Usuário ou senha incorretos.",
+          inst: "Você não tem acesso à instituição selecionada.",
+          inst_invalida: "Instituição inválida."
+        };
+        showError(map[code] || "Erro ao fazer login.");
+      })();
+
+      // Carrega instituições
+      (async function carregarInstituicoes() {
+        try {
+          const res = await fetch(API_INST_URL);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const lista = await res.json(); // [{ _id, nome }]
+          instSelect.innerHTML = '<option value="">Selecione...</option>';
+          lista.forEach(i => {
+            const opt = document.createElement("option");
+            opt.value = i._id;
+            opt.textContent = i.nome || "(sem nome)";
+            instSelect.appendChild(opt);
+          });
+
+          // Restaura última seleção (se existir)
+          const last = localStorage.getItem("last_instituicao_id");
+          if (last && instSelect.querySelector(`option[value="${last}"]`)) {
+            instSelect.value = last;
+          }
+
+          instSelect.disabled = false;
+          submitBtn.disabled = false;
+        } catch (e) {
+          console.error("Falha ao carregar instituições:", e);
+          instSelect.innerHTML = '<option value="">(erro ao carregar)</option>';
+          instSelect.disabled = true;
+          submitBtn.disabled = true;
+          showError("Não foi possível carregar as instituições. Verifique a API.");
+        }
+      })();
+
+      // Guarda a seleção
+      instSelect.addEventListener("change", () => {
+        clearError();
+        if (instSelect.value) {
+          localStorage.setItem("last_instituicao_id", instSelect.value);
+        }
+      });
+
+      // Validação do formulário
+      form.addEventListener("submit", function (e) {
+        clearError();
+
+        // Instituição obrigatória
+        if (!instSelect.value) {
+          e.preventDefault();
+          showError("Selecione uma instituição.");
+          instSelect.focus();
+          return;
+        }
+
+        // Usuário
+        const user = (userInput.value || "").trim();
+        if (!user) {
+          e.preventDefault(); showError("Preencha o campo usuário."); userInput.focus(); return;
+        }
+        if (user.length < minLen) {
+          e.preventDefault(); showError(`Usuário deve ter no mínimo ${minLen} caracteres.`); userInput.focus(); return;
+        }
+        if (user.length > maxLen) {
+          e.preventDefault(); showError(`Usuário deve ter no máximo ${maxLen} caracteres.`); userInput.focus(); return;
+        }
+        if (forbidden.test(user)) {
+          e.preventDefault(); showError("Usuário contém caracteres inválidos."); userInput.focus(); return;
+        }
+
+        // Senha
+        const pass = passInput.value || "";
+        if (!pass) {
+          e.preventDefault(); showError("Preencha o campo senha."); passInput.focus(); return;
+        }
+        if (pass.length < minLen) {
+          e.preventDefault(); showError(`Senha deve ter no mínimo ${minLen} caracteres.`); passInput.focus(); return;
+        }
+        if (pass.length > maxLen) {
+          e.preventDefault(); showError(`Senha deve ter no máximo ${maxLen} caracteres.`); passInput.focus(); return;
+        }
+        if (forbidden.test(pass)) {
+          e.preventDefault(); showError("Senha contém caracteres inválidos."); passInput.focus(); return;
+        }
+      });
+
+      // Limpa erro ao digitar
+      [userInput, passInput].forEach(inp => {
+        inp.addEventListener("input", clearError);
+      });
+    });
+  </script>
 </body>
-
 </html>
