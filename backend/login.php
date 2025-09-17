@@ -85,7 +85,7 @@ $_SESSION['user_id']        = $user_data['id'];
 $_SESSION['nome']           = $user_data['nome'] ?? null;
 $_SESSION['tipo_acesso']    = $user_data['tipo_acesso'] ?? null;
 $_SESSION['user_name']      = $user_data['user_name'] ?? null;
-$_SESSION['instituicao_id'] = $inst ?: ($user_data['instituicao_id'] ?? null);
+$_SESSION['instituicao_id'] = $user_data['instituicao_id'] ?? null;
 
 header("Location: ../views/dashboard.php");
 exit();
