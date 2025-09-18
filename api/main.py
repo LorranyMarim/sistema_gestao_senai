@@ -1,7 +1,6 @@
 # main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from rotas_usuario import router as usuario_router
 from rotas_curso import router as curso_router
 from rotas_instituicao import router as instituicao_router
@@ -13,6 +12,8 @@ from rotas_turma import router as turma_router
 from rotas_dashboard import router as dashboard_router
 from fastapi.middleware.gzip import GZipMiddleware
 from bootstrap import router as bootstrap_router
+
+
 
 
 
@@ -50,8 +51,7 @@ app.include_router(calendario_router)
 app.include_router(instrutor_router)
 app.include_router(turma_router)      # /api/turmas -> rotas_turma.py
 app.include_router(dashboard_router)
-app.include_router(bootstrap_router)
-
+app.include_router(bootstrap_router, prefix="/api")
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 # -----------------------------------------------------------------------------

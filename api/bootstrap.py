@@ -1,8 +1,11 @@
-import json, hashlib, time
+import json, hashlib, time, asyncio
 from fastapi import APIRouter, Depends, Request, Response
-from auth_dep import get_ctx, RequestCtx
+from auth_dep import get_ctx, RequestCtx, get_current_user
 from db import get_mongo_db
 import redis
+from cache_utils import cached  # agora existe
+from rotas_dashboard import _obter_metricas, _listar_alertas, _buscar_notificacoes
+
 
 router = APIRouter()
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
@@ -30,7 +33,20 @@ def _build_bundle(db, inst_oid):
     # adicione empresas/calendários/turmas metadados conforme necessidade
     return {"cursos": cursos, "ucs": ucs, "instrutores": instrutores}
 
-@router.get("/api/bootstrap")
+def _key_dashboard(user_id: int) -> str:
+    return f"view:dashboard:{user_id}"
+
+@router.get("/dashboard/bootstrap")
+@cached(key_builder=lambda user: _key_dashboard(user.id), ttl=60)
+async def dashboard_bootstrap(user=Depends(get_current_user)):
+    m, a, n = await asyncio.gather(
+        _obter_metricas(user.id),
+        _listar_alertas(user.id),
+        _buscar_notificacoes(user.id),
+    )
+    return {"metricas": m, "alertas": a, "notificacoes": n}
+
+@router.get("/bootstrap")
 def bootstrap(request: Request, response: Response, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     vkey = f"inst:{ctx.inst}:version"
@@ -42,7 +58,7 @@ def bootstrap(request: Request, response: Response, ctx: RequestCtx = Depends(ge
         bundle = json.loads(cached)
     else:
         bundle = _build_bundle(db, ctx.inst_oid)
-        r.setex(bkey, 120, json.dumps(bundle, ensure_ascii=False))  # TTL 120s
+        r.setex(bkey, 120, json.dumps(bundle, ensure_ascii=False))
 
     etag = _etag_for(bundle, version)
     inm = request.headers.get("if-none-match")

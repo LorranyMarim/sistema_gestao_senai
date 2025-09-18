@@ -22,3 +22,12 @@ def get_ctx(request: Request) -> RequestCtx:
     except InvalidId:
         raise HTTPException(status_code=400, detail="Instituição inválida")
     return RequestCtx(user=payload["sub"], inst=inst, inst_oid=inst_oid)
+
+class CurrentUser:
+    def __init__(self, user_id: str, inst_id: str):
+        self.id = user_id
+        self.inst_id = inst_id
+
+def get_current_user(request: Request) -> CurrentUser:
+    ctx = get_ctx(request)
+    return CurrentUser(user_id=ctx.user, inst_id=ctx.inst)
