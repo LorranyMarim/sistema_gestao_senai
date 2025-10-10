@@ -5,7 +5,7 @@ from db import get_mongo_db
 import redis
 from cache_utils import cached  # agora existe
 from rotas_dashboard import _obter_metricas, _listar_alertas, _buscar_notificacoes
-
+from datetime import datetime, timezone
 
 router = APIRouter()
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
@@ -67,4 +67,55 @@ def bootstrap(request: Request, response: Response, ctx: RequestCtx = Depends(ge
         return
 
     response.headers["ETag"] = etag
+    return bundle
+
+
+# Em api/bootstrap.py
+
+# ... (importações e código existentes) ...
+
+def _build_uc_bundle(db):
+    """
+    Agrega todos os dados necessários para a tela de Gestão de Unidades Curriculares.
+    """
+    # 1. Busca todas as instituições, retornando apenas os campos necessários.
+    instituicoes_cursor = db["instituicao"].find({}, {"_id": 1, "razao_social": 1, "nome": 1})
+    instituicoes = [
+        {
+            "_id": str(inst["_id"]),
+            "razao_social": inst.get("razao_social") or inst.get("nome") or "(Sem nome)"
+        }
+        for inst in instituicoes_cursor
+    ]
+
+    # 2. Busca todas as unidades curriculares, ordenando pelas mais recentes.
+    #    A função _normalize_uc (helper) garante que os dados estejam limpos.
+    ucs_cursor = db["unidade_curricular"].find({}).sort([("data_criacao", -1)])
+    
+    # Helper para normalizar cada documento de UC
+    def _normalize_uc(doc):
+        if not doc:
+            return None
+        if doc.get("_id"):
+            doc["_id"] = str(doc["_id"])
+        if doc.get("instituicao_id"):
+            doc["instituicao_id"] = str(doc["instituicao_id"])
+        if isinstance(doc.get("data_criacao"), datetime):
+            doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
+        return doc
+
+    ucs = [_normalize_uc(uc) for uc in ucs_cursor]
+
+    return {
+        "instituicoes": instituicoes,
+        "ucs": ucs
+    }
+
+@router.get("/gestao_ucs/bootstrap")
+def gestao_ucs_bootstrap(db = Depends(get_mongo_db)):
+    """
+    Endpoint de bootstrap para a tela de Gestão de Unidades Curriculares.
+    """
+    # Importações necessárias para a função _build_uc_bundle
+    bundle = _build_uc_bundle(db)
     return bundle

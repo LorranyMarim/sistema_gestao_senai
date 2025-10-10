@@ -80,12 +80,11 @@
             justify-content: center;
         }
 
-        /* Oculta as colunas 1 (ID) e 2 (Instituição) da tabela principal */
-        /* Oculta as colunas 1 (ID) e 2 (Instituição) apenas na tabela de UCs */
+        /* 2 (Instituição) da tabela principal */
+        /* 2 (Instituição) apenas na tabela de UCs */
         #ucTable th:nth-child(1),
         #ucTable td:nth-child(1),
-        #ucTable th:nth-child(2),
-        #ucTable td:nth-child(2) {
+        {
             display: none;
         }
 
@@ -201,12 +200,7 @@
                             <label for="filterCriadoAte">Criado até:</label>
                             <input type="date" id="filterCriadoAte">
                         </div>
-                        <div class="filter-group">
-                            <label for="filterInstituicao">Instituição:</label>
-                            <select id="filterInstituicao" style="min-width: 220px;">
-                                <!-- opções serão preenchidas via JS -->
-                            </select>
-                        </div>
+                    
                     </div>
 
                     <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
@@ -238,7 +232,6 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Instituição</th>
                                 <th>Descrição da Unidade Curricular</th>
                                 <th>Sala Ideal</th>
                                 <th>Status</th>
@@ -269,12 +262,7 @@
                 <input type="hidden" id="ucId">
                 <div id="alertUc" style="display:none"></div>
 
-                <div class="form-group">
-                    <label for="instituicaoUc">Instituição:</label>
-                    <select id="instituicaoUc" required>
-                        <option value="">Selecione a instituição</option>
-                    </select>
-                </div>
+                
 
                 <div class="form-group">
                     <label for="descricaoUc">Descrição da UC:</label>
@@ -308,10 +296,7 @@
             <h2>Detalhes da Unidade Curricular</h2>
 
             <form>
-                <div class="form-group">
-                    <label>Instituição:</label>
-                    <input type="text" id="viewInstituicaoUc" readonly disabled>
-                </div>
+               
                 <div class="form-group">
                     <label>Descrição da UC:</label>
                     <input type="text" id="viewDescricaoUc" readonly disabled>

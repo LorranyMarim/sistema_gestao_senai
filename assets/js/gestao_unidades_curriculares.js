@@ -9,9 +9,9 @@
 
   // ===================== Config & State =====================
   const API = Object.freeze({
-    instituicao: 'http://localhost:8000/api/instituicoes',
-    uc: 'http://localhost:8000/api/unidades_curriculares',
-  });
+    bootstrap: '../backend/processa_unidade_curricular.php?action=bootstrap',
+    uc: '../backend/processa_unidade_curricular.php', // Mantido para CRUD
+});
 
   const STATE = {
     instituicoes: [],
@@ -71,30 +71,16 @@
       dateStyle: 'short',
       timeStyle: 'short',
     });
-  }
-
-  // ===================== Instituições =====================
-  async function fetchInstituicoes() {
-    if (STATE.instituicoes.length) return STATE.instituicoes;
-    const data = await safeFetch(API.instituicao);
-    STATE.instituicoes = Array.isArray(data) ? data : [];
-    return STATE.instituicoes;
-  }
+  } 
   async function preencherSelectInstituicao(selectedId = '') {
-    const insts = await fetchInstituicoes();
+    // Agora usa os dados do STATE, não faz mais fetch.
+    const insts = STATE.instituicoes;
     const opts = ['<option value="">Selecione a instituição</option>']
-      .concat(insts.map(i =>
-        `<option value="${i._id}" ${i._id === selectedId ? 'selected' : ''}>${i.razao_social ?? i.nome ?? '(sem nome)'}</option>`
-      ));
+        .concat(insts.map(i =>
+            `<option value="${i._id}" ${i._id === selectedId ? 'selected' : ''}>${i.razao_social ?? i.nome ?? '(sem nome)'}</option>`
+        ));
     selectInstituicao.innerHTML = opts.join('');
-  }
-  async function preencherFiltroInstituicao() {
-    const insts = await fetchInstituicoes();
-    const opts = ['<option value="">Todas as instituições</option>']
-      .concat(insts.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome ?? '(sem nome)'}</option>`));
-    filterInstituicao.innerHTML = opts.join('');
-  }
-
+}
   // ===================== Modais UC =====================
   function openModalUC(edit = false, uc = {}) {
     preencherSelectInstituicao(edit ? uc.instituicao_id : '');
@@ -133,76 +119,99 @@
       if (e.target === visualizarUcModal) closeVisualizarUcModal();
     });
   }
+// ===================== Carregamento e Renderização =====================
 
-  // ===================== Build Query =====================
-  function buildQuery() {
-    const p = new URLSearchParams();
-    const { page, pageSize } = STATE.pagination;
-    const { q, instituicoes, status, created_from, created_to } = STATE.filters;
-
-    if (q) p.set('q', q);
-    instituicoes.forEach(v => p.append('instituicao', v));
-    status.forEach(s => p.append('status', s));
-    if (created_from) p.set('created_from', created_from);
-    if (created_to)   p.set('created_to', created_to);
-    p.set('page', String(page));
-    p.set('page_size', String(pageSize));
-
-    return p.toString();
-  }
-
-  // ===================== UC: Busca & Tabela =====================
-  async function carregarUnidadesCurriculares() {
+/**
+ * Busca o pacote inicial de dados (UCs e Instituições) do backend.
+ * Esta função é chamada apenas uma vez no carregamento da página.
+ */
+async function carregarDadosIniciais() {
     try {
-      const qs = buildQuery();
-      const [data] = await Promise.all([
-        safeFetch(`${API.uc}?${qs}`),
-        fetchInstituicoes()
-      ]);
+        const data = await safeFetch(API.bootstrap);
+        STATE.instituicoes = data.instituicoes || [];
+        STATE.ucs = data.ucs || [];
 
-      const items = Array.isArray(data) ? data : (data.items || []);
-      const total = Array.isArray(data) ? items.length : (data.total ?? items.length);
-
-      STATE.ucs = items;
-      STATE.pagination.total = total;
-      STATE.pagination.totalPages = Math.max(1, Math.ceil(total / STATE.pagination.pageSize));
-
-      renderTableUC();
-      renderPaginationInfo();
+        // Após carregar os dados, preenche os filtros e a tabela pela primeira vez
+        popularFiltrosIniciais();
+        renderizarConteudo(); 
     } catch (err) {
-      console.error(err);
-      ucTableBody.innerHTML = `<tr><td colspan="7">Erro ao buscar dados.</td></tr>`;
-      pageInfo && (pageInfo.textContent = '—');
+        console.error(err);
+        ucTableBody.innerHTML = `<tr><td colspan="7">Erro ao buscar dados. Tente recarregar a página.</td></tr>`;
+        pageInfo && (pageInfo.textContent = '—');
     }
-  }
+}
 
-  function renderTableUC() {
-    if (!STATE.ucs.length) {
-      ucTableBody.innerHTML = `<tr><td colspan="7">Nenhuma UC cadastrada.</td></tr>`;
-      return;
+/**
+ * Preenche os selects de filtro com os dados carregados.
+ */
+function popularFiltrosIniciais() {
+    const insts = STATE.instituicoes;
+    const opts = ['<option value="">Todas as instituições</option>']
+        .concat(insts.map(i => `<option value="${i._id}">${i.razao_social ?? '(sem nome)'}</option>`));
+    if (filterInstituicao) filterInstituicao.innerHTML = opts.join('');
+}
+
+/**
+ * Filtra e pagina os dados em STATE e atualiza a UI (tabela e paginação).
+ */
+function renderizarConteudo() {
+    applyFiltersFromUI(); // Pega os valores atuais dos inputs de filtro
+
+    // Filtra a lista completa de UCs em memória
+    const filteredUcs = STATE.ucs.filter(uc => {
+        const { q, instituicoes, status, created_from, created_to } = STATE.filters;
+
+        if (q && !`${uc.descricao} ${uc.sala_ideal}`.toLowerCase().includes(q.toLowerCase())) return false;
+        if (instituicoes.length && !instituicoes.includes(uc.instituicao_id)) return false;
+        if (status.length && !status.includes(uc.status)) return false;
+        if (created_from && uc.data_criacao < created_from) return false;
+        if (created_to && uc.data_criacao > created_to) return false;
+
+        return true;
+    });
+
+    STATE.pagination.total = filteredUcs.length;
+    STATE.pagination.totalPages = Math.max(1, Math.ceil(STATE.pagination.total / STATE.pagination.pageSize));
+    STATE.pagination.page = Math.min(Math.max(1, STATE.pagination.page), STATE.pagination.totalPages);
+
+    const start = (STATE.pagination.page - 1) * STATE.pagination.pageSize;
+    const end = start + STATE.pagination.pageSize;
+    const pageItems = filteredUcs.slice(start, end);
+
+    renderTableUC(pageItems); // Passa apenas os itens da página atual para renderizar
+    renderPaginationInfo();
+}
+
+ function renderTableUC(ucsParaRenderizar) { // Recebe a lista de UCs da página atual
+    if (!ucsParaRenderizar.length) {
+        ucTableBody.innerHTML = `<tr><td colspan="7">Nenhuma UC encontrada com os filtros aplicados.</td></tr>`;
+        return;
     }
-    const rows = STATE.ucs.map(uc => {
-      const inst = STATE.instituicoes.find(i => i._id === uc.instituicao_id);
-      return `
-        <tr>
-          <td>${uc._id}</td>
-          <td>${inst ? (inst.razao_social ?? inst.nome ?? '') : ''}</td>
-          <td>${uc.descricao ?? ''}</td>
-          <td>${uc.sala_ideal ?? ''}</td>
-          <td>${uc.status ?? 'Ativa'}</td>
-          <td>${fmtDateBR(uc.data_criacao)}</td>
-          <td>
-            <div class="action-buttons">
-              <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
-              <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
-              <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-            </div>
-          </td>
-        </tr>
-      `;
+
+    const instituicoesMap = new Map(STATE.instituicoes.map(i => [i._id, i.razao_social ?? i.nome ?? '(sem nome)']));
+
+    const rows = ucsParaRenderizar.map(uc => {
+        const nomeInst = instituicoesMap.get(uc.instituicao_id) || '';
+        return `
+            <tr>
+                <td>${uc._id}</td>
+                <td>${nomeInst}</td>
+                <td>${uc.descricao ?? ''}</td>
+                <td>${uc.sala_ideal ?? ''}</td>
+                <td>${uc.status ?? 'Ativa'}</td>
+                <td>${fmtDateBR(uc.data_criacao)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
     });
     ucTableBody.innerHTML = rows.join('');
-  }
+}
 
   function renderPaginationInfo() {
     const { page, total, totalPages, pageSize } = STATE.pagination;
@@ -237,8 +246,9 @@
         const id = delBtn.dataset.id;
         if (!confirm('Deseja excluir esta UC?')) return;
         try {
-          await safeFetch(`${API.uc}/${encodeURIComponent(id)}`, { method: 'DELETE' });
-          await carregarUnidadesCurriculares();
+           await safeFetch(`${API.uc}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+          // Recarrega os dados do bootstrap para garantir consistência após a exclusão
+          await carregarDadosIniciais(); 
         } catch (err) {
           console.error(err);
           alert('Erro ao excluir. Tente novamente.');
@@ -316,7 +326,7 @@
         setTimeout(async () => {
           alert('Unidade Curricular salva com sucesso!');
           STATE.pagination.page = 1;
-          await carregarUnidadesCurriculares();
+          await carregarDadosIniciais();
         }, 200);
       } catch (err) {
         console.error(err);
@@ -341,58 +351,51 @@
     STATE.filters.created_to   = toIsoEndOfDayLocal(filterCriadoAte?.value || '');
   }
 
-  function wireFilters() {
-    // busca (debounce)
-    searchInput?.addEventListener('input', debounce(async () => {
-      STATE.pagination.page = 1;
-      applyFiltersFromUI();
-      await carregarUnidadesCurriculares();
+function wireFilters() {
+    // Todas as chamadas para carregarUnidadesCurriculares() são substituídas por renderizarConteudo()
+
+    searchInput?.addEventListener('input', debounce(() => {
+        STATE.pagination.page = 1;
+        renderizarConteudo();
     }, 350));
 
-    // instituicao (select simples)
-    filterInstituicao?.addEventListener('change', async () => {
-      STATE.pagination.page = 1;
-      applyFiltersFromUI();
-      await carregarUnidadesCurriculares();
-    });
-
-    // status (select)
-    filterStatus?.addEventListener('change', async () => {
-      STATE.pagination.page = 1;
-      applyFiltersFromUI();
-      await carregarUnidadesCurriculares();
-    });
-
-    // datas
-    [filterCriadoDe, filterCriadoAte].forEach(el => {
-      el?.addEventListener('change', async () => {
+    filterInstituicao?.addEventListener('change', () => {
         STATE.pagination.page = 1;
-        applyFiltersFromUI();
-        await carregarUnidadesCurriculares();
-      });
+        renderizarConteudo();
     });
 
-    // itens por página
-    pageSizeSel?.addEventListener('change', async () => {
-      STATE.pagination.pageSize = parseInt(pageSizeSel.value || '10', 10);
-      STATE.pagination.page = 1;
-      await carregarUnidadesCurriculares();
+    filterStatus?.addEventListener('change', () => {
+        STATE.pagination.page = 1;
+        renderizarConteudo();
     });
 
-    // paginação
-    prevPageBtn?.addEventListener('click', async () => {
-      if (STATE.pagination.page > 1) {
-        STATE.pagination.page--;
-        await carregarUnidadesCurriculares();
-      }
+    [filterCriadoDe, filterCriadoAte].forEach(el => {
+        el?.addEventListener('change', () => {
+            STATE.pagination.page = 1;
+            renderizarConteudo();
+        });
     });
-    nextPageBtn?.addEventListener('click', async () => {
-      if (STATE.pagination.page < STATE.pagination.totalPages) {
-        STATE.pagination.page++;
-        await carregarUnidadesCurriculares();
-      }
+
+    pageSizeSel?.addEventListener('change', () => {
+        STATE.pagination.pageSize = parseInt(pageSizeSel.value || '10', 10);
+        STATE.pagination.page = 1;
+        renderizarConteudo();
     });
-  }
+
+    prevPageBtn?.addEventListener('click', () => {
+        if (STATE.pagination.page > 1) {
+            STATE.pagination.page--;
+            renderizarConteudo();
+        }
+    });
+
+    nextPageBtn?.addEventListener('click', () => {
+        if (STATE.pagination.page < STATE.pagination.totalPages) {
+            STATE.pagination.page++;
+            renderizarConteudo();
+        }
+    });
+}
   // --- UX de intervalo de datas (filtros) ---
 function setupFiltroCriadoRange() {
   if (!filterCriadoDe || !filterCriadoAte) return;
@@ -418,12 +421,10 @@ function setupFiltroCriadoRange() {
   sync();
 
   // quando alterar o "de", re-sincroniza e reaplica filtros
-  filterCriadoDe.addEventListener('input', async () => {
-    sync();
-    // (opcional) já dispara a busca ao mudar o "de"
-    STATE.pagination.page = 1;
-    applyFiltersFromUI();
-    await carregarUnidadesCurriculares();
+   filterCriadoDe.addEventListener('input', () => { // Não precisa mais ser async
+    sync();
+    STATE.pagination.page = 1;
+    renderizarConteudo();
   });
 
   // protege contra “até” < “de” caso o usuário force
@@ -436,56 +437,33 @@ function setupFiltroCriadoRange() {
 
 
   // ===================== Bootstrap =====================
-  document.addEventListener('DOMContentLoaded', async () => {
+  // ===================== Bootstrap =====================
+document.addEventListener('DOMContentLoaded', async () => {
     try {
-      await preencherFiltroInstituicao();
-      wireModalEvents();
-      wireInlineValidation();
-      wireFormSubmit();
-      wireTableActions();
-      wireFilters();
-      setupFiltroCriadoRange();
+        await carregarDadosIniciais();
 
+        wireModalEvents();
+        wireInlineValidation();
+        wireFormSubmit();
+        wireTableActions();
+        wireFilters();
+        setupFiltroCriadoRange();
 
-      // filtros iniciais (Status = Todos)
-      applyFiltersFromUI();
-      await carregarUnidadesCurriculares();
+        // O código do botão "Limpar filtros" permanece o mesmo, mas ele agora chamará
+        // onClear, que irá resetar os filtros no STATE e chamar renderizarConteudo().
+        const clearCtl = App.ui.setupClearFilters({
+            // ... (configuração existente) ...
+            onClear: async () => {
+                STATE.filters = { q: '', instituicoes: [], status: [], created_from: '', created_to: '' };
+                STATE.pagination.page = 1;
+                renderizarConteudo(); // <<< Apenas renderiza novamente
+            }
+        });
 
-      // Botão "Limpar filtros" (centralizado no geral.js)
-      const clearCtl = App.ui.setupClearFilters({
-        buttonSelector: '#btnClearFilters',
-        // campos observados para habilitar/desabilitar o botão
-        watchSelectors: [
-          '#searchUc',
-          '#filterInstituicao',
-          '#filterStatus',
-          '#filterCriadoDe',
-          '#filterCriadoAte',
-        ],
-        getFiltersState: () => STATE.filters,
-        resetUI: () => {
-          const $id = (s) => document.getElementById(s);
-          $id('searchUc')         && ($id('searchUc').value = '');
-          $id('filterInstituicao')&& ($id('filterInstituicao').value = '');
-          $id('filterStatus')     && ($id('filterStatus').value = '');
-          $id('filterCriadoDe')   && ($id('filterCriadoDe').value = '');
-          $id('filterCriadoAte')  && ($id('filterCriadoAte').value = '');
-          // normalmente não resetamos "Itens por página"
-          setupFiltroCriadoRange();
-        },
-        onClear: async () => {
-          STATE.filters = { q: '', instituicoes: [], status: [], created_from: '', created_to: '' };
-          STATE.pagination.page = 1;
-          await carregarUnidadesCurriculares();
-        }
-      });
-
-      // garante estado inicial correto do botão (desabilitado sem filtros)
-      clearCtl?.update && clearCtl.update();
-
+        clearCtl?.update && clearCtl.update();
     } catch (err) {
-      console.error('Falha ao inicializar a página:', err);
+        console.error('Falha ao inicializar a página:', err);
     }
-  });
+});
 
 })();
