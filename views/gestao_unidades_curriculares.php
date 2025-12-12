@@ -80,13 +80,11 @@
             justify-content: center;
         }
 
-        /* 2 (Instituição) da tabela principal */
-        /* 2 (Instituição) apenas na tabela de UCs */
         #ucTable th:nth-child(1),
-        #ucTable td:nth-child(1),
-        {
-            display: none;
-        }
+    #ucTable td:nth-child(1),
+    #ucTable th:nth-child(2),
+    #ucTable td:nth-child(2) {
+        display: none;}
 
         /* Garante que os dois modais fiquem sempre acima da sidebar/menu */
         #ucModal,
@@ -136,32 +134,35 @@
 </head>
 
 <body>
-     <div class="dashboard-container">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
-        <h3>Menu Principal</h3>
-      </div>
-      <nav class="sidebar-nav">
-        <ul>
-          <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-          <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
-          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-          <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-          <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a></li>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
+                <h3>Menu Principal</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
+                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i>
+                            Gestão de UCs</a></li>
+                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a>
+                    </li>
 
-          <li id="nav-relatorios" class="has-submenu">
-            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
-              <span><i class="fas fa-file-alt"></i> Relatórios</span>
-              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-            </a>
-            <ul class="submenu" id="submenu-relatorios">
-              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
-            </ul>
-          </li>
-          <li id="nav-config" class="has-submenu">
+                    <li id="nav-relatorios" class="has-submenu">
+                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+                            <span><i class="fas fa-file-alt"></i> Relatórios</span>
+                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                        </a>
+                        <ul class="submenu" id="submenu-relatorios">
+                            <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+                        </ul>
+                    </li>
+                    <li id="nav-config" class="has-submenu">
                         <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
                             <span><i class="fas fa-tools"></i> Configuração</span>
                             <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
@@ -170,10 +171,10 @@
                             <li><a href="configuracao_usuarios.php"> Usuários</a></li>
                         </ul>
                     </li>
-          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-        </ul>
-      </nav>
-    </aside>
+                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
+        </aside>
 
         <main class="main-content">
             <header class="main-header">
@@ -200,7 +201,7 @@
                             <label for="filterCriadoAte">Criado até:</label>
                             <input type="date" id="filterCriadoAte">
                         </div>
-                    
+
                     </div>
 
                     <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
@@ -232,6 +233,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Instituição</th>
                                 <th>Descrição da Unidade Curricular</th>
                                 <th>Sala Ideal</th>
                                 <th>Status</th>
@@ -262,7 +264,7 @@
                 <input type="hidden" id="ucId">
                 <div id="alertUc" style="display:none"></div>
 
-                
+
 
                 <div class="form-group">
                     <label for="descricaoUc">Descrição da UC:</label>
@@ -296,7 +298,7 @@
             <h2>Detalhes da Unidade Curricular</h2>
 
             <form>
-               
+
                 <div class="form-group">
                     <label>Descrição da UC:</label>
                     <input type="text" id="viewDescricaoUc" readonly disabled>
