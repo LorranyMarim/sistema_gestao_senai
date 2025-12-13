@@ -2,7 +2,17 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Request, status
 
-SECRET_KEY = "supersecretkey1234"  # Troque por uma chave forte de verdade!
+import os
+from dotenv import load_dotenv
+
+# Carrega as variáveis do arquivo .env
+load_dotenv()
+
+# Pega o valor do .env ou usa um fallback (opcional) caso não encontre
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("A variavel de ambiente SECRET_KEY não foi definida.")
 ALGORITHM = "HS256"
 SESSION_EXP_MINUTES = 60
 

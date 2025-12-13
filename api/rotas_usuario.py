@@ -109,7 +109,10 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
         inst_final = chosen
 
     # Cookie só após tudo validado
-    token = criar_token({"sub": usuario.get("user_name")}, expires_delta=timedelta(minutes=30))
+    token = criar_token(
+        {"sub": usuario.get("user_name"),
+         "inst": inst_final
+         }, expires_delta=timedelta(minutes=30))
     response.set_cookie(
         key="session_token", 
         value=token, 
