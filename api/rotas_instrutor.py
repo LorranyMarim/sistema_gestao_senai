@@ -3,6 +3,8 @@ from db import get_mongo_db
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from datetime import datetime, timezone
+from fastapi import Depends
+from auth_dep import get_ctx, RequestCtx
 
 router = APIRouter()
 
@@ -110,10 +112,11 @@ def _oid_or_400(id_str: str) -> ObjectId:
 # -------------------------- Rotas --------------------------
 
 @router.get("/api/instrutores")
-def listar_instrutores():
+def listar_instrutores(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     db = get_mongo_db()
     col = db["instrutor"]
     pipeline = [
+        {"$match": {"instituicao_id": str(ctx.inst_oid)}}, # <--- ALTERAÇÃO: Filtro
         {"$addFields": {"sortKey": {"$ifNull": ["$data_criacao", {"$toDate": "$_id"}]}}},
         {"$sort": {"sortKey": -1}},
         {"$project": {"sortKey": 0}},
@@ -122,22 +125,22 @@ def listar_instrutores():
     return [_normalize_instrutor(x) for x in itens]
 
 @router.post("/api/instrutores")
-def criar_instrutor(instrutor: dict):
+def criar_instrutor(instrutor: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     db = get_mongo_db()
     instrutor = dict(instrutor or {})
     instrutor.pop("_id", None)
     instrutor.pop("data_criacao", None)
 
     clean = _whitelist_payload(instrutor, partial=False)
+    clean["instituicao_id"] = str(ctx.inst_oid)
     clean["status"] = _normalize_status(clean.get("status"))
-    clean["data_criacao"] = datetime.now(timezone.utc)
 
     result = db["instrutor"].insert_one(clean)
     saved = db["instrutor"].find_one({"_id": result.inserted_id})
     return _normalize_instrutor(saved)
 
 @router.put("/api/instrutores/{id}")
-def atualizar_instrutor(id: str, instrutor: dict):
+def atualizar_instrutor(id: str, instrutor: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     db = get_mongo_db()
     oid = _oid_or_400(id)
     instrutor = dict(instrutor or {})
@@ -146,8 +149,8 @@ def atualizar_instrutor(id: str, instrutor: dict):
 
     clean = _whitelist_payload(instrutor, partial=True)
     # Normaliza status somente se veio no payload
-    if "status" in clean:
-        clean["status"] = _normalize_status(clean.get("status"))
+    if "instituicao_id" in clean:
+        del clean["instituicao_id"]
 
     if not clean:
         # nada para atualizar
@@ -156,17 +159,20 @@ def atualizar_instrutor(id: str, instrutor: dict):
             raise HTTPException(status_code=404, detail="Instrutor não encontrado")
         return _normalize_instrutor(updated)
 
-    result = db["instrutor"].update_one({"_id": oid}, {"$set": clean})
+    result = db["instrutor"].update_one(
+        {"_id": oid, "instituicao_id": str(ctx.inst_oid)}, 
+        {"$set": clean}
+    )
     if result.matched_count:
         updated = db["instrutor"].find_one({"_id": oid})
         return _normalize_instrutor(updated)
     raise HTTPException(status_code=404, detail="Instrutor não encontrado")
 
 @router.delete("/api/instrutores/{id}")
-def remover_instrutor(id: str):
+def remover_instrutor(id: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     oid = _oid_or_400(id)
-    result = db["instrutor"].delete_one({"_id": oid})
+    result = db["instrutor"].delete_one({"_id": oid, "instituicao_id": str(ctx.inst_oid)})
     if result.deleted_count:
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="Instrutor não encontrado")

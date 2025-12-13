@@ -4,6 +4,8 @@ from typing import List, Optional, Dict, Any
 from bson import ObjectId
 from db import get_mongo_db
 from datetime import datetime, timezone
+from fastapi import Depends
+from auth_dep import get_ctx, RequestCtx
 
 
 router = APIRouter(prefix="/api/turmas", tags=["Turmas"])
@@ -89,15 +91,11 @@ def _serialize_full(doc: Dict[str, Any]) -> Dict[str, Any]:
 # ===================== ROTAS =====================
 @router.post("/", status_code=201)
 @router.post("", status_code=201, include_in_schema=False)   # aceita sem "/"
-def criar_turma(turma: TurmaCreate):
+def criar_turma(turma: TurmaCreate, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     doc = turma.dict()
-
-
-
-    # IDs para ObjectId
     doc["id_curso"]       = _to_oid(doc["id_curso"], "id_curso")
-    doc["id_instituicao"] = _to_oid(doc["id_instituicao"], "id_instituicao")
+    doc["id_instituicao"] = ctx.inst_oid 
     doc["id_calendario"]  = _to_oid(doc["id_calendario"], "id_calendario")
     doc["id_empresa"]     = _to_oid(doc["id_empresa"], "id_empresa")
 
@@ -118,15 +116,16 @@ def criar_turma(turma: TurmaCreate):
 
 @router.put("/{turma_id}")
 @router.put("/{turma_id}/", include_in_schema=False)         # aceita "/"
-def atualizar_turma(turma_id: str, turma: TurmaCreate):
+def atualizar_turma(turma_id: str, turma: TurmaCreate, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     db = get_mongo_db()
     _id = _to_oid(turma_id, "turma_id")
     doc = turma.dict()
 
-   
-
     doc["id_curso"]       = _to_oid(doc["id_curso"], "id_curso")
-    doc["id_instituicao"] = _to_oid(doc["id_instituicao"], "id_instituicao")
+    
+    # ALTERAÇÃO AQUI: Garante que a turma continue na instituição do usuário
+    doc["id_instituicao"] = ctx.inst_oid
+
     doc["id_calendario"]  = _to_oid(doc["id_calendario"], "id_calendario")
     doc["id_empresa"]     = _to_oid(doc["id_empresa"], "id_empresa")
 
@@ -140,18 +139,23 @@ def atualizar_turma(turma_id: str, turma: TurmaCreate):
         else:
             uc["id_instrutor"] = _to_oid(id_instr, "unidades_curriculares[].id_instrutor")
 
-    res = db["turma"].update_one({"_id": _id}, {"$set": doc})
+    res = db["turma"].update_one(
+        {"_id": _id, "id_instituicao": ctx.inst_oid}, 
+        {"$set": doc}
+    )
+    
     if res.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Turma não encontrada")
+        raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
     return {"msg": "Turma atualizada com sucesso", "id": turma_id}
 
 @router.get("/", tags=["Turmas"])
-@router.get("", include_in_schema=False)   # aceita sem "/"
+@router.get("", include_in_schema=False)
 def listar_turmas(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=200),
     sort_by: str = Query("data_hora_criacao"),
     sort_dir: str = Query("desc"),
+    ctx: RequestCtx = Depends(get_ctx) # <--- Adicionado ctx
 ):
     """
     Retorna {items, page, page_size, total} para preencher a tabela do front.
@@ -174,6 +178,7 @@ def listar_turmas(
     sort_val = -1 if sort_dir.lower() == "desc" else 1
 
     pipeline = [
+        {"$match": {"id_instituicao": ctx.inst_oid}}, # <--- FILTRO DE SEGURANÇA
         {"$sort": {sort_key: sort_val}},
         {"$skip": (page - 1) * page_size},
         {"$limit": page_size},
@@ -199,8 +204,6 @@ def listar_turmas(
             }
         },
     ]
-
-
     items = []
     for d in coll.aggregate(pipeline):
         items.append({
@@ -221,5 +224,6 @@ def listar_turmas(
             ),
         })
 
-    total = coll.count_documents({})  # sem filtros por enquanto
+    total = coll.count_documents({"id_instituicao": ctx.inst_oid})
+    
     return {"items": items, "page": page, "page_size": page_size, "total": total}

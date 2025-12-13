@@ -10,6 +10,8 @@ from bson.errors import InvalidId
 import re
 import time
 from datetime import timedelta
+from fastapi import Depends
+from auth_dep import get_ctx, RequestCtx
 
 
 router = APIRouter()
@@ -131,3 +133,115 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
         "instituicao_id": inst_final,
         "token": token 
     }
+
+# ==============================================================================
+#  ROTAS DE CRUD (ADICIONE ISTO APÓS O LOGIN PARA NÃO QUEBRAR A TELA DE USUÁRIOS)
+# ==============================================================================
+
+@router.get("/api/usuarios")
+def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
+    """Lista apenas usuários da mesma instituição do admin logado"""
+    db = get_mongo_db()
+    
+    # FILTRO DE SEGURANÇA: Só traz usuários vinculados a esta instituição
+    # ou que tenham essa instituição na lista de acesso
+    filtro = {
+        "$or": [
+            {"instituicao_id": str(ctx.inst_oid)},
+            {"instituicoes_ids": str(ctx.inst_oid)}
+        ]
+    }
+    
+    usuarios = list(db["usuario"].find(filtro, {"senha": 0})) # Não retorna hash de senha
+    
+    # Normaliza o _id para string
+    for u in usuarios:
+        u["id"] = str(u["_id"])
+        del u["_id"]
+        
+    return usuarios
+
+@router.post("/api/usuarios", status_code=201)
+def criar_usuario(dados: dict, ctx: RequestCtx = Depends(get_ctx)):
+    """Cria usuário vinculado forçadamente à instituição do admin"""
+    db = get_mongo_db()
+    
+    # Validações básicas
+    if not dados.get("user_name") or not dados.get("senha"):
+        raise HTTPException(status_code=400, detail="Usuário e senha são obrigatórios")
+
+    # Verifica duplicidade
+    if db["usuario"].find_one({"user_name_lc": dados["user_name"].lower()}):
+        raise HTTPException(status_code=400, detail="Nome de usuário já existe")
+
+    from auth import get_password_hash # Importação local ou mova para o topo
+    
+    novo_usuario = {
+        "nome": dados.get("nome"),
+        "user_name": dados["user_name"],
+        "user_name_lc": dados["user_name"].lower(),
+        "senha": get_password_hash(dados["senha"]),
+        "tipo_acesso": dados.get("tipo_acesso", "instrutor"),
+        "ativo": True,
+        
+        # SEGURANÇA: Força a instituição do contexto
+        "instituicao_id": str(ctx.inst_oid), 
+        "instituicoes_ids": [str(ctx.inst_oid)]
+    }
+    
+    db["usuario"].insert_one(novo_usuario)
+    return {"msg": "Usuário criado com sucesso"}
+
+@router.put("/api/usuarios/{user_id}")
+def atualizar_usuario(user_id: str, dados: dict, ctx: RequestCtx = Depends(get_ctx)):
+    db = get_mongo_db()
+    oid = _oid_or_400(user_id)
+    
+    # SEGURANÇA: Garante que só edita se o usuário pertencer à instituição do admin
+    filtro_seguranca = {
+        "_id": oid,
+        "$or": [
+            {"instituicao_id": str(ctx.inst_oid)},
+            {"instituicoes_ids": str(ctx.inst_oid)}
+        ]
+    }
+    
+    usuario_existente = db["usuario"].find_one(filtro_seguranca)
+    if not usuario_existente:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado ou acesso negado")
+
+    campos_update = {}
+    if "nome" in dados: campos_update["nome"] = dados["nome"]
+    if "tipo_acesso" in dados: campos_update["tipo_acesso"] = dados["tipo_acesso"]
+    if "ativo" in dados: campos_update["ativo"] = dados["ativo"]
+    
+    # Se enviou senha nova, atualiza o hash
+    if dados.get("senha"):
+        from auth import get_password_hash
+        campos_update["senha"] = get_password_hash(dados["senha"])
+
+    # Impede mudar a instituição via JSON (mantém a segurança)
+    if "instituicao_id" in dados:
+        del dados["instituicao_id"]
+
+    db["usuario"].update_one({"_id": oid}, {"$set": campos_update})
+    return {"msg": "Usuário atualizado"}
+
+@router.delete("/api/usuarios/{user_id}")
+def deletar_usuario(user_id: str, ctx: RequestCtx = Depends(get_ctx)):
+    db = get_mongo_db()
+    oid = _oid_or_400(user_id)
+    
+    # SEGURANÇA: Delete com filtro de instituição
+    res = db["usuario"].delete_one({
+        "_id": oid,
+        "$or": [
+            {"instituicao_id": str(ctx.inst_oid)},
+            {"instituicoes_ids": str(ctx.inst_oid)}
+        ]
+    })
+    
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado ou acesso negado")
+        
+    return {"msg": "Usuário removido"}

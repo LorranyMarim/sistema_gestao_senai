@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Body, status
+from fastapi import APIRouter, HTTPException, Body, status, Depends
 from pydantic import BaseModel, conint, constr, validator
 from enum import Enum
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from bson import ObjectId
 import re
-
+from auth_dep import get_ctx, RequestCtx
 from db import get_mongo_db
 
 router = APIRouter()
@@ -68,7 +68,7 @@ class CursoIn(BaseModel):
             raise ValueError("Existem UCs duplicadas na lista.")
         return v
 
-# PUT recebe a mesma estrutura (frontend envia tudo)
+# PUT recebe a mesma estrutura
 CursoUpdate = CursoIn
 
 # ========================= Utils =========================
@@ -104,29 +104,15 @@ def _normalize(doc: dict) -> dict:
     return doc
 
 def _check_refs(db, curso: CursoIn) -> Dict[str, str]:
-    """
-    Verifica se instituicao_id e cada UC existem.
-    Retorna dict {campo: "mensagem"} com erros; vazio se ok.
-    """
     errors: Dict[str, str] = {}
-
-    # Instituição
-    inst_id = _to_obj_id(curso.instituicao_id)
-    if not db["instituicao"].find_one({"_id": inst_id}):
-        errors["instituicao_id"] = "Instituição não encontrada."
-
     # UCs
     for idx, uc in enumerate(curso.ordem_ucs):
         oid = _to_obj_id(uc.id)
         if not db["unidade_curricular"].find_one({"_id": oid}):
             errors[f"ordem_ucs[{idx}].id"] = "UC não encontrada."
-
     return errors
 
 def _conflict_exists(db, curso: CursoIn, exclude_id: Optional[str] = None) -> bool:
-    """
-    Conflito: mesmo nome + instituicao_id + categoria (case-insensitive no nome).
-    """
     filtro: Dict[str, Any] = {
         "instituicao_id": curso.instituicao_id,
         "categoria": curso.categoria.value,
@@ -140,20 +126,25 @@ def _conflict_exists(db, curso: CursoIn, exclude_id: Optional[str] = None) -> bo
     return db["curso"].find_one(filtro) is not None
 
 # ========================= Rotas =========================
+
 @router.get("/api/cursos")
-def listar_cursos():
+def listar_cursos(ctx: RequestCtx = Depends(get_ctx)): # <--- Protegido
     db = get_mongo_db()
-    itens = list(db["curso"].find({}).sort([("data_criacao", -1), ("_id", -1)]))
+    # Filtro de segurança: apenas cursos da instituição logada
+    itens = list(db["curso"].find({"instituicao_id": str(ctx.inst_oid)}).sort([("data_criacao", -1), ("_id", -1)]))
     return [_normalize(x) for x in itens]
 
 @router.post("/api/cursos", status_code=status.HTTP_201_CREATED)
-def criar_curso(payload: dict = Body(...)):
+def criar_curso(payload: dict = Body(...), ctx: RequestCtx = Depends(get_ctx)): # <--- Protegido
     db = get_mongo_db()
 
-    # Sanitização suave (strings)
-    for field in ("nome", "observacao", "categoria", "area_tecnologica", "tipo", "nivel_curso", "status"):
-        if field in payload:
-            payload[field] = _strip_tags(payload.get(field))
+    # 1. Injeção de Segurança: Força a instituição do token
+    payload["instituicao_id"] = str(ctx.inst_oid)
+
+    # 2. Sanitização (limpa HTML malicioso)
+    for field in ("nome", "observacao"):
+        if field in payload and isinstance(payload[field], str):
+            payload[field] = _strip_tags(payload[field])
 
     try:
         curso = CursoIn(**payload)
@@ -177,17 +168,21 @@ def criar_curso(payload: dict = Body(...)):
     return _normalize(saved)
 
 @router.put("/api/cursos/{id}")
-def atualizar_curso(id: str, payload: dict = Body(...)):
+def atualizar_curso(id: str, payload: dict = Body(...), ctx: RequestCtx = Depends(get_ctx)): # <--- Protegido
     db = get_mongo_db()
+
     if not HEX24.match(id):
         raise HTTPException(status_code=404, detail="Curso não encontrado")
 
-    # Sanitização suave
-    for field in ("nome", "observacao"):
-        if field in payload:
-            payload[field] = _strip_tags(payload.get(field))
+    # 1. Injeção de Segurança
+    payload["instituicao_id"] = str(ctx.inst_oid)
 
-    # Nunca permitir alteração de data_criacao
+    # 2. Sanitização
+    for field in ("nome", "observacao"):
+        if field in payload and isinstance(payload[field], str):
+            payload[field] = _strip_tags(payload[field])
+
+    # Proteção de campos imutáveis
     payload.pop("data_criacao", None)
     payload.pop("_id", None)
 
@@ -196,8 +191,9 @@ def atualizar_curso(id: str, payload: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    if not db["curso"].find_one({"_id": ObjectId(id)}):
-        raise HTTPException(status_code=404, detail="Curso não encontrado")
+    # Verificação de segurança: O curso existe E pertence à instituição?
+    if not db["curso"].find_one({"_id": ObjectId(id), "instituicao_id": str(ctx.inst_oid)}):
+        raise HTTPException(status_code=404, detail="Curso não encontrado ou acesso negado")
 
     ref_errors = _check_refs(db, curso)
     if ref_errors:
@@ -206,18 +202,25 @@ def atualizar_curso(id: str, payload: dict = Body(...)):
     if _conflict_exists(db, curso, exclude_id=id):
         raise HTTPException(status_code=409, detail="Esta combinação de nome + instituição + categoria já existe.")
 
-    res = db["curso"].update_one({"_id": ObjectId(id)}, {"$set": curso.dict()})
+    res = db["curso"].update_one(
+        {"_id": ObjectId(id), "instituicao_id": str(ctx.inst_oid)}, 
+        {"$set": curso.dict()}
+    )
     if res.matched_count:
         updated = db["curso"].find_one({"_id": ObjectId(id)})
         return _normalize(updated)
+    
     raise HTTPException(status_code=404, detail="Curso não encontrado")
 
 @router.delete("/api/cursos/{id}")
-def deletar_curso(id: str):
+def deletar_curso(id: str, ctx: RequestCtx = Depends(get_ctx)): # <--- Protegido
     db = get_mongo_db()
     if not HEX24.match(id):
         raise HTTPException(status_code=404, detail="Curso não encontrado")
-    res = db["curso"].delete_one({"_id": ObjectId(id)})
+    
+    # Delete seguro com filtro de instituição
+    res = db["curso"].delete_one({"_id": ObjectId(id), "instituicao_id": str(ctx.inst_oid)})
+    
     if res.deleted_count:
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="Curso não encontrado")

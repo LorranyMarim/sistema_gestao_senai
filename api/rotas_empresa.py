@@ -1,13 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from db import get_mongo_db
 from bson.objectid import ObjectId
 from datetime import datetime, timezone
+from auth_dep import get_ctx, RequestCtx
 
 router = APIRouter()
 
 def _normalize_empresa(doc):
-    """Converte ObjectId para str e normaliza data_criacao para ISO-8601 (UTC).
-       Faz fallback do _id -> data quando data_criacao não existir."""
+    """Converte ObjectId para str e normaliza data_criacao para ISO-8601 (UTC)."""
     if not doc:
         return doc
     oid = doc.get("_id")
@@ -30,16 +30,15 @@ def _normalize_empresa(doc):
     return doc
 
 @router.get("/api/empresas")
-def listar_empresas():
+def listar_empresas(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     """
-    Lista empresas já ordenadas do mais recente para o mais antigo.
-    Se algum documento não tiver data_criacao, usamos o _id (ObjectId) como fallback.
+    Lista apenas empresas da instituição logada.
     """
     db = get_mongo_db()
     col = db["empresa"]
 
-    # Usa aggregation para coalescer data_criacao com a data do _id
     pipeline = [
+        {"$match": {"instituicao_id": str(ctx.inst_oid)}}, # <--- FILTRO DE SEGURANÇA
         {
             "$addFields": {
                 "sortKey": {
@@ -55,14 +54,18 @@ def listar_empresas():
     return [_normalize_empresa(e) for e in empresas]
 
 @router.post("/api/empresas")
-def adicionar_empresa(empresa: dict):
+def adicionar_empresa(empresa: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     """
-    Cria empresa e grava data_criacao no servidor (UTC).
-    Campo não é aceito do cliente.
+    Cria empresa vinculada à instituição do usuário logado.
     """
     db = get_mongo_db()
-    if "razao_social" not in empresa or "cnpj" not in empresa or "instituicao_id" not in empresa:
-        raise HTTPException(status_code=400, detail="Campos obrigatórios: razao_social, cnpj, instituicao_id")
+    
+    # Removemos a obrigatoriedade de 'instituicao_id' vir do cliente, pois nós vamos injetar
+    if "razao_social" not in empresa or "cnpj" not in empresa:
+        raise HTTPException(status_code=400, detail="Campos obrigatórios: razao_social, cnpj")
+
+    # SEGURANÇA: Força a instituição do token
+    empresa["instituicao_id"] = str(ctx.inst_oid)
 
     # ignora qualquer data_criacao enviada pelo cliente
     empresa.pop("data_criacao", None)
@@ -73,28 +76,35 @@ def adicionar_empresa(empresa: dict):
     return _normalize_empresa(saved)
 
 @router.put("/api/empresas/{empresa_id}")
-def editar_empresa(empresa_id: str, empresa: dict):
-    """
-    Atualiza empresa SEM permitir alterar data_criacao.
-    """
+def editar_empresa(empresa_id: str, empresa: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     db = get_mongo_db()
     empresa = dict(empresa or {})
-    empresa.pop("data_criacao", None)  # impede alteração
+    
+    # Impede alterar metadados e mover de instituição
+    empresa.pop("data_criacao", None)
+    empresa.pop("_id", None)
+    empresa.pop("instituicao_id", None) # Não permite mudar a empresa de unidade
 
+    # SEGURANÇA: Só atualiza se o ID existir E pertencer à instituição logada
     result = db["empresa"].update_one(
-        {"_id": ObjectId(empresa_id)},
+        {"_id": ObjectId(empresa_id), "instituicao_id": str(ctx.inst_oid)},
         {"$set": empresa}
     )
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+        raise HTTPException(status_code=404, detail="Empresa não encontrada ou acesso negado")
 
     updated = db["empresa"].find_one({"_id": ObjectId(empresa_id)})
     return _normalize_empresa(updated)
 
 @router.delete("/api/empresas/{empresa_id}")
-def excluir_empresa(empresa_id: str):
+def excluir_empresa(empresa_id: str, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     db = get_mongo_db()
-    result = db["empresa"].delete_one({"_id": ObjectId(empresa_id)})
+    
+    # SEGURANÇA: Só deleta se pertencer à instituição
+    result = db["empresa"].delete_one(
+        {"_id": ObjectId(empresa_id), "instituicao_id": str(ctx.inst_oid)}
+    )
+    
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+        raise HTTPException(status_code=404, detail="Empresa não encontrada ou acesso negado")
     return {"msg": "Empresa excluída"}
