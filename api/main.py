@@ -12,6 +12,7 @@ from rotas_turma import router as turma_router
 from rotas_dashboard import router as dashboard_router
 from fastapi.middleware.gzip import GZipMiddleware
 from bootstrap import router as bootstrap_router
+from fastapi.middleware.gzip import GZipMiddleware
 
 
 
@@ -38,6 +39,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # -----------------------------------------------------------------------------
 # Rotas
