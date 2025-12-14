@@ -178,3 +178,40 @@ def deletar_uc(id: str, ctx: RequestCtx = Depends(get_ctx)):
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="UC não encontrada ou acesso negado")
+
+# --- Adicionar em api/rotas_uc.py ---
+
+@router.get("/api/gestao_ucs/bootstrap")
+def bootstrap_ucs(ctx: RequestCtx = Depends(get_ctx)):
+    db = get_mongo_db()
+    
+    # 1. Buscar a Instituição Logada (para preencher o select de filtro/cadastro)
+    # Como o usuário é "tenant", ele só vê a própria instituição.
+    inst_oid = ctx.inst_oid
+    instituicao = db["instituicao"].find_one({"_id": inst_oid})
+    
+    lista_inst = []
+    if instituicao:
+        instituicao["_id"] = str(instituicao["_id"])
+        lista_inst.append(instituicao)
+
+    # 2. Buscar TODAS as UCs desta instituição (sem paginação inicial para o bootstrap ou ajuste conforme necessidade)
+    # Nota: O frontend faz a paginação em memória no "STATE.pagination", então aqui retornamos tudo.
+    cursor_ucs = db["unidade_curricular"].find({"instituicao_id": str(inst_oid)}).sort("data_criacao", -1)
+    
+    lista_ucs = []
+    for uc in cursor_ucs:
+        uc["_id"] = str(uc["_id"])
+        # Formatar datas para string ISO (compatibilidade com frontend)
+        if isinstance(uc.get("data_criacao"), datetime):
+            uc["data_criacao"] = uc["data_criacao"].astimezone(timezone.utc).isoformat()
+        elif isinstance(uc.get("data_criacao"), ObjectId):
+             uc["data_criacao"] = uc["data_criacao"].generation_time.isoformat()
+             
+        lista_ucs.append(uc)
+
+    # Retorna a estrutura exata que o gestao_unidades_curriculares.js espera
+    return {
+        "instituicoes": lista_inst,
+        "ucs": lista_ucs
+    }

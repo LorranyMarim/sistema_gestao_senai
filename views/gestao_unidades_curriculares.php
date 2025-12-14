@@ -81,10 +81,11 @@
         }
 
         #ucTable th:nth-child(1),
-    #ucTable td:nth-child(1),
-    #ucTable th:nth-child(2),
-    #ucTable td:nth-child(2) {
-        display: none;}
+        #ucTable td:nth-child(1),
+        #ucTable th:nth-child(2),
+        #ucTable td:nth-child(2) {
+            display: none;
+        }
 
         /* Garante que os dois modais fiquem sempre acima da sidebar/menu */
         #ucModal,
@@ -243,7 +244,7 @@
                         </thead>
                         <tbody id="ucTableBody"></tbody>
                     </table>
-                    <div class="pagination-bar" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                    <div class="pagination-bar" ...>
                         <button class="btn btn-secondary" id="prevPage">Anterior</button>
                         <span id="pageInfo">Página 1 de 1 • 0 registros</span>
                         <button class="btn btn-secondary" id="nextPage">Próximo</button>

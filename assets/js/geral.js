@@ -600,5 +600,74 @@
     safe('SubmenusGeneric', App.ui.initSidebarSubmenusGeneric);
 
   });
+  // ===================== NOVO MÓDULO DE PAGINAÇÃO =====================
+  App.pagination = {
+    /**
+     * Fatia um array com base na página e tamanho.
+     */
+    paginateData: (items, page, pageSize) => {
+      const total = items.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const validPage = Math.min(Math.max(1, page), totalPages);
+      
+      const start = (validPage - 1) * pageSize;
+      const end = start + pageSize;
+      
+      return {
+        pagedData: items.slice(start, end),
+        meta: {
+          page: validPage,
+          pageSize,
+          total,
+          totalPages
+        }
+      };
+    },
 
+    /**
+     * Configura os eventos de clique.
+     */
+    bindControls: (els, onChange) => {
+      const { prev, next, sizeSel } = els;
+      
+      // Remove listeners antigos para evitar duplicidade (cloneNode truque)
+      if (prev) {
+        const newPrev = prev.cloneNode(true);
+        prev.parentNode.replaceChild(newPrev, prev);
+        newPrev.addEventListener('click', () => onChange('prev'));
+        els.prev = newPrev; // atualiza referência
+      }
+      if (next) {
+        const newNext = next.cloneNode(true);
+        next.parentNode.replaceChild(newNext, next);
+        newNext.addEventListener('click', () => onChange('next'));
+        els.next = newNext;
+      }
+      if (sizeSel) {
+        const newSize = sizeSel.cloneNode(true);
+        sizeSel.parentNode.replaceChild(newSize, sizeSel);
+        newSize.addEventListener('change', () => onChange('size', parseInt(newSize.value, 10)));
+        els.sizeSel = newSize;
+      }
+    },
+
+    /**
+     * Atualiza a UI (botões e texto).
+     */
+    updateUI: (els, meta) => {
+      const { prev, next, info } = els;
+      const { page, total, totalPages } = meta;
+
+      if (info) {
+        info.textContent = `Página ${page} de ${totalPages} • ${total} registros`;
+      }
+      if (prev) prev.disabled = page <= 1;
+      if (next) next.disabled = page >= totalPages || total === 0;
+    }
+  };
+
+  // Garanta que App.pagination está acessível globalmente
+  window.App = App;
+
+// FIM DO ARQUIVO (certifique-se que está dentro da IIFE ou module scope)
 })();
