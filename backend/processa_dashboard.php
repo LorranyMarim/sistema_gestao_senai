@@ -19,6 +19,10 @@ function http_json($method, $url, $payload = null, $timeout = 10, $connectTimeou
         $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/json';
         $opts[CURLOPT_POSTFIELDS] = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
+    // [ETAPA 5] Repassa o cookie de sessão para a API Python
+    if (isset($_COOKIE['session_token'])) {
+        $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
+    }
     curl_setopt_array($ch, $opts);
     $body = curl_exec($ch);
     $err = curl_errno($ch);

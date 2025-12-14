@@ -17,12 +17,15 @@ function getRequestData() {
 function curl_json($method, $url, $payload = null) {
     $ch = curl_init($url);
     $opts = [
-        CURLOPT_RETURNTRANSFER => true,
+       CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CUSTOMREQUEST  => $method,
         CURLOPT_CONNECTTIMEOUT => 3,
         CURLOPT_TIMEOUT        => 10,
         CURLOPT_HTTPHEADER     => ['Accept: application/json'],
     ];
+    if (isset($_COOKIE['session_token'])) {
+        $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
+    }
     if ($payload !== null) {
         $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/json';
         $opts[CURLOPT_POSTFIELDS]   = json_encode($payload, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);

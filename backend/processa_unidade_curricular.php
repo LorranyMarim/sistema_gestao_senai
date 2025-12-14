@@ -42,6 +42,16 @@ function curl_json($method, $url, $payload = null) {
         $opts[CURLOPT_POSTFIELDS]   = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
+    // [ETAPA 5] Repassa o cookie de sessão para a API Python
+    if (isset($_COOKIE['session_token'])) {
+        $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
+    }
+
+    curl_setopt_array($ch, $opts);
+    // [ETAPA 5] Repassa o cookie de sessão para a API Python
+    if (isset($_COOKIE['session_token'])) {
+        $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
+    }
     curl_setopt_array($ch, $opts);
     $response = curl_exec($ch);
     $errno    = curl_errno($ch);

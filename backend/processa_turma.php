@@ -60,6 +60,15 @@ curl_setopt_array($ch, [
     CURLOPT_FOLLOWLOCATION  => true,   // ✅ segue redirect se houver
     CURLOPT_MAXREDIRS       => 2,
 ]);
+// ... após curl_setopt_array($ch, [...]);
+
+// [ETAPA 5] Repassa o cookie de sessão do navegador para a API Python
+if (isset($_COOKIE['session_token'])) {
+    $cookie_string = 'session_token=' . $_COOKIE['session_token'];
+    curl_setopt($ch, CURLOPT_COOKIE, $cookie_string);
+}
+
+// $result = curl_exec($ch); ...
 
 $result   = curl_exec($ch);
 $httpcode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);

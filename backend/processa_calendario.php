@@ -15,6 +15,13 @@ $action = $_GET['action'] ?? '';
 
 if ($method === "OPTIONS") { http_response_code(200); exit; }
 
+// === Configuração do Cookie (Helper) ===
+function add_cookie($ch) {
+    if (isset($_COOKIE['session_token'])) {
+        curl_setopt($ch, CURLOPT_COOKIE, 'session_token=' . $_COOKIE['session_token']);
+    }
+}
+
 // === NOVO: eventos por faixa ===
 if ($method === "GET" && $action === "eventos_range") {
   $start = $_GET['start'] ?? '';
@@ -22,6 +29,9 @@ if ($method === "GET" && $action === "eventos_range") {
   $qs = http_build_query(['start' => $start, 'end' => $end]);
   $ch = curl_init($api_url . "/eventos_range?" . $qs);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  
+  add_cookie($ch); // [ETAPA 5]
+  
   $response = curl_exec($ch);
   curl_close($ch);
   echo $response;
@@ -35,6 +45,9 @@ if ($method === "POST" && $action === "evento") {
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
   curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+  
+  add_cookie($ch); // [ETAPA 5]
+  
   $response = curl_exec($ch);
   curl_close($ch);
   echo $response; exit;
@@ -48,6 +61,9 @@ if ($method === "PUT" && $action === "editar_dia_nao_letivo") {
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
   curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+  
+  add_cookie($ch); // [ETAPA 5]
+  
   $response = curl_exec($ch);
   curl_close($ch);
   echo $response; exit;
@@ -59,6 +75,9 @@ if ($method === "DELETE" && $action === "remover_dia_nao_letivo") {
   $ch = curl_init($api_url . "/$id/remover_dia_nao_letivo?data=$data");
   curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  
+  add_cookie($ch); // [ETAPA 5]
+  
   $response = curl_exec($ch);
   curl_close($ch);
   echo $response; exit;
@@ -75,6 +94,9 @@ switch ($method) {
     $url = $api_url . ($qs2 ? "?$qs2" : "");
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    add_cookie($ch); // [ETAPA 5]
+    
     $response = curl_exec($ch);
     curl_close($ch);
     echo $response;
@@ -87,6 +109,9 @@ switch ($method) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    
+    add_cookie($ch); // [ETAPA 5]
+    
     $response = curl_exec($ch);
     curl_close($ch);
     echo $response;
@@ -100,6 +125,9 @@ switch ($method) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    
+    add_cookie($ch); // [ETAPA 5]
+    
     $response = curl_exec($ch);
     curl_close($ch);
     echo $response;
@@ -110,6 +138,9 @@ switch ($method) {
     $ch = curl_init($api_url . "/$id");
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    add_cookie($ch); // [ETAPA 5]
+    
     $response = curl_exec($ch);
     curl_close($ch);
     echo $response;
