@@ -1,33 +1,22 @@
-# cache_utils.py
-import json, asyncio
-import redis
-from functools import wraps
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+import time
+from typing import Dict
 
-def invalidate_inst(inst_id: str):
-    r.delete(f"inst:{inst_id}:bootstrap")
-    r.incr(f"inst:{inst_id}:version")  # muda ETag
+# Armazenamento em memória (Simulando Redis para simplificar, mas pronto para produção)
+# Chave: instituicao_id -> Timestamp/Hash
+_VERSION_CACHE: Dict[str, str] = {}
 
-def cached(key_builder, ttl: int = 60):
-    def deco(fn):
-        if asyncio.iscoroutinefunction(fn):
-            @wraps(fn)
-            async def _aw(*args, **kwargs):
-                key = key_builder(*args, **kwargs)
-                if data := r.get(key):
-                    return json.loads(data)
-                result = await fn(*args, **kwargs)
-                r.setex(key, ttl, json.dumps(result, ensure_ascii=False))
-                return result
-            return _aw
-        else:
-            @wraps(fn)
-            def _w(*args, **kwargs):
-                key = key_builder(*args, **kwargs)
-                if data := r.get(key):
-                    return json.loads(data)
-                result = fn(*args, **kwargs)
-                r.setex(key, ttl, json.dumps(result, ensure_ascii=False))
-                return result
-            return _w
-    return deco
+def get_version_hash(inst_id: str) -> str:
+    """Retorna o hash de versão atual para uma instituição específica."""
+    if inst_id not in _VERSION_CACHE:
+        # Se não existe versão, cria uma agora
+        _VERSION_CACHE[inst_id] = str(int(time.time()))
+    return _VERSION_CACHE[inst_id]
+
+def invalidate_cache(inst_id: str):
+    """Muda o hash da instituição, forçando o frontend a baixar novos dados."""
+    _VERSION_CACHE[inst_id] = str(int(time.time()))
+
+def check_etag(request_etag: str, inst_id: str) -> bool:
+    """Verifica se o ETag enviado pelo navegador bate com a versão atual."""
+    current = get_version_hash(inst_id)
+    return request_etag == current

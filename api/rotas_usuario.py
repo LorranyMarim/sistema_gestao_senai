@@ -134,7 +134,7 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
         "token": token 
     }
 
-# ==============================================================================
+# # ==============================================================================
 #  ROTAS DE CRUD (ADICIONE ISTO APÓS O LOGIN PARA NÃO QUEBRAR A TELA DE USUÁRIOS)
 # ==============================================================================
 

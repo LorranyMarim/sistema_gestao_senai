@@ -7,6 +7,7 @@ from bson import ObjectId
 import re
 from auth_dep import get_ctx, RequestCtx
 from db import get_mongo_db
+from cache_utils import invalidate_cache
 
 router = APIRouter()
 
@@ -135,7 +136,7 @@ def listar_cursos(ctx: RequestCtx = Depends(get_ctx)): # <--- Protegido
     return [_normalize(x) for x in itens]
 
 @router.post("/api/cursos", status_code=status.HTTP_201_CREATED)
-def criar_curso(payload: dict = Body(...), ctx: RequestCtx = Depends(get_ctx)): # <--- Protegido
+def criar_curso(payload: dict = Body(...), ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
 
     # 1. Injeção de Segurança: Força a instituição do token
@@ -164,6 +165,9 @@ def criar_curso(payload: dict = Body(...), ctx: RequestCtx = Depends(get_ctx)): 
     data["data_criacao"] = datetime.now(timezone.utc)
 
     inserted = db["curso"].insert_one(data)
+    saved = db["curso"].find_one({"_id": inserted.inserted_id})
+    invalidate_cache(str(ctx.inst_oid)) 
+    
     saved = db["curso"].find_one({"_id": inserted.inserted_id})
     return _normalize(saved)
 
@@ -207,6 +211,8 @@ def atualizar_curso(id: str, payload: dict = Body(...), ctx: RequestCtx = Depend
         {"$set": curso.dict()}
     )
     if res.matched_count:
+        invalidate_cache(str(ctx.inst_oid))
+    if res.matched_count:
         updated = db["curso"].find_one({"_id": ObjectId(id)})
         return _normalize(updated)
     
@@ -220,6 +226,9 @@ def deletar_curso(id: str, ctx: RequestCtx = Depends(get_ctx)): # <--- Protegido
     
     # Delete seguro com filtro de instituição
     res = db["curso"].delete_one({"_id": ObjectId(id), "instituicao_id": str(ctx.inst_oid)})
+    if res.deleted_count:
+        invalidate_cache(str(ctx.inst_oid))
+        return {"msg": "Removido com sucesso"}
     
     if res.deleted_count:
         return {"msg": "Removido com sucesso"}
