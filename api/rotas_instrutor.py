@@ -5,6 +5,7 @@ from bson.errors import InvalidId
 from datetime import datetime, timezone
 from fastapi import Depends
 from auth_dep import get_ctx, RequestCtx
+from cache_utils import invalidate_cache  # <--- Importação adicionada
 
 router = APIRouter()
 
@@ -112,11 +113,11 @@ def _oid_or_400(id_str: str) -> ObjectId:
 # -------------------------- Rotas --------------------------
 
 @router.get("/api/instrutores")
-def listar_instrutores(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def listar_instrutores(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     col = db["instrutor"]
     pipeline = [
-        {"$match": {"instituicao_id": str(ctx.inst_oid)}}, # <--- ALTERAÇÃO: Filtro
+        {"$match": {"instituicao_id": str(ctx.inst_oid)}},
         {"$addFields": {"sortKey": {"$ifNull": ["$data_criacao", {"$toDate": "$_id"}]}}},
         {"$sort": {"sortKey": -1}},
         {"$project": {"sortKey": 0}},
@@ -125,7 +126,7 @@ def listar_instrutores(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ct
     return [_normalize_instrutor(x) for x in itens]
 
 @router.post("/api/instrutores")
-def criar_instrutor(instrutor: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def criar_instrutor(instrutor: dict, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     instrutor = dict(instrutor or {})
     instrutor.pop("_id", None)
@@ -136,11 +137,15 @@ def criar_instrutor(instrutor: dict, ctx: RequestCtx = Depends(get_ctx)): # <---
     clean["status"] = _normalize_status(clean.get("status"))
 
     result = db["instrutor"].insert_one(clean)
+    
+    # Invalida cache após inserção
+    invalidate_cache(str(ctx.inst_oid)) 
+
     saved = db["instrutor"].find_one({"_id": result.inserted_id})
     return _normalize_instrutor(saved)
 
 @router.put("/api/instrutores/{id}")
-def atualizar_instrutor(id: str, instrutor: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def atualizar_instrutor(id: str, instrutor: dict, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     oid = _oid_or_400(id)
     instrutor = dict(instrutor or {})
@@ -164,6 +169,9 @@ def atualizar_instrutor(id: str, instrutor: dict, ctx: RequestCtx = Depends(get_
         {"$set": clean}
     )
     if result.matched_count:
+        # Invalida cache após atualização
+        invalidate_cache(str(ctx.inst_oid))
+        
         updated = db["instrutor"].find_one({"_id": oid})
         return _normalize_instrutor(updated)
     raise HTTPException(status_code=404, detail="Instrutor não encontrado")
@@ -174,5 +182,7 @@ def remover_instrutor(id: str, ctx: RequestCtx = Depends(get_ctx)):
     oid = _oid_or_400(id)
     result = db["instrutor"].delete_one({"_id": oid, "instituicao_id": str(ctx.inst_oid)})
     if result.deleted_count:
+        # Invalida cache após remoção
+        invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="Instrutor não encontrado")

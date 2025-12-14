@@ -6,7 +6,7 @@ from db import get_mongo_db
 from datetime import datetime, timezone
 from fastapi import Depends
 from auth_dep import get_ctx, RequestCtx
-
+from cache_utils import invalidate_cache  # <--- Importação adicionada
 
 router = APIRouter(prefix="/api/turmas", tags=["Turmas"])
 
@@ -112,6 +112,10 @@ def criar_turma(turma: TurmaCreate, ctx: RequestCtx = Depends(get_ctx)):
 
     doc["data_hora_criacao"] =  datetime.now(timezone.utc)
     res = db["turma"].insert_one(doc)
+    
+    # Invalida o cache da instituição
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Turma cadastrada com sucesso", "id": str(res.inserted_id)}
 
 @router.put("/{turma_id}")
@@ -146,6 +150,10 @@ def atualizar_turma(turma_id: str, turma: TurmaCreate, ctx: RequestCtx = Depends
     
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
+    
+    # Invalida o cache da instituição
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Turma atualizada com sucesso", "id": turma_id}
 
 @router.get("/", tags=["Turmas"])

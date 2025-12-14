@@ -1,9 +1,8 @@
-# rotas_dashboard.py
 import asyncio
 from fastapi import APIRouter, Depends
 from db import get_mongo_db
 import unicodedata
-from bson import ObjectId  # <--- Faltava importar isso
+from bson import ObjectId
 from auth_dep import get_ctx, RequestCtx
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
@@ -163,16 +162,15 @@ def dashboard_metrics(ctx: RequestCtx = Depends(get_ctx)):
 @router.get("/alunos_por_turno")
 def alunos_por_turno(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
-    # Agora a função aceita o ID
     return _svc_alunos_por_turno(db, ctx.inst_oid)
 
 @router.get("/areas_tecnologicas_pie")
-def areas_tecnologicas_pie(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def areas_tecnologicas_pie(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     return _svc_areas_tecnologicas(db, ctx.inst_oid)
 
 @router.get("/areas_tecnologicas")
-def areas_tecnologicas(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def areas_tecnologicas(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     return _svc_areas_tecnologicas(db, ctx.inst_oid)
 

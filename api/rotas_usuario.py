@@ -1,4 +1,3 @@
-# rotas_usuario.py
 from fastapi import APIRouter, HTTPException, Response, Request, status
 from db import get_mongo_db
 from auth import verificar_senha
@@ -12,7 +11,7 @@ import time
 from datetime import timedelta
 from fastapi import Depends
 from auth_dep import get_ctx, RequestCtx
-
+from cache_utils import invalidate_cache  # <--- Importação adicionada
 
 router = APIRouter()
 
@@ -134,7 +133,7 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
         "token": token 
     }
 
-# # ==============================================================================
+# ==============================================================================
 #  ROTAS DE CRUD (ADICIONE ISTO APÓS O LOGIN PARA NÃO QUEBRAR A TELA DE USUÁRIOS)
 # ==============================================================================
 
@@ -190,6 +189,10 @@ def criar_usuario(dados: dict, ctx: RequestCtx = Depends(get_ctx)):
     }
     
     db["usuario"].insert_one(novo_usuario)
+    
+    # INVALIDA O CACHE da instituição
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Usuário criado com sucesso"}
 
 @router.put("/api/usuarios/{user_id}")
@@ -225,6 +228,10 @@ def atualizar_usuario(user_id: str, dados: dict, ctx: RequestCtx = Depends(get_c
         del dados["instituicao_id"]
 
     db["usuario"].update_one({"_id": oid}, {"$set": campos_update})
+    
+    # INVALIDA O CACHE da instituição
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Usuário atualizado"}
 
 @router.delete("/api/usuarios/{user_id}")
@@ -243,5 +250,8 @@ def deletar_usuario(user_id: str, ctx: RequestCtx = Depends(get_ctx)):
     
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado ou acesso negado")
+    
+    # INVALIDA O CACHE da instituição
+    invalidate_cache(str(ctx.inst_oid))
         
     return {"msg": "Usuário removido"}

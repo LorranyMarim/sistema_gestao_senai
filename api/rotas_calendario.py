@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta, date, timezone
 from typing import Optional, Dict, Any, List
 from auth_dep import get_ctx, RequestCtx
+from cache_utils import invalidate_cache  # <--- Importação adicionada
 
 router = APIRouter()
 
@@ -162,6 +163,10 @@ def adicionar_calendario(calendario: Dict[str, Any], ctx: RequestCtx = Depends(g
         calendario["status"] = "Ativo"
 
     result = db["calendario"].insert_one(calendario)
+    
+    # Invalida cache
+    invalidate_cache(str(ctx.inst_oid))
+    
     calendario["_id"] = str(result.inserted_id)
     return _as_str_id(calendario)
 
@@ -190,6 +195,9 @@ def editar_calendario(calendario_id: str, calendario: Dict[str, Any], ctx: Reque
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Calendário não encontrado ou acesso negado")
 
+    # Invalida cache
+    invalidate_cache(str(ctx.inst_oid))
+
     atualizado = db["calendario"].find_one(_id_filter(calendario_id, ctx.inst_oid))
     return _as_str_id(atualizado)
 
@@ -201,6 +209,10 @@ def excluir_calendario(calendario_id: str, ctx: RequestCtx = Depends(get_ctx)): 
     result = db["calendario"].delete_one(_id_filter(calendario_id, ctx.inst_oid))
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Calendário não encontrado ou acesso negado")
+    
+    # Invalida cache
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Calendário excluído"}
 
 # -------------------- Adicionar evento --------------------
@@ -226,6 +238,8 @@ def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx))
         dt += timedelta(days=1)
 
     resumo = {"por_calendario": {}, "adicionados": [], "duplicados": [], "fora_periodo": []}
+    
+    algum_adicionado = False
 
     for cal_id in evento["calendarios_ids"]:
         # SEGURANÇA: Verifica se o calendário pertence à instituição antes de ler/editar
@@ -256,6 +270,7 @@ def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx))
                 _id_filter(str(cal_id), ctx.inst_oid),
                 {"$push": {"dias_nao_letivos": {"$each": novos}}}
             )
+            algum_adicionado = True
 
         resumo["por_calendario"][str(cal_id)] = {
             "adicionados": [d["data"] for d in novos],
@@ -265,6 +280,10 @@ def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx))
         resumo["adicionados"].extend([d["data"] for d in novos])
         resumo["duplicados"].extend([d["data"] for d in dups])
         resumo["fora_periodo"].extend([d["data"] for d in fora])
+
+    if algum_adicionado:
+        # Invalida cache se houve alteração
+        invalidate_cache(str(ctx.inst_oid))
 
     # ... (lógica de resumo de mensagem igual ao original) ...
     resumo["adicionados"] = sorted(set(resumo["adicionados"]))
@@ -296,6 +315,10 @@ def editar_dia_nao_letivo(calendario_id: str, payload: Dict[str, Any], ctx: Requ
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Dia não letivo não encontrado ou acesso negado")
+    
+    # Invalida cache
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Dia não letivo editado."}
 
 # -------------------- Remover dia não letivo --------------------
@@ -309,6 +332,10 @@ def remover_dia_nao_letivo(calendario_id: str, data: str, ctx: RequestCtx = Depe
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Calendário não encontrado ou acesso negado")
+    
+    # Invalida cache
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Dia não letivo removido."}
 
 # -------------------- Eventos por faixa (FullCalendar) --------------------

@@ -3,6 +3,7 @@ from db import get_mongo_db
 from bson.objectid import ObjectId
 from datetime import datetime, timezone
 from auth_dep import get_ctx, RequestCtx
+from cache_utils import invalidate_cache  # <--- Importação adicionada
 
 router = APIRouter()
 
@@ -30,7 +31,7 @@ def _normalize_empresa(doc):
     return doc
 
 @router.get("/api/empresas")
-def listar_empresas(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def listar_empresas(ctx: RequestCtx = Depends(get_ctx)):
     """
     Lista apenas empresas da instituição logada.
     """
@@ -38,7 +39,7 @@ def listar_empresas(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     col = db["empresa"]
 
     pipeline = [
-        {"$match": {"instituicao_id": str(ctx.inst_oid)}}, # <--- FILTRO DE SEGURANÇA
+        {"$match": {"instituicao_id": str(ctx.inst_oid)}},
         {
             "$addFields": {
                 "sortKey": {
@@ -54,7 +55,7 @@ def listar_empresas(ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
     return [_normalize_empresa(e) for e in empresas]
 
 @router.post("/api/empresas")
-def adicionar_empresa(empresa: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def adicionar_empresa(empresa: dict, ctx: RequestCtx = Depends(get_ctx)):
     """
     Cria empresa vinculada à instituição do usuário logado.
     """
@@ -72,11 +73,15 @@ def adicionar_empresa(empresa: dict, ctx: RequestCtx = Depends(get_ctx)): # <---
     empresa["data_criacao"] = datetime.now(timezone.utc)
 
     result = db["empresa"].insert_one(empresa)
+    
+    # Invalida o cache da instituição após inserção
+    invalidate_cache(str(ctx.inst_oid))
+
     saved = db["empresa"].find_one({"_id": result.inserted_id})
     return _normalize_empresa(saved)
 
 @router.put("/api/empresas/{empresa_id}")
-def editar_empresa(empresa_id: str, empresa: dict, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def editar_empresa(empresa_id: str, empresa: dict, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     empresa = dict(empresa or {})
     
@@ -93,11 +98,14 @@ def editar_empresa(empresa_id: str, empresa: dict, ctx: RequestCtx = Depends(get
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Empresa não encontrada ou acesso negado")
 
+    # Invalida o cache da instituição após atualização
+    invalidate_cache(str(ctx.inst_oid))
+
     updated = db["empresa"].find_one({"_id": ObjectId(empresa_id)})
     return _normalize_empresa(updated)
 
 @router.delete("/api/empresas/{empresa_id}")
-def excluir_empresa(empresa_id: str, ctx: RequestCtx = Depends(get_ctx)): # <--- Adicionado ctx
+def excluir_empresa(empresa_id: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     
     # SEGURANÇA: Só deleta se pertencer à instituição
@@ -107,4 +115,8 @@ def excluir_empresa(empresa_id: str, ctx: RequestCtx = Depends(get_ctx)): # <---
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Empresa não encontrada ou acesso negado")
+    
+    # Invalida o cache da instituição após remoção
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"msg": "Empresa excluída"}

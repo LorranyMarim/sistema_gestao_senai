@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from db import get_mongo_db
-from bson import ObjectId
+from bson.objectid import ObjectId
 from pydantic import BaseModel, Field, validator
 from typing import Literal, Optional, List
 from datetime import datetime, timezone
 import re
 from pymongo.collation import Collation
 from auth_dep import get_ctx, RequestCtx
+from cache_utils import invalidate_cache  # <--- Importação adicionada
 
 router = APIRouter()
 
@@ -126,10 +127,14 @@ def criar_uc(uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(get_ctx)):
     data.pop('_id', None)
 
     inserted = db["unidade_curricular"].insert_one(data)
+    
+    # Invalida cache após inserção
+    invalidate_cache(str(ctx.inst_oid))
+    
     return {"_id": str(inserted.inserted_id)}
 
 @router.put("/api/unidades_curriculares/{id}")
-def atualizar_uc(id: str, uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(get_ctx)): # <--- FALTAVA O CTX
+def atualizar_uc(id: str, uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(get_ctx)):
     oid = _try_objectid(id)
     if not oid:
         raise HTTPException(status_code=400, detail="ID inválido")
@@ -150,11 +155,13 @@ def atualizar_uc(id: str, uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(
     )
     
     if res.matched_count:
+        # Invalida cache após atualização
+        invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Atualizado com sucesso"}
     raise HTTPException(status_code=404, detail="UC não encontrada ou acesso negado")
 
 @router.delete("/api/unidades_curriculares/{id}")
-def deletar_uc(id: str, ctx: RequestCtx = Depends(get_ctx)): # <--- FALTAVA O CTX
+def deletar_uc(id: str, ctx: RequestCtx = Depends(get_ctx)):
     oid = _try_objectid(id)
     if not oid:
         raise HTTPException(status_code=400, detail="ID inválido")
@@ -167,5 +174,7 @@ def deletar_uc(id: str, ctx: RequestCtx = Depends(get_ctx)): # <--- FALTAVA O CT
     )
     
     if res.deleted_count:
+        # Invalida cache após remoção
+        invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="UC não encontrada ou acesso negado")

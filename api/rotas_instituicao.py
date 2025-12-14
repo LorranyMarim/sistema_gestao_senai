@@ -4,6 +4,12 @@ from db import get_mongo_db
 # NOTA: Esta rota é pública pois alimenta o combobox da tela de Login.
 # Não adicione Depends(get_ctx) aqui, senão ninguém consegue logar.
 
+from fastapi import APIRouter
+from db import get_mongo_db
+
+# NOTA: Esta rota é pública pois alimenta o combobox da tela de Login.
+# Não adicione Depends(get_ctx) aqui, senão ninguém consegue logar.
+
 router = APIRouter()
 
 @router.get("/api/instituicoes")
