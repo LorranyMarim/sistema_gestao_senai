@@ -1,13 +1,20 @@
 // gestao_turmas.js (refatorado)
 (() => {
   'use strict';
+  // Referências para os controles de paginação
+const pagElements = {
+  prev: document.getElementById('prevPage'),
+  next: document.getElementById('nextPage'),
+  info: document.getElementById('pageInfo'),
+  sizeSel: document.getElementById('pageSize')
+};
 
   // ========================= ESTADO & CACHES =========================
   let cursosCache = [];
   let instrutoresCache = [];
   let empresasMap = new Map();
   let allTurmas = [];
-
+const { paginateData, bindControls, updateUI } = App.pagination;
   const state = { page: 1, pageSize: 25, sort: 'created_desc' };
 
   // ========================= HELPERS GERAIS =========================
@@ -254,43 +261,40 @@
       </tr>`;
   };
 
-  function renderFiltered() {
+function renderFiltered() {
     const f = readFilters();
-    state.pageSize = f.pageSize;
 
-    const rows = applyFilters(allTurmas, f).sort(sorters['created_desc']);
-    const total = rows.length;
-    const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    state.page = Math.min(Math.max(state.page, 1), totalPages);
+    // 1. Filtra e Ordena
+    const filteredRows = applyFilters(allTurmas, f).sort(sorters['created_desc']);
 
-    const start = (state.page - 1) * state.pageSize;
-    const pageRows = rows.slice(start, start + state.pageSize);
+    // 2. Pagina usando o módulo centralizado
+    const { pagedData, meta } = paginateData(filteredRows, state.page, f.pageSize);
 
+    // Atualiza estado local caso a página tenha sido ajustada automaticamente
+    state.page = meta.page;
+
+    // 3. Renderiza Tabela
     const tbody = $('#turmasTable tbody');
-    if (!tbody) return;
+    if (tbody) {
+        tbody.innerHTML = pagedData.length
+            ? pagedData.map(turmaRowHTML).join('')
+            : `<tr><td colspan="7" class="text-muted">Nenhum registro encontrado.</td></tr>`;
+    }
 
-    tbody.innerHTML = pageRows.length
-      ? pageRows.map(turmaRowHTML).join('')
-      : `<tr><td colspan="7" class="text-muted">Nenhum registro encontrado.</td></tr>`;
+    // 4. Atualiza Botões e Texto (Geral.js)
+    updateUI(pagElements, meta);
 
-    const pageInfo = $('#pageInfo');
-    if (pageInfo) pageInfo.textContent = `Página ${state.page} de ${totalPages} • ${total} registros`;
-
-    const prev = $('#prevPage'), next = $('#nextPage');
-    if (prev) prev.disabled = state.page <= 1;
-    if (next) next.disabled = state.page >= totalPages;
-
+    // 5. Atualiza estado do botão limpar
     const hasFilters = !!(f.q || f.empresa !== 'Todos' || f.status !== 'Todos' || f.turno !== 'Todos' || f.area !== 'Todos');
     const btnClear = $('#btnClearFilters');
     if (btnClear) btnClear.disabled = !hasFilters;
-  }
-
+}
   async function carregarTurmas() {
     const tbody = $('#turmasTable tbody');
     if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Carregando…</td></tr>`;
     try {
-      const data = await fetchJSON('http://localhost:8000/api/turmas');
+      const data = await fetchJSON('../backend/processa_turma.php');
       allTurmas = Array.isArray(data?.items) ? data.items : [];
       populateFilterOptions(allTurmas);
       renderFiltered();
@@ -301,29 +305,46 @@
   }
 
   function attachFilterHandlers() {
+    // 1. Listeners dos filtros (Input de texto, Selects de filtro)
     ['searchTurma', 'filterEmpresa', 'filterStatus', 'filterTurno', 'filterArea', 'pageSize'].forEach(id => {
-      const el = $('#' + id);
-      if (!el) return;
-      on(el, 'input', () => { state.page = 1; renderFiltered(); });
-      on(el, 'change', () => { state.page = 1; renderFiltered(); });
+        const el = $('#' + id);
+        if (!el) return;
+        
+        // Ao digitar ou trocar filtro, volta para página 1 e renderiza
+        on(el, 'input', () => { state.page = 1; renderFiltered(); });
+        on(el, 'change', () => { state.page = 1; renderFiltered(); });
     });
 
+    // 2. Botão Limpar Filtros
     const btnClear = $('#btnClearFilters');
     if (btnClear) on(btnClear, 'click', () => {
-      const setVal = (id, v) => { const el = $('#' + id); if (el) el.value = v; };
-      setVal('searchTurma', '');
-      setVal('filterEmpresa', 'Todos');
-      setVal('filterStatus', 'Todos');
-      setVal('filterTurno', 'Todos');
-      setVal('filterArea', 'Todos');
-      state.page = 1;
-      renderFiltered();
+        const setVal = (id, v) => { const el = $('#' + id); if (el) el.value = v; };
+        setVal('searchTurma', '');
+        setVal('filterEmpresa', 'Todos');
+        setVal('filterStatus', 'Todos');
+        setVal('filterTurno', 'Todos');
+        setVal('filterArea', 'Todos');
+        state.page = 1;
+        renderFiltered();
     });
 
-    const prev = $('#prevPage'), next = $('#nextPage');
-    if (prev) on(prev, 'click', () => { if (state.page > 1) { state.page--; renderFiltered(); } });
-    if (next) on(next, 'click', () => { state.page++; renderFiltered(); });
-  }
+    // 3. Paginação (Nova Lógica)
+    
+    // --> MANTENHA ESTA LINHA <--
+    // Ela garante que o select comece com o valor certo (ex: 25)
+    if (pagElements.sizeSel) pagElements.sizeSel.value = state.pageSize; 
+
+    // Removemos os clicks manuais antigos e usamos a central:
+    bindControls(pagElements, (action, value) => {
+        if (action === 'prev') state.page--;
+        if (action === 'next') state.page++;
+        if (action === 'size') {
+            state.page = 1;
+            // O valor do pageSize é pego automaticamente no renderFiltered -> readFilters
+        }
+        renderFiltered();
+    });
+}
 
   // ========================= VIEWER (MODAL DE VISUALIZAÇÃO) =========================
   const getUcNomeByCurso = (cursoId, ucId) => {

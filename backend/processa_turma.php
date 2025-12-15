@@ -1,110 +1,65 @@
 <?php
-header('Content-Type: application/json');
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-// Apenas POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+// URL da API Python
+$api_url = 'http://localhost:8000/api/turmas';
+
+function curl_request($method, $url, $data = null) {
+    $ch = curl_init($url);
+    $headers = ['Content-Type: application/json'];
+    
+    // Repassa o cookie de sessão para autenticação
+    if (isset($_COOKIE['session_token'])) {
+        curl_setopt($ch, CURLOPT_COOKIE, 'session_token=' . $_COOKIE['session_token']);
+    }
+
+    $opts = [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CUSTOMREQUEST  => $method,
+        CURLOPT_HTTPHEADER     => $headers,
+        CURLOPT_TIMEOUT        => 10
+    ];
+
+    if ($data !== null) {
+        $opts[CURLOPT_POSTFIELDS] = json_encode($data);
+    }
+
+    curl_setopt_array($ch, $opts);
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    http_response_code($http_code);
+    return $response;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+$id = $_GET['id'] ?? '';
+
+// Tratamento de rotas
+if ($method === 'GET') {
+    // Se tiver ID, busca específica, senão lista tudo
+    $url = $id ? "$api_url/" . urlencode($id) : $api_url;
+    echo curl_request('GET', $url);
+} 
+elseif ($method === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    echo curl_request('POST', $api_url, $input);
+} 
+elseif ($method === 'PUT') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    echo curl_request('PUT', "$api_url/" . urlencode($id), $input);
+} 
+elseif ($method === 'DELETE') {
+    echo curl_request('DELETE', "$api_url/" . urlencode($id));
+} 
+elseif ($method === 'OPTIONS') {
+    http_response_code(200);
+} else {
     http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Método inválido']);
-    exit;
+    echo json_encode(['error' => 'Método não permitido']);
 }
-
-// Lê JSON
-$raw  = file_get_contents('php://input');
-$data = json_decode($raw, true);
-if (!is_array($data)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'JSON inválido no body']);
-    exit;
-}
-
-/* ===== Validação mínima ===== */
-$required = [
-    'codigo','id_curso','data_inicio','data_fim','turno',
-    'num_alunos','id_instituicao','id_calendario','id_empresa','unidades_curriculares'
-];
-$missing = array_values(array_diff($required, array_keys($data)));
-if ($missing) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Campos obrigatórios ausentes', 'missing' => $missing]);
-    exit;
-}
-if (!is_array($data['unidades_curriculares']) || count($data['unidades_curriculares']) === 0) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'unidades_curriculares deve ser uma lista não vazia']);
-    exit;
-}
-
-// Normalizações
-$data['num_alunos'] = (int)$data['num_alunos'];
-
-/*  ❌ Removido: conversão de status para boolean
-    Queremos "ativo"|"inativo" como string, do jeito que veio do front.
-    if (!array_key_exists('status', $data)) { ... }
-*/
-
-// ===== Chama a API FastAPI =====
-// IMPORTANTE: sem barra final para evitar redirect (ou ligue FOLLOWLOCATION)
-$apiUrl = 'http://localhost:8000/api/turmas';
-
-$ch = curl_init($apiUrl);
-curl_setopt_array($ch, [
-    CURLOPT_POST            => 1,
-    CURLOPT_RETURNTRANSFER  => true,
-    CURLOPT_HTTPHEADER      => [
-        'Content-Type: application/json',
-        'Accept: application/json'
-    ],
-    CURLOPT_POSTFIELDS      => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-    CURLOPT_CONNECTTIMEOUT  => 5,
-    CURLOPT_TIMEOUT         => 15,
-    CURLOPT_FOLLOWLOCATION  => true,   // ✅ segue redirect se houver
-    CURLOPT_MAXREDIRS       => 2,
-]);
-// ... após curl_setopt_array($ch, [...]);
-
-// [ETAPA 5] Repassa o cookie de sessão do navegador para a API Python
-if (isset($_COOKIE['session_token'])) {
-    $cookie_string = 'session_token=' . $_COOKIE['session_token'];
-    curl_setopt($ch, CURLOPT_COOKIE, $cookie_string);
-}
-
-// $result = curl_exec($ch); ...
-
-$result   = curl_exec($ch);
-$httpcode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlErr  = curl_error($ch);
-curl_close($ch);
-
-// Falha de transporte
-if ($result === false) {
-    http_response_code(502);
-    echo json_encode([
-        'success' => false,
-        'error'   => 'Falha ao conectar na API de turmas',
-        'detail'  => $curlErr
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// Resposta da API
-$resp = json_decode($result, true);
-
-// Sucesso (aceita 200 ou 201)
-if ($httpcode === 201 || $httpcode === 200) {
-    http_response_code($httpcode);
-    echo json_encode(['success' => true, 'api' => $resp ?: []], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// Erro da API
-http_response_code($httpcode);
-$msg = 'Erro ao cadastrar turma!';
-if (is_array($resp) && isset($resp['detail'])) {
-    $msg = is_string($resp['detail']) ? $resp['detail'] : json_encode($resp['detail'], JSON_UNESCAPED_UNICODE);
-}
-echo json_encode([
-    'success' => false,
-    'error'   => $msg,
-    'status'  => $httpcode,
-    'api_raw' => $resp ?? $result,
-], JSON_UNESCAPED_UNICODE);
+?>

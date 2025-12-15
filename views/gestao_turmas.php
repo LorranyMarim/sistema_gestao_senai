@@ -280,14 +280,14 @@
 
 
   <div class="filter-group">
-    <label for="pageSize">Itens/página:</label>
-    <select id="pageSize">
-      <option value="10">10</option>
-      <option value="25" selected>25</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-    </select>
-  </div>
+  <label for="pageSize">Itens/página:</label>
+  <select id="pageSize">
+    <option value="10">10</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+  </select>
+</div>
 
   <div class="filter-group">
     <label>&nbsp;</label>
@@ -314,11 +314,11 @@
             <tbody><!-- preenchido via JS --></tbody>
           </table>
 
-          <div class="pagination-bar d-flex align-items-center gap-2 mt-2">
-            <button class="btn btn-secondary" id="prevPage">Anterior</button>
-            <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-            <button class="btn btn-secondary" id="nextPage">Próximo</button>
-          </div>
+          <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+  <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+  <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+  <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
+</div>
         </div>
       </section>
     </main>
