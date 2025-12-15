@@ -3,20 +3,23 @@
   'use strict';
 
   if (!window.App) throw new Error('Carregue geral.js antes de gestao_unidades_curriculares.js.');
-  
-  // Imports centralizados
+
+  // ===================== Imports =====================
   const { $, $$ } = App.dom;
   const { debounce, toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.utils;
   const { safeFetch } = App.net;
-  const { paginateData, bindControls, updateUI } = App.pagination; // Import da paginação
+  const { paginateData, bindControls, updateUI } = App.pagination;
 
   // ===================== Config & State =====================
+  const LS_KEY = 'ucs_gestao_state_v1';
+  
   const API = Object.freeze({
     bootstrap: '../backend/processa_unidade_curricular.php?action=bootstrap',
     uc: '../backend/processa_unidade_curricular.php',
   });
 
-  const STATE = {
+  // Estado inicial padrão
+  const DEFAULT_STATE = {
     instituicoes: [],
     ucs: [],
     ucEditId: null,
@@ -24,427 +27,385 @@
     filters: { q: '', instituicoes: [], status: [], created_from: '', created_to: '' },
   };
 
-  // ===================== DOM refs =====================
-  const ucModal = $('#ucModal');
-  const addUcBtn = $('#addUcBtn');
-  const closeModalBtn = $('#closeModalBtn');
-  const cancelBtn = $('#cancelBtn');
-  const ucForm = $('#ucForm');
-  const modalTitleUc = $('#modalTitleUc');
-  const ucIdInput = $('#ucId');
-  const descricaoUcInput = $('#descricaoUc');
-  const salaIdealInput = $('#salaIdeal');
-  const selectInstituicao = $('#instituicaoUc');
-  const statusUc = $('#statusUc');
-  const alertUc = $('#alertUc');
+  // Carrega do LocalStorage ou usa padrão, preservando arrays vazios
+  let savedState = {};
+  try {
+    savedState = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+  } catch {}
 
-  // Modal Visualizar
-  const visualizarUcModal = $('#visualizarUcModal');
-  const closeVisualizarUcBtn = $('#closeVisualizarUcBtn');
-  const fecharVisualizarUcBtn = $('#fecharVisualizarUcBtn');
-  const viewInstituicaoUc = $('#viewInstituicaoUc');
-  const viewDescricaoUc = $('#viewDescricaoUc');
-  const viewSalaIdealUc = $('#viewSalaIdealUc');
-  const viewStatusUc = $('#viewStatusUc');
-
-  // Tabela / busca
-  const ucTableBody = $('#ucTableBody');
-  const searchInput = $('#searchUc');
-
-  // Filtros UI
-  const filterInstituicao = $('#filterInstituicao');
-  const filterStatus = $('#filterStatus');
-  const filterCriadoDe = $('#filterCriadoDe');
-  const filterCriadoAte = $('#filterCriadoAte');
-  
-  // Elementos de Paginação (Agrupados)
-  const pagElements = {
-    prev: $('#prevPage'),
-    next: $('#nextPage'),
-    info: $('#pageInfo'),
-    sizeSel: $('#pageSize')
+  const STATE = {
+    ...DEFAULT_STATE,
+    pagination: { ...DEFAULT_STATE.pagination, ...savedState.pagination },
+    filters: { ...DEFAULT_STATE.filters, ...savedState.filters }
   };
 
-  // ===================== Utils de data =====================
+  // ===================== DOM Refs =====================
+  const refs = {
+    // Modais e Formulários
+    ucModal: $('#ucModal'),
+    addUcBtn: $('#addUcBtn'),
+    closeModalBtn: $('#closeModalBtn'),
+    cancelBtn: $('#cancelBtn'),
+    ucForm: $('#ucForm'),
+    modalTitleUc: $('#modalTitleUc'),
+    ucIdInput: $('#ucId'),
+    descricaoUcInput: $('#descricaoUc'),
+    salaIdealInput: $('#salaIdeal'),
+    selectInstituicao: $('#instituicaoUc'),
+    statusUc: $('#statusUc'),
+    alertUc: $('#alertUc'),
+
+    // Visualizar
+    visualizarUcModal: $('#visualizarUcModal'),
+    closeVisualizarUcBtn: $('#closeVisualizarUcBtn'),
+    fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
+    viewFields: {
+      instituicao: $('#viewInstituicaoUc'),
+      descricao: $('#viewDescricaoUc'),
+      sala: $('#viewSalaIdealUc'),
+      status: $('#viewStatusUc')
+    },
+
+    // Tabela e Filtros
+    ucTableBody: $('#ucTableBody'),
+    searchInput: $('#searchUc'),
+    filterInstituicao: $('#filterInstituicao'),
+    filterStatus: $('#filterStatus'),
+    filterCriadoDe: $('#filterCriadoDe'),
+    filterCriadoAte: $('#filterCriadoAte'),
+
+    // Paginação
+    pagElements: {
+      prev: $('#prevPage'),
+      next: $('#nextPage'),
+      info: $('#pageInfo'),
+      sizeSel: $('#pageSize')
+    }
+  };
+
+  // ===================== Persistência =====================
+  function saveState() {
+    const toSave = {
+      pagination: { pageSize: STATE.pagination.pageSize }, // Salva apenas o tamanho da página
+      filters: STATE.filters
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(toSave));
+  }
+
+  // ===================== Utils UI =====================
   function fmtDateBR(isoLike) {
     if (!isoLike) return '—';
     const dt = new Date(isoLike);
-    if (isNaN(dt)) return '—';
-    return dt.toLocaleString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      dateStyle: 'short',
-      timeStyle: 'short',
-    });
-  } 
-
-  async function preencherSelectInstituicao(selectedId = '') {
-    const insts = STATE.instituicoes;
-    const opts = ['<option value="">Selecione a instituição</option>']
-        .concat(insts.map(i =>
-            `<option value="${i._id}" ${i._id === selectedId ? 'selected' : ''}>${i.razao_social ?? i.nome ?? '(sem nome)'}</option>`
-        ));
-    selectInstituicao.innerHTML = opts.join('');
+    return isNaN(dt) ? '—' : dt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   }
 
-  // ===================== Modais UC =====================
-  function openModalUC(edit = false, uc = {}) {
-    preencherSelectInstituicao(edit ? uc.instituicao_id : '');
-    ucModal.classList.add('show');
-    ucIdInput.value = edit ? uc._id : '';
-    descricaoUcInput.value = edit ? (uc.descricao ?? '') : '';
-    salaIdealInput.value = edit ? (uc.sala_ideal ?? '') : '';
-    statusUc.value = edit ? (uc.status ?? 'Ativa') : 'Ativa';
-    modalTitleUc.textContent = edit ? 'Editar Unidade Curricular' : 'Adicionar Nova Unidade Curricular';
-    STATE.ucEditId = edit ? uc._id : null;
-    clearAlert();
+  function clearAlert() {
+    if (!refs.alertUc) return;
+    refs.alertUc.style.display = 'none';
+    refs.alertUc.className = '';
+    refs.alertUc.textContent = '';
   }
 
-  function closeModalUC() {
-    ucModal.classList.remove('show');
-    ucForm.reset();
-    STATE.ucEditId = null;
-    clearAlert();
+  function showAlert(msg, type = 'error') {
+    if (!refs.alertUc) return;
+    refs.alertUc.textContent = msg;
+    refs.alertUc.className = type === 'error' ? 'alert-error' : 'alert-success';
+    refs.alertUc.style.display = 'block';
+    if (type === 'success') setTimeout(clearAlert, 3000);
   }
 
-  function openVisualizarUcModal(uc) {
-    const inst = STATE.instituicoes.find(i => i._id === uc.instituicao_id);
-    viewInstituicaoUc.value = inst ? (inst.razao_social ?? inst.nome ?? '') : '';
-    viewDescricaoUc.value = uc.descricao ?? '';
-    viewSalaIdealUc.value = uc.sala_ideal ?? '';
-    viewStatusUc.value = uc.status ?? 'Ativa';
-    visualizarUcModal.classList.add('show');
-  }
-
-  function closeVisualizarUcModal() { visualizarUcModal.classList.remove('show'); }
-
-  function wireModalEvents() {
-    addUcBtn?.addEventListener('click', () => openModalUC());
-    closeModalBtn?.addEventListener('click', closeModalUC);
-    cancelBtn?.addEventListener('click', closeModalUC);
-    closeVisualizarUcBtn?.addEventListener('click', closeVisualizarUcModal);
-    fecharVisualizarUcBtn?.addEventListener('click', closeVisualizarUcModal);
-    window.addEventListener('click', (e) => {
-      if (e.target === ucModal) closeModalUC();
-      if (e.target === visualizarUcModal) closeVisualizarUcModal();
-    });
-  }
-
-  // ===================== Carregamento e Renderização =====================
-
-  async function carregarDadosIniciais() {
+  // ===================== Core Logic =====================
+  
+  // 1. Carregamento Inicial
+  async function carregarDados() {
     try {
-        const data = await safeFetch(API.bootstrap);
-        STATE.instituicoes = data.instituicoes || [];
-        STATE.ucs = data.ucs || [];
-
-        popularFiltrosIniciais();
-        renderizarConteudo(); 
+      const data = await safeFetch(API.bootstrap);
+      STATE.instituicoes = data.instituicoes || [];
+      STATE.ucs = data.ucs || [];
+      
+      popularSelects();
+      restaurarFiltrosUI(); // Preenche inputs com valor do LocalStorage
+      renderizarConteudo();
     } catch (err) {
-        console.error(err);
-        ucTableBody.innerHTML = `<tr><td colspan="7">Erro ao buscar dados. Tente recarregar a página.</td></tr>`;
-        if (pagElements.info) pagElements.info.textContent = '—';
+      console.error(err);
+      refs.ucTableBody.innerHTML = `<tr><td colspan="7" class="text-center">Erro ao carregar dados.</td></tr>`;
     }
   }
 
-  function popularFiltrosIniciais() {
+  // 2. Popula Selects (Modal e Filtro)
+  function popularSelects() {
     const insts = STATE.instituicoes;
-    const opts = ['<option value="">Todas as instituições</option>']
-        .concat(insts.map(i => `<option value="${i._id}">${i.razao_social ?? '(sem nome)'}</option>`));
-    if (filterInstituicao) filterInstituicao.innerHTML = opts.join('');
+    
+    // Select do Filtro
+    if (refs.filterInstituicao) {
+      const current = refs.filterInstituicao.value;
+      refs.filterInstituicao.innerHTML = ['<option value="">Todas as instituições</option>']
+        .concat(insts.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`))
+        .join('');
+      if(current) refs.filterInstituicao.value = current;
+    }
+
+    // Select do Modal (Edição/Criação)
+    if (refs.selectInstituicao) {
+       refs.selectInstituicao.innerHTML = ['<option value="">Selecione...</option>']
+        .concat(insts.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`))
+        .join('');
+    }
   }
 
-  // === Renderização Refatorada com Geral.js ===
+  // 3. Restaura UI baseada no Estado salvo
+  function restaurarFiltrosUI() {
+    if(refs.searchInput) refs.searchInput.value = STATE.filters.q || '';
+    if(refs.filterInstituicao && STATE.filters.instituicoes[0]) refs.filterInstituicao.value = STATE.filters.instituicoes[0];
+    if(refs.filterStatus && STATE.filters.status[0]) refs.filterStatus.value = STATE.filters.status[0];
+    // Datas precisariam de conversão reversa de ISO para YYYY-MM-DD se necessário, 
+    // mas simplificamos mantendo vazio se complexo.
+    if(refs.pagElements.sizeSel) refs.pagElements.sizeSel.value = STATE.pagination.pageSize;
+  }
+
+  // 4. Renderização Principal (Filtro -> Paginação -> Tabela)
   function renderizarConteudo() {
-    applyFiltersFromUI();
-
-    // 1. Filtragem
-    const filteredUcs = STATE.ucs.filter(uc => {
-        const { q, instituicoes, status, created_from, created_to } = STATE.filters;
-
-        if (q && !`${uc.descricao} ${uc.sala_ideal}`.toLowerCase().includes(q.toLowerCase())) return false;
-        if (instituicoes.length && !instituicoes.includes(uc.instituicao_id)) return false;
-        if (status.length && !status.includes(uc.status)) return false;
-        if (created_from && uc.data_criacao < created_from) return false;
-        if (created_to && uc.data_criacao > created_to) return false;
-
-        return true;
+    // A. Filtragem Local
+    const filtered = STATE.ucs.filter(uc => {
+      const f = STATE.filters;
+      // Texto
+      if (f.q) {
+        const text = `${uc.descricao} ${uc.sala_ideal}`.toLowerCase();
+        if (!text.includes(f.q.toLowerCase())) return false;
+      }
+      // Selects
+      if (f.instituicoes.length && !f.instituicoes.includes(uc.instituicao_id)) return false;
+      if (f.status.length && !f.status.includes(uc.status)) return false;
+      // Datas
+      if (f.created_from && uc.data_criacao < f.created_from) return false;
+      if (f.created_to && uc.data_criacao > f.created_to) return false;
+      return true;
     });
 
-    // 2. Paginação (Usa lógica do geral.js)
-    const { pagedData, meta } = paginateData(
-        filteredUcs, 
-        STATE.pagination.page, 
-        STATE.pagination.pageSize
-    );
-
-    // Atualiza STATE
+    // B. Paginação (usa helper do geral.js)
+    const { pagedData, meta } = paginateData(filtered, STATE.pagination.page, STATE.pagination.pageSize);
     STATE.pagination = { ...STATE.pagination, ...meta };
 
-    // 3. Atualiza UI de paginação (botões e texto)
-    updateUI(pagElements, meta);
-
-    // 4. Renderiza tabela
-    renderTableUC(pagedData);
+    // C. Atualiza UI
+    updateUI(refs.pagElements, meta);
+    renderTable(pagedData);
   }
 
-  function renderTableUC(ucsParaRenderizar) {
-    if (!ucsParaRenderizar.length) {
-        ucTableBody.innerHTML = `<tr><td colspan="7">Nenhuma UC encontrada com os filtros aplicados.</td></tr>`;
-        return;
+  function renderTable(lista) {
+    if (!lista.length) {
+      refs.ucTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Nenhum registro encontrado.</td></tr>`;
+      return;
     }
 
-    const instituicoesMap = new Map(STATE.instituicoes.map(i => [i._id, i.razao_social ?? i.nome ?? '(sem nome)']));
+    const mapInst = new Map(STATE.instituicoes.map(i => [i._id, i.razao_social ?? i.nome]));
 
-    const rows = ucsParaRenderizar.map(uc => {
-        const nomeInst = instituicoesMap.get(uc.instituicao_id) || '';
-        return `
-            <tr>
-                <td>${uc._id}</td>
-                <td>${nomeInst}</td>
-                <td>${uc.descricao ?? ''}</td>
-                <td>${uc.sala_ideal ?? ''}</td>
-                <td>${uc.status ?? 'Ativa'}</td>
-                <td>${fmtDateBR(uc.data_criacao)}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
-                        <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-    ucTableBody.innerHTML = rows.join('');
+    refs.ucTableBody.innerHTML = lista.map(uc => `
+      <tr>
+        <td>${uc._id?.substring(0,8)}...</td>
+        <td>${mapInst.get(uc.instituicao_id) || '—'}</td>
+        <td>${uc.descricao || ''}</td>
+        <td>${uc.sala_ideal || ''}</td>
+        <td>${uc.status || 'Ativa'}</td>
+        <td>${fmtDateBR(uc.data_criacao)}</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Ver"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
   }
 
-  function wireTableActions() {
-    ucTableBody.addEventListener('click', async (e) => {
-      const viewBtn = e.target.closest('.btn-view');
-      const editBtn = e.target.closest('.btn-edit');
-      const delBtn  = e.target.closest('.btn-delete');
-
-      if (viewBtn) {
-        const uc = STATE.ucs.find(u => u._id === viewBtn.dataset.id);
-        if (uc) openVisualizarUcModal(uc);
-        return;
-      }
-      if (editBtn) {
-        const uc = STATE.ucs.find(u => u._id === editBtn.dataset.id);
-        if (uc) openModalUC(true, uc);
-        return;
-      }
-      if (delBtn) {
-        if (!confirm('Deseja excluir esta UC?')) return;
-        try {
-           await safeFetch(`${API.uc}/${encodeURIComponent(delBtn.dataset.id)}`, { method: 'DELETE' });
-           await carregarDadosIniciais(); 
-        } catch (err) {
-          console.error(err);
-          alert('Erro ao excluir. Tente novamente.');
-        }
-      }
-    });
-  }
-
-  // ===================== Validação =====================
-  const forbiddenChars = /[<>"';{}]/g;
-  function clearAlert() { alertUc.textContent = ''; alertUc.className = ''; alertUc.style.display = 'none'; }
-  function showAlert(msg, type = 'error') {
-    alertUc.textContent = msg;
-    alertUc.className = (type === 'error' ? 'alert-error' : 'alert-success');
-    alertUc.style.display = 'block';
-    if (type === 'success') setTimeout(clearAlert, 2500);
-  }
-  function sanitize(val) { return (val || '').replace(/\s+/g, ' ').trim(); }
-
-  function validateUcForm() {
-    clearAlert();
-    // Verifica se instituição existe (segurança adicional frontend)
-    if (!selectInstituicao.value) { showAlert('Selecione uma instituição.', 'error'); selectInstituicao.focus(); return false; }
-
-    descricaoUcInput.value = sanitize(descricaoUcInput.value);
-    if (descricaoUcInput.value.length < 2 || descricaoUcInput.value.length > 100) {
-      showAlert('Descrição deve ter entre 2 e 100 caracteres.', 'error'); descricaoUcInput.focus(); return false;
-    }
-    if (forbiddenChars.test(descricaoUcInput.value)) { showAlert('Descrição contém caracteres inválidos.', 'error'); descricaoUcInput.focus(); return false; }
-
-    salaIdealInput.value = sanitize(salaIdealInput.value);
-    const alphaNumBR = /^[A-Za-zÀ-ÿ0-9 ]+$/;
-    if (salaIdealInput.value.length < 2 || salaIdealInput.value.length > 20) {
-      showAlert('Sala Ideal deve ter entre 2 e 20 caracteres.', 'error'); salaIdealInput.focus(); return false;
-    }
-    if (!alphaNumBR.test(salaIdealInput.value)) { showAlert('Sala Ideal aceita apenas letras, números e espaços.', 'error'); salaIdealInput.focus(); return false; }
-
-    if (!statusUc.value) { showAlert('Selecione o status.', 'error'); statusUc.focus(); return false; }
-    return true;
-  }
-
-  function wireInlineValidation() {
-    [descricaoUcInput, salaIdealInput, selectInstituicao, statusUc].forEach(input => {
-      input.addEventListener('input', clearAlert);
-    });
-  }
-
-  // ===================== Submit CRUD =====================
-  function disableForm(disabled) { $$('button, input, select, textarea', ucForm).forEach(el => { el.disabled = disabled; }); }
+  // ===================== Event Listeners =====================
   
-  function buildPayload() {
-    // Pega a primeira instituição carregada no STATE (já que o usuário só vê a dele)
-    const instituicaoLogada = STATE.instituicoes[0]?._id; 
-    if (!instituicaoLogada) {
-        alert("Erro de segurança: Instituição não identificada na sessão.");
-        return null;
-    }
-    return {
-      descricao: descricaoUcInput.value,
-      sala_ideal: salaIdealInput.value,
-      instituicao_id: instituicaoLogada,
-      status: statusUc.value
+  function setupFilters() {
+    // Helper para atualizar estado e redesenhar
+    const update = () => {
+      STATE.pagination.page = 1; // Reseta página ao filtrar
+      saveState();
+      renderizarConteudo();
     };
+
+    // Input Texto (Debounce)
+    refs.searchInput?.addEventListener('input', debounce((e) => {
+      STATE.filters.q = e.target.value.trim();
+      update();
+    }, 300));
+
+    // Selects
+    refs.filterInstituicao?.addEventListener('change', (e) => {
+      STATE.filters.instituicoes = e.target.value ? [e.target.value] : [];
+      update();
+    });
+
+    refs.filterStatus?.addEventListener('change', (e) => {
+      STATE.filters.status = e.target.value ? [e.target.value] : [];
+      update();
+    });
+
+    // Datas
+    const onDateChange = () => {
+      STATE.filters.created_from = toIsoStartOfDayLocal(refs.filterCriadoDe.value);
+      STATE.filters.created_to = toIsoEndOfDayLocal(refs.filterCriadoAte.value);
+      update();
+    };
+    refs.filterCriadoDe?.addEventListener('change', onDateChange);
+    refs.filterCriadoAte?.addEventListener('change', onDateChange);
+
+    // Paginação (Binds do geral.js)
+    bindControls(refs.pagElements, (action, val) => {
+      if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
+      if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
+      if (action === 'size') {
+        STATE.pagination.pageSize = parseInt(val);
+        STATE.pagination.page = 1;
+      }
+      saveState();
+      renderizarConteudo();
+    });
+
+    // Botão Limpar
+    App.ui.setupClearFilters({
+      onClear: async () => {
+        STATE.filters = { ...DEFAULT_STATE.filters };
+        STATE.pagination.page = 1;
+        
+        // Limpa inputs visuais
+        if(refs.searchInput) refs.searchInput.value = '';
+        if(refs.filterInstituicao) refs.filterInstituicao.value = '';
+        if(refs.filterStatus) refs.filterStatus.value = '';
+        if(refs.filterCriadoDe) refs.filterCriadoDe.value = '';
+        if(refs.filterCriadoAte) refs.filterCriadoAte.value = '';
+        
+        saveState();
+        renderizarConteudo();
+      }
+    });
   }
 
-  function wireFormSubmit() {
-    ucForm.addEventListener('submit', async (e) => {
+  function setupModais() {
+    // Abrir Modal
+    refs.addUcBtn?.addEventListener('click', () => {
+      STATE.ucEditId = null;
+      refs.ucForm.reset();
+      refs.ucIdInput.value = '';
+      refs.modalTitleUc.textContent = 'Adicionar Nova UC';
+      
+      // Auto-seleciona a instituição se só houver uma
+      if (STATE.instituicoes.length === 1 && refs.selectInstituicao) {
+          refs.selectInstituicao.value = STATE.instituicoes[0]._id;
+      }
+      
+      App.ui.showModal(refs.ucModal);
+    });
+
+    // Fechar Modal
+    const fechar = () => {
+      App.ui.hideModal(refs.ucModal);
+      clearAlert();
+    };
+    refs.closeModalBtn?.addEventListener('click', fechar);
+    refs.cancelBtn?.addEventListener('click', fechar);
+
+    // Submit
+    refs.ucForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!validateUcForm()) return;
+      if (!validarForm()) return;
 
-      const payload = buildPayload();
-      if (!payload) return;
+      const payload = {
+        descricao: refs.descricaoUcInput.value.trim(),
+        sala_ideal: refs.salaIdealInput.value.trim(),
+        instituicao_id: refs.selectInstituicao.value,
+        status: refs.statusUc.value
+      };
 
-      const isEdit = Boolean(STATE.ucEditId);
-      const url = isEdit ? `${API.uc}/${encodeURIComponent(STATE.ucEditId)}` : API.uc;
+      const isEdit = !!STATE.ucEditId;
+      const url = isEdit ? `${API.uc}/${STATE.ucEditId}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
       try {
-        disableForm(true);
         await safeFetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        closeModalUC();
-        setTimeout(async () => {
-          alert('Unidade Curricular salva com sucesso!');
-          STATE.pagination.page = 1;
-          await carregarDadosIniciais();
-        }, 200);
+        
+        alert('Operação realizada com sucesso!');
+        fechar();
+        carregarDados(); // Recarrega para atualizar tabela
       } catch (err) {
         console.error(err);
-        showAlert('Erro ao salvar UC. Tente novamente.', 'error');
-      } finally {
-        disableForm(false);
+        showAlert('Erro ao salvar. Verifique os dados.', 'error');
       }
     });
   }
 
-  // ===================== Filtros & Paginação =====================
-  function applyFiltersFromUI() {
-    STATE.filters.q = (searchInput?.value || '').trim();
+  function setupTableActions() {
+    refs.ucTableBody?.addEventListener('click', async (e) => {
+      const btnView = e.target.closest('.btn-view');
+      const btnEdit = e.target.closest('.btn-edit');
+      const btnDel = e.target.closest('.btn-delete');
 
-    const selInst = filterInstituicao?.value || '';
-    STATE.filters.instituicoes = selInst ? [selInst] : [];
+      if (btnView) {
+        const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
+        if(!uc) return;
+        const inst = STATE.instituicoes.find(i => i._id === uc.instituicao_id);
+        
+        refs.viewFields.instituicao.value = inst?.razao_social || '—';
+        refs.viewFields.descricao.value = uc.descricao;
+        refs.viewFields.sala.value = uc.sala_ideal;
+        refs.viewFields.status.value = uc.status;
+        
+        App.ui.showModal(refs.visualizarUcModal);
+      }
 
-    const selStatus = filterStatus?.value || '';
-    STATE.filters.status = selStatus ? [selStatus] : [];
+      if (btnEdit) {
+        const uc = STATE.ucs.find(u => u._id === btnEdit.dataset.id);
+        if(!uc) return;
+        STATE.ucEditId = uc._id;
+        
+        refs.ucIdInput.value = uc._id;
+        refs.selectInstituicao.value = uc.instituicao_id;
+        refs.descricaoUcInput.value = uc.descricao;
+        refs.salaIdealInput.value = uc.sala_ideal;
+        refs.statusUc.value = uc.status;
+        refs.modalTitleUc.textContent = 'Editar UC';
+        
+        App.ui.showModal(refs.ucModal);
+      }
 
-    STATE.filters.created_from = toIsoStartOfDayLocal(filterCriadoDe?.value || '');
-    STATE.filters.created_to   = toIsoEndOfDayLocal(filterCriadoAte?.value || '');
-  }
-
-  function wireFilters() {
-    // 1. Filtros de Texto e Selects (Recuperado do código original)
-    searchInput?.addEventListener('input', debounce(() => {
-        STATE.pagination.page = 1;
-        renderizarConteudo();
-    }, 350));
-
-    filterInstituicao?.addEventListener('change', () => {
-        STATE.pagination.page = 1;
-        renderizarConteudo();
-    });
-
-    filterStatus?.addEventListener('change', () => {
-        STATE.pagination.page = 1;
-        renderizarConteudo();
-    });
-
-    [filterCriadoDe, filterCriadoAte].forEach(el => {
-        el?.addEventListener('change', () => {
-            STATE.pagination.page = 1;
-            renderizarConteudo();
-        });
-    });
-
-    // 2. Paginação (Nova lógica via geral.js)
-    bindControls(pagElements, (action, value) => {
-        if (action === 'prev') {
-             if (STATE.pagination.page > 1) STATE.pagination.page--;
-        } else if (action === 'next') {
-             if (STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
-        } else if (action === 'size') {
-             STATE.pagination.pageSize = value;
-             STATE.pagination.page = 1; // Reseta ao mudar tamanho
+      if (btnDel) {
+        if (!confirm('Tem certeza que deseja excluir esta UC?')) return;
+        try {
+          await safeFetch(`${API.uc}/${btnDel.dataset.id}`, { method: 'DELETE' });
+          carregarDados();
+        } catch(err) {
+          alert('Erro ao excluir: ' + err.message);
         }
-        renderizarConteudo();
-    });
-  }
-
-  // --- UX de intervalo de datas ---
-  function setupFiltroCriadoRange() {
-    if (!filterCriadoDe || !filterCriadoAte) return;
-
-    const sync = () => {
-      const hasStart = !!filterCriadoDe.value;
-      filterCriadoAte.disabled = !hasStart;
-      filterCriadoAte.min = hasStart ? filterCriadoDe.value : '';
-
-      if (!hasStart) {
-        filterCriadoAte.value = '';
-      } else if (filterCriadoAte.value && filterCriadoAte.value < filterCriadoDe.value) {
-        filterCriadoAte.value = filterCriadoDe.value;
-      }
-    };
-
-    sync();
-
-    filterCriadoDe.addEventListener('input', () => {
-      sync();
-      STATE.pagination.page = 1;
-      renderizarConteudo();
-    });
-
-    filterCriadoAte.addEventListener('input', () => {
-      if (filterCriadoDe.value && filterCriadoAte.value < filterCriadoDe.value) {
-        filterCriadoAte.value = filterCriadoDe.value;
       }
     });
+
+    // Fechar modal de visualização
+    const fechaView = () => App.ui.hideModal(refs.visualizarUcModal);
+    refs.closeVisualizarUcBtn?.addEventListener('click', fechaView);
+    refs.fecharVisualizarUcBtn?.addEventListener('click', fechaView);
   }
 
-  // ===================== Inicialização =====================
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        await carregarDadosIniciais();
+  function validarForm() {
+    // Validação simples (pode ser expandida)
+    if (!refs.selectInstituicao.value) { showAlert('Selecione a instituição'); return false; }
+    if (refs.descricaoUcInput.value.length < 3) { showAlert('Descrição muito curta'); return false; }
+    return true;
+  }
 
-        wireModalEvents();
-        wireInlineValidation();
-        wireFormSubmit();
-        wireTableActions();
-        wireFilters();
-        setupFiltroCriadoRange();
-
-        // Limpar Filtros
-        const clearCtl = App.ui.setupClearFilters({
-            onClear: async () => {
-                STATE.filters = { q: '', instituicoes: [], status: [], created_from: '', created_to: '' };
-                STATE.pagination.page = 1;
-                renderizarConteudo();
-            }
-        });
-        clearCtl?.update && clearCtl.update();
-    } catch (err) {
-        console.error('Falha ao inicializar a página:', err);
-    }
+  // ===================== Init =====================
+  document.addEventListener('DOMContentLoaded', () => {
+    setupFilters();
+    setupModais();
+    setupTableActions();
+    carregarDados();
   });
 
 })();
