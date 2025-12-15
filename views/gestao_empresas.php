@@ -91,9 +91,8 @@
 
     /* ---- Ocultar colunas: 1 = ID, 4 = Instituição ---- */
     #empresasTable th:nth-child(1),
-    #empresasTable td:nth-child(1),
-    #empresasTable th:nth-child(4),
-    #empresasTable td:nth-child(4) {
+    #empresasTable td:nth-child(1)
+    {
       display: none;
     }
   </style>
@@ -159,12 +158,7 @@
             <input type="text" id="searchEmpresa" placeholder="Razão social ou CNPJ..." class="search-input" />
           </div>
 
-          <div class="filter-group">
-            <label for="filterInstituicao">Instituição:</label>
-            <select id="filterInstituicao" style="min-width:220px">
-              <!-- preenchido via JS -->
-            </select>
-          </div>
+          
 
           <div class="filter-group">
             <label for="filterStatus">Status:</label>
@@ -196,7 +190,7 @@
                 <th>ID</th>
                 <th>Razão Social</th>
                 <th>CNPJ</th>
-                <th>Instituição</th>
+             
                 <th>STATUS</th>
                 <th>CRIADO EM</th>
                 <th class="actions">Ações</th>
@@ -223,13 +217,6 @@
           <form id="empresaForm" autocomplete="off">
             <input type="hidden" id="empresaId" />
             <div id="alertEmpresa" style="display:none"></div>
-
-            <div class="form-group">
-              <label for="instituicaoId">Instituição:</label>
-              <select id="instituicaoId" required>
-                <option value="">Selecione</option>
-              </select>
-            </div>
 
             <div class="form-group">
               <label for="nomeEmpresa">Nome da Empresa/Parceiro:</label>
@@ -265,10 +252,6 @@
           <span class="close-button" id="closeVisualizarEmpresa" title="Fechar">&times;</span>
           <h2>Detalhes da Empresa</h2>
           <form>
-            <div class="form-group">
-              <label>Instituição:</label>
-              <input type="text" id="viewInstituicao" readonly disabled />
-            </div>
             <div class="form-group">
               <label>Nome da Empresa/Parceiro:</label>
               <input type="text" id="viewNomeEmpresa" readonly disabled />

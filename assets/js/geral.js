@@ -693,4 +693,152 @@
   };
 
   window.App = App;
+  /* assets/js/geral.js */
+
+// ... (código existente) ...
+
+// Módulo de Filtros Centralizado
+App.filters = {
+  /**
+   * Renderiza os filtros na div alvo.
+   * @param {string} targetId - ID da div container (ex: 'filter_area').
+   * @param {object} config - Configurações de ativação { search: bool, date: bool, status: bool, pageSize: bool }.
+   * @param {HTMLElement} [customElement] - Elemento DOM extra (ex: filtro Instituição) para inserir antes dos itens/página.
+   * @param {function} [onChange] - Callback disparado ao mudar qualquer filtro.
+   * @param {function} [onClear] - Callback disparado ao clicar em limpar.
+   */
+  render: function(targetId, config, customElement, onChange, onClear) {
+    const container = document.getElementById(targetId);
+    if (!container) return;
+
+    // Limpa e aplica estilos flex
+    container.innerHTML = '';
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.gap = '10px';
+    container.style.alignItems = 'flex-end';
+
+    const createGroup = (lbl, input) => {
+      const div = document.createElement('div');
+      div.className = 'filter-group';
+      div.style.display = 'flex';
+      div.style.flexDirection = 'column';
+      const label = document.createElement('label');
+      label.textContent = lbl;
+      label.style.marginBottom = '4px';
+      label.style.fontWeight = '600';
+      label.style.fontSize = '0.9em';
+      div.appendChild(label);
+      div.appendChild(input);
+      return div;
+    };
+
+    const triggerChange = () => { if (typeof onChange === 'function') onChange(); };
+
+    // 1º Campo: Buscar
+    if (config.search) {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.id = 'gen_search';
+      inp.placeholder = 'Digite para buscar...';
+      inp.className = 'form-control'; // Bootstrap
+      inp.style.minWidth = '200px';
+      inp.addEventListener('input', App.utils.debounce(triggerChange, 400));
+      container.appendChild(createGroup('Buscar:', inp));
+    }
+
+    // 2º e 3º Campos: Datas (Criado de / até)
+    if (config.date) {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const from = document.createElement('input');
+      from.type = 'date';
+      from.id = 'gen_created_from';
+      from.className = 'form-control';
+      from.min = '1900-01-01';
+      from.max = today;
+
+      const to = document.createElement('input');
+      to.type = 'date';
+      to.id = 'gen_created_to';
+      to.className = 'form-control';
+      to.max = today;
+
+      // Lógica de Bloqueio/Preenchimento
+      from.addEventListener('change', () => {
+        const val = from.value;
+        to.min = val; // Bloqueia data menor
+        if (val) to.value = val; // Preenche com o mesmo valor
+        triggerChange();
+      });
+      to.addEventListener('change', triggerChange);
+
+      container.appendChild(createGroup('Criado de:', from));
+      container.appendChild(createGroup('Criado até:', to));
+    }
+
+    // 4º Campo: Status
+    if (config.status) {
+      const sel = document.createElement('select');
+      sel.id = 'gen_status';
+      sel.className = 'form-select'; // Bootstrap
+      ['Todos', 'Ativo', 'Inativo'].forEach(optTxt => {
+        const opt = document.createElement('option');
+        opt.value = optTxt;
+        opt.textContent = optTxt;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', triggerChange);
+      container.appendChild(createGroup('Status:', sel));
+    }
+
+    // Injeção de Filtro Customizado (ex: Instituição) - Mantém a lógica da tela específica
+    if (customElement) {
+      const div = createGroup(customElement.dataset.label || 'Filtro:', customElement);
+      container.appendChild(div);
+    }
+
+    // 5º Campo: Itens/Página
+    if (config.pageSize) {
+      const sel = document.createElement('select');
+      sel.id = 'gen_pagesize';
+      sel.className = 'form-select';
+      [10, 25, 50, 100].forEach(num => {
+        const opt = document.createElement('option');
+        opt.value = num;
+        opt.textContent = num;
+        sel.appendChild(opt);
+      });
+      sel.value = 10; // Padrão
+      sel.addEventListener('change', triggerChange);
+      container.appendChild(createGroup('Itens/página:', sel));
+    }
+
+    // 6º Botão: Limpar Filtros
+    const btnDiv = document.createElement('div');
+    btnDiv.className = 'filter-group';
+    const btn = document.createElement('button');
+    btn.id = 'gen_clear';
+    btn.className = 'btn btn-light border'; // Visual leve
+    btn.innerHTML = '<i class="fas fa-broom"></i> Limpar Filtros';
+    btn.type = 'button';
+    
+    btn.addEventListener('click', () => {
+      // Reseta campos genéricos
+      if(document.getElementById('gen_search')) document.getElementById('gen_search').value = '';
+      if(document.getElementById('gen_created_from')) document.getElementById('gen_created_from').value = '';
+      if(document.getElementById('gen_created_to')) document.getElementById('gen_created_to').value = '';
+      if(document.getElementById('gen_status')) document.getElementById('gen_status').value = 'Todos';
+      if(document.getElementById('gen_pagesize')) document.getElementById('gen_pagesize').value = 10;
+      
+      // Reseta customizado se houver (assumindo select)
+      if(customElement && customElement.tagName === 'SELECT') customElement.value = '';
+
+      if (typeof onClear === 'function') onClear();
+    });
+
+    btnDiv.appendChild(btn);
+    container.appendChild(btnDiv);
+  }
+};
 })();

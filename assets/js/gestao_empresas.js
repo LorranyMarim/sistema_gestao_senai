@@ -9,7 +9,7 @@
   let empresasData = [];           // lista crua vinda da API (sem filtros)
   let instituicoesMap = {};        // { _id: razao_social }
   const STATE = {
-    filters: { q: '', instituicao: '', status: '' }, // '' = todas; 'Ativa' | 'Inativa'
+    filters: { q: '', status: '' }, // '' = todas; 'Ativa' | 'Inativa'
     page: 1,
     pageSize: 10,
     total: 0,
@@ -38,7 +38,6 @@
   const empresaIdInput = document.getElementById('empresaId');
   const nomeEmpresaInput = document.getElementById('nomeEmpresa');
   const cnpjMatrizInput = document.getElementById('cnpjMatriz');
-  const instituicaoSelect = document.getElementById('instituicaoId');
   const statusSelect = document.getElementById('statusEmpresa');
   const alertEmpresa = document.getElementById('alertEmpresa');
 
@@ -46,7 +45,6 @@
   const visualizarEmpresaModal = document.getElementById('visualizarEmpresaModal');
   const closeVisualizarEmpresa = document.getElementById('closeVisualizarEmpresa');
   const fecharVisualizarEmpresa = document.getElementById('fecharVisualizarEmpresa');
-  const viewInstituicao = document.getElementById('viewInstituicao');
   const viewNomeEmpresa = document.getElementById('viewNomeEmpresa');
   const viewCnpjMatriz = document.getElementById('viewCnpjMatriz');
 
@@ -277,7 +275,6 @@
   // ========= Modais =========
   function openVisualizarEmpresaModal(empresa) {
     if (!empresa) return;
-    viewInstituicao.value = instituicoesMap[empresa.instituicao_id] || '';
     viewNomeEmpresa.value = empresa.razao_social || '';
     viewCnpjMatriz.value = empresa.cnpj || '';
     visualizarEmpresaModal?.classList.add('show');

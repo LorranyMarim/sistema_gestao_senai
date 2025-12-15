@@ -187,10 +187,10 @@
             <section class="table-section">
                 <h2>Unidades Curriculares Cadastradas</h2>
 
-                <div class="filter-section">
+                <div id="filter_area" class="mb-3">
                     <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap;">
                         <div class="filter-group">
-                            <label for="searchUc">Buscar UC:</label>
+                            <label for="searchUc">Buscar:</label>
                             <input type="text" id="searchUc" placeholder="Descrição ou sala..." class="search-input">
                         </div>
 
