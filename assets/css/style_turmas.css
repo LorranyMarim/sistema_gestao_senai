@@ -2904,3 +2904,28 @@ body.modal-open {
   border-bottom: 1px solid rgba(255, 255, 255, 0.347);
   padding-bottom: 6px;
 }
+
+/* Adicione ao final do arquivo style.css */
+
+/* Garante que botões desabilitados fiquem cinza claro e sem cursor */
+button:disabled,
+button[disabled],
+.btn-disabled {
+    background-color: #e5e7eb !important; /* Cinza claro */
+    color: #9ca3af !important; /* Texto cinza escuro */
+    cursor: not-allowed !important;
+    border-color: #d1d5db !important;
+    transform: none !important; /* Remove efeito de clique */
+}
+
+/* Garante que o btn-primary seja o azul do sistema */
+.btn-primary {
+    background-color: #004B8D; /* Azul Senai ou o azul definido no seu tema */
+    color: white;
+}
+
+/* Garante que o btn-secondary seja um cinza médio (estado inativo mas não disabled, se necessário) */
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}

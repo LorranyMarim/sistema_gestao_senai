@@ -47,7 +47,8 @@ function getCreatedDate(c){
     const d = new Date(c.data_criacao);
     if (!isNaN(+d)) return d;
   }
-  return oidToDate(c?._id) || new Date(0);
+  // Correção: tenta c.id se c._id não existir
+  return oidToDate(c?.id || c?._id) || new Date(0);
 }
 
 
@@ -122,17 +123,6 @@ function initFilterUcsSelect2(){
 }
 
 
-  // se já tínhamos UCs no estado, injeta opções para exibição imediata
-  try {
-    (filtros.ucs || []).forEach(id => {
-      if (!$ucs.find(`option[value="${id}"]`).length) {
-        const nome = ucDataMap[id] || id;
-        $ucs.append(new Option(nome, id, true, true));
-      }
-    });
-    $ucs.trigger('change.select2');
-  } catch { }
-
 function populateFilterInstituicao(){
   const sel = document.getElementById('filterInstituicao');
   if (!sel) return;
@@ -195,19 +185,27 @@ function wireFilterEvents() {
     filtros.sortBy = e.target.value || 'created_desc';
     filtros.page = 1; saveFiltros(); applyFiltersAndRender();
   });
-  el('pageSize')?.addEventListener('change', e => {
-    filtros.pageSize = Number(e.target.value || 10) || 10;
-    filtros.page = 1; saveFiltros(); applyFiltersAndRender();
-  });
+  App.pagination.bindControls(
+    {
+      prev: document.getElementById('prevPage'),
+      next: document.getElementById('nextPage'),
+      sizeSel: document.getElementById('pageSize') // Se houver select de tamanho
+    },
+    (action, value) => {
+      // Callback que o geral.js chama quando clica
+      if (action === 'prev') filtros.page--;
+      if (action === 'next') filtros.page++;
+      if (action === 'size') {
+        filtros.pageSize = value;
+        filtros.page = 1;
+      }
+      
+      saveFiltros();
+      applyFiltersAndRender();
+    }
+  );
 
-  el('prevPage')?.addEventListener('click', () => {
-    if (filtros.page > 1) { filtros.page -= 1; saveFiltros(); applyFiltersAndRender(); }
-  });
-  el('nextPage')?.addEventListener('click', () => {
-    const { totalPages } = getFilteredAndSorted();
-    if (filtros.page < totalPages) { filtros.page += 1; saveFiltros(); applyFiltersAndRender(); }
-  });
-
+  
   // Limpar filtros
   const btnClear = el('btnClearFilters');
   if (btnClear && !btnClear._bound) {
@@ -274,30 +272,49 @@ function compareBy(a, b) {
   }
 }
 
-function getFilteredAndSorted() {
+
+// Substitua a função applyFiltersAndRender e getFilteredAndSorted antigas por esta lógica:
+
+function getFilteredList() {
+  // Apenas filtra e ordena, SEM FATIAR (SLICE)
   let list = (cursosCache || []).filter(c =>
     matchesText(c) && matchesInstituicao(c) && matchesStatus(c) && matchesArea(c) && matchesModalidade(c) &&
     matchesTipo(c) && matchesUcs(c)
   );
   list.sort(compareBy);
-
-  const total = list.length;
-  const pageSize = Math.max(1, filtros.pageSize || 10);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const page = Math.min(Math.max(1, filtros.page || 1), totalPages);
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-
-  return { pageItems: list.slice(start, end), total, page, totalPages, pageSize };
+  return list;
 }
 
 function applyFiltersAndRender() {
-  const { pageItems, total, page, totalPages } = getFilteredAndSorted();
-  renderCursosTable(pageItems);
-  const pageInfo = document.getElementById('pageInfo');
-  if (pageInfo) pageInfo.textContent = `Página ${page} de ${totalPages} • ${total} registros`;
-}
+  // 1. Pega lista completa filtrada
+  const fullList = getFilteredList();
 
+  // 2. Usa a ferramenta centralizada para paginar
+  const { pagedData, meta } = App.pagination.paginateData(
+    fullList, 
+    filtros.page, 
+    filtros.pageSize || 10
+  );
+
+  // Atualiza o filtro local caso a página tenha sido corrigida pelo paginateData (ex: usuário estava na pag 10 e filtrou, caindo pra pag 1)
+  if (filtros.page !== meta.page) {
+    filtros.page = meta.page;
+    saveFiltros();
+  }
+
+  // 3. Renderiza a tabela com os dados da página (pagedData)
+  renderCursosTable(pagedData);
+
+  // 4. Atualiza os botões (Azul/Cinza) e o texto
+  App.pagination.updateUI(
+    {
+      prev: document.getElementById('prevPage'),
+      next: document.getElementById('nextPage'),
+      info: document.getElementById('pageInfo')
+    },
+    meta
+  );
+}
 
 // ======================= Utils UI =======================
 function setLoadingTable(on) {
@@ -434,13 +451,44 @@ $(document).ready(function () {
 
 });
 
+// Função para buscar TODOS os cursos paginados até acabar
+async function fetchAllCursos() {
+  let page = 1;
+  const pageSize = 100; // O backend limita a 100 (le=100 em rotas_curso.py)
+  let all = [];
+  
+  while (true) {
+    // Busca página atual
+    // O backend aceita parâmetros via GET, o PHP repassa a query string
+    const url = `${API_CURSO}?page=${page}&page_size=${pageSize}`;
+    const data = await fetchJson(url);
+    
+    // O fetchJson do seu projeto retorna data.items se existir, ou o próprio array
+    const items = Array.isArray(data) ? data : (data.items || []);
+    
+    if (!items.length) break; // Acabaram os dados
+    
+    all = all.concat(items);
+    
+    // Se vier menos que o tamanho da página, é a última página
+    if (items.length < pageSize) break;
+    
+    page++;
+  }
+  return all;
+}
 // ======================= Carga inicial =======================
+// Substitua a função carregarCursos inteira por esta:
 async function carregarCursos() {
   setLoadingTable(true);
+  
+  // Agora usamos fetchAllCursos() para garantir que pegamos tudo do banco
   const [cursos, insts] = await Promise.all([
-    fetchJson(API_CURSO, []),
+    fetchAllCursos(), 
     fetchJson(API_INST, []),
   ]);
+  
+  // Carrega UCs (já existia)
   const ucs = await fetchAllUCs(1000);
 
   cursosCache = cursos || [];
@@ -449,7 +497,8 @@ async function carregarCursos() {
 
   ucDataMap = {};
   ucsCache.forEach(uc => {
-    const id = uc._id || uc.id;
+    // Correção preventiva para ID de UCs também
+    const id = uc.id || uc._id;
     if (id) ucDataMap[id] = uc.descricao || '';
   });
 
@@ -510,6 +559,7 @@ function renderCursosTable(cursos) {
   }
 
   cursos.forEach(curso => {
+    const cursoId = curso.id || curso._id;
     $tbody.append(`
       <tr>
         <td>${curso.nome || ''}</td>
@@ -519,9 +569,9 @@ function renderCursosTable(cursos) {
         <td>${normalizeStatus(curso.status)}</td>
         <td>
           <div class="action-buttons">
-            <button class="btn btn-icon btn-view" data-id="${curso._id}" title="Visualizar"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-icon btn-edit" data-id="${curso._id}" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-icon btn-delete" data-id="${curso._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            <button class="btn btn-icon btn-view" data-id="${cursoId}" title="Visualizar"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-icon btn-edit" data-id="${cursoId}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-icon btn-delete" data-id="${cursoId}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
           </div>
         </td>
       </tr>
@@ -534,7 +584,7 @@ function renderCursosTable(cursos) {
 // ======================= Modais =======================
 function abrirModalCurso(edit = false, cursoId = null) {
   modoEdicao = !!edit;
-  cursoEditando = edit ? cursosCache.find(c => String(c._id) === String(cursoId)) : null;
+  cursoEditando = edit ? cursosCache.find(c => String(c.id || c._id) === String(cursoId)) : null;
 
   preencherSelectInstituicao(edit ? cursoEditando?.instituicao_id : '');
   preencherSelectUCs(
@@ -547,7 +597,7 @@ function abrirModalCurso(edit = false, cursoId = null) {
   $('#tipoCurso').val(edit ? (cursoEditando?.tipo || '') : '');
   $('#statusCurso').val(edit ? (cursoEditando?.status || 'Ativo') : 'Ativo');
   $('#cargaHoraria').val(edit ? (cursoEditando?.carga_horaria ?? '') : '');
-  $('#cursoId').val(edit ? (cursoEditando?._id || '') : '');
+  $('#cursoId').val(edit ? (cursoEditando?.id || cursoEditando?._id || '') : '');
   $('#nomeCurso').val(edit ? (cursoEditando?.nome || '') : '');
   $('#areaTecnologicaCurso').val(edit ? (cursoEditando?.area_tecnologica || '') : '');
   $('#observacao').val(edit ? (cursoEditando?.observacao || '') : '');
@@ -812,7 +862,7 @@ function salvarUcsConfig() {
 
 // ======================= Visualizar: SOMENTE LEITURA =======================
 function mostrarDetalheCurso(cursoId) {
-  const curso = cursosCache.find(c => String(c._id) === String(cursoId));
+  const curso = cursosCache.find(c => String(c.id || c._id) === String(cursoId));
   if (!curso) return;
 
   const instNome = (instituicoesCache.find(i => String(i._id || i.id) === String(curso.instituicao_id))?.razao_social) || curso.instituicao_id || '';

@@ -232,9 +232,11 @@ require_once("../config/verifica_login.php");
           </table>
         </div>
         <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-  <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+  <button class="btn btn-secondary" id="prevPage" type="button" disabled>Anterior</button>
+  
   <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-  <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
+  
+  <button class="btn btn-secondary" id="nextPage" type="button" disabled>Próximo</button>
 </div>
 
 

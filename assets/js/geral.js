@@ -600,14 +600,15 @@
     safe('SubmenusGeneric', App.ui.initSidebarSubmenusGeneric);
 
   });
-  // ===================== NOVO MÓDULO DE PAGINAÇÃO =====================
+  // ===================== MÓDULO DE PAGINAÇÃO CENTRALIZADO =====================
   App.pagination = {
     /**
-     * Fatia um array com base na página e tamanho.
+     * Fatia o array de dados para a página atual.
      */
     paginateData: (items, page, pageSize) => {
       const total = items.length;
       const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      // Garante que a pagina atual não ultrapasse o limite
       const validPage = Math.min(Math.max(1, page), totalPages);
       
       const start = (validPage - 1) * pageSize;
@@ -625,17 +626,17 @@
     },
 
     /**
-     * Configura os eventos de clique.
+     * Configura os eventos de clique (Next, Prev e Select de tamanho).
+     * Remove listeners antigos para evitar duplicidade.
      */
     bindControls: (els, onChange) => {
       const { prev, next, sizeSel } = els;
       
-      // Remove listeners antigos para evitar duplicidade (cloneNode truque)
       if (prev) {
         const newPrev = prev.cloneNode(true);
         prev.parentNode.replaceChild(newPrev, prev);
         newPrev.addEventListener('click', () => onChange('prev'));
-        els.prev = newPrev; // atualiza referência
+        els.prev = newPrev; // Atualiza referência no objeto els
       }
       if (next) {
         const newNext = next.cloneNode(true);
@@ -652,22 +653,44 @@
     },
 
     /**
-     * Atualiza a UI (botões e texto).
+     * Atualiza o texto e a COR dos botões.
+     * Lógica: Azul (btn-primary) se puder clicar, Cinza (btn-secondary/disabled) se não.
      */
     updateUI: (els, meta) => {
       const { prev, next, info } = els;
       const { page, total, totalPages } = meta;
 
+      // Atualiza texto informativo
       if (info) {
         info.textContent = `Página ${page} de ${totalPages} • ${total} registros`;
       }
-      if (prev) prev.disabled = page <= 1;
-      if (next) next.disabled = page >= totalPages || total === 0;
+
+      // Função auxiliar para estilizar botão
+      const setButtonState = (btn, isDisabled) => {
+        if (!btn) return;
+        btn.disabled = isDisabled;
+        
+        if (isDisabled) {
+            // Estado Inativo: Cinza
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary'); 
+            // O CSS global button:disabled cuidará do resto visualmente
+        } else {
+            // Estado Ativo: Azul
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+        }
+      };
+
+      // Configura botão ANTERIOR
+      // Desabilitado se estiver na página 1
+      setButtonState(prev, page <= 1);
+
+      // Configura botão PRÓXIMO
+      // Desabilitado se estiver na última página ou se não houver registros
+      setButtonState(next, page >= totalPages || total === 0);
     }
   };
 
-  // Garanta que App.pagination está acessível globalmente
   window.App = App;
-
-// FIM DO ARQUIVO (certifique-se que está dentro da IIFE ou module scope)
 })();
