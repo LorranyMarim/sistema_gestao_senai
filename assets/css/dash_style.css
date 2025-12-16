@@ -1,0 +1,346 @@
+/* Estilos Gerais para o Dashboard */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5; /* Fundo mais claro para o dashboard */
+    display: flex; /* Usado para o layout lateral */
+    min-height: 100vh;
+    color: #333;
+}
+
+.dashboard-container {
+    display: flex;
+    width: 100%;
+}
+
+/* Sidebar de Navegação */
+.sidebar {
+    width: 250px;
+    background-color: #004B8D; /* Azul escuro do SENAI */
+    color: white;
+    padding: 20px 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Ocupa exatamente 100% da altura da viewport */
+    position: fixed; /* Fixa a sidebar na tela */
+    top: 0;
+    left: 0;
+    z-index: 900;
+    overflow-y: auto; /* Adiciona scroll se o conteúdo da sidebar for maior que a tela */
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 0 15px;
+}
+
+.sidebar-logo {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.sidebar-nav {
+    flex-grow: 1; /* Ocupa o espaço restante */
+    overflow-y: auto; /* Adiciona scroll se necessário */
+    padding-right: 5px; /* Pequeno padding para evitar que a barra de rolagem toque os links */
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 5px;
+}
+
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 5px;
+    margin: 0 10px;
+}
+
+.sidebar-nav li a i {
+    margin-right: 15px;
+    font-size: 1.1em;
+    width: 20px;
+    text-align: center;
+}
+
+/* Estado de Hover */
+.sidebar-nav li a:hover {
+    background-color: #007BFF;
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+/* Estado Ativo (para o item da página atual) */
+.sidebar-nav li a.active {
+    background-color: #007BFF;
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-left: 5px solid #FFC107;
+    padding-left: 15px;
+}
+
+/* Estilo para o item "Sair" ou ações secundárias */
+.sidebar-nav li a.logout {
+    margin-top: 30px;
+    background-color: #DC3545;
+}
+
+.sidebar-nav li a.logout:hover {
+    background-color: #c82333;
+    transform: none;
+}
+
+/* Conteúdo Principal do Dashboard */
+.main-content {
+    margin-left: 250px; /* Adiciona margem para que o conteúdo não fique por baixo da sidebar fixa */
+    padding: 30px;
+    background-color: #f0f2f5;
+    flex-grow: 1; /* Ocupa o restante do espaço horizontal */
+}
+
+.main-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+    display: flex; /* Para alinhar título e botão */
+    justify-content: space-between; /* Espaçamento entre os elementos */
+    align-items: center; /* Alinha verticalmente */
+}
+
+.main-header h1 {
+    margin: 0;
+    color: #004B8D;
+    font-size: 2em;
+}
+
+/* KPIs (Key Performance Indicators) */
+.kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.kpi-card {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    border-left: 5px solid #007BFF;
+}
+
+.kpi-card h3 {
+    margin-top: 0;
+    color: #555;
+    font-size: 1.1em;
+}
+
+.kpi-card p {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #004B8D;
+    margin: 0;
+}
+
+/* Seção de Gráficos */
+.charts-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.chart-card {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-card h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #004B8D;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+.chart-card canvas {
+    max-width: 100%;
+    /* Removido !important e ajustado height/width para ser mais flexível */
+    height: auto; /* Permite que o Chart.js gerencie a altura proporcionalmente */
+    min-height: 250px; /* Garante uma altura mínima */
+    max-height: 350px; /* Define uma altura máxima razoável */
+    width: 100%; /* Ocupa a largura total do card */
+}
+
+
+/* Estatísticas Rápidas (Alerta/Urgência) */
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    font-size: 1.1em;
+}
+
+.stat-card p {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.stat-card.urgent {
+    border-left: 5px solid #DC3545;
+}
+.stat-card.urgent h3, .stat-card.urgent p {
+    color: #DC3545;
+}
+
+.stat-card.warning {
+    border-left: 5px solid #FFC107;
+}
+.stat-card.warning h3, .stat-card.warning p {
+    color: #FFC107;
+}
+
+/* Botão do Menu Sanduíche */
+.menu-toggle {
+    display: none; /* Inicia oculto, será exibido apenas em telas menores */
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #004B8D;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1.5em;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000; /* Garante que o botão fique acima de tudo */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Modificador para a sidebar quando ela está oculta */
+.sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+/* Responsividade Avançada com Menu Sanduíche */
+@media (max-width: 992px) {
+    /* Esconde a sidebar e mostra o botão sanduíche */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 250px;
+        z-index: 999;
+        transform: translateX(-250px); /* Move a sidebar para fora da tela */
+        transition: transform 0.3s ease-in-out;
+    }
+
+    /* Exibe a sidebar quando a classe 'active' é adicionada via JS */
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .menu-toggle {
+        display: block; /* Mostra o botão sanduíche */
+    }
+
+    /* Adiciona uma camada de escurecimento sobre o conteúdo principal */
+    .dashboard-container.sidebar-active::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+    }
+    
+    .main-content {
+        margin-left: 0; /* Remove a margem do conteúdo principal */
+        padding: 20px;
+    }
+
+    /* Ajusta o layout de cards para 2 colunas em telas médias */
+    .kpis, .charts-section, .quick-stats {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    .kpi-card p, .stat-card p {
+        font-size: 2em;
+    }
+}
+
+/* Ajustes para telas pequenas (smartphones) */
+@media (max-width: 576px) {
+    .main-content {
+        padding: 15px;
+    }
+    
+    /* Em telas muito pequenas, todas as seções de cards voltam a ter 1 coluna */
+    .kpis, .charts-section, .quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .kpi-card h3, .chart-card h3, .stat-card h3 {
+        font-size: 1em;
+    }
+    
+    .kpi-card p, .stat-card p {
+        font-size: 1.8em;
+    }
+}
+
+/* Correção para o !important em telas pequenas (agora responsivo) */
+.charts-section .chart-card canvas {
+    height: auto !important; /* Retorna ao padrão para que o gráfico seja responsivo */
+    width: 100% !important;
+}

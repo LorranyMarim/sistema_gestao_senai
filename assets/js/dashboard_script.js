@@ -168,7 +168,7 @@
   }
 
   function setupMenuToggle() {
-    const menuToggle = $('#menu-toggle');
+    const menuToggle = $('#btn-menu-toggle-mobile');
     const sidebar = document.querySelector('.sidebar');
     const container = document.querySelector('.dashboard-container');
 

@@ -158,7 +158,7 @@
   }
 
   function initRelatoriosDropdown() {
-    const relatoriosLi = document.getElementById('nav-relatorios');
+    const relatoriosLi = document.getElementById('nav-item-relatorios');
     if (!relatoriosLi) return;
 
     const toggle = relatoriosLi.querySelector('.submenu-toggle');
@@ -167,7 +167,7 @@
     if (toggle.dataset.wired === '1') return;
     toggle.dataset.wired = '1';
 
-    if (!submenu.id) submenu.id = 'submenu-relatorios';
+    if (!submenu.id) submenu.id = 'submenu-relatorios-list';
     if (!toggle.hasAttribute('aria-controls')) {
       toggle.setAttribute('aria-controls', submenu.id);
     }
@@ -216,7 +216,7 @@
   }
 
   function initConfigDropdown() {
-    const configLi = document.getElementById('nav-config');
+    const configLi = document.getElementById('nav-item-config');
     if (!configLi) return;
 
     const toggle = configLi.querySelector('.submenu-toggle');
@@ -225,7 +225,7 @@
     if (toggle.dataset.wired === '1') return;
     toggle.dataset.wired = '1';
 
-    if (!submenu.id) submenu.id = 'submenu-config';
+    if (!submenu.id) submenu.id = 'submenu-config-list';
     if (!toggle.hasAttribute('aria-controls')) {
       toggle.setAttribute('aria-controls', submenu.id);
     }
@@ -274,9 +274,9 @@
   }
 
   function initSidebarHamburger() {
-    const menuToggle = $('#menu-toggle');
-    const sidebar = $('.sidebar');
-    const dashboardContainer = $('.dashboard-container');
+    const menuToggle = $('#btn-menu-toggle-mobile');
+    const sidebar = $('#sidebar-navigation-area');
+    const dashboardContainer = $('#wrapper-dashboard-layout');
     if (!menuToggle || !sidebar || !dashboardContainer) return;
     if (menuToggle.dataset.wired === '1') return;
     menuToggle.dataset.wired = '1';
@@ -354,7 +354,7 @@
     const nav = document.querySelector('.sidebar-nav');
     if (!nav) return;
 
-    nav.querySelectorAll('li.has-submenu').forEach((li) => {
+    nav.querySelectorAll('li.has-submenu').forEach((li, idx) => {
       const toggle = li.querySelector('.submenu-toggle');
       const submenu = li.querySelector('.submenu');
       if (!toggle || !submenu) return;
@@ -363,7 +363,7 @@
       li.dataset.wired = '1';
       toggle.dataset.wired = '1';
 
-      if (!submenu.id) submenu.id = `submenu-${Math.random().toString(36).slice(2)}`;
+      if (!submenu.id) submenu.id = `submenu-generic-${idx}-${Math.random().toString(36).slice(2)}`;
       if (!toggle.hasAttribute('aria-controls')) toggle.setAttribute('aria-controls', submenu.id);
 
       const sync = () => {
@@ -398,7 +398,7 @@
   }
 
   function setupClearFilters({
-    buttonSelector = '#btnClearFilters',
+    buttonSelector = '#gen_clear',
     getFiltersState,
     resetUI,
     onClear,
@@ -568,18 +568,21 @@
       
       if (prev) {
         const newPrev = prev.cloneNode(true);
+        if(prev.id) newPrev.id = prev.id; 
         prev.parentNode.replaceChild(newPrev, prev);
         newPrev.addEventListener('click', () => onChange('prev'));
         els.prev = newPrev;
       }
       if (next) {
         const newNext = next.cloneNode(true);
+        if(next.id) newNext.id = next.id;
         next.parentNode.replaceChild(newNext, next);
         newNext.addEventListener('click', () => onChange('next'));
         els.next = newNext;
       }
       if (sizeSel) {
         const newSize = sizeSel.cloneNode(true);
+        if(sizeSel.id) newSize.id = sizeSel.id;
         sizeSel.parentNode.replaceChild(newSize, sizeSel);
         newSize.addEventListener('change', () => onChange('size', parseInt(newSize.value, 10)));
         els.sizeSel = newSize;
@@ -619,13 +622,17 @@
       container.innerHTML = '';
       container.className = 'filter-container';
 
-      const createGroup = (lbl, input) => {
+      const createGroup = (lbl, input, idSuffix) => {
         const div = document.createElement('div');
         div.className = 'filter-group';
+        div.id = `filter-group-${idSuffix}`;
         
         const label = document.createElement('label');
         label.textContent = lbl;
-                if (!input.classList.contains('filter-input')) {
+        label.id = `filter-label-${idSuffix}`;
+        label.setAttribute('for', input.id);
+
+        if (!input.classList.contains('filter-input')) {
             input.classList.add('filter-input');
             if(!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
                input.classList.add('form-control'); 
@@ -638,13 +645,14 @@
       };
 
       const triggerChange = () => { if (typeof onChange === 'function') onChange(); };
+      
       if (config.search) {
         const inp = document.createElement('input');
         inp.type = 'text';
         inp.id = 'gen_search';
         inp.placeholder = 'Digite para buscar...';
         inp.addEventListener('input', App.utils.debounce(triggerChange, 400));
-        container.appendChild(createGroup('Buscar:', inp));
+        container.appendChild(createGroup('Buscar:', inp, 'search'));
       }
 
       if (config.date) {
@@ -669,8 +677,8 @@
         });
         to.addEventListener('change', triggerChange);
 
-        container.appendChild(createGroup('Criado de:', from));
-        container.appendChild(createGroup('Criado até:', to));
+        container.appendChild(createGroup('Criado de:', from, 'date-from'));
+        container.appendChild(createGroup('Criado até:', to, 'date-to'));
       }
 
       if (config.status) {
@@ -681,17 +689,20 @@
           const opt = document.createElement('option');
           opt.value = optTxt;
           opt.textContent = optTxt;
+          opt.id = `opt-status-${optTxt.toLowerCase()}`;
           sel.appendChild(opt);
         });
         sel.addEventListener('change', triggerChange);
-        container.appendChild(createGroup('Status:', sel));
+        container.appendChild(createGroup('Status:', sel, 'status'));
       }
 
       if (customElement) {
         if (customElement instanceof Element && !customElement.classList.contains('filter-input')) {
              customElement.classList.add('filter-input');
         }
-        const div = createGroup(customElement.dataset?.label || 'Filtro:', customElement);
+        if(!customElement.id) customElement.id = 'gen_custom_filter';
+        
+        const div = createGroup(customElement.dataset?.label || 'Filtro:', customElement, 'custom');
         container.appendChild(div);
       }
 
@@ -703,21 +714,23 @@
           const opt = document.createElement('option');
           opt.value = num;
           opt.textContent = num;
+          opt.id = `opt-pagesize-${num}`;
           sel.appendChild(opt);
         });
         sel.value = 10;
         sel.addEventListener('change', triggerChange);
-        container.appendChild(createGroup('Itens/página:', sel));
+        container.appendChild(createGroup('Itens/página:', sel, 'pagesize'));
       }
 
       const btnDiv = document.createElement('div');
       btnDiv.className = 'filter-group';
+      btnDiv.id = 'filter-group-actions';
       btnDiv.style.flex = '0 0 auto'; 
       
       const btn = document.createElement('button');
       btn.id = 'gen_clear';
       btn.className = 'btn btn-light border filter-btn-clear filter-input'; 
-      btn.innerHTML = '<i class="fas fa-broom"></i> Limpar';
+      btn.innerHTML = '<i class="fas fa-broom" id="icon-btn-clear"></i> Limpar';
       btn.type = 'button';
       
       btn.addEventListener('click', () => {
