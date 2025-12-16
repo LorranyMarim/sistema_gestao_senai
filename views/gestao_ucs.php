@@ -1,3 +1,6 @@
+<?php
+require_once("../config/verifica_login.php");
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -6,132 +9,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Unidades Curriculares - SENAI</title>
 
-    <!-- Tailwind (mantido) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- CSS do projeto (ajustado para a estrutura /css) -->
-    <link rel="stylesheet" href="../assets/css/style_turmas.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
-    <!-- Font Awesome (mantido) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <!-- Estilo inline do modal (mantido para não alterar aparência) -->
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.3);
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-        }
-
-        .modal.show {
-            display: flex !important;
-        }
-
-        .modal-content {
-            background: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            min-width: 320px;
-            max-width: 90vw;
-            position: relative;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 30px;
-            font-size: 2em;
-            cursor: pointer;
-        }
-
-        .alert-error,
-        .alert-success {
-            margin: 10px 0 0 0;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-
-        .alert-error {
-            background: #fde2e1;
-            color: #b20000;
-        }
-
-        .alert-success {
-            background: #e7f8e2;
-            color: #227b2f;
-        }
-
-        .form-group label {
-            font-weight: bold;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #ucTable th:nth-child(1),
-        #ucTable td:nth-child(1),
-        #ucTable th:nth-child(2),
-        #ucTable td:nth-child(2) {
-            display: none;
-        }
-
-        /* Garante que os dois modais fiquem sempre acima da sidebar/menu */
-        #ucModal,
-        #visualizarUcModal {
-            position: fixed !important;
-            inset: 0 !important;
-            /* top/right/bottom/left: 0 */
-            z-index: 9999 !important;
-            /* maior que qualquer sidebar */
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, .3);
-        }
-
-        #ucModal.show,
-        #visualizarUcModal.show {
-            display: flex !important;
-        }
-
-        /* Unifica o tamanho visual dos conteúdos dos modais */
-        #ucModal .modal-content,
-        #visualizarUcModal .modal-content {
-            width: min(680px, 90vw);
-            /* fica elegante no desktop e mobile */
-            max-height: 90vh;
-            /* evita “extrapolar” a altura */
-            overflow: auto;
-            /* scroll interno se precisar */
-            border-radius: 10px;
-            padding: 30px;
-            background: #fff;
-            position: relative;
-        }
-
-        /* (opcional) inputs de visualização não forçam largura gigantesca */
-        #visualizarUcModal .modal-content input[readonly],
-        #visualizarUcModal .modal-content input[disabled] {
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-    </style>
-
-    <!-- Script da página (externo e com defer para carregar após o DOM) -->
-
 </head>
 
 <body>
@@ -188,45 +70,7 @@
                 <h2>Unidades Curriculares Cadastradas</h2>
 
                 <div id="filter_area" class="mb-3">
-                    <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap;">
-                        <div class="filter-group">
-                            <label for="searchUc">Buscar:</label>
-                            <input type="text" id="searchUc" placeholder="Descrição ou sala..." class="search-input">
-                        </div>
-
-                        <div class="filter-group">
-                            <label for="filterCriadoDe">Criado de:</label>
-                            <input type="date" id="filterCriadoDe">
-                        </div>
-                        <div class="filter-group">
-                            <label for="filterCriadoAte">Criado até:</label>
-                            <input type="date" id="filterCriadoAte">
-                        </div>
-
-                    </div>
-
-                    <div class="filter-row" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-                        <div class="filter-group">
-                            <label for="filterStatus">Status:</label>
-                            <select id="filterStatus">
-                                <option value="">Todos</option>
-                                <option value="Ativa">Ativa</option>
-                                <option value="Inativa">Inativa</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-  <label for="pageSize">Itens/página:</label>
-  <select id="pageSize">
-    <option value="10">10</option>
-    <option value="25">25</option>
-    <option value="50">50</option>
-    <option value="100">100</option>
-  </select>
-</div>
-                        <button id="btnClearFilters" class="btn btn-light" type="button" title="Limpar filtros">
-                            <i class="fas fa-broom"></i> Limpar filtros
-                        </button>
-                    </div>
+                 
                 </div>
 
                 <div class="table-responsive">
@@ -245,22 +89,20 @@
                         <tbody id="ucTableBody"></tbody>
                     </table>
                     <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-  <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
-  <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-  <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
-</div>
+                        <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+                        <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+                        <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
+                    </div>
 
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Modal UC -->
     <div id="ucModal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="closeModalBtn">&times;</span>
-            <h2 id="modalTitleUc">Adicionar Nova Unidade Curricular</h2>
-
+           <h3 id="modalTitleUc" class="text-2xl mb-4 p-4 rounded-t-lg" style="background-color: #004B8D; color: white; margin: -30px -30px 20px -30px;">Adicionar Nova Unidade Curricular</h3>
             <form id="ucForm" autocomplete="off">
                 <input type="hidden" id="ucId">
                 <div id="alertUc" style="display:none"></div>
@@ -292,7 +134,6 @@
         </div>
     </div>
 
-    <!-- Modal Visualizar UC -->
     <div id="visualizarUcModal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="closeVisualizarUcBtn">&times;</span>
@@ -316,9 +157,9 @@
             </form>
         </div>
     </div>
-    <script src="../assets/js/geral.js"></script>
+    <script src="../assets/js/geral_script.js"></script>
     <script src="../assets/js/prefetch.js"></script>
-    <script src="../assets/js/gestao_unidades_curriculares.js" defer></script>
+    <script src="../assets/js/ucs_scripts.js" defer></script>
 </body>
 
 </html>

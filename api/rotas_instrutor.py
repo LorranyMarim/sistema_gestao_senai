@@ -5,11 +5,10 @@ from bson.errors import InvalidId
 from datetime import datetime, timezone
 from fastapi import Depends
 from auth_dep import get_ctx, RequestCtx
-from cache_utils import invalidate_cache  # <--- Importação adicionada
+from cache_utils import invalidate_cache  
 
 router = APIRouter()
 
-# -------------------------- Helpers --------------------------
 
 def _as_list_str(v):
     """Garante lista[str] a partir de list/str/None."""
@@ -17,7 +16,6 @@ def _as_list_str(v):
         return []
     if isinstance(v, list):
         return [str(x) for x in v if x is not None]
-    # se vier string única
     return [str(v)]
 
 def _coerce_carga(v, default=0, minv=0, maxv=10**9):
@@ -44,7 +42,6 @@ def _normalize_instrutor(doc: dict):
     if not doc:
         return doc
 
-    # _id e fallback de data
     oid = doc.get("_id")
     if isinstance(oid, ObjectId):
         gen_time = oid.generation_time.astimezone(timezone.utc)
@@ -52,7 +49,6 @@ def _normalize_instrutor(doc: dict):
     else:
         gen_time = None
 
-    # instituicao_id como string
     inst = doc.get("instituicao_id")
     if isinstance(inst, ObjectId):
         doc["instituicao_id"] = str(inst)
@@ -61,20 +57,16 @@ def _normalize_instrutor(doc: dict):
     else:
         doc["instituicao_id"] = str(inst)
 
-    # coleções e números
     doc["mapa_competencia"] = _as_list_str(doc.get("mapa_competencia"))
     doc["turnos"] = _as_list_str(doc.get("turnos"))
     doc["carga_horaria"] = _coerce_carga(doc.get("carga_horaria"), default=0)
 
-    # categoria compat (sempre lista[str])
     cat = doc.get("categoria", doc.get("categoriaInstrutor", []))
     doc["categoria"] = _as_list_str(cat)
     doc.pop("categoriaInstrutor", None)
 
-    # status
     doc["status"] = _normalize_status(doc.get("status"))
 
-    # data_criacao ISO UTC (fallback _id)
     dt = doc.get("data_criacao")
     if isinstance(dt, datetime):
         doc["data_criacao"] = dt.astimezone(timezone.utc).isoformat()
@@ -92,7 +84,6 @@ def _whitelist_payload(instrutor: dict, partial: bool = False) -> dict:
     }
     clean = {k: instrutor[k] for k in list(instrutor.keys()) if k in allow}
 
-    # Força tipos
     clean["instituicao_id"] = str(clean.get("instituicao_id", "") or "")
     clean["turnos"] = _as_list_str(clean.get("turnos"))
     clean["mapa_competencia"] = _as_list_str(clean.get("mapa_competencia"))
@@ -110,7 +101,6 @@ def _oid_or_400(id_str: str) -> ObjectId:
     except InvalidId:
         raise HTTPException(status_code=400, detail="ID inválido")
 
-# -------------------------- Rotas --------------------------
 
 @router.get("/api/instrutores")
 def listar_instrutores(ctx: RequestCtx = Depends(get_ctx)):
@@ -138,7 +128,6 @@ def criar_instrutor(instrutor: dict, ctx: RequestCtx = Depends(get_ctx)):
 
     result = db["instrutor"].insert_one(clean)
     
-    # Invalida cache após inserção
     invalidate_cache(str(ctx.inst_oid)) 
 
     saved = db["instrutor"].find_one({"_id": result.inserted_id})
@@ -153,12 +142,10 @@ def atualizar_instrutor(id: str, instrutor: dict, ctx: RequestCtx = Depends(get_
     instrutor.pop("data_criacao", None)
 
     clean = _whitelist_payload(instrutor, partial=True)
-    # Normaliza status somente se veio no payload
     if "instituicao_id" in clean:
         del clean["instituicao_id"]
 
     if not clean:
-        # nada para atualizar
         updated = db["instrutor"].find_one({"_id": oid})
         if not updated:
             raise HTTPException(status_code=404, detail="Instrutor não encontrado")
@@ -169,7 +156,6 @@ def atualizar_instrutor(id: str, instrutor: dict, ctx: RequestCtx = Depends(get_
         {"$set": clean}
     )
     if result.matched_count:
-        # Invalida cache após atualização
         invalidate_cache(str(ctx.inst_oid))
         
         updated = db["instrutor"].find_one({"_id": oid})
@@ -182,7 +168,6 @@ def remover_instrutor(id: str, ctx: RequestCtx = Depends(get_ctx)):
     oid = _oid_or_400(id)
     result = db["instrutor"].delete_one({"_id": oid, "instituicao_id": str(ctx.inst_oid)})
     if result.deleted_count:
-        # Invalida cache após remoção
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="Instrutor não encontrado")

@@ -590,7 +590,7 @@ button[type="submit"]:hover {
 }
 
 .close-button {
-    color: #aaa;
+    color: #ffffff;
     position: absolute;
     /* Posição absoluta dentro do modal-content */
     right: 15px;
@@ -1380,7 +1380,7 @@ button[type="submit"]:hover {
 }
 
 .close-button {
-    color: #aaa;
+    color: #ffffff;
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -2929,3 +2929,67 @@ button[disabled],
     background-color: #6c757d;
     color: white;
 }
+
+/* Adicione ou substitua no final de assets/css/style_turmas.css */
+
+/* --- Container dos Filtros --- */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- Grupo de cada Filtro --- */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 200px; /* Flexível: cresce e encolhe, base 200px */
+    min-width: 150px;
+}
+
+.filter-group label {
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #374151;
+}
+
+/* --- Inputs e Selects Padronizados --- */
+.filter-input {
+    width: 100%;
+    height: 42px; /* Altura fixa para alinhamento */
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem; /* Bootstrap border-radius padrão */
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.filter-input:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* --- Botão Limpar --- */
+.filter-btn-clear {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 140px;
+}
+

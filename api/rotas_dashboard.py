@@ -7,9 +7,6 @@ from auth_dep import get_ctx, RequestCtx
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
-# ==============================
-# Helpers (Lógica de Negócio com Isolamento)
-# ==============================
 def _normalize_status(v) -> str:
     if v is None or v == "":
         return "—"
@@ -30,31 +27,28 @@ def _strip_accents_lower(s: str) -> str:
 def _svc_dashboard_metrics(db, inst_oid: ObjectId):
     coll = db["turma"]
 
-    # 1. Total de turmas DA INSTITUIÇÃO
     total_turmas = coll.count_documents({"id_instituicao": inst_oid})
 
-    # 2. Total de alunos DA INSTITUIÇÃO
     ag_total_alunos = list(
         coll.aggregate([
-            {"$match": {"id_instituicao": inst_oid}}, # <--- Filtro
+            {"$match": {"id_instituicao": inst_oid}}, 
             {"$group": {"_id": None, "soma": {"$sum": {"$ifNull": ["$num_alunos", 0]}}}}
         ])
     )
     total_alunos = int(ag_total_alunos[0]["soma"]) if ag_total_alunos else 0
 
-    # 3. Turmas ativas DA INSTITUIÇÃO
     turmas_ativas = coll.count_documents({
-        "id_instituicao": inst_oid, # <--- Filtro adicionado
+        "id_instituicao": inst_oid, 
         "$or": [
             {"status": True},
             {"status": {"$regex": r"^(ativo|ativa|true|1)$", "$options": "i"}}
         ]
     })
 
-    # 4. Turmas incompletas DA INSTITUIÇÃO
+
     ag_incompletas = list(
         coll.aggregate([
-            {"$match": {"id_instituicao": inst_oid}}, # <--- Filtro deve vir PRIMEIRO
+            {"$match": {"id_instituicao": inst_oid}}, 
             {"$unwind": {"path": "$unidades_curriculares", "preserveNullAndEmptyArrays": False}},
             {"$match": {
                 "$or": [
@@ -75,12 +69,12 @@ def _svc_dashboard_metrics(db, inst_oid: ObjectId):
         "turmas_incompletas": turmas_incompletas,
     }
 
-def _svc_alunos_por_turno(db, inst_oid: ObjectId): # <--- Aceita ID
+def _svc_alunos_por_turno(db, inst_oid: ObjectId): 
     coll = db["turma"]
 
     ag = list(
         coll.aggregate([
-            {"$match": {"id_instituicao": inst_oid}}, # <--- Filtro
+            {"$match": {"id_instituicao": inst_oid}},
             {
                 "$group": {
                     "_id": {"turno": "$turno", "status": "$status"},
@@ -120,10 +114,10 @@ def _svc_alunos_por_turno(db, inst_oid: ObjectId): # <--- Aceita ID
 
     return result
 
-def _svc_areas_tecnologicas(db, inst_oid: ObjectId): # <--- Aceita ID
+def _svc_areas_tecnologicas(db, inst_oid: ObjectId): 
     turma = db["turma"]
     pipeline = [
-        {"$match": {"id_instituicao": inst_oid}}, # <--- Filtro (Fundamental filtrar antes do Lookup)
+        {"$match": {"id_instituicao": inst_oid}}, 
         {"$addFields": {
             "status_norm": {
                 "$toLower": {"$trim": { "input": { "$toString": "$status" } }}
@@ -151,9 +145,6 @@ def _svc_areas_tecnologicas(db, inst_oid: ObjectId): # <--- Aceita ID
     ag = list(turma.aggregate(pipeline))
     return {"labels": [r["_id"] for r in ag], "data": [int(r["qtd_turmas"]) for r in ag]}
 
-# =======================================
-# Endpoints Protegidos
-# =======================================
 @router.get("/metrics")
 def dashboard_metrics(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
@@ -174,16 +165,13 @@ def areas_tecnologicas(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     return _svc_areas_tecnologicas(db, ctx.inst_oid)
 
-# =======================================
-# Funções usadas pelo bootstrap (Internas)
-# =======================================
+
 async def _obter_metricas(inst_oid: ObjectId):
     """
     Agrega métricas para o bootstrap.
     Atualizado para receber e repassar o inst_oid.
     """
     db = get_mongo_db()
-    # Passamos o inst_oid para todas as threads
     cards, por_turno, por_area = await asyncio.gather(
         asyncio.to_thread(_svc_dashboard_metrics, db, inst_oid),
         asyncio.to_thread(_svc_alunos_por_turno, db, inst_oid),

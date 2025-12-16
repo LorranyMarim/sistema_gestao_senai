@@ -1,27 +1,20 @@
-/* eslint-disable no-console */
 (() => {
   'use strict';
 
-  if (!window.App) throw new Error('Carregue geral.js antes de gestao_unidades_curriculares.js.');
+  if (!window.App) throw new Error('Carregue geral_script.js antes de ucs_script.js.');
 
-  // ===================== Imports =====================
   const { $, $$ } = App.dom;
   const { debounce, toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.utils;
   const { safeFetch } = App.net;
   const { paginateData, bindControls, updateUI } = App.pagination;
 
-  // Variável para o filtro customizado (Instituição)
-  let filterInstituicaoEl = null;
-
-  // ===================== Config & State =====================
   const LS_KEY = 'ucs_gestao_state_v2';
   
   const API = Object.freeze({
-    bootstrap: '../backend/processa_unidade_curricular.php?action=bootstrap',
-    uc: '../backend/processa_unidade_curricular.php',
+    bootstrap: '../backend/processa_ucs.php?action=bootstrap',
+    uc: '../backend/processa_ucs.php',
   });
 
-  // Estado inicial
   const DEFAULT_STATE = {
     instituicoes: [],
     ucs: [],
@@ -30,7 +23,6 @@
     filters: { q: '', instituicoes: [], status: ['Todos'], created_from: '', created_to: '' },
   };
 
-  // Carrega do LocalStorage
   let savedState = {};
   try { savedState = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch {}
 
@@ -40,7 +32,6 @@
     filters: { ...DEFAULT_STATE.filters, ...savedState.filters }
   };
 
-  // ===================== DOM Refs =====================
   const refs = {
     ucModal: $('#ucModal'),
     addUcBtn: $('#addUcBtn'),
@@ -51,11 +42,10 @@
     ucIdInput: $('#ucId'),
     descricaoUcInput: $('#descricaoUc'),
     salaIdealInput: $('#salaIdeal'),
-    selectInstituicao: $('#instituicaoUc'), // Select dentro do MODAL (não confundir com filtro)
+    selectInstituicao: $('#instituicaoUc'), 
     statusUc: $('#statusUc'),
     alertUc: $('#alertUc'),
     ucTableBody: $('#ucTableBody'),
-    // Visualizar
     visualizarUcModal: $('#visualizarUcModal'),
     closeVisualizarUcBtn: $('#closeVisualizarUcBtn'),
     fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
@@ -64,16 +54,14 @@
       sala: $('#viewSalaIdealUc'),
       status: $('#viewStatusUc')
     },
-    // Paginação
     pagElements: {
       prev: $('#prevPage'),
       next: $('#nextPage'),
       info: $('#pageInfo'),
-      sizeSel: null // Será vinculado dinamicamente pelo geral.js
+      sizeSel: null 
     }
   };
 
-  // ===================== Persistência =====================
   function saveState() {
     localStorage.setItem(LS_KEY, JSON.stringify({
       pagination: { pageSize: STATE.pagination.pageSize },
@@ -81,7 +69,6 @@
     }));
   }
 
-  // ===================== Core Logic =====================
   
   async function carregarDadosIniciais() {
     try {
@@ -89,7 +76,6 @@
       STATE.instituicoes = data.instituicoes || [];
       STATE.ucs = data.ucs || [];
       
-      // Popula apenas o select do MODAL de cadastro (o filtro é separado)
       popularSelectModal();
     } catch (err) {
       console.error(err);
@@ -105,31 +91,24 @@
     }
   }
 
-  // Leitura dos filtros gerados pelo geral.js
   function applyFiltersFromUI() {
-    // Texto
     const elSearch = document.getElementById('gen_search');
     STATE.filters.q = (elSearch?.value || '').trim();
     
-    // Status
     const elStatus = document.getElementById('gen_status');
     STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
 
-    // Datas
     const elFrom = document.getElementById('gen_created_from');
     const elTo = document.getElementById('gen_created_to');
     STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
     STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
 
-    // Customizado (Instituição)
     const selInst = filterInstituicaoEl?.value || '';
     STATE.filters.instituicoes = selInst ? [selInst] : [];
 
-    // PageSize
     const elSize = document.getElementById('gen_pagesize');
     if (elSize) {
         STATE.pagination.pageSize = parseInt(elSize.value, 10);
-        // Atualiza a referência para o módulo de paginação
         refs.pagElements.sizeSel = elSize;
     }
   }
@@ -138,30 +117,23 @@
     applyFiltersFromUI();
     saveState();
 
-    // 1. Filtragem Local
     const filtered = STATE.ucs.filter(uc => {
       const f = STATE.filters;
-      // Texto
       if (f.q) {
         const text = `${uc.descricao} ${uc.sala_ideal}`.toLowerCase();
         if (!text.includes(f.q.toLowerCase())) return false;
       }
-      // Status
       if (f.status[0] !== 'Todos' && uc.status !== f.status[0]) return false;
-      // Instituição
       if (f.instituicoes.length && !f.instituicoes.includes(uc.instituicao_id)) return false;
-      // Datas
       if (f.created_from && uc.data_criacao < f.created_from) return false;
       if (f.created_to && uc.data_criacao > f.created_to) return false;
       
       return true;
     });
 
-    // 2. Paginação
     const { pagedData, meta } = paginateData(filtered, STATE.pagination.page, STATE.pagination.pageSize);
     STATE.pagination = { ...STATE.pagination, ...meta };
 
-    // 3. UI
     updateUI(refs.pagElements, meta);
     renderTable(pagedData);
   }
@@ -174,7 +146,6 @@
 
     const mapInst = new Map(STATE.instituicoes.map(i => [i._id, i.razao_social ?? i.nome]));
     
-    // Helper data
     const fmtData = (d) => {
         if(!d) return '-';
         try { return new Date(d).toLocaleDateString('pt-BR'); } catch{ return '-'; }
@@ -190,71 +161,47 @@
         <td>${fmtData(uc.data_criacao)}</td>
         <td>
           <div class="action-buttons flex gap-2 justify-center">
-            <button class="btn btn-icon btn-view text-blue-500" data-id="${uc._id}" title="Ver"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-icon btn-edit text-yellow-500" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-icon btn-delete text-red-500" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            <button class="btn btn-icon btn-view text-white-500" data-id="${uc._id}" title="Ver"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-icon btn-edit text-white-500" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-icon btn-delete text-white-500" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
           </div>
         </td>
       </tr>
     `).join('');
   }
 
-  // ===================== Inicialização dos Filtros =====================
-  function setupFiltersAndRender() {
-    // 1. Criar o Select de Instituição manualmente
-    filterInstituicaoEl = document.createElement('select');
-    filterInstituicaoEl.id = 'custom_instituicao'; 
-    filterInstituicaoEl.className = 'form-select border rounded px-2 py-1';
-    filterInstituicaoEl.dataset.label = 'Instituição:';
-    filterInstituicaoEl.innerHTML = '<option value="">Todas as instituições</option>';
-    
-    // Popula com dados carregados
-    if (STATE.instituicoes && STATE.instituicoes.length) {
-        STATE.instituicoes.forEach(i => {
-            const opt = document.createElement('option');
-            opt.value = i._id;
-            opt.textContent = i.razao_social || i.nome || '(sem nome)';
-            filterInstituicaoEl.appendChild(opt);
-        });
-    }
-
-    // 2. Chamar o renderizador do geral.js
+function setupFiltersAndRender() {
+   
     if (App.filters && App.filters.render) {
         App.filters.render(
             'filter_area', 
             { search: true, date: true, status: true, pageSize: true }, 
-            filterInstituicaoEl, 
-            () => { // OnChange
+            null, 
+            () => { 
                 STATE.pagination.page = 1;
                 renderizarConteudo();
             },
-            () => { // OnClear
-                STATE.filters = { ...DEFAULT_STATE.filters }; // Reseta estado
+            () => { 
+                STATE.filters = { ...DEFAULT_STATE.filters }; 
                 STATE.pagination.page = 1;
                 renderizarConteudo();
             }
         );
     }
 
-    // 3. Restaurar valores salvos na UI (opcional, para UX melhor)
     if(STATE.filters.q && document.getElementById('gen_search')) 
         document.getElementById('gen_search').value = STATE.filters.q;
         
-    // 4. Renderizar Tabela Inicialmente
     renderizarConteudo();
   }
 
-  // ===================== Eventos da Tabela e Modal =====================
   function setupEvents() {
-    // Paginação
     bindControls(refs.pagElements, (action, val) => {
         if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
         if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
-        // 'size' é tratado no change do filtro gerado
         renderizarConteudo();
     });
 
-    // Ações da Tabela
     refs.ucTableBody?.addEventListener('click', async (e) => {
       const btnView = e.target.closest('.btn-view');
       const btnEdit = e.target.closest('.btn-edit');
@@ -292,11 +239,10 @@
       }
     });
 
-    // Modal
     refs.addUcBtn?.addEventListener('click', () => {
       STATE.ucEditId = null;
       refs.ucForm.reset();
-      refs.modalTitleUc.textContent = 'Adicionar UC';
+      refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
       App.ui.showModal(refs.ucModal);
     });
 
@@ -304,7 +250,6 @@
     refs.closeModalBtn?.addEventListener('click', closeModal);
     refs.cancelBtn?.addEventListener('click', closeModal);
 
-    // Salvar
     refs.ucForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const payload = {
@@ -326,21 +271,66 @@
       } catch (err) { alert('Erro ao salvar.'); }
     });
     
-    // Fechar View Modal
     const closeView = () => App.ui.hideModal(refs.visualizarUcModal);
     refs.closeVisualizarUcBtn?.addEventListener('click', closeView);
     refs.fecharVisualizarUcBtn?.addEventListener('click', closeView);
   }
 
-  // ===================== Init =====================
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-        await carregarDadosIniciais(); // Busca dados
-        setupFiltersAndRender();       // Cria filtros e Renderiza a tabela
-        setupEvents();                 // Liga eventos de clique/modal
+        await carregarDadosIniciais(); 
+        setupFiltersAndRender();       
+        setupEvents();                
     } catch (err) {
         console.error('Falha na inicialização:', err);
     }
   });
+
+
+  function setupFiltersAndRender() {
+    
+    if (App.filters && App.filters.render) {
+        App.filters.render(
+            'filter_area', 
+            { search: true, date: true, status: true, pageSize: true }, 
+            null, 
+            () => { 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            },
+            () => { 
+                STATE.filters = { ...DEFAULT_STATE.filters }; 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            }
+        );
+    }
+
+    if(STATE.filters.q && document.getElementById('gen_search')) 
+        document.getElementById('gen_search').value = STATE.filters.q;
+        
+    renderizarConteudo();
+  }
+
+  function applyFiltersFromUI() {
+    const elSearch = document.getElementById('gen_search');
+    STATE.filters.q = (elSearch?.value || '').trim();
+    
+    const elStatus = document.getElementById('gen_status');
+    STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
+
+    const elFrom = document.getElementById('gen_created_from');
+    const elTo = document.getElementById('gen_created_to');
+    STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
+    STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
+
+    STATE.filters.instituicoes = []; 
+
+    const elSize = document.getElementById('gen_pagesize');
+    if (elSize) {
+        STATE.pagination.pageSize = parseInt(elSize.value, 10);
+        refs.pagElements.sizeSel = elSize;
+    }
+  }
 
 })();

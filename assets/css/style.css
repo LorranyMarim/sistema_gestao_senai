@@ -1,97 +1,53 @@
-body {
+#page-login {
     font-family: 'Arial', sans-serif;
     background-color: #004B8D;
-    /* Azul escuro principal do SENAI para o fundo */
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
     color: #333;
-    /* Cor de texto padrão para o corpo */
 }
 
-.login-container {
+#main-container {
     background-color: #ffffff;
-    /* Fundo branco para o card de login */
     padding: 40px;
-    /* Espaçamento interno generoso */
     border-radius: 8px;
-    /* Cantos arredondados */
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    /* Sombra suave para profundidade */
     width: 400px;
-    /* Largura fixa do container */
     max-width: 90%;
-    /* Garante que seja responsivo em telas menores */
     text-align: center;
-    /* Centraliza o conteúdo (incluindo a logo) */
     box-sizing: border-box;
-    /* Inclui padding e border na largura total */
 }
 
-.senai-logo {
-    /* MUDANÇAS AQUI */
+#logo-senai {
     width: 100%;
-    /* Define a largura da imagem como 50% da largura do pai (.login-container) */
     height: auto;
-    /* Mantém a proporção da imagem */
     display: block;
-    /* Essencial para que margin: auto funcione e para a imagem ocupar sua própria linha */
     margin: 0 auto 30px auto;
-    /* Centraliza horizontalmente (0 nas laterais, auto em cima/baixo) e adiciona margem inferior */
-    /* FIM DAS MUDANÇAS */
 }
 
-/* Estilos para os grupos de input */
-.input-group {
+#group-instituicao, 
+#group-username, 
+#group-password {
     margin-bottom: 20px;
-    /* Espaço entre os campos */
     text-align: left;
-    /* Alinha labels e inputs à esquerda dentro do grupo */
 }
 
-.input-group label {
+#group-instituicao label,
+#group-username label,
+#group-password label {
     display: block;
-    /* Cada label em sua própria linha */
     margin-bottom: 8px;
-    /* Espaço entre label e input */
     color: #004B8D;
-    /* Azul escuro do SENAI para as labels */
     font-weight: bold;
     font-size: 15px;
 }
 
-.input-group input[type="text"],
-.input-group input[type="password"] {
+#username, 
+#password, 
+#instituicao {
     width: 100%;
-    /* Ocupa toda a largura disponível no container */
-    padding: 12px;
-    /* Padding interno dos inputs */
-    border: 1px solid #CCC;
-    /* Borda cinza clara */
-    border-radius: 5px;
-    /* Bordas arredondadas */
-    box-sizing: border-box;
-    font-size: 16px;
-    background-color: #f9f9f9;
-    /* Fundo levemente cinza */
-}
-
-/* Efeitos ao focar nos inputs */
-.input-group input[type="text"]:focus,
-.input-group input[type="password"]:focus {
-    border-color: #007BFF;
-    /* Borda azul ao focar */
-    outline: none;
-    /* Remove o contorno padrão do navegador */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    /* Sombra azul suave ao focar */
-}
-
-.input-group select {
-    width: 100%;
-    /* 100% menos o padding e bordas */
     padding: 12px;
     border: 1px solid #CCC;
     border-radius: 5px;
@@ -100,18 +56,16 @@ body {
     background-color: #f9f9f9;
 }
 
-.input-group input:focus,
-.input-group select:focus,
-.input-group textarea:focus {
-    /* Adicionado textarea */
+#username:focus, 
+#password:focus, 
+#instituicao:focus {
     border-color: #007BFF;
     outline: none;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
-/* Estilo do botão de submit */
-button[type="submit"] {
+
+#btn-submit {
     background-color: #007BFF;
-    /* Azul mais claro do SENAI para o botão */
     color: white;
     padding: 15px 25px;
     border: none;
@@ -120,154 +74,726 @@ button[type="submit"] {
     font-size: 18px;
     font-weight: bold;
     width: 100%;
-    /* Ocupa toda a largura do container */
     transition: background-color 0.3s ease, transform 0.2s ease;
-    /* Transições suaves */
 }
 
-button[type="submit"]:hover {
+#btn-submit:hover {
     background-color: #0056b3;
-    /* Azul escuro no hover */
     transform: translateY(-2px);
-    /* Efeito de elevação sutil */
 }
 
-/* Estilo para mensagens de erro */
-.error-message {
+#form-error {
     color: #D32F2F;
-    /* Vermelho forte para erros */
     margin-top: 20px;
     font-weight: bold;
     font-size: 14px;
 }
 
-.modal {
-    display: none;
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    display: flex;
+    min-height: 100vh;
+    color: #333;
+}
+
+.dashboard-container {
+    display: flex;
+    width: 100%;
+
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #004B8D;
+    color: white;
+    padding: 20px 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.3);
+    z-index: 900;
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 0 15px;
+}
+
+.sidebar-logo {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.sidebar-nav {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 3px;
+}
+
+.sidebar-nav li a {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 999;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 5px;
+    margin: 0 10px;
+    padding: 8px 16px; 
+    line-height: 1.30; 
 }
 
-.modal-content {
-    background: #fff;
-    border-radius: 10px;
-    padding: 30px;
-    min-width: 350px;
-    max-width: 90vw;
-    position: relative;
-}
-
-.show {
-    display: flex !important;
-}
-
-.btn {
-    margin: 2px;
-}
-
-.modal-close,
-.close-button {
-    position: absolute;
-    top: 15px;
-    right: 30px;
-    font-size: 2em;
-    cursor: pointer;
-}
-
-.popup-field {
-    margin-bottom: 12px;
-}
-
-.popup-label {
-    font-weight: bold;
-    margin-right: 8px;
-}
-
-.uc-list-detail {
-    margin-left: 18px;
-    margin-bottom: 12px;
-    border-left: 2px solid #e5e7eb;
-    padding-left: 10px;
-}
-
-.uc-header {
-    font-weight: bold;
-    color: #3b82f6;
-}
-
-.uc-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-bottom: 8px;
-}
-
-.uc-table th,
-.uc-table td {
-    border: 1px solid #ddd;
-    padding: 3px 6px;
-}
-
-.uc-table th {
-    background: #f3f4f6;
-}
-
-/* Accordion modal styles */
-.accordion {
-    width: 100%;
-}
-
-.accordion-item {
-    background: #f9f9f9;
-    border-radius: 6px;
-    margin-bottom: 8px;
-}
-
-.accordion-header button {
-    width: 100%;
-    text-align: left;
-    border: none;
-    background: none;
-    outline: none;
-    padding: 14px;
+.sidebar-nav li a i {
+    margin-right: 15px;
     font-size: 1.1em;
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
 }
 
-.accordion-collapse {
-    padding: 0 18px 12px 18px;
+.sidebar-nav li a:hover {
+    background-color: #007BFF;
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+.sidebar-nav li a.active {
+    background-color: #007BFF;
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-left: 5px solid #FFC107;
+    padding-left: 11px;
+}
+
+.sidebar-nav li a.logout {
+    margin-top: 30px;
+    background-color: #DC3545;
+}
+
+.sidebar-nav li a.logout:hover {
+    background-color: #c82333;
+    transform: none;
+}
+.sidebar-nav li.has-submenu > .submenu {
+  display: none;
+  padding-left: 1.25rem;
+}
+
+.sidebar-nav li.has-submenu.open > .submenu {
+  display: block;
+}
+
+.sidebar-nav li.has-submenu > .submenu {
+  display: none;
+  padding-left: 1.25rem;
+}
+.sidebar-nav li.has-submenu.open > .submenu {
+  display: block;
+}
+
+.sidebar-nav li.has-submenu > .submenu li a {
+  padding: 6px 16px; 
+  line-height: 1.1;
+}
+.sidebar-nav .submenu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-nav .submenu-toggle .caret {
+  transition: transform 0.2s ease;
+  margin-left: .75rem;
+  font-size: .85em;
+  opacity: .8;
+}
+.sidebar-nav li.has-submenu.open .submenu-toggle .caret {
+  transform: rotate(90deg);
+}
+
+.sidebar-nav .submenu a.active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+#btnClearFilters{
+    background-color: #DCDCDC;
+}
+#btnClearFilters.is-disabled,
+#btnClearFilters:disabled {
+  opacity: .5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.sidebar-nav ul > li:not(:last-child) > a {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.139);
+  padding-bottom: 8px; 
+}
+
+.sidebar-nav ul > li.has-submenu .submenu > li:not(:last-child) > a {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.347);
+  padding-bottom: 6px;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 30px;
+    background-color: #f0f2f5;
+    flex-grow: 1;
+}
+
+.main-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header h1 {
+    margin: 0;
+    color: #004B8D;
+    font-size: 2em;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 30px;
+    background-color: #f0f2f5;
+}
+
+/* =========================================
+   ESTILOS GERAIS & ESTRUTURA
+   ========================================= */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    display: flex;
+    min-height: 100vh;
+    color: #333;
+}
+
+.dashboard-container {
+    display: flex;
+    width: 100%;
+}
+
+/* =========================================
+   SIDEBAR (Barra Lateral)
+   ========================================= */
+.sidebar {
+    width: 250px;
+    background-color: #004B8D; /* Azul escuro do SENAI */
+    color: white;
+    padding: 20px 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 900;
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 0 15px;
+}
+
+.sidebar-logo {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.sidebar-nav {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 3px;
+}
+
+/* Separadores entre itens (linha fina) */
+.sidebar-nav ul > li:not(:last-child) > a {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.139);
+    padding-bottom: 8px;
+}
+
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 5px;
+    margin: 0 10px;
+    padding: 8px 16px;
+    line-height: 1.30;
+}
+
+.sidebar-nav li a i {
+    margin-right: 15px;
+    font-size: 1.1em;
+    width: 20px;
+    text-align: center;
+}
+
+/* Estados Hover e Active */
+.sidebar-nav li a:hover {
+    background-color: #007BFF;
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+.sidebar-nav li a.active {
+    background-color: #007BFF;
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-left: 5px solid #FFC107; /* Amarelo destaque */
+    padding-left: 11px;
+}
+
+/* =========================================
+   SUBMENUS (Relatórios e Configurações)
+   ========================================= */
+.sidebar-nav li.has-submenu > .submenu {
     display: none;
+    padding-left: 1.25rem;
 }
 
-.accordion-collapse.active {
+.sidebar-nav li.has-submenu.open > .submenu {
     display: block;
 }
 
-/* Adicione ao final do arquivo style.css */
-
-/* Garante que botões desabilitados fiquem cinza claro e sem cursor */
-button:disabled,
-button[disabled],
-.btn-disabled {
-    background-color: #e5e7eb !important; /* Cinza claro */
-    color: #9ca3af !important; /* Texto cinza escuro */
-    cursor: not-allowed !important;
-    border-color: #d1d5db !important;
-    transform: none !important; /* Remove efeito de clique */
+.sidebar-nav li.has-submenu > .submenu li a {
+    padding: 6px 16px;
+    line-height: 1.1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.347);
 }
 
-/* Garante que o btn-primary seja o azul do sistema */
-.btn-primary {
-    background-color: #004B8D; /* Azul Senai ou o azul definido no seu tema */
+.sidebar-nav .submenu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-nav .submenu-toggle .caret {
+    transition: transform 0.2s ease;
+    margin-left: .75rem;
+    font-size: .85em;
+    opacity: .8;
+}
+
+.sidebar-nav li.has-submenu.open .submenu-toggle .caret {
+    transform: rotate(90deg);
+}
+
+/* =========================================
+   CONTEÚDO PRINCIPAL (Main)
+   ========================================= */
+.main-content {
+    margin-left: 250px;
+    padding: 30px;
+    background-color: #f0f2f5;
+    flex-grow: 1;
+}
+
+.main-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header h1 {
+    margin: 0;
+    color: #004B8D;
+    font-size: 2em;
+}
+
+/* =========================================
+   BOTÃO MENU (Mobile Toggle)
+   ========================================= */
+.menu-toggle {
+    display: none; /* Oculto em Desktop */
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #004B8D;
     color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1.5em;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-/* Garante que o btn-secondary seja um cinza médio (estado inativo mas não disabled, se necessário) */
-.btn-secondary {
-    background-color: #6c757d;
-    color: white;
+.menu-toggle:hover {
+    transform: scale(1.05);
 }
+
+/* =========================================
+   RESPONSIVIDADE (Tablets e Celulares)
+   ========================================= */
+@media (max-width: 992px) {
+    /* Mostra o botão sanduíche */
+    .menu-toggle {
+        display: block;
+    }
+
+    /* Esconde a sidebar por padrão */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: auto;
+        max-height: 100vh;
+        width: 250px;
+        z-index: 999;
+        transform: translateX(-250px);
+        transition: transform 0.3s ease-in-out;
+        overflow-y: hidden;
+        padding-bottom: 20px;
+    }
+
+    /* Exibe a sidebar quando ativa via JS */
+    .sidebar.active {
+        transform: translateX(0);
+        overflow-y: auto;
+    }
+
+    .sidebar-nav li a {
+        padding: 8px 12px;
+    }
+
+    /* Ajusta o conteúdo principal para ocupar a tela toda */
+    .main-content {
+        margin-left: 0;
+    }
+
+    /* Overlay escuro quando o menu está aberto */
+    .dashboard-container.sidebar-active::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+    }
+}
+
+@media (max-width: 576px) {
+    .main-content {
+        padding: 15px;
+    }
+
+    .main-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .main-header h1 {
+        margin-bottom: 15px;
+        font-size: 1.5em;
+    }
+}
+
+/* =========================================
+   ADICIONAIS PARA GESTÃO (Tabelas, Filtros, Botões)
+   ========================================= */
+
+/* 1. Botões Padronizados */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+    text-decoration: none;
+    font-weight: normal; /* Reseta pesos herdados */
+}
+.btn:hover { opacity: 0.9; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background-color: #004B8D; color: #fff; }
+.btn-secondary { background-color: #6c757d; color: #fff; }
+
+/* Botões Pequenos (Tabela) */
+.btn-icon { padding: 6px 10px; border-radius: 4px; font-size: 0.9rem; }
+.btn-view { background-color: #17a2b8; color: white; }
+.btn-edit { background-color: #ffc107; color: #333; }
+.btn-delete { background-color: #dc3545; color: white; }
+
+/* 2. Área de Filtros */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 200px;
+    min-width: 150px;
+}
+.filter-group label {
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #555;
+}
+.filter-input {
+    width: 100%;
+    height: 40px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* 3. Tabelas */
+.table-section {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.table-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.25rem;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
+}
+.table-responsive { width: 100%; overflow-x: auto; }
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    min-width: 800px;
+}
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+.data-table th {
+    background-color: #f8f9fa;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+.data-table tbody tr:hover { background-color: #f1f1f1; }
+.data-table .actions { text-align: center; width: 140px; }
+
+/* 4. Paginação */
+.pagination-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+.pagination-bar span { font-size: 0.9rem; color: #666; }
+
+/* 5. Inputs Gerais e Modais */
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; color: #333; font-weight: 500; }
+
+/* Aplica estilo apenas em inputs que NÃO sejam do login (para evitar conflito visual) */
+.modal-content input[type="text"],
+.modal-content input[type="date"],
+.modal-content input[type="number"],
+.modal-content select,
+.filter-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+ .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .modal.show {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            min-width: 320px;
+            max-width: 90vw;
+            position: relative;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 30px;
+            font-size: 2em;
+            cursor: pointer;
+        }
+
+        .alert-error,
+        .alert-success {
+            margin: 10px 0 0 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .alert-error {
+            background: #fde2e1;
+            color: #b20000;
+        }
+
+        .alert-success {
+            background: #e7f8e2;
+            color: #227b2f;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ucTable th:nth-child(1),
+        #ucTable td:nth-child(1),
+        #ucTable th:nth-child(2),
+        #ucTable td:nth-child(2) {
+            display: none;
+        }
+
+        #ucModal,
+        #visualizarUcModal {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 9999 !important;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .3);
+        }
+
+        #ucModal.show,
+        #visualizarUcModal.show {
+            display: flex !important;
+        }
+
+        #ucModal .modal-content,
+        #visualizarUcModal .modal-content {
+            width: min(680px, 90vw);
+            max-height: 90vh;
+            overflow: auto;
+            border-radius: 10px;
+            padding: 30px;
+            background: #fff;
+            position: relative;
+        }
+
+        #visualizarUcModal .modal-content input[readonly],
+        #visualizarUcModal .modal-content input[disabled] {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }

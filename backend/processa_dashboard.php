@@ -1,8 +1,6 @@
 <?php
-// processa_dashboard.php
 header('Content-Type: application/json');
 
-// ========================= Helpers =========================
 function http_json($method, $url, $payload = null, $timeout = 10, $connectTimeout = 3)
 {
     $ch = curl_init($url);
@@ -19,7 +17,6 @@ function http_json($method, $url, $payload = null, $timeout = 10, $connectTimeou
         $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/json';
         $opts[CURLOPT_POSTFIELDS] = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
-    // [ETAPA 5] Repassa o cookie de sessão para a API Python
     if (isset($_COOKIE['session_token'])) {
         $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
     }
@@ -39,7 +36,6 @@ function output($status, $data)
     exit;
 }
 
-// Normaliza string: remove acentos, trim e para minúsculas
 function norm($s)
 {
     $s = (string) ($s ?? '');
@@ -58,25 +54,21 @@ function is_active($status)
     return ($t === 'ativo' || $t === 'ativa' || $t === 'true' || $t === '1');
 }
 
-// ========================= Config =========================
 $FASTAPI_BASE = 'http://localhost:8000';
 $ACTION = $_GET['action'] ?? 'metrics';
 
 
-// ========================= Roteador =========================
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     output(405, ['error' => 'Método não suportado']);
 }
 
 switch ($ACTION) {
     case 'metrics': {
-        // 1) Tenta pegar métricas direto da API
         list($e1, $code1, $body1) = http_json('GET', $FASTAPI_BASE . '/api/dashboard/metrics');
         if ($e1 === 0 && $code1 >= 200 && $code1 < 300 && $body1) {
             output($code1, $body1);
         }
 
-        // 2) Fallback: calcula via /api/turmas
         $total_turmas = 0;
         $total_alunos = 0;
         $turmas_ativas = 0;
@@ -132,13 +124,11 @@ switch ($ACTION) {
     }
 
     case 'alunos_por_turno': {
-        // 1) Tenta direto na rota do FastAPI
         list($e1, $code1, $body1) = http_json('GET', $FASTAPI_BASE . '/api/dashboard/alunos_por_turno');
         if ($e1 === 0 && $code1 >= 200 && $code1 < 300 && $body1) {
             output($code1, $body1);
         }
 
-        // 2) Fallback: calcula via /api/turmas (somando apenas ATIVAS)
         $res = ['Manhã' => 0, 'Tarde' => 0, 'Noite' => 0];
 
         $page = 1;
@@ -164,7 +154,6 @@ switch ($ACTION) {
             $total = (int) ($json['total'] ?? 0);
 
             foreach ($items as $t) {
-                // Só considera ATIVAS
                 if (!is_active($t['status'] ?? null)) {
                     continue;
                 }
@@ -174,7 +163,6 @@ switch ($ACTION) {
                 }
 
                 $turno = norm($t['turno'] ?? '');
-                // Bucketização tolerante
                 if (strpos($turno, 'manh') !== false) {
                     $res['Manhã'] += $n;
                 } elseif (strpos($turno, 'tarde') !== false) {
@@ -202,7 +190,6 @@ switch ($ACTION) {
         if ($e1 === 0 && $code1 >= 200 && $code1 < 300 && $body1) {
             output($code1, $body1);
         }
-        // Se quiser, pode devolver algo vazio para não quebrar o front
         output(502, ['error' => 'Falha ao obter areas_tecnologicas da API']);
         break;
     }

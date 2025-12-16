@@ -4,11 +4,9 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta, date, timezone
 from typing import Optional, Dict, Any, List
 from auth_dep import get_ctx, RequestCtx
-from cache_utils import invalidate_cache  # <--- Importação adicionada
-
+from cache_utils import invalidate_cache 
 router = APIRouter()
 
-# -------------------- Helpers --------------------
 def _try_objectid(v: Optional[str]):
     if not isinstance(v, str) or not v:
         return v
@@ -62,7 +60,6 @@ def _as_str_id(doc: Dict[str, Any]) -> Dict[str, Any]:
         doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
     return doc
 
-# -------------------- Listar com paginação/filtros --------------------
 @router.get("/api/calendarios")
 def listar_calendarios(
     page: int = Query(1, ge=1),
@@ -72,23 +69,20 @@ def listar_calendarios(
     empresa_id: Optional[str] = None, 
     id_empresa: Optional[str] = Query(None, alias="id_empresa"),
     status: Optional[str] = None,
-    ctx: RequestCtx = Depends(get_ctx) # <--- Protegido
+    ctx: RequestCtx = Depends(get_ctx)
 ):
     db = get_mongo_db()
     filtro: Dict[str, Any] = {}
     
-    # SEGURANÇA: Filtro obrigatório e inegociável
     filtro["id_instituicao"] = ctx.inst_oid
     
     emp = id_empresa or empresa_id
 
-    # Filtro por empresa (dentro da mesma instituição)
     if emp:
         bf = _id_both_types(emp)
         if bf:
             filtro["id_empresa"] = bf
 
-    # Filtro por ano
     if year:
         inicio_ano = date(year, 1, 1).isoformat()
         fim_ano = date(year, 12, 31).isoformat()
@@ -121,7 +115,6 @@ def listar_calendarios(
     items = [_as_str_id(x) for x in cursor]
     return {"items": items, "total": total, "page": page, "limit": limit}
 
-# -------------------- Adicionar novo calendário --------------------
 @router.post("/api/calendarios")
 def adicionar_calendario(calendario: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
@@ -133,10 +126,8 @@ def adicionar_calendario(calendario: Dict[str, Any], ctx: RequestCtx = Depends(g
         if k in calendario:
             calendario[k] = _try_objectid(calendario[k])
 
-    # SEGURANÇA: Força instituição do token
     calendario["id_instituicao"] = ctx.inst_oid
     
-    # Validação de Datas
     try:
         ini = datetime.strptime(calendario["data_inicial"], "%Y-%m-%d").date()
         fim = datetime.strptime(calendario["data_final"], "%Y-%m-%d").date()
@@ -146,7 +137,6 @@ def adicionar_calendario(calendario: Dict[str, Any], ctx: RequestCtx = Depends(g
     if fim < ini:
         raise HTTPException(status_code=400, detail="Data final não pode ser anterior à data inicial.")
 
-    # Gera finais de semana
     dnl = []
     dt = ini
     while dt <= fim:
@@ -164,20 +154,17 @@ def adicionar_calendario(calendario: Dict[str, Any], ctx: RequestCtx = Depends(g
 
     result = db["calendario"].insert_one(calendario)
     
-    # Invalida cache
     invalidate_cache(str(ctx.inst_oid))
     
     calendario["_id"] = str(result.inserted_id)
     return _as_str_id(calendario)
 
-# -------------------- Editar calendário --------------------
 @router.put("/api/calendarios/{calendario_id}")
-def editar_calendario(calendario_id: str, calendario: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)): # <--- CTX
+def editar_calendario(calendario_id: str, calendario: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
 
     calendario.pop("data_criacao", None)
     
-    # SEGURANÇA: Impede mover de instituição
     calendario.pop("id_instituicao", None) 
     calendario.pop("_id", None)
 
@@ -187,7 +174,6 @@ def editar_calendario(calendario_id: str, calendario: Dict[str, Any], ctx: Reque
     if "id_empresa" in calendario:
         calendario["id_empresa"] = _try_objectid(calendario["id_empresa"])
 
-    # SEGURANÇA: Atualiza apenas se pertencer à instituição
     result = db["calendario"].update_one(
         _id_filter(calendario_id, ctx.inst_oid),
         {"$set": calendario}
@@ -195,29 +181,24 @@ def editar_calendario(calendario_id: str, calendario: Dict[str, Any], ctx: Reque
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Calendário não encontrado ou acesso negado")
 
-    # Invalida cache
     invalidate_cache(str(ctx.inst_oid))
 
     atualizado = db["calendario"].find_one(_id_filter(calendario_id, ctx.inst_oid))
     return _as_str_id(atualizado)
 
-# -------------------- Excluir calendário --------------------
 @router.delete("/api/calendarios/{calendario_id}")
-def excluir_calendario(calendario_id: str, ctx: RequestCtx = Depends(get_ctx)): # <--- CTX
+def excluir_calendario(calendario_id: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
-    # SEGURANÇA: Filtro com inst_oid
     result = db["calendario"].delete_one(_id_filter(calendario_id, ctx.inst_oid))
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Calendário não encontrado ou acesso negado")
     
-    # Invalida cache
     invalidate_cache(str(ctx.inst_oid))
     
     return {"msg": "Calendário excluído"}
 
-# -------------------- Adicionar evento --------------------
 @router.post("/api/calendarios/adicionar_evento")
-def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)): # <--- CTX
+def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)): 
     db = get_mongo_db()
     obrig = ["calendarios_ids", "descricao", "data_inicial", "data_final"]
     if any(k not in evento for k in obrig):
@@ -242,7 +223,6 @@ def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx))
     algum_adicionado = False
 
     for cal_id in evento["calendarios_ids"]:
-        # SEGURANÇA: Verifica se o calendário pertence à instituição antes de ler/editar
         doc = db["calendario"].find_one(
             _id_filter(str(cal_id), ctx.inst_oid),
             {"data_inicial": 1, "data_final": 1, "dias_nao_letivos.data": 1}
@@ -282,10 +262,8 @@ def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx))
         resumo["fora_periodo"].extend([d["data"] for d in fora])
 
     if algum_adicionado:
-        # Invalida cache se houve alteração
         invalidate_cache(str(ctx.inst_oid))
 
-    # ... (lógica de resumo de mensagem igual ao original) ...
     resumo["adicionados"] = sorted(set(resumo["adicionados"]))
     resumo["duplicados"] = sorted(set(resumo["duplicados"]))
     resumo["fora_periodo"] = sorted(set(resumo["fora_periodo"]))
@@ -294,15 +272,13 @@ def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx))
         resumo["msg"] = "Dias adicionados com sucesso."
     return resumo
 
-# -------------------- Editar dia não letivo --------------------
 @router.put("/api/calendarios/{calendario_id}/editar_dia_nao_letivo")
-def editar_dia_nao_letivo(calendario_id: str, payload: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)): # <--- CTX
+def editar_dia_nao_letivo(calendario_id: str, payload: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     req = ["data_original", "data_nova", "descricao"]
     if any(k not in payload for k in req):
         raise HTTPException(status_code=400, detail=f"Campos obrigatórios: {', '.join(req)}")
 
-    # SEGURANÇA: Adicionado inst_oid no filtro base
     filtro = _id_filter(calendario_id, ctx.inst_oid)
     filtro["dias_nao_letivos.data"] = payload["data_original"]
 
@@ -316,16 +292,13 @@ def editar_dia_nao_letivo(calendario_id: str, payload: Dict[str, Any], ctx: Requ
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Dia não letivo não encontrado ou acesso negado")
     
-    # Invalida cache
     invalidate_cache(str(ctx.inst_oid))
     
     return {"msg": "Dia não letivo editado."}
 
-# -------------------- Remover dia não letivo --------------------
 @router.delete("/api/calendarios/{calendario_id}/remover_dia_nao_letivo")
-def remover_dia_nao_letivo(calendario_id: str, data: str, ctx: RequestCtx = Depends(get_ctx)): # <--- CTX
+def remover_dia_nao_letivo(calendario_id: str, data: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
-    # SEGURANÇA: Filtro com inst_oid
     result = db["calendario"].update_one(
         _id_filter(calendario_id, ctx.inst_oid),
         {"$pull": {"dias_nao_letivos": {"data": data}}}
@@ -333,18 +306,15 @@ def remover_dia_nao_letivo(calendario_id: str, data: str, ctx: RequestCtx = Depe
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Calendário não encontrado ou acesso negado")
     
-    # Invalida cache
     invalidate_cache(str(ctx.inst_oid))
     
     return {"msg": "Dia não letivo removido."}
 
-# -------------------- Eventos por faixa (FullCalendar) --------------------
 @router.get("/api/calendarios/eventos_range")
-def eventos_range(start: str, end: str, ctx: RequestCtx = Depends(get_ctx)): # <--- CTX
+def eventos_range(start: str, end: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
 
     filtro = {
-        # SEGURANÇA: Apenas calendários da instituição
         "id_instituicao": ctx.inst_oid,
         "$and": [
             {"data_inicial": {"$lte": end}},

@@ -26,7 +26,6 @@ function curl_json($method, $url, $payload = null) {
         CURLOPT_HTTPHEADER     => ['Accept: application/json'],
     ];
 
-    // [CORREÇÃO] Repassa o cookie de sessão para a API Python
     if (isset($_COOKIE['session_token'])) {
         $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
     }

@@ -1,14 +1,11 @@
 import time
 from typing import Dict
 
-# Armazenamento em memória (Simulando Redis para simplificar, mas pronto para produção)
-# Chave: instituicao_id -> Timestamp/Hash
 _VERSION_CACHE: Dict[str, str] = {}
 
 def get_version_hash(inst_id: str) -> str:
     """Retorna o hash de versão atual para uma instituição específica."""
     if inst_id not in _VERSION_CACHE:
-        # Se não existe versão, cria uma agora
         _VERSION_CACHE[inst_id] = str(int(time.time()))
     return _VERSION_CACHE[inst_id]
 

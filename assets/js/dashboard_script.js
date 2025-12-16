@@ -1,8 +1,6 @@
-// assets/js/dashboard.js
 (() => {
   'use strict';
 
-  // ===== Helpers mínimos (funcionam mesmo sem geral.js, mas usam se existir) =====
   const App = window.App || {};
   const Dom = App.dom || {};
   const $ = Dom.$ || ((sel, root = document) => root.querySelector(sel));
@@ -17,7 +15,6 @@
     if (el) el.textContent = String(val);
   }
 
-  // Normaliza status vindo como booleano / string
   const normalizeStatus =
     App.format?.normalizeStatus ||
     (v => {
@@ -28,7 +25,6 @@
       return t ? t[0].toUpperCase() + t.slice(1) : '—';
     });
 
-  // ====== Fallbacks de obtenção de métricas ======
   async function getMetricsFromPrefetch() {
     const metrics =
       (await App.prefetch?.getWithRevalidate?.('dashboard_metrics')) ||
@@ -59,7 +55,6 @@
     }
   }
 
-  // Busca lista de turmas do cache do prefetch (já normalizada para array)
   async function getTurmasFromPrefetch() {
     if (App.prefetch?.forView) {
       await App.prefetch.forView('dashboard');
@@ -71,7 +66,6 @@
     return Array.isArray(turmas) ? turmas : null;
   }
 
-  // Controla concorrência para buscar detalhes das turmas (para somar num_alunos e ucs sem instrutor)
   async function scanDetailsAndAggregate(turmas, {
     baseUrl = 'http://localhost:8000/api/turmas',
     maxConcurrency = 6,
@@ -117,7 +111,7 @@
                 }
               }
             })
-            .catch(() => { /* ignora falhas individuais */ })
+            .catch(() => { /* ignorar erros individuais */ })
             .finally(() => { active--; next(); });
         }
       };
@@ -197,11 +191,9 @@
     });
   }
 
-  // ==================== GRÁFICOS ====================
   let __chartTurnosInstance = null;
   let __chartAreasInstance = null;
 
-  // Barras: alunos por turno (mantido como está)
   async function chartTurnos() {
     try {
       const res = await fetch('http://localhost:8000/api/dashboard/alunos_por_turno', {
@@ -211,7 +203,6 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
-      // garante canvas dentro do card
       const container = document.getElementById('distribuicaoTurno');
       if (!container) return;
       let canvas = document.getElementById('chartjs-bar');
@@ -254,20 +245,16 @@
     }
   }
 
-  // ---------- Helper: tenta múltiplas URLs até obter {labels, data} válido ----------
   function extractLabelsValues(anyPayload) {
-    // 1) Se veio como array de agregação: [{ _id, qtd_turmas }, ...]
     if (Array.isArray(anyPayload)) {
       const labels = anyPayload.map(r => (r && (r._id ?? r.id ?? '(Sem área)')));
       const values = anyPayload.map(r => Number(r?.qtd_turmas ?? r?.qtd ?? r?.count ?? 0));
       if (labels.length && values.length) return { labels, values };
     }
-    // 2) Se veio embrulhado: { data: { labels, data } } OU { labels, data }
     const obj = anyPayload?.data || anyPayload || {};
     if (Array.isArray(obj.labels) && Array.isArray(obj.data)) {
       return { labels: obj.labels, values: obj.data };
     }
-    // 3) Se veio como { items: [...] } no formato de agregação
     if (Array.isArray(obj.items)) {
       const labels = obj.items.map(r => (r && (r._id ?? r.id ?? '(Sem área)')));
       const values = obj.items.map(r => Number(r?.qtd_turmas ?? r?.qtd ?? r?.count ?? 0));
@@ -285,17 +272,12 @@
     throw new Error('payload vazio');
   }
 
-  // Pie: turmas ativas por area_tecnologica (com fallback robusto)
   async function chartAreas() {
     try {
       const attempts = [
-        // 1) usa o proxy PHP que EXISTE
         { url: 'processa_dashboard.php?action=areas_tecnologicas', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
-        // 2) tenta direto na API (se CORS permitir)
         { url: 'http://localhost:8000/api/dashboard/areas_tecnologicas_pie', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
-        // 3) (opcional) se você criar a action areas_tecnologicas_pie no PHP
         { url: 'processa_dashboard.php?action=areas_tecnologicas_pie', opts: { credentials: 'same-origin', headers: { 'Accept': 'application/json' } } },
-        // 4) endpoint alternativo, se existir
         { url: 'http://localhost:8000/api/dashboard/areas_tecnologicas', opts: { credentials: 'include', headers: { 'Accept': 'application/json' } } },
       ];
       let labels = [], values = [];
@@ -303,10 +285,10 @@
         try {
           const r = await tryFetchPie(a.url, a.opts);
           labels = r.labels; values = r.values;
-          console.debug('[pie] usando', a.url, { labels, values }); // <— opcional
+          console.debug('[pie] usando', a.url, { labels, values });
           break;
         } catch (e){
-          console.debug('[pie] falhou', a.url, e); // <— opcional
+          console.debug('[pie] falhou', a.url, e); 
          }
       }
       if (!labels.length || !values.length) {
@@ -374,11 +356,10 @@
     }
   }
 
-  // ===== bootstrap =====
   runNowOrOnReady(async () => {
     setupMenuToggle();
     await loadMetrics();
     await chartTurnos();
-    await chartAreas(); // <-- mantenha só estas duas chamadas
+    await chartAreas(); 
   });
 })();

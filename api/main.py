@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from rotas_usuario import router as usuario_router
@@ -14,13 +13,6 @@ from fastapi.middleware.gzip import GZipMiddleware
 from bootstrap import router as bootstrap_router
 from fastapi.middleware.gzip import GZipMiddleware
 
-
-
-
-
-# -----------------------------------------------------------------------------
-# App
-# -----------------------------------------------------------------------------
 app = FastAPI(
     title="API SENAI Betim",
     version="1.0.0",
@@ -28,10 +20,6 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# -----------------------------------------------------------------------------
-# CORS (apenas uma vez, com regex cobrindo localhost/127.0.0.1 em qualquer porta)
-# Observação: allow_credentials=True exige origem explícita; por isso usamos regex.
-# -----------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
@@ -41,24 +29,19 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
-# -----------------------------------------------------------------------------
-# Rotas
-# -----------------------------------------------------------------------------
 app.include_router(usuario_router)
 app.include_router(curso_router)
 app.include_router(instituicao_router)
-app.include_router(uc_router)   # incluído uma única vez
+app.include_router(uc_router)  
 app.include_router(empresa_router)
 app.include_router(calendario_router)
 app.include_router(instrutor_router)
-app.include_router(turma_router)      # /api/turmas -> rotas_turma.py
+app.include_router(turma_router)    
 app.include_router(dashboard_router)
 app.include_router(bootstrap_router, prefix="/api")
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
-# -----------------------------------------------------------------------------
-# Healthcheck
-# -----------------------------------------------------------------------------
+
 @app.get("/")
 def status():
     return {"ok": True, "msg": "API online"}

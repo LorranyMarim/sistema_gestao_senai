@@ -5,10 +5,8 @@ from fastapi import HTTPException, Request, status
 import os
 from dotenv import load_dotenv
 
-# Carrega as variáveis do arquivo .env
 load_dotenv()
 
-# Pega o valor do .env ou usa um fallback (opcional) caso não encontre
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 if not SECRET_KEY:
@@ -29,7 +27,7 @@ def verificar_token(token: str):
         sub = payload.get("sub")
         if not sub:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
-        return payload  # <- devolve dict com sub, exp, inst
+        return payload  
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
 

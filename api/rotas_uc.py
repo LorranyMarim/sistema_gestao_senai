@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import re
 from pymongo.collation import Collation
 from auth_dep import get_ctx, RequestCtx
-from cache_utils import invalidate_cache  # <--- Importação adicionada
+from cache_utils import invalidate_cache  
 
 router = APIRouter()
 
@@ -47,17 +47,14 @@ def listar_ucs(
     db = get_mongo_db()
     filtro: dict = {}
 
-    # --- CORREÇÃO: O filtro de instituição é OBRIGATÓRIO e fora de qualquer IF ---
     filtro["instituicao_id"] = str(ctx.inst_oid)
 
-    # Busca textual
     if q:
         filtro["$or"] = [
             {"descricao":  {"$regex": q, "$options": "i"}},
             {"sala_ideal": {"$regex": q, "$options": "i"}},
         ]
 
-    # Status
     if status:
         norm = []
         for s in status:
@@ -70,7 +67,6 @@ def listar_ucs(
         if norm:
             filtro["status"] = {"$in": norm}
 
-    # Datas
     if created_from or created_to:
         if created_from and created_from.tzinfo is None:
             created_from = created_from.replace(tzinfo=timezone.utc)
@@ -128,7 +124,6 @@ def criar_uc(uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(get_ctx)):
 
     inserted = db["unidade_curricular"].insert_one(data)
     
-    # Invalida cache após inserção
     invalidate_cache(str(ctx.inst_oid))
     
     return {"_id": str(inserted.inserted_id)}
@@ -145,17 +140,14 @@ def atualizar_uc(id: str, uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(
     data.pop('_id', None)
     data.pop('data_criacao', None)
     
-    # SEGURANÇA: Sobrescreve a instituição para a do token, impedindo mover a UC
     data['instituicao_id'] = str(ctx.inst_oid)
 
-    # SEGURANÇA: Adiciona instituicao_id no filtro do update
     res = db["unidade_curricular"].update_one(
         {"_id": oid, "instituicao_id": str(ctx.inst_oid)}, 
         {"$set": data}
     )
     
     if res.matched_count:
-        # Invalida cache após atualização
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Atualizado com sucesso"}
     raise HTTPException(status_code=404, detail="UC não encontrada ou acesso negado")
@@ -168,25 +160,20 @@ def deletar_uc(id: str, ctx: RequestCtx = Depends(get_ctx)):
 
     db = get_mongo_db()
     
-    # SEGURANÇA: Adiciona instituicao_id no filtro
     res = db["unidade_curricular"].delete_one(
         {"_id": oid, "instituicao_id": str(ctx.inst_oid)}
     )
     
     if res.deleted_count:
-        # Invalida cache após remoção
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="UC não encontrada ou acesso negado")
 
-# --- Adicionar em api/rotas_uc.py ---
 
 @router.get("/api/gestao_ucs/bootstrap")
 def bootstrap_ucs(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     
-    # 1. Buscar a Instituição Logada (para preencher o select de filtro/cadastro)
-    # Como o usuário é "tenant", ele só vê a própria instituição.
     inst_oid = ctx.inst_oid
     instituicao = db["instituicao"].find_one({"_id": inst_oid})
     
@@ -195,14 +182,11 @@ def bootstrap_ucs(ctx: RequestCtx = Depends(get_ctx)):
         instituicao["_id"] = str(instituicao["_id"])
         lista_inst.append(instituicao)
 
-    # 2. Buscar TODAS as UCs desta instituição (sem paginação inicial para o bootstrap ou ajuste conforme necessidade)
-    # Nota: O frontend faz a paginação em memória no "STATE.pagination", então aqui retornamos tudo.
     cursor_ucs = db["unidade_curricular"].find({"instituicao_id": str(inst_oid)}).sort("data_criacao", -1)
     
     lista_ucs = []
     for uc in cursor_ucs:
         uc["_id"] = str(uc["_id"])
-        # Formatar datas para string ISO (compatibilidade com frontend)
         if isinstance(uc.get("data_criacao"), datetime):
             uc["data_criacao"] = uc["data_criacao"].astimezone(timezone.utc).isoformat()
         elif isinstance(uc.get("data_criacao"), ObjectId):
@@ -210,7 +194,6 @@ def bootstrap_ucs(ctx: RequestCtx = Depends(get_ctx)):
              
         lista_ucs.append(uc)
 
-    # Retorna a estrutura exata que o gestao_unidades_curriculares.js espera
     return {
         "instituicoes": lista_inst,
         "ucs": lista_ucs

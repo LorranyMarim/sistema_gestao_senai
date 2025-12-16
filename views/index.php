@@ -1,5 +1,4 @@
 <?php
-// views/index.php
 session_start();
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     header("Location: dashboard.php");
@@ -15,22 +14,23 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
-<body>
-  <div class="login-container">
-    <img src="../assets/logo_azul.png" alt="Logo" class="senai-logo">
+<body id="page-login">
+  
+  <div id="main-container" class="login-container">
+    
+    <img id="logo-senai" src="../assets/logo_azul.png" alt="Logo" class="senai-logo">
 
-    <form action="../backend/login.php" method="POST" autocomplete="off" novalidate>
-      <!-- Erros (JS injeta aqui) -->
+    <form id="login-form" action="../backend/processa_login.php" method="POST" autocomplete="off" novalidate>
       <p id="form-error" class="error-message" style="display:none;color:#d9534f;margin-bottom:10px;"></p>
 
-      <div class="input-group">
+      <div id="group-instituicao" class="input-group">
         <label for="instituicao">Instituição:</label>
         <select id="instituicao" name="instituicao_id" required disabled>
           <option value="">Carregando instituições...</option>
         </select>
       </div>
 
-      <div class="input-group">
+      <div id="group-username" class="input-group">
         <label for="username">Usuário:</label>
         <input
           type="text"
@@ -44,7 +44,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         >
       </div>
 
-      <div class="input-group">
+      <div id="group-password" class="input-group">
         <label for="password">Senha:</label>
         <input
           type="password"
@@ -60,7 +60,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
       <button id="btn-submit" type="submit" disabled>Entrar</button>
 
       <?php
-        // Passa o código de erro (se houver) para o JS ler
         if (isset($_GET['erro'])) {
           echo '<input type="hidden" id="errcode" value="'.htmlspecialchars($_GET['erro']).'">';
         }
@@ -70,9 +69,10 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const API_INST_URL = "http://localhost:8000/api/instituicoes";
+      const API_INST_URL = "../backend/processa_instituicao.php";
 
-      const form = document.querySelector("form");
+      const form = document.getElementById("login-form");
+      
       const instSelect = document.getElementById("instituicao");
       const userInput = document.getElementById("username");
       const passInput = document.getElementById("password");
@@ -92,7 +92,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         errP.style.display = "none";
       }
 
-      // ERROS vindos do backend (?erro=)
       (function handleBackendError() {
         const code = document.getElementById("errcode")?.value ||
                      new URLSearchParams(location.search).get("erro");
@@ -107,12 +106,11 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         showError(map[code] || "Erro ao fazer login.");
       })();
 
-      // Carrega instituições
       (async function carregarInstituicoes() {
         try {
           const res = await fetch(API_INST_URL);
           if (!res.ok) throw new Error("HTTP " + res.status);
-          const lista = await res.json(); // [{ _id, nome }]
+          const lista = await res.json(); 
           instSelect.innerHTML = '<option value="">Selecione...</option>';
           lista.forEach(i => {
             const opt = document.createElement("option");
@@ -121,7 +119,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             instSelect.appendChild(opt);
           });
 
-          // Restaura última seleção (se existir)
           const last = localStorage.getItem("last_instituicao_id");
           if (last && instSelect.querySelector(`option[value="${last}"]`)) {
             instSelect.value = last;
@@ -138,7 +135,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         }
       })();
 
-      // Guarda a seleção
       instSelect.addEventListener("change", () => {
         clearError();
         if (instSelect.value) {
@@ -146,11 +142,9 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         }
       });
 
-      // Validação do formulário
       form.addEventListener("submit", function (e) {
         clearError();
 
-        // Instituição obrigatória
         if (!instSelect.value) {
           e.preventDefault();
           showError("Selecione uma instituição.");
@@ -158,7 +152,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           return;
         }
 
-        // Usuário
         const user = (userInput.value || "").trim();
         if (!user) {
           e.preventDefault(); showError("Preencha o campo usuário."); userInput.focus(); return;
@@ -173,7 +166,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           e.preventDefault(); showError("Usuário contém caracteres inválidos."); userInput.focus(); return;
         }
 
-        // Senha
         const pass = passInput.value || "";
         if (!pass) {
           e.preventDefault(); showError("Preencha o campo senha."); passInput.focus(); return;
@@ -189,7 +181,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         }
       });
 
-      // Limpa erro ao digitar
       [userInput, passInput].forEach(inp => {
         inp.addEventListener("input", clearError);
       });
