@@ -232,8 +232,8 @@ function setupFiltersAndRender() {
       if (btnDel) {
         if (!confirm('Tem certeza que deseja excluir esta UC?')) return;
         try {
-          await safeFetch(`${API.uc}/${btnDel.dataset.id}`, { method: 'DELETE' });
-          await carregarDadosIniciais(); 
+          await safeFetch(`${API.uc}?id=${btnDel.dataset.id}`, { method: 'DELETE' });
+          await carregarDadosIniciais();
           renderizarConteudo();
         } catch(err) { alert('Erro ao excluir.'); }
       }
@@ -259,14 +259,13 @@ function setupFiltersAndRender() {
         status: refs.statusUc.value
       };
       const isEdit = !!STATE.ucEditId;
-      const url = isEdit ? `${API.uc}/${STATE.ucEditId}` : API.uc;
+      const url = isEdit ? `${API.uc}?id=${STATE.ucEditId}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
       try {
         await safeFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         closeModal();
         await carregarDadosIniciais();
-        renderizarConteudo();
         alert('Salvo com sucesso!');
       } catch (err) { alert('Erro ao salvar.'); }
     });

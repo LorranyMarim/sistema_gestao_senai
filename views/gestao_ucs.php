@@ -158,7 +158,7 @@ require_once("../config/verifica_login.php");
         </div>
     </div>
     <script src="../assets/js/geral_script.js"></script>
-    <script src="../assets/js/ucs_scripts.js" defer></script>
+    <script src="../assets/js/ucs_script.js" defer></script>
 </body>
 
 </html>
