@@ -182,11 +182,13 @@ def bootstrap_ucs(ctx: RequestCtx = Depends(get_ctx)):
         instituicao["_id"] = str(instituicao["_id"])
         lista_inst.append(instituicao)
 
-    cursor_ucs = db["unidade_curricular"].find({"instituicao_id": str(inst_oid)}).sort("data_criacao", -1)
+    cursor_ucs = db["unidade_curricular"].find({"instituicao_id": inst_oid}).sort("data_criacao", -1)
     
     lista_ucs = []
     for uc in cursor_ucs:
         uc["_id"] = str(uc["_id"])
+        if "instituicao_id" in uc:
+            uc["instituicao_id"] = str(uc["instituicao_id"])
         if isinstance(uc.get("data_criacao"), datetime):
             uc["data_criacao"] = uc["data_criacao"].astimezone(timezone.utc).isoformat()
         elif isinstance(uc.get("data_criacao"), ObjectId):

@@ -103,8 +103,7 @@
     STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
     STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
 
-    const selInst = filterInstituicaoEl?.value || '';
-    STATE.filters.instituicoes = selInst ? [selInst] : [];
+    STATE.filters.instituicoes = [];
 
     const elSize = document.getElementById('gen_pagesize');
     if (elSize) {

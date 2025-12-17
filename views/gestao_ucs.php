@@ -105,6 +105,7 @@ require_once("../config/verifica_login.php");
            <h3 id="modalTitleUc" class="text-2xl mb-4 p-4 rounded-t-lg">Adicionar Nova Unidade Curricular</h3>
             <form id="ucForm" autocomplete="off">
                 <input type="hidden" id="ucId">
+                <select id="instituicaoUc" style="display:none;"></select>
                 <div id="alertUc" style="display:none"></div>
 
 
