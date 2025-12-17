@@ -124,6 +124,7 @@ body.modal-open {
 .dashboard-container {
     display: flex;
     width: 100%;
+    overflow: hidden;
 }
 
 
@@ -141,6 +142,7 @@ body.modal-open {
     left: 0;
     z-index: 900;
     overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .sidebar h3 {
@@ -274,10 +276,13 @@ body.modal-open {
 
 .main-content {
     margin-left: 250px; 
-    padding: 30px;
+    padding: 20px;
     background-color: var(--cor-fundo);
     flex-grow: 1;
     min-height: 100vh;
+    flex: 1;
+    overflow-y: auto;
+    height: 100%;
 }
 
 .main-header {
@@ -347,7 +352,26 @@ button[disabled],
     transform: none !important;
     pointer-events: none;
 }
+/* Estilo específico para o botão de limpar filtros gerado dinamicamente */
+#gen_clear {
+    color: #333 !important; /* Define a cor do texto (ex: cinza escuro) */
+    background-color: #f8f9fa; /* Opcional: define uma cor de fundo clara */
+    border-color: #ddd; /* Opcional: cor da borda */
+}
 
+/* Garante que o ícone dentro do botão siga a mesma cor */
+#gen_clear i {
+    color: #333 !important; 
+}
+
+/* Efeito ao passar o mouse (Hover) */
+#gen_clear:hover {
+    background-color: #e2e6ea;
+    color: #000 !important;
+}
+#gen_clear:hover i {
+    color: #000 !important;
+}
 .btn-primary { background-color: var(--cor-sidebar); color: #fff; }
 .btn-primary:hover { background-color: var(--cor-primaria-hover); }
 

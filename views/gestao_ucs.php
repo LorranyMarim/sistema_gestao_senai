@@ -77,8 +77,7 @@ require_once("../config/verifica_login.php");
                     <table id="ucTable" class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Instituição</th>
+                              
                                 <th>Descrição da Unidade Curricular</th>
                                 <th>Sala Ideal</th>
                                 <th>Status</th>

@@ -152,8 +152,7 @@
 
     refs.ucTableBody.innerHTML = lista.map(uc => `
       <tr>
-        <td>${uc._id?.substring(0,8)}...</td>
-        <td>${mapInst.get(uc.instituicao_id) || '—'}</td>
+       
         <td>${uc.descricao || ''}</td>
         <td>${uc.sala_ideal || ''}</td>
         <td>${uc.status || 'Ativa'}</td>
