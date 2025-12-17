@@ -16,7 +16,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <!-- Seu CSS (mantido para layout da página) -->
-  <link rel="stylesheet" href="../assets/css/style_turmas.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
   <style>
     /* Z-index padrão do Bootstrap p/ modal (acima de sidebars, etc.) */
     :root {
@@ -491,9 +491,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Seus scripts -->
-  <script src="../assets/js/geral.js"></script>
-  <script src="../assets/js/prefetch.js"></script>
-  <script src="../assets/js/gestao_turmas.js"></script>
+  <script src="../assets/js/geral_script.js"></script>
+  <script src="../assets/js/turmas_script.js"></script>
 </body>
 
 </html>

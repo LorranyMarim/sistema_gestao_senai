@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-/* Requer: geral.js (expondo window.App) */
-if (!window.App) throw new Error('Carregue geral.js antes de gestao_calendario.js.');
+/* Requer: geral_script.js (expondo window.App) */
+if (!window.App) throw new Error('Carregue geral_script.js antes de calendario_script.js.');
 
 const { $, $$, runNowOrOnReady } = App.dom;
 const { debounce, norm, toId, dateMax, dateMin, dateClamp } = App.utils;
@@ -102,7 +102,7 @@ function closeModal(id) {
 window.openModal = openModal;
 window.closeModal = closeModal;
 
-// (o geral.js já fecha modais ao clicar no overlay .modal)
+// (o geral_script.js já fecha modais ao clicar no overlay .modal)
 // aqui só garantimos o reset correto dos modais específicos.
 window.addEventListener("click", (ev) => {
   const tgt = ev.target;
@@ -175,7 +175,7 @@ pagerCtrl.update();                // pinta "Página 1 de 1 • 0 registros"
 await carregarCalendarios();        // <— busca inicial (preenche tabela + totais)
 await carregarEventosNoCalendario();
 
-  // Botão "Limpar filtros" (centralizado no geral.js)
+  // Botão "Limpar filtros" (centralizado no geral_script.js)
   setupClearFilters({
     buttonSelector: '#btnClearFilters',
     getFiltersState: () => STATE.filters,

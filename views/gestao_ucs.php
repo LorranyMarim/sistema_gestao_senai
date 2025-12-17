@@ -102,7 +102,7 @@ require_once("../config/verifica_login.php");
     <div id="ucModal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="closeModalBtn">&times;</span>
-           <h3 id="modalTitleUc" class="text-2xl mb-4 p-4 rounded-t-lg" style="background-color: #004B8D; color: white; margin: -30px -30px 20px -30px;">Adicionar Nova Unidade Curricular</h3>
+           <h3 id="modalTitleUc" class="text-2xl mb-4 p-4 rounded-t-lg">Adicionar Nova Unidade Curricular</h3>
             <form id="ucForm" autocomplete="off">
                 <input type="hidden" id="ucId">
                 <div id="alertUc" style="display:none"></div>
@@ -158,7 +158,6 @@ require_once("../config/verifica_login.php");
         </div>
     </div>
     <script src="../assets/js/geral_script.js"></script>
-    <script src="../assets/js/prefetch.js"></script>
     <script src="../assets/js/ucs_scripts.js" defer></script>
 </body>
 

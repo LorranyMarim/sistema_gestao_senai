@@ -9,7 +9,7 @@ require_once("../config/verifica_login.php");
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestão de Cursos - SENAI</title>
 
-  <link rel="stylesheet" href="../assets/css/style_turmas.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
@@ -358,9 +358,8 @@ require_once("../config/verifica_login.php");
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.full.min.js"></script>
-  <script src="../assets/js/geral.js"></script>
-  <script src="../assets/js/prefetch.js"></script>
-  <script src="../assets/js/gestao_cursos.js"></script>
+  <script src="../assets/js/geral_script.js"></script>
+  <script src="../assets/js/cursos_script.js"></script>
 </body>
 
 </html>

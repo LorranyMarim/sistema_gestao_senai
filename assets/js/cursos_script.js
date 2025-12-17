@@ -192,7 +192,7 @@ function wireFilterEvents() {
       sizeSel: document.getElementById('pageSize') // Se houver select de tamanho
     },
     (action, value) => {
-      // Callback que o geral.js chama quando clica
+      // Callback que o geral_script.js chama quando clica
       if (action === 'prev') filtros.page--;
       if (action === 'next') filtros.page++;
       if (action === 'size') {

@@ -1081,7 +1081,7 @@
       // Carrega "último filtro" salvo
       loadLastFilter();
       reflectFiltersToUI();
-      // Botão "Limpar filtros" (usa helper do geral.js)
+      // Botão "Limpar filtros" (usa helper do geral_script.js)
       // Habilita quando QUALQUER filtro (exceto Itens/página e Ordenação) estiver ativo
       updateClearBtn();
 

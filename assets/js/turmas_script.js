@@ -281,7 +281,7 @@ function renderFiltered() {
             : `<tr><td colspan="7" class="text-muted">Nenhum registro encontrado.</td></tr>`;
     }
 
-    // 4. Atualiza Botões e Texto (Geral.js)
+    // 4. Atualiza Botões e Texto (geral_script.js)
     updateUI(pagElements, meta);
 
     // 5. Atualiza estado do botão limpar
