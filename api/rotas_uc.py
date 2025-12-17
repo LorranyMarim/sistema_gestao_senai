@@ -15,11 +15,11 @@ FORBIDDEN_CHARS = re.compile(r'[<>"\';{}]')
 
 class UnidadeCurricularModel(BaseModel):
     descricao: str = Field(..., min_length=2, max_length=100)
-    sala_ideal: str = Field(..., min_length=2, max_length=100)
+    tipo_uc: str = Field(..., min_length=2, max_length=100)
     instituicao_id: str = Field(..., min_length=2, max_length=100)
     status: Literal['Ativa', 'Inativa']
 
-    @validator('descricao', 'sala_ideal', 'instituicao_id', pre=True)
+    @validator('descricao', 'tipo_uc', 'instituicao_id', pre=True)
     def sanitize_and_check_chars(cls, v):
         if not isinstance(v, str):
             raise ValueError("Valor inválido.")
@@ -52,7 +52,7 @@ def listar_ucs(
     if q:
         filtro["$or"] = [
             {"descricao":  {"$regex": q, "$options": "i"}},
-            {"sala_ideal": {"$regex": q, "$options": "i"}},
+            {"tipo_uc": {"$regex": q, "$options": "i"}},
         ]
 
     if status:

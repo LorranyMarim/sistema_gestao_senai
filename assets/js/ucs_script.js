@@ -119,7 +119,7 @@
     const filtered = STATE.ucs.filter(uc => {
       const f = STATE.filters;
       if (f.q) {
-        const text = `${uc.descricao} ${uc.sala_ideal}`.toLowerCase();
+        const text = `${uc.descricao} ${uc.tipo_uc}`.toLowerCase();
         if (!text.includes(f.q.toLowerCase())) return false;
       }
       if (f.status[0] !== 'Todos' && uc.status !== f.status[0]) return false;
@@ -154,7 +154,7 @@
       <tr>
        
         <td>${uc.descricao || ''}</td>
-        <td>${uc.sala_ideal || ''}</td>
+        <td>${uc.tipo_uc || ''}</td>
         <td>${uc.status || 'Ativa'}</td>
         <td>${fmtData(uc.data_criacao)}</td>
         <td>
@@ -209,7 +209,7 @@ function setupFiltersAndRender() {
         const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
         if(!uc) return;
         refs.viewFields.descricao.value = uc.descricao;
-        refs.viewFields.sala.value = uc.sala_ideal;
+        refs.viewFields.sala.value = uc.tipo_uc;
         refs.viewFields.status.value = uc.status;
         App.ui.showModal(refs.visualizarUcModal);
       }
@@ -221,7 +221,7 @@ function setupFiltersAndRender() {
         refs.ucIdInput.value = uc._id;
         refs.selectInstituicao.value = uc.instituicao_id;
         refs.descricaoUcInput.value = uc.descricao;
-        refs.salaIdealInput.value = uc.sala_ideal;
+        refs.salaIdealInput.value = uc.tipo_uc;
         refs.statusUc.value = uc.status;
         refs.modalTitleUc.textContent = 'Editar UC';
         App.ui.showModal(refs.ucModal);
@@ -252,7 +252,7 @@ function setupFiltersAndRender() {
       e.preventDefault();
       const payload = {
         descricao: refs.descricaoUcInput.value.trim(),
-        sala_ideal: refs.salaIdealInput.value.trim(),
+        tipo_uc: refs.salaIdealInput.value.trim(),
         instituicao_id: refs.selectInstituicao.value,
         status: refs.statusUc.value
       };
