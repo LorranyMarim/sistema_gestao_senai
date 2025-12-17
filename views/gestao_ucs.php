@@ -79,7 +79,7 @@ require_once("../config/verifica_login.php");
                             <tr>
                               
                                 <th>Descrição da Unidade Curricular</th>
-                                <th>Sala Ideal</th>
+                                <th>Tipo de UC</th>
                                 <th>Status</th>
                                 <th>Criado em</th>
                                 <th class="actions">Ações</th>
@@ -115,7 +115,7 @@ require_once("../config/verifica_login.php");
                 </div>
 
                 <div class="form-group">
-                    <label for="salaIdeal">Sala Ideal:</label>
+                    <label for="salaIdeal">Tipo de UC:</label>
                     <input type="text" id="salaIdeal" required minlength="2" maxlength="100">
                 </div>
 
@@ -146,7 +146,7 @@ require_once("../config/verifica_login.php");
                     <input type="text" id="viewDescricaoUc" readonly disabled>
                 </div>
                 <div class="form-group">
-                    <label>Sala Ideal:</label>
+                    <label>Tipo de UC:</label>
                     <input type="text" id="viewSalaIdealUc" readonly disabled>
                 </div>
                 <div class="form-group">

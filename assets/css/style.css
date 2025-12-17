@@ -352,19 +352,17 @@ button[disabled],
     transform: none !important;
     pointer-events: none;
 }
-/* Estilo específico para o botão de limpar filtros gerado dinamicamente */
+
 #gen_clear {
-    color: #333 !important; /* Define a cor do texto (ex: cinza escuro) */
-    background-color: #f8f9fa; /* Opcional: define uma cor de fundo clara */
-    border-color: #ddd; /* Opcional: cor da borda */
+    color: #333 !important;
+    background-color: #f8f9fa; 
+    border-color: #ddd; 
 }
 
-/* Garante que o ícone dentro do botão siga a mesma cor */
 #gen_clear i {
     color: #333 !important; 
 }
 
-/* Efeito ao passar o mouse (Hover) */
 #gen_clear:hover {
     background-color: #e2e6ea;
     color: #000 !important;
