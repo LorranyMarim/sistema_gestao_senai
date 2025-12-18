@@ -50,7 +50,7 @@
     fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
     viewFields: {
       descricao: $('#viewDescricaoUc'),
-      tipo: $('#viewSalaIdealUc'),
+      tipo: $('#viewTipoUc'),
       status: $('#viewStatusUc')
     },
     pagElements: {
@@ -207,10 +207,13 @@
       if (btnView) {
         const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
         if (!uc) return;
+        
+        // Correção: usar .tipo ao invés de .sala, conforme definido em refs.viewFields
         refs.viewFields.descricao.value = uc.descricao;
-        refs.viewFields.sala.value = uc.tipo_uc;
-        refs.tipoUcInput.value = uc.tipo_uc;
+        refs.viewFields.tipo.value = uc.tipo_uc; 
         refs.viewFields.status.value = uc.status;
+        
+        // Abre o modal
         App.ui.showModal(refs.visualizarUcModal);
       }
 
@@ -221,8 +224,15 @@
         refs.ucIdInput.value = uc._id;
         refs.selectInstituicao.value = uc.instituicao_id;
         refs.descricaoUcInput.value = uc.descricao;
-        refs.salaIdealInput.value = uc.tipo_uc;
-        refs.statusUc.value = uc.status;
+        refs.tipoUcInput.value = uc.tipo_uc; // (Nota: certifique-se que refs.tipoUcInput aponta para o ID correto no seu código)
+        
+        // --- ADICIONE/AJUSTE ESTAS LINHAS ---
+        if (refs.statusUc) {
+             refs.statusUc.disabled = false; // Habilita o campo para edição
+             refs.statusUc.value = uc.status;
+        }
+        // ------------------------------------
+
         refs.modalTitleUc.textContent = 'Editar UC';
         App.ui.showModal(refs.ucModal);
       }
@@ -244,10 +254,17 @@
       }
       STATE.ucEditId = null;
       refs.ucForm.reset();
-      refs.ucIdInput.value = '';          // garante novo cadastro
+      refs.ucIdInput.value = ''; 
       refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
-      App.ui.showModal(refs.ucModal);
+      
+      // --- ADICIONE ESTAS LINHAS ---
+      if (refs.statusUc) {
+        refs.statusUc.value = 'Ativo'; // Valor padrão
+        refs.statusUc.disabled = true; // Desativado para alteração
+      }
+      // -----------------------------
 
+      App.ui.showModal(refs.ucModal);
     });
 
     const closeModal = () => App.ui.hideModal(refs.ucModal);

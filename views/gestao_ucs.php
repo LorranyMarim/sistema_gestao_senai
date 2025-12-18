@@ -116,15 +116,23 @@ require_once("../config/verifica_login.php");
                 </div>
 
                 <div class="form-group">
-                    <label for="tipoUc">Tipo de UC:</label>
-                    <select id="tipoUc" class="form-control" required>
-                        <option value="">Selecione</option>
-                        <option value="EAD">EAD</option>
-                        <option value="Teórica">Teórica</option>
-                        <option value="Prática">Prática</option>
-                        <option value="Teórica com Prática">Teórica com Prática</option>
-                    </select>
-                </div>
+    <label for="tipoUc">Tipo de UC:</label>
+    <select id="tipoUc" class="form-control" required>
+        <option value="">Selecione</option>
+        <option value="EAD">EAD</option>
+        <option value="Teórica">Teórica</option>
+        <option value="Prática">Prática</option>
+        <option value="Teórica com Prática">Teórica com Prática</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="statusUc">Status:</label>
+    <select id="statusUc" class="form-control">
+        <option value="Ativo">Ativo</option>
+        <option value="Inativo">Inativo</option>
+    </select>
+</div>
 
                 <div class="modal-footer"
                     style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
@@ -154,7 +162,7 @@ require_once("../config/verifica_login.php");
                 </div>
                 <div class="form-group">
                     <label>Tipo de UC:</label>
-                    <input type="text" id="viewSalaIdealUc" readonly disabled>
+                    <input type="text" id="viewTipoUc" readonly disabled>
                 </div>
                 <div class="form-group">
                     <label>Status:</label>
