@@ -105,7 +105,11 @@ require_once("../config/verifica_login.php");
 
             <form id="ucForm" autocomplete="off">
                 <input type="hidden" id="ucId">
-                <select id="instituicaoUc" style="display:none;"></select>
+               <div class="form-group" style="display:none;">
+    <label for="instituicaoUc">Instituição:</label>
+    <select id="instituicaoUc" class="form-control" required>
+        </select>
+</div>
 
                 <div id="alertUc" style="display:none"></div>
 

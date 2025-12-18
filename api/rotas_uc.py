@@ -17,7 +17,7 @@ class UnidadeCurricularModel(BaseModel):
     descricao: str = Field(..., min_length=2, max_length=100)
     tipo_uc: str = Field(..., min_length=2, max_length=100)
     instituicao_id: str = Field(..., min_length=2, max_length=100)
-    status: Literal['Ativa', 'Inativa']
+    status: Literal['Ativo', 'Inativo']
 
     @validator('descricao', 'tipo_uc', 'instituicao_id', pre=True)
     def sanitize_and_check_chars(cls, v):
@@ -47,7 +47,8 @@ def listar_ucs(
     db = get_mongo_db()
     filtro: dict = {}
 
-    filtro["instituicao_id"] = str(ctx.inst_oid)
+    # CORREÇÃO: Usar ObjectId diretamente, removendo str()
+    filtro["instituicao_id"] = ctx.inst_oid 
 
     if q:
         filtro["$or"] = [
@@ -60,9 +61,9 @@ def listar_ucs(
         for s in status:
             if not s: continue
             v = s.strip().capitalize()
-            if v == "Ativo": v = "Ativa"
-            elif v == "Inativo": v = "Inativa"
-            if v in ("Ativa", "Inativa"):
+            if v == "Ativo": v = "Ativo"
+            elif v == "Inativo": v = "Inativo"
+            if v in ("Ativo", "Inativo"):
                 norm.append(v)
         if norm:
             filtro["status"] = {"$in": norm}
@@ -90,14 +91,15 @@ def listar_ucs(
     total = col.count_documents(filtro, collation=coll)
     cursor = (
         col.find(filtro, collation=coll)
-           .sort("data_criacao", -1)
-           .skip((page - 1) * page_size)
-           .limit(page_size)
+            .sort("data_criacao", -1)
+            .skip((page - 1) * page_size)
+            .limit(page_size)
     )
 
     items = []
     for uc in cursor:
         oid = uc.get("_id")
+        # Converte para string apenas na hora de devolver para o frontend
         if isinstance(uc.get("instituicao_id"), ObjectId):
             uc["instituicao_id"] = str(uc["instituicao_id"])
 
@@ -117,7 +119,9 @@ def criar_uc(uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     data = uc.dict()
 
-    data['instituicao_id'] = str(ctx.inst_oid)
+    # CORREÇÃO: Salvar como ObjectId (removido str())
+    data['instituicao_id'] = ctx.inst_oid 
+    
     data['status'] = data['status'].capitalize()
     data['data_criacao'] = datetime.now(timezone.utc)
     data.pop('_id', None)
@@ -140,10 +144,12 @@ def atualizar_uc(id: str, uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(
     data.pop('_id', None)
     data.pop('data_criacao', None)
     
-    data['instituicao_id'] = str(ctx.inst_oid)
+    # CORREÇÃO: Atualizar mantendo como ObjectId
+    data['instituicao_id'] = ctx.inst_oid
 
     res = db["unidade_curricular"].update_one(
-        {"_id": oid, "instituicao_id": str(ctx.inst_oid)}, 
+        # CORREÇÃO: Query deve buscar por ObjectId
+        {"_id": oid, "instituicao_id": ctx.inst_oid}, 
         {"$set": data}
     )
     
@@ -161,7 +167,8 @@ def deletar_uc(id: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     
     res = db["unidade_curricular"].delete_one(
-        {"_id": oid, "instituicao_id": str(ctx.inst_oid)}
+        # CORREÇÃO: Query de delete deve buscar por ObjectId
+        {"_id": oid, "instituicao_id": ctx.inst_oid}
     )
     
     if res.deleted_count:
@@ -182,6 +189,8 @@ def bootstrap_ucs(ctx: RequestCtx = Depends(get_ctx)):
         instituicao["_id"] = str(instituicao["_id"])
         lista_inst.append(instituicao)
 
+    # A busca aqui já estava correta usando inst_oid (que é ObjectId), 
+    # agora funcionará perfeitamente com os dados salvos corretamente.
     cursor_ucs = db["unidade_curricular"].find({"instituicao_id": inst_oid}).sort("data_criacao", -1)
     
     lista_ucs = []

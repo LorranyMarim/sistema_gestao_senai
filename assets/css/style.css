@@ -643,7 +643,7 @@ select:focus,
     position: relative;
 }
 
-#ucModal .modal-content { max-width: 950px; }
+
 .modal.show {
   display: flex;
 }
@@ -1129,7 +1129,7 @@ select:focus,
   background-color: #fff;
   border-radius: 10px;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
   box-shadow: var(--sombra-caixa);
   display: flex;
   flex-direction: column;

@@ -82,11 +82,20 @@
     }
   }
 
+  /* Arquivo: assets/js/ucs_script.js */
+
   function popularSelectModal() {
     if (refs.selectInstituicao) {
-      refs.selectInstituicao.innerHTML = ['<option value="">Selecione...</option>']
-        .concat(STATE.instituicoes.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`))
-        .join('');
+      // Cria as opções
+      refs.selectInstituicao.innerHTML = STATE.instituicoes.map(i => 
+        `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`
+      ).join('');
+
+      // LÓGICA NOVA: Selecionar automaticamente a primeira instituição disponível
+      // Isso garante que o valor não vá vazio, já que o campo está oculto
+      if (STATE.instituicoes.length > 0) {
+        refs.selectInstituicao.value = STATE.instituicoes[0]._id;
+      }
     }
   }
 
@@ -217,23 +226,27 @@
         App.ui.showModal(refs.visualizarUcModal);
       }
 
+      // Evento: Abrir Modal de Edição (dentro do listener da tabela)
       if (btnEdit) {
+        // Encontra a UC no array em memória (carregado do backend)
         const uc = STATE.ucs.find(u => u._id === btnEdit.dataset.id);
         if (!uc) return;
-        STATE.ucEditId = uc._id;
-        refs.ucIdInput.value = uc._id;
-        refs.selectInstituicao.value = uc.instituicao_id;
-        refs.descricaoUcInput.value = uc.descricao;
-        refs.tipoUcInput.value = uc.tipo_uc; // (Nota: certifique-se que refs.tipoUcInput aponta para o ID correto no seu código)
-        
-        // --- ADICIONE/AJUSTE ESTAS LINHAS ---
-        if (refs.statusUc) {
-             refs.statusUc.disabled = false; // Habilita o campo para edição
-             refs.statusUc.value = uc.status;
-        }
-        // ------------------------------------
 
-        refs.modalTitleUc.textContent = 'Editar UC';
+        STATE.ucEditId = uc._id; // Salva o ID para usar no PUT
+        refs.ucIdInput.value = uc._id;
+        
+        // Preenche os campos
+        refs.selectInstituicao.value = uc.instituicao_id || ''; // Garante seleção
+        refs.descricaoUcInput.value = uc.descricao;
+        refs.tipoUcInput.value = uc.tipo_uc;
+        
+        // Regra de Negócio: Na edição, o Status pode ser alterado
+        if (refs.statusUc) {
+             refs.statusUc.disabled = false; 
+             refs.statusUc.value = uc.status; // Vai receber "Ativo" ou "Inativo" do banco
+        }
+
+        refs.modalTitleUc.textContent = 'Editar/Alterar Unidade Curricular';
         App.ui.showModal(refs.ucModal);
       }
 
@@ -247,22 +260,27 @@
       }
     });
 
+    // Evento: Abrir Modal de Adicionar
+    /* Arquivo: assets/js/ucs_script.js - Dentro de setupEvents() */
+
     refs.addUcBtn?.addEventListener('click', () => {
-      if (!refs.ucModal) {
-        console.error('Erro crítico: Modal não encontrado no DOM.');
-        return;
-      }
+      if (!refs.ucModal) return;
+      
       STATE.ucEditId = null;
       refs.ucForm.reset();
       refs.ucIdInput.value = ''; 
       refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
       
-      // --- ADICIONE ESTAS LINHAS ---
-      if (refs.statusUc) {
-        refs.statusUc.value = 'Ativo'; // Valor padrão
-        refs.statusUc.disabled = true; // Desativado para alteração
+      // GARANTIR A INSTITUIÇÃO: Reaplica o valor da instituição do usuário logado
+      if (STATE.instituicoes.length > 0) {
+          refs.selectInstituicao.value = STATE.instituicoes[0]._id;
       }
-      // -----------------------------
+
+      // AJUSTE DO STATUS: Define como 'Ativo'
+      if (refs.statusUc) {
+        refs.statusUc.value = 'Ativo'; // Valor atualizado
+        refs.statusUc.disabled = true; // Mantém travado na criação
+      }
 
       App.ui.showModal(refs.ucModal);
     });
@@ -271,27 +289,55 @@
     refs.closeModalBtn?.addEventListener('click', closeModal);
     refs.cancelBtn?.addEventListener('click', closeModal);
 
+    // Evento: Salvar (Submit do Formulário)
+    /* Arquivo: assets/js/ucs_script.js - Dentro do submit do form */
+
+    // --- EVENTO: SALVAR (CRIAR OU EDITAR) ---
     refs.ucForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const isEdit = !!STATE.ucEditId;
 
+      // Validação: Instituição Obrigatória
+      const idInstituicao = refs.selectInstituicao.value;
+      if (!idInstituicao) {
+          exibirMensagem("Erro: Instituição não identificada.");
+          return;
+      }
+
       const payload = {
         descricao: refs.descricaoUcInput.value.trim(),
         tipo_uc: refs.tipoUcInput.value.trim(),
-        instituicao_id: refs.selectInstituicao.value,
+        instituicao_id: idInstituicao,
         status: isEdit ? (refs.statusUc?.value ?? 'Ativo') : 'Ativo'
       };
-
 
       const url = isEdit ? `${API.uc}?id=${STATE.ucEditId}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
       try {
-        await safeFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        // 1. Envia os dados para o backend
+        await safeFetch(url, { 
+            method, 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        });
+
+        // 2. Fecha o modal
         closeModal();
+
+        // 3. Recarrega os dados do banco (Atualiza STATE.ucs)
         await carregarDadosIniciais();
-        alert('Salvo com sucesso!');
-      } catch (err) { alert('Erro ao salvar.'); }
+
+        // 4. ATUALIZA A TABELA VISUALMENTE (Aplica filtros e paginação)
+        renderizarConteudo();
+        
+        // 5. Exibe a mensagem de sucesso personalizada
+        exibirMensagem('Salvo com sucesso!');
+        
+      } catch (err) { 
+          console.error(err); 
+          exibirMensagem('Erro ao salvar. Tente novamente.'); 
+      }
     });
 
     const closeView = () => App.ui.hideModal(refs.visualizarUcModal);
