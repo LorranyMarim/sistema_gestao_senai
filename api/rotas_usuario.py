@@ -144,38 +144,31 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
 
 @router.get("/api/usuarios")
 def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
-    """
-    Lista usuários vinculados à instituição do admin logado.
-    Filtra pelo ID da instituição presente no Token (ctx.inst_oid).
-    """
+    """Lista apenas usuários da mesma instituição do admin logado"""
     db = get_mongo_db()
 
-    # 1. Filtro de Segurança: Apenas usuários da mesma instituição
+    # CORREÇÃO 1: Usar ctx.inst_oid diretamente (assumindo que seja ObjectId)
+    # Se ctx.inst_oid não for ObjectId, use: ObjectId(ctx.inst_oid)
     filtro = {
-        "instituicao_id": str(ctx.inst_oid) # Filtra pelo ID da instituição do token
+        "$or": [
+            {"instituicao_id": ctx.inst_oid}, 
+            {"instituicoes_ids": str(ctx.inst_oid)}
+        ]
     }
     
-    # 2. Busca no banco ordenando por nome
-    # Removemos o campo 'senha' da resposta por segurança
-    cursor = db["usuario"].find(filtro, {"senha": 0}).sort("nome", 1)
-    
-    lista_usuarios = []
-    for u in cursor:
-        # Conversão de ObjectId para string para o JSON
-        u["id"] = str(u["_id"])
-        del u["_id"]
-        
-        # Tratamento de datas para ISO String (para o JS formatar)
-        if "data_criacao" in u and isinstance(u["data_criacao"], datetime):
-            u["data_criacao"] = u["data_criacao"].isoformat()
-            
-        # Garante que status exista (fallback)
-        if "status" not in u:
-            u["status"] = "Ativo" if u.get("ativo") is True else "Inativo"
+    usuarios = list(db["usuario"].find(filtro, {"senha": 0}))
 
-        lista_usuarios.append(u)
+    for u in usuarios:
+        # CORREÇÃO 2: Manter a chave "_id" convertida para string
+        # O Frontend espera receber "_id", não apenas "id"
+        u["_id"] = str(u["_id"]) 
+        u["id"] = u["_id"] # Mantém compatibilidade extra se necessário
         
-    return lista_usuarios
+        # Converte datas para string ISO se necessário
+        if "data_criacao" in u:
+            u["data_criacao"] = u["data_criacao"].isoformat()
+
+    return usuarios
 
 @router.post("/api/usuarios", status_code=201)
 def criar_usuario(dados: dict, ctx: RequestCtx = Depends(get_ctx)):
