@@ -9,7 +9,7 @@
   const { paginateData, bindControls, updateUI } = App.pagination;
 
   const LS_KEY = 'ucs_gestao_state_v2';
-
+  
   const API = Object.freeze({
     bootstrap: '../backend/processa_ucs.php?action=bootstrap',
     uc: '../backend/processa_ucs.php',
@@ -24,7 +24,7 @@
   };
 
   let savedState = {};
-  try { savedState = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { }
+  try { savedState = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch {}
 
   const STATE = {
     ...DEFAULT_STATE,
@@ -40,8 +40,8 @@
     modalTitleUc: $('#modalTitleUc'),
     ucIdInput: $('#ucId'),
     descricaoUcInput: $('#descricaoUc'),
-    tipoUcInput: $('#tipoUc'),
-    selectInstituicao: $('#instituicaoUc'),
+    salaIdealInput: $('#salaIdeal'),
+    selectInstituicao: $('#instituicaoUc'), 
     statusUc: $('#statusUc'),
     alertUc: $('#alertUc'),
     ucTableBody: $('#ucTableBody'),
@@ -50,14 +50,14 @@
     fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
     viewFields: {
       descricao: $('#viewDescricaoUc'),
-      tipo: $('#viewSalaIdealUc'),
+      sala: $('#viewSalaIdealUc'),
       status: $('#viewStatusUc')
     },
     pagElements: {
       prev: $('#prevPage'),
       next: $('#nextPage'),
       info: $('#pageInfo'),
-      sizeSel: null
+      sizeSel: null 
     }
   };
 
@@ -68,13 +68,13 @@
     }));
   }
 
-
+  
   async function carregarDadosIniciais() {
     try {
       const data = await safeFetch(API.bootstrap);
       STATE.instituicoes = data.instituicoes || [];
       STATE.ucs = data.ucs || [];
-
+      
       popularSelectModal();
     } catch (err) {
       console.error(err);
@@ -84,7 +84,7 @@
 
   function popularSelectModal() {
     if (refs.selectInstituicao) {
-      refs.selectInstituicao.innerHTML = ['<option value="">Selecione...</option>']
+       refs.selectInstituicao.innerHTML = ['<option value="">Selecione...</option>']
         .concat(STATE.instituicoes.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`))
         .join('');
     }
@@ -93,7 +93,7 @@
   function applyFiltersFromUI() {
     const elSearch = document.getElementById('gen_search');
     STATE.filters.q = (elSearch?.value || '').trim();
-
+    
     const elStatus = document.getElementById('gen_status');
     STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
 
@@ -106,8 +106,8 @@
 
     const elSize = document.getElementById('gen_pagesize');
     if (elSize) {
-      STATE.pagination.pageSize = parseInt(elSize.value, 10);
-      refs.pagElements.sizeSel = elSize;
+        STATE.pagination.pageSize = parseInt(elSize.value, 10);
+        refs.pagElements.sizeSel = elSize;
     }
   }
 
@@ -125,7 +125,7 @@
       if (f.instituicoes.length && !f.instituicoes.includes(uc.instituicao_id)) return false;
       if (f.created_from && uc.data_criacao < f.created_from) return false;
       if (f.created_to && uc.data_criacao > f.created_to) return false;
-
+      
       return true;
     });
 
@@ -143,10 +143,10 @@
     }
 
     const mapInst = new Map(STATE.instituicoes.map(i => [i._id, i.razao_social ?? i.nome]));
-
+    
     const fmtData = (d) => {
-      if (!d) return '-';
-      try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return '-'; }
+        if(!d) return '-';
+        try { return new Date(d).toLocaleDateString('pt-BR'); } catch{ return '-'; }
     };
 
     refs.ucTableBody.innerHTML = lista.map(uc => `
@@ -154,7 +154,7 @@
        
         <td>${uc.descricao || ''}</td>
         <td>${uc.tipo_uc || ''}</td>
-        <td>${uc.status || 'Ativo'}</td>
+        <td>${uc.status || 'Ativa'}</td>
         <td>${fmtData(uc.data_criacao)}</td>
         <td>
           <div class="action-buttons flex gap-2 justify-center">
@@ -167,36 +167,36 @@
     `).join('');
   }
 
-  function setupFiltersAndRender() {
-
+function setupFiltersAndRender() {
+   
     if (App.filters && App.filters.render) {
-      App.filters.render(
-        'filter_area',
-        { search: true, date: true, status: true, pageSize: true },
-        null,
-        () => {
-          STATE.pagination.page = 1;
-          renderizarConteudo();
-        },
-        () => {
-          STATE.filters = { ...DEFAULT_STATE.filters };
-          STATE.pagination.page = 1;
-          renderizarConteudo();
-        }
-      );
+        App.filters.render(
+            'filter_area', 
+            { search: true, date: true, status: true, pageSize: true }, 
+            null, 
+            () => { 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            },
+            () => { 
+                STATE.filters = { ...DEFAULT_STATE.filters }; 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            }
+        );
     }
 
-    if (STATE.filters.q && document.getElementById('gen_search'))
-      document.getElementById('gen_search').value = STATE.filters.q;
-
+    if(STATE.filters.q && document.getElementById('gen_search')) 
+        document.getElementById('gen_search').value = STATE.filters.q;
+        
     renderizarConteudo();
   }
 
   function setupEvents() {
     bindControls(refs.pagElements, (action, val) => {
-      if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
-      if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
-      renderizarConteudo();
+        if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
+        if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
+        renderizarConteudo();
     });
 
     refs.ucTableBody?.addEventListener('click', async (e) => {
@@ -206,17 +206,16 @@
 
       if (btnView) {
         const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
-        if (!uc) return;
+        if(!uc) return;
         refs.viewFields.descricao.value = uc.descricao;
         refs.viewFields.sala.value = uc.tipo_uc;
-        refs.tipoUcInput.value = uc.tipo_uc;
         refs.viewFields.status.value = uc.status;
         App.ui.showModal(refs.visualizarUcModal);
       }
 
       if (btnEdit) {
         const uc = STATE.ucs.find(u => u._id === btnEdit.dataset.id);
-        if (!uc) return;
+        if(!uc) return;
         STATE.ucEditId = uc._id;
         refs.ucIdInput.value = uc._id;
         refs.selectInstituicao.value = uc.instituicao_id;
@@ -233,7 +232,7 @@
           await safeFetch(`${API.uc}?id=${btnDel.dataset.id}`, { method: 'DELETE' });
           await carregarDadosIniciais();
           renderizarConteudo();
-        } catch (err) { alert('Erro ao excluir.'); }
+        } catch(err) { alert('Erro ao excluir.'); }
       }
     });
 
@@ -241,13 +240,11 @@
       if (!refs.ucModal) {
         console.error('Erro crítico: Modal não encontrado no DOM.');
         return;
-      }
+    }
       STATE.ucEditId = null;
       refs.ucForm.reset();
-      refs.ucIdInput.value = '';          // garante novo cadastro
       refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
       App.ui.showModal(refs.ucModal);
-
     });
 
     const closeModal = () => App.ui.hideModal(refs.ucModal);
@@ -256,16 +253,13 @@
 
     refs.ucForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const isEdit = !!STATE.ucEditId;
-
       const payload = {
         descricao: refs.descricaoUcInput.value.trim(),
-        tipo_uc: refs.tipoUcInput.value.trim(),
+        tipo_uc: refs.salaIdealInput.value.trim(),
         instituicao_id: refs.selectInstituicao.value,
-        status: isEdit ? (refs.statusUc?.value ?? 'Ativo') : 'Ativo'
+        status: refs.statusUc.value
       };
-
-
+      const isEdit = !!STATE.ucEditId;
       const url = isEdit ? `${API.uc}?id=${STATE.ucEditId}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
@@ -276,7 +270,7 @@
         alert('Salvo com sucesso!');
       } catch (err) { alert('Erro ao salvar.'); }
     });
-
+    
     const closeView = () => App.ui.hideModal(refs.visualizarUcModal);
     refs.closeVisualizarUcBtn?.addEventListener('click', closeView);
     refs.fecharVisualizarUcBtn?.addEventListener('click', closeView);
@@ -284,7 +278,7 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     // 1. Mostra o loader imediatamente
-    App.loader.show();
+    App.loader.show(); 
 
     // Configura eventos de UI (botões) para que o usuário veja a interface pronta por trás do loader,
     // ou você pode mover isso para depois do await se preferir que nada seja interativo.
@@ -292,51 +286,51 @@
     setupEvents();
 
     try {
-      // 2. Aguarda o carregamento dos dados da API
-      await carregarDadosIniciais();
-
-      // 3. Renderiza a tabela
-      setupFiltersAndRender();
+        // 2. Aguarda o carregamento dos dados da API
+        await carregarDadosIniciais(); 
+        
+        // 3. Renderiza a tabela
+        setupFiltersAndRender();       
     } catch (err) {
-      console.error('Falha na inicialização:', err);
-      // Opcional: Mostrar mensagem de erro na tela
-      alert('Erro ao carregar dados do sistema. Verifique sua conexão.');
+        console.error('Falha na inicialização:', err);
+        // Opcional: Mostrar mensagem de erro na tela
+        alert('Erro ao carregar dados do sistema. Verifique sua conexão.');
     } finally {
-      // 4. Esconde o loader independentemente de sucesso ou erro
-      App.loader.hide();
+        // 4. Esconde o loader independentemente de sucesso ou erro
+        App.loader.hide();
     }
   });
 
 
   function setupFiltersAndRender() {
-
+    
     if (App.filters && App.filters.render) {
-      App.filters.render(
-        'filter_area',
-        { search: true, date: true, status: true, pageSize: true },
-        null,
-        () => {
-          STATE.pagination.page = 1;
-          renderizarConteudo();
-        },
-        () => {
-          STATE.filters = { ...DEFAULT_STATE.filters };
-          STATE.pagination.page = 1;
-          renderizarConteudo();
-        }
-      );
+        App.filters.render(
+            'filter_area', 
+            { search: true, date: true, status: true, pageSize: true }, 
+            null, 
+            () => { 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            },
+            () => { 
+                STATE.filters = { ...DEFAULT_STATE.filters }; 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            }
+        );
     }
 
-    if (STATE.filters.q && document.getElementById('gen_search'))
-      document.getElementById('gen_search').value = STATE.filters.q;
-
+    if(STATE.filters.q && document.getElementById('gen_search')) 
+        document.getElementById('gen_search').value = STATE.filters.q;
+        
     renderizarConteudo();
   }
 
   function applyFiltersFromUI() {
     const elSearch = document.getElementById('gen_search');
     STATE.filters.q = (elSearch?.value || '').trim();
-
+    
     const elStatus = document.getElementById('gen_status');
     STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
 
@@ -345,12 +339,12 @@
     STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
     STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
 
-    STATE.filters.instituicoes = [];
+    STATE.filters.instituicoes = []; 
 
     const elSize = document.getElementById('gen_pagesize');
     if (elSize) {
-      STATE.pagination.pageSize = parseInt(elSize.value, 10);
-      refs.pagElements.sizeSel = elSize;
+        STATE.pagination.pageSize = parseInt(elSize.value, 10);
+        refs.pagElements.sizeSel = elSize;
     }
   }
 

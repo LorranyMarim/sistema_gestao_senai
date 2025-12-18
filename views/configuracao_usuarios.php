@@ -70,14 +70,14 @@ require_once("../config/verifica_login.php");
                 <h2>Unidades Curriculares Cadastradas</h2>
 
                 <div id="filter_area" class="mb-3">
-
+                 
                 </div>
 
                 <div class="table-responsive">
                     <table id="ucTable" class="data-table">
                         <thead>
                             <tr>
-
+                              
                                 <th>Descrição da Unidade Curricular</th>
                                 <th>Tipo de UC</th>
                                 <th>Status</th>
@@ -100,49 +100,44 @@ require_once("../config/verifica_login.php");
 
     <div id="ucModal" class="modal modal-dialog-centered">
         <div class="modal-content">
-            <span class="close-button" id="closeModalBtn">&times;</span>
-            <h2 id="modalTitleUc">Adicionar Nova Unidade Curricular</h2>
-
+            <span class="close-button" id="closeVisualizarUcBtn">&times;</span>
+           <h2>Adicionar Nova Unidade Curricular</h2>
             <form id="ucForm" autocomplete="off">
-                <input type="hidden" id="ucId">
-                <select id="instituicaoUc" style="display:none;"></select>
+    <input type="hidden" id="ucId">
+    <select id="instituicaoUc" style="display:none;"></select>
+    
+    <div id="alertUc" style="display:none"></div>
 
-                <div id="alertUc" style="display:none"></div>
+    <div class="form-group">
+        <label for="descricaoUc">Descrição da UC:</label>
+        <input type="text" id="descricaoUc" class="form-control" required minlength="4" maxlength="100" placeholder="Ex: Programação Web">
+    </div>
 
-                <div class="form-group">
-                    <label for="descricaoUc">Descrição da UC:</label>
-                    <input type="text" id="descricaoUc" class="form-control" required minlength="4" maxlength="100"
-                        placeholder="Ex: Programação Web">
-                </div>
+    <div class="form-group">
+        <label for="tipoUc">Tipo de UC:</label>
+        <select id="tipoUc" class="form-control" required>
+            <option value="">Selecione</option>
+            <option value="EAD">EAD</option>
+            <option value="Teórica">Teórica</option>
+            <option value="Prática">Prática</option>
+            <option value="Teórica com Prática">Teórica com Prática</option>
+        </select>
+    </div>
 
-                <div class="form-group">
-                    <label for="tipoUc">Tipo de UC:</label>
-                    <select id="tipoUc" class="form-control" required>
-                        <option value="">Selecione</option>
-                        <option value="EAD">EAD</option>
-                        <option value="Teórica">Teórica</option>
-                        <option value="Prática">Prática</option>
-                        <option value="Teórica com Prática">Teórica com Prática</option>
-                    </select>
-                </div>
-
-                <div class="modal-footer"
-                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-                    <button type="button" class="btn btn-secondary" id="cancelBtn">
-                        <i class="fas fa-times-circle"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Salvar
-                    </button>
-                </div>
-            </form>
+    <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+        <button type="button" class="btn btn-secondary" id="cancelBtn">
+            <i class="fas fa-times-circle"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salvar
+        </button>
+    </div>
+</form>
         </div>
     </div>
 
     <div id="visualizarUcModal" class="modal modal-dialog-centered">
-
         <div class="modal-content">
-
             <span class="close-button" id="closeVisualizarUcBtn">&times;</span>
             <h2>Detalhes da Unidade Curricular</h2>
 

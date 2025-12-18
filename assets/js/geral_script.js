@@ -303,23 +303,26 @@
     window.addEventListener('click', (ev) => {
       const el = ev.target;
       if (el?.classList?.contains('modal')) {
-        el.style.display = 'none';
+        App.ui.hideModal(el);
       }
+
     });
   }
 
   function showModal(el) {
     if (!el) return;
-    if (el.classList) el.classList.add('show');
-    else el.style.display = 'flex';
+    el.classList.add('show');
+    el.style.display = 'flex';
     document.body.classList.add('modal-open');
   }
+
   function hideModal(el) {
     if (!el) return;
-    if (el.classList) el.classList.remove('show');
-    else el.style.display = 'none';
+    el.classList.remove('show');
+    el.style.display = 'none';
     document.body.classList.remove('modal-open');
   }
+
 
   function attachDateRangeValidation({ formId, startId, endId, fieldNames = { start: 'Início', end: 'Fim' } }) {
     const form = document.getElementById(formId);
@@ -402,7 +405,7 @@
     getFiltersState,
     resetUI,
     onClear,
-    watchSelectors 
+    watchSelectors
   } = {}) {
     const btn = document.querySelector(buttonSelector);
     if (!btn) return;
@@ -548,10 +551,10 @@
       const total = items.length;
       const totalPages = Math.max(1, Math.ceil(total / pageSize));
       const validPage = Math.min(Math.max(1, page), totalPages);
-      
+
       const start = (validPage - 1) * pageSize;
       const end = start + pageSize;
-      
+
       return {
         pagedData: items.slice(start, end),
         meta: {
@@ -565,24 +568,24 @@
 
     bindControls: (els, onChange) => {
       const { prev, next, sizeSel } = els;
-      
+
       if (prev) {
         const newPrev = prev.cloneNode(true);
-        if(prev.id) newPrev.id = prev.id; 
+        if (prev.id) newPrev.id = prev.id;
         prev.parentNode.replaceChild(newPrev, prev);
         newPrev.addEventListener('click', () => onChange('prev'));
         els.prev = newPrev;
       }
       if (next) {
         const newNext = next.cloneNode(true);
-        if(next.id) newNext.id = next.id;
+        if (next.id) newNext.id = next.id;
         next.parentNode.replaceChild(newNext, next);
         newNext.addEventListener('click', () => onChange('next'));
         els.next = newNext;
       }
       if (sizeSel) {
         const newSize = sizeSel.cloneNode(true);
-        if(sizeSel.id) newSize.id = sizeSel.id;
+        if (sizeSel.id) newSize.id = sizeSel.id;
         sizeSel.parentNode.replaceChild(newSize, sizeSel);
         newSize.addEventListener('change', () => onChange('size', parseInt(newSize.value, 10)));
         els.sizeSel = newSize;
@@ -600,13 +603,13 @@
       const setButtonState = (btn, isDisabled) => {
         if (!btn) return;
         btn.disabled = isDisabled;
-        
+
         if (isDisabled) {
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-secondary'); 
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-secondary');
         } else {
-            btn.classList.remove('btn-secondary');
-            btn.classList.add('btn-primary');
+          btn.classList.remove('btn-secondary');
+          btn.classList.add('btn-primary');
         }
       };
 
@@ -616,7 +619,7 @@
   };
 
   App.filters = {
-    render: function(targetId, config, customElement, onChange, onClear) {
+    render: function (targetId, config, customElement, onChange, onClear) {
       const container = document.getElementById(targetId);
       if (!container) return;
       container.innerHTML = '';
@@ -626,17 +629,17 @@
         const div = document.createElement('div');
         div.className = 'filter-group';
         div.id = `filter-group-${idSuffix}`;
-        
+
         const label = document.createElement('label');
         label.textContent = lbl;
         label.id = `filter-label-${idSuffix}`;
         label.setAttribute('for', input.id);
 
         if (!input.classList.contains('filter-input')) {
-            input.classList.add('filter-input');
-            if(!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
-               input.classList.add('form-control'); 
-            }
+          input.classList.add('filter-input');
+          if (!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
+            input.classList.add('form-control');
+          }
         }
 
         div.appendChild(label);
@@ -645,7 +648,7 @@
       };
 
       const triggerChange = () => { if (typeof onChange === 'function') onChange(); };
-      
+
       if (config.search) {
         const inp = document.createElement('input');
         inp.type = 'text';
@@ -657,7 +660,7 @@
 
       if (config.date) {
         const today = new Date().toISOString().split('T')[0];
-        
+
         const from = document.createElement('input');
         from.type = 'date';
         from.id = 'gen_created_from';
@@ -698,10 +701,10 @@
 
       if (customElement) {
         if (customElement instanceof Element && !customElement.classList.contains('filter-input')) {
-             customElement.classList.add('filter-input');
+          customElement.classList.add('filter-input');
         }
-        if(!customElement.id) customElement.id = 'gen_custom_filter';
-        
+        if (!customElement.id) customElement.id = 'gen_custom_filter';
+
         const div = createGroup(customElement.dataset?.label || 'Filtro:', customElement, 'custom');
         container.appendChild(div);
       }
@@ -725,22 +728,22 @@
       const btnDiv = document.createElement('div');
       btnDiv.className = 'filter-group';
       btnDiv.id = 'filter-group-actions';
-      btnDiv.style.flex = '0 0 auto'; 
-      
+      btnDiv.style.flex = '0 0 auto';
+
       const btn = document.createElement('button');
       btn.id = 'gen_clear';
-      btn.className = 'btn btn-light border filter-btn-clear filter-input'; 
+      btn.className = 'btn btn-light border filter-btn-clear filter-input';
       btn.innerHTML = '<i class="fas fa-broom" id="icon-btn-clear"></i> Limpar';
       btn.type = 'button';
-      
+
       btn.addEventListener('click', () => {
-        if(document.getElementById('gen_search')) document.getElementById('gen_search').value = '';
-        if(document.getElementById('gen_created_from')) document.getElementById('gen_created_from').value = '';
-        if(document.getElementById('gen_created_to')) document.getElementById('gen_created_to').value = '';
-        if(document.getElementById('gen_status')) document.getElementById('gen_status').value = 'Todos';
-        if(document.getElementById('gen_pagesize')) document.getElementById('gen_pagesize').value = 10;
-        
-        if(customElement && (customElement.tagName === 'SELECT' || customElement.tagName === 'INPUT')) customElement.value = '';
+        if (document.getElementById('gen_search')) document.getElementById('gen_search').value = '';
+        if (document.getElementById('gen_created_from')) document.getElementById('gen_created_from').value = '';
+        if (document.getElementById('gen_created_to')) document.getElementById('gen_created_to').value = '';
+        if (document.getElementById('gen_status')) document.getElementById('gen_status').value = 'Todos';
+        if (document.getElementById('gen_pagesize')) document.getElementById('gen_pagesize').value = 10;
+
+        if (customElement && (customElement.tagName === 'SELECT' || customElement.tagName === 'INPUT')) customElement.value = '';
 
         if (typeof onClear === 'function') onClear();
       });
@@ -751,5 +754,100 @@
   };
 
   window.App = App;
+
+  /* =========================================
+     MÓDULO LOADER (Spinner Global)
+     ========================================= */
+  App.loader = {
+    _el: null, // Referência ao elemento do loader
+
+    // Inicializa: injeta CSS e cria o HTML do loader no final do body
+    init: function() {
+      if (document.getElementById('app-loader-overlay')) {
+        this._el = document.getElementById('app-loader-overlay');
+        return;
+      }
+
+      // 1. Injetar CSS do Loader
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .loader-overlay {
+          position: fixed;
+          top: 0; left: 0; width: 100%; height: 100%;
+          background-color: rgba(255, 255, 255, 0.9); /* Fundo branco com leve transparência */
+          z-index: 99999; /* Fica acima de tudo, inclusive modais */
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 0.3s ease;
+        }
+        .loader-hidden {
+          opacity: 0;
+          pointer-events: none; /* Permite clicar através quando invisível */
+          visibility: hidden;
+        }
+        .loader-spinner {
+          width: 50px;
+          height: 50px;
+          border: 5px solid #e0e0e0; /* Cinza claro para o fundo do anel */
+          border-top: 5px solid #0056b3; /* Cor da plataforma */
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 15px;
+        }
+        .loader-text {
+          font-family: 'Arial', sans-serif;
+          font-size: 16px;
+          font-weight: 600;
+          color: #0056b3; /* Cor da plataforma */
+          letter-spacing: 0.5px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+
+      // 2. Criar HTML do Loader
+      const div = document.createElement('div');
+      div.id = 'app-loader-overlay';
+      div.className = 'loader-overlay loader-hidden'; // Começa oculto
+      div.innerHTML = `
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Por favor, aguarde.</div>
+      `;
+      
+      // Garante que o body existe antes de anexar
+      const appendToBody = () => {
+          if(document.body) {
+              document.body.appendChild(div);
+              this._el = div;
+          } else {
+              window.addEventListener('DOMContentLoaded', () => {
+                  document.body.appendChild(div);
+                  this._el = div;
+              });
+          }
+      };
+      appendToBody();
+    },
+
+    show: function() {
+      if (!this._el) this.init();
+      // Remove a classe que esconde
+      if(this._el) this._el.classList.remove('loader-hidden');
+    },
+
+    hide: function() {
+      if (this._el) {
+        this._el.classList.add('loader-hidden');
+      }
+    }
+  };
+
+  // Inicializa o loader imediatamente
+  App.loader.init();
 
 })();

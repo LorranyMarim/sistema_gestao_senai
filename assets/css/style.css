@@ -644,6 +644,9 @@ select:focus,
 }
 
 #ucModal .modal-content { max-width: 950px; }
+.modal.show {
+  display: flex;
+}
 
 .modal-header {
     padding: 20px 25px;
@@ -1111,3 +1114,97 @@ select:focus,
         padding: 2px;
     }
 }
+
+/* =========================
+   MODAIS - PADRÃO GLOBAL
+   ========================= */
+
+/* Centraliza verticalmente quando a classe for usada no .modal */
+.modal.modal-dialog-centered {
+  align-items: center; /* já existe, mas garantimos aqui */
+}
+
+/* Caixa do modal (conteúdo) */
+.modal .modal-content {
+  background-color: #fff;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: var(--sombra-caixa);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  position: relative;
+
+  /* Respiro do conteúdo (evita campos colados nas bordas) */
+  overflow: hidden; /* garante que header/footer respeitem bordas arredondadas */
+}
+
+/* Caso você use um modal maior (como #ucModal) mantém seu max-width */
+#ucModal .modal-content {
+  max-width: 950px;
+}
+
+/* Cabeçalho padrão (serve para h2/h3 que estão soltos também) */
+.modal .modal-content > h2,
+.modal .modal-content > h3,
+.modal .modal-header {
+  background: #004d80;
+  color: #fff;
+  margin: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+}
+
+/* Caso o título tenha classes extras (ex: p-4 do Tailwind), neutraliza para não duplicar padding */
+#ucModal #modalTitleUc {
+  margin: 0 !important;
+  padding: 16px 20px !important;
+  color: #fff !important;
+}
+
+/* Área interna do formulário / corpo do modal */
+.modal .modal-content > form,
+.modal .modal-body,
+.modal .modal-content form {
+  padding: 20px;            /* padding geral */
+  box-sizing: border-box;
+}
+
+/* Espaçamento extra entre o título e os campos quando h2/h3 está fora do .modal-header */
+.modal .modal-content > h2 + form,
+.modal .modal-content > h3 + form {
+  padding-top: 20px;
+}
+
+/* Footer padrão */
+.modal .modal-footer,
+.modal .modal-actions {
+  padding: 16px 20px;
+  border-top: 1px solid var(--cor-borda);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+  background: #fff;
+}
+
+/* Botão de fechar (X) sempre visível no header azul */
+.modal .close-button,
+.modal .modal-close {
+  color: #fff;
+  opacity: 0.9;
+}
+
+.modal .close-button:hover,
+.modal .modal-close:hover {
+  opacity: 1;
+}
+
+/* Ajuste: inputs dentro do modal não “encostam” no container */
+.modal .form-group {
+  margin-bottom: 16px;
+}
+
