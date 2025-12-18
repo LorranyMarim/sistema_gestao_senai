@@ -7,13 +7,17 @@ require_once("../config/verifica_login.php");
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Unidades Curriculares - SENAI</title>
+    <title>Configuração de Usuários - SENAI</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="../assets/css/style.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        .hidden-col { display: none; }
+    </style>
 </head>
 
 <body>
@@ -28,139 +32,177 @@ require_once("../config/verifica_login.php");
                     <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i>
-                            Gestão de UCs</a></li>
-                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a>
-                    </li>
+                    <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i> Gestão de Calendários</a></li>
 
                     <li id="nav-relatorios" class="has-submenu">
-                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+                        <a href="#" class="submenu-toggle">
                             <span><i class="fas fa-file-alt"></i> Relatórios</span>
-                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                            <i class="fas fa-chevron-right caret"></i>
                         </a>
                         <ul class="submenu" id="submenu-relatorios">
                             <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
                         </ul>
                     </li>
-                    <li id="nav-config" class="has-submenu">
-                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
+                    
+                    <li id="nav-config" class="has-submenu active open">
+                        <a href="#" class="submenu-toggle" aria-expanded="true" aria-controls="submenu-config"  class="active">
                             <span><i class="fas fa-tools"></i> Configuração</span>
-                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                            <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
                         </a>
-                        <ul class="submenu" id="submenu-config">
-                            <li><a href="configuracao_usuarios.php"> Usuários</a></li>
+                        <ul class="submenu show" id="submenu-config">
+                            <li><a href="configuracao_usuarios.php" class="active"> Usuários</a></li>
                         </ul>
                     </li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                    <li><a href="../backend/processa_logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
             </nav>
         </aside>
 
         <main class="main-content">
             <header class="main-header">
-                <h1>Gestão de Unidades Curriculares</h1>
-                <button class="btn btn-primary" id="addUcBtn"><i class="fas fa-plus-circle"></i> Adicionar Nova
-                    UC</button>
+                <h1>Configuração de Usuários</h1>
+                <button class="btn btn-primary" id="addUserBtn"><i class="fas fa-user-plus"></i> Cadastrar Usuário</button>
             </header>
 
             <section class="table-section">
-                <h2>Unidades Curriculares Cadastradas</h2>
+                <h2>Usuários Cadastrados</h2>
 
-                <div id="filter_area" class="mb-3">
-                 
-                </div>
+                <div id="filter_area" class="mb-3"></div>
 
                 <div class="table-responsive">
-                    <table id="ucTable" class="data-table">
+                    <table id="userTable" class="data-table">
                         <thead>
                             <tr>
-                              
-                                <th>Descrição da Unidade Curricular</th>
-                                <th>Tipo de UC</th>
+                                <th class="hidden-col">ID</th>
+                                <th class="hidden-col">Instituição</th>
+                                <th>Nome</th>
+                                <th>User Name</th>
+                                <th>Tipo de Usuário</th>
                                 <th>Status</th>
-                                <th>Criado em</th>
+                                <th>Criado Em</th>
                                 <th class="actions">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="ucTableBody"></tbody>
+                        <tbody id="userTableBody"></tbody>
                     </table>
                     <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
                         <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
                         <span id="pageInfo">Página 1 de 1 • 0 registros</span>
                         <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
                     </div>
-
                 </div>
             </section>
         </main>
     </div>
 
-    <div id="ucModal" class="modal modal-dialog-centered">
+    <div id="userModal" class="modal modal-dialog-centered">
         <div class="modal-content">
-            <span class="close-button" id="closeVisualizarUcBtn">&times;</span>
-           <h2>Adicionar Nova Unidade Curricular</h2>
-            <form id="ucForm" autocomplete="off">
-    <input type="hidden" id="ucId">
-    <select id="instituicaoUc" style="display:none;"></select>
-    
-    <div id="alertUc" style="display:none"></div>
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <h2 id="modalTitleUser">Cadastrar Novo Usuário</h2>
 
-    <div class="form-group">
-        <label for="descricaoUc">Descrição da UC:</label>
-        <input type="text" id="descricaoUc" class="form-control" required minlength="4" maxlength="100" placeholder="Ex: Programação Web">
-    </div>
-
-    <div class="form-group">
-        <label for="tipoUc">Tipo de UC:</label>
-        <select id="tipoUc" class="form-control" required>
-            <option value="">Selecione</option>
-            <option value="EAD">EAD</option>
-            <option value="Teórica">Teórica</option>
-            <option value="Prática">Prática</option>
-            <option value="Teórica com Prática">Teórica com Prática</option>
-        </select>
-    </div>
-
-    <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-        <button type="button" class="btn btn-secondary" id="cancelBtn">
-            <i class="fas fa-times-circle"></i> Cancelar
-        </button>
-        <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> Salvar
-        </button>
-    </div>
-</form>
-        </div>
-    </div>
-
-    <div id="visualizarUcModal" class="modal modal-dialog-centered">
-        <div class="modal-content">
-            <span class="close-button" id="closeVisualizarUcBtn">&times;</span>
-            <h2>Detalhes da Unidade Curricular</h2>
-
-            <form>
+            <form id="userForm" autocomplete="off">
+                <input type="hidden" id="userId">
+                
+                <div class="form-group" style="display:none;">
+                    <label for="instituicaoUser">Instituição:</label>
+                    <select id="instituicaoUser" class="form-control" required></select>
+                </div>
 
                 <div class="form-group">
-                    <label>Descrição da UC:</label>
-                    <input type="text" id="viewDescricaoUc" readonly disabled>
+                    <label for="nomeUser">Nome Completo:</label>
+                    <input type="text" id="nomeUser" class="form-control" required minlength="4" maxlength="100">
                 </div>
+
                 <div class="form-group">
-                    <label>Tipo de UC:</label>
-                    <input type="text" id="viewSalaIdealUc" readonly disabled>
+                    <label for="emailUser">E-mail FIEMG:</label>
+                    <input type="email" id="emailUser" class="form-control" required placeholder="Ex: nome.sobrenome@fiemg.com.br">
                 </div>
+
                 <div class="form-group">
-                    <label>Status:</label>
-                    <input type="text" id="viewStatusUc" readonly disabled>
+                    <label for="tipoUser">Tipo de Usuário:</label>
+                    <select id="tipoUser" class="form-control" required>
+                        <option value="">Selecione</option>
+                        <option value="Coordenador">Coordenador</option>
+                        <option value="Pedagogo">Pedagogo</option>
+                        <option value="Instrutor">Instrutor</option>
+                    </select>
                 </div>
-                <button type="button" class="btn btn-secondary" id="fecharVisualizarUcBtn">Fechar</button>
+
+                <div class="form-group">
+                    <label for="senhaUser" id="lblSenha">Cadastrar Senha:</label>
+                    <input type="password" id="senhaUser" class="form-control" autocomplete="new-password">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmaSenhaUser" id="lblConfirmaSenha">Confirme a Senha:</label>
+                    <input type="password" id="confirmaSenhaUser" class="form-control" autocomplete="new-password">
+                </div>
+
+                <div class="form-group">
+                    <label for="statusUser">Status:</label>
+                    <select id="statusUser" class="form-control">
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inativo">Inativo</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        <i class="fas fa-times-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
             </form>
         </div>
     </div>
-    <script src="../assets/js/geral_script.js"></script>
-    <script src="../assets/js/ucs_script.js" defer></script>
-</body>
 
+    <div id="visualizarUserModal" class="modal modal-dialog-centered">
+        <div class="modal-content">
+            <span class="close-button" id="closeVisualizarUserBtn">&times;</span>
+            <h2>Detalhes do Usuário</h2>
+
+            <form>
+                <div class="form-group">
+                    <label>Nome Completo:</label>
+                    <input type="text" id="viewNomeUser" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label>E-mail FIEMG:</label>
+                    <input type="text" id="viewEmailUser" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Usuário:</label>
+                    <input type="text" id="viewTipoUser" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <input type="text" id="viewStatusUser" readonly disabled>
+                </div>
+                <button type="button" class="btn btn-secondary" id="fecharVisualizarUserBtn">Fechar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="systemMessageModal" class="modal modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: var(--cor-primaria); color: white;">
+                <h3 style="font-size: 1.1rem; margin: 0;">Sistema de Gestão e Coordenação Senai Betim (SGCS - Betim)</h3>
+            </div>
+            <div class="modal-body" style="padding: 30px; text-align: center; font-size: 1.1rem;">
+                <p id="systemMessageText"></p>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button type="button" class="btn btn-primary" id="closeSystemMessageBtn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/geral_script.js"></script>
+    <script src="../assets/js/usuarios_script.js" defer></script>
+</body>
 </html>

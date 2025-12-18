@@ -47,7 +47,6 @@ def listar_ucs(
     db = get_mongo_db()
     filtro: dict = {}
 
-    # CORREÇÃO: Usar ObjectId diretamente, removendo str()
     filtro["instituicao_id"] = ctx.inst_oid 
 
     if q:
@@ -99,7 +98,6 @@ def listar_ucs(
     items = []
     for uc in cursor:
         oid = uc.get("_id")
-        # Converte para string apenas na hora de devolver para o frontend
         if isinstance(uc.get("instituicao_id"), ObjectId):
             uc["instituicao_id"] = str(uc["instituicao_id"])
 
@@ -119,7 +117,6 @@ def criar_uc(uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     data = uc.dict()
 
-    # CORREÇÃO: Salvar como ObjectId (removido str())
     data['instituicao_id'] = ctx.inst_oid 
     
     data['status'] = data['status'].capitalize()
@@ -144,11 +141,9 @@ def atualizar_uc(id: str, uc: UnidadeCurricularModel, ctx: RequestCtx = Depends(
     data.pop('_id', None)
     data.pop('data_criacao', None)
     
-    # CORREÇÃO: Atualizar mantendo como ObjectId
     data['instituicao_id'] = ctx.inst_oid
 
     res = db["unidade_curricular"].update_one(
-        # CORREÇÃO: Query deve buscar por ObjectId
         {"_id": oid, "instituicao_id": ctx.inst_oid}, 
         {"$set": data}
     )
@@ -167,7 +162,6 @@ def deletar_uc(id: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     
     res = db["unidade_curricular"].delete_one(
-        # CORREÇÃO: Query de delete deve buscar por ObjectId
         {"_id": oid, "instituicao_id": ctx.inst_oid}
     )
     
@@ -189,8 +183,6 @@ def bootstrap_ucs(ctx: RequestCtx = Depends(get_ctx)):
         instituicao["_id"] = str(instituicao["_id"])
         lista_inst.append(instituicao)
 
-    # A busca aqui já estava correta usando inst_oid (que é ObjectId), 
-    # agora funcionará perfeitamente com os dados salvos corretamente.
     cursor_ucs = db["unidade_curricular"].find({"instituicao_id": inst_oid}).sort("data_criacao", -1)
     
     lista_ucs = []

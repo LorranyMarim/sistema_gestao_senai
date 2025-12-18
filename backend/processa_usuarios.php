@@ -1,19 +1,16 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+// Arquivo: backend/processa_usuarios.php
 
+header("Content-Type: application/json; charset=UTF-8");
+require_once("../config/verifica_login.php"); // Garante segurança de sessão PHP
+
+// Configuração da URL da API Python
 $api_base_url = 'http://localhost:8000/api';
-$api_uc_url = $api_base_url . '/unidades_curriculares';
-$api_bootstrap_url = $api_base_url . '/gestao_ucs/bootstrap';
+$api_url = $api_base_url . '/usuarios'; // Rota da API Python
 
 function getRequestData() {
     $raw = file_get_contents('php://input');
-    if ($raw === false || $raw === '') return null;
-    $data = json_decode($raw, true);
-    return is_array($data) ? $data : null;
+    return ($raw && $raw !== '') ? json_decode($raw, true) : null;
 }
 
 function curl_json($method, $url, $payload = null) {
@@ -21,73 +18,52 @@ function curl_json($method, $url, $payload = null) {
     $opts = [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CUSTOMREQUEST  => $method,
-        CURLOPT_CONNECTTIMEOUT => 3,
-        CURLOPT_TIMEOUT        => 10,
         CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+        CURLOPT_TIMEOUT        => 10
     ];
 
+    // Repassa o Token da sessão para a API Python
     if (isset($_COOKIE['session_token'])) {
         $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
     }
 
     if ($payload !== null) {
+        $opts[CURLOPT_POSTFIELDS] = json_encode($payload);
         $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/json';
-        $opts[CURLOPT_POSTFIELDS]   = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
-    
+
     curl_setopt_array($ch, $opts);
     $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE) ?: 500;
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     http_response_code($http_code);
-    echo ($response !== false) ? $response : json_encode(['error' => 'Falha na conexão com API']);
-    exit;
+    echo $response;
 }
 
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$id     = $_GET['id'] ?? '';
-$action = $_GET['action'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'];
+$id = $_GET['id'] ?? ''; // Pega ID da URL se houver (ex: processa_usuarios.php?id=123)
 
-if ($method === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
+// Roteamento Simples
 switch ($method) {
     case 'GET':
-        if ($action === 'bootstrap') {
-            curl_json('GET', $api_bootstrap_url);
-        } elseif ($id !== '') {
-            curl_json('GET', $api_uc_url . '/' . rawurlencode($id));
-        } else {
-            $qs = $_SERVER['QUERY_STRING'] ?? '';
-            parse_str($qs, $params);
-            unset($params['action']);
-            $final_qs = http_build_query($params);
-            curl_json('GET', $api_uc_url . ($final_qs ? '?' . $final_qs : ''));
-        }
+        // Se tiver ID, busca um específico, senão lista todos
+        $url_final = ($id !== '') ? "$api_url/$id" : $api_url;
+        curl_json('GET', $url_final);
         break;
 
     case 'POST':
-        $data = getRequestData() ?? [];
-        curl_json('POST', $api_uc_url, $data);
+        curl_json('POST', $api_url, getRequestData());
         break;
 
     case 'PUT':
-        if ($id === '') { http_response_code(400); echo json_encode(['error' => 'ID obrigatório']); exit; }
-        $data = getRequestData() ?? [];
-        unset($data['data_criacao']);
-        curl_json('PUT', $api_uc_url . '/' . rawurlencode($id), $data);
+        if ($id === '') { http_response_code(400); echo json_encode(['msg' => 'ID necessário']); exit; }
+        curl_json('PUT', "$api_url/$id", getRequestData());
         break;
 
     case 'DELETE':
-        if ($id === '') { http_response_code(400); echo json_encode(['error' => 'ID obrigatório']); exit; }
-        curl_json('DELETE', $api_uc_url . '/' . rawurlencode($id));
+        if ($id === '') { http_response_code(400); echo json_encode(['msg' => 'ID necessário']); exit; }
+        curl_json('DELETE', "$api_url/$id");
         break;
-
-    default:
-        http_response_code(405);
-        echo json_encode(['error' => 'Método não permitido']);
 }
 ?>

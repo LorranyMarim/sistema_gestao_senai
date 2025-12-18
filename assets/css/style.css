@@ -172,6 +172,7 @@ body.modal-open {
     list-style: none;
     padding: 0;
     margin: 0;
+    margin-bottom: 3px;
 }
 
 .sidebar-nav li {
@@ -1115,16 +1116,10 @@ select:focus,
     }
 }
 
-/* =========================
-   MODAIS - PADRÃO GLOBAL
-   ========================= */
-
-/* Centraliza verticalmente quando a classe for usada no .modal */
 .modal.modal-dialog-centered {
-  align-items: center; /* já existe, mas garantimos aqui */
+  align-items: center; 
 }
 
-/* Caixa do modal (conteúdo) */
 .modal .modal-content {
   background-color: #fff;
   border-radius: 10px;
@@ -1135,17 +1130,13 @@ select:focus,
   flex-direction: column;
   max-height: 90vh;
   position: relative;
-
-  /* Respiro do conteúdo (evita campos colados nas bordas) */
-  overflow: hidden; /* garante que header/footer respeitem bordas arredondadas */
+  overflow: hidden; 
 }
 
-/* Caso você use um modal maior (como #ucModal) mantém seu max-width */
 #ucModal .modal-content {
   max-width: 950px;
 }
 
-/* Cabeçalho padrão (serve para h2/h3 que estão soltos também) */
 .modal .modal-content > h2,
 .modal .modal-content > h3,
 .modal .modal-header {
@@ -1158,28 +1149,24 @@ select:focus,
   border-top-right-radius: 0px;
 }
 
-/* Caso o título tenha classes extras (ex: p-4 do Tailwind), neutraliza para não duplicar padding */
 #ucModal #modalTitleUc {
   margin: 0 !important;
   padding: 16px 20px !important;
   color: #fff !important;
 }
 
-/* Área interna do formulário / corpo do modal */
 .modal .modal-content > form,
 .modal .modal-body,
 .modal .modal-content form {
-  padding: 20px;            /* padding geral */
+  padding: 20px;            
   box-sizing: border-box;
 }
 
-/* Espaçamento extra entre o título e os campos quando h2/h3 está fora do .modal-header */
 .modal .modal-content > h2 + form,
 .modal .modal-content > h3 + form {
   padding-top: 20px;
 }
 
-/* Footer padrão */
 .modal .modal-footer,
 .modal .modal-actions {
   padding: 16px 20px;
@@ -1191,7 +1178,6 @@ select:focus,
   background: #fff;
 }
 
-/* Botão de fechar (X) sempre visível no header azul */
 .modal .close-button,
 .modal .modal-close {
   color: #fff;
@@ -1203,7 +1189,6 @@ select:focus,
   opacity: 1;
 }
 
-/* Ajuste: inputs dentro do modal não “encostam” no container */
 .modal .form-group {
   margin-bottom: 16px;
 }

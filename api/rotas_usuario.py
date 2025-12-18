@@ -13,6 +13,7 @@ from fastapi import Depends
 from auth_dep import get_ctx, RequestCtx
 from cache_utils import invalidate_cache
 from redis_client import get_redis
+from datetime import datetime
 
 
 router = APIRouter()
@@ -143,23 +144,38 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
 
 @router.get("/api/usuarios")
 def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
-    """Lista apenas usuários da mesma instituição do admin logado"""
+    """
+    Lista usuários vinculados à instituição do admin logado.
+    Filtra pelo ID da instituição presente no Token (ctx.inst_oid).
+    """
     db = get_mongo_db()
 
+    # 1. Filtro de Segurança: Apenas usuários da mesma instituição
     filtro = {
-        "$or": [
-            {"instituicao_id": str(ctx.inst_oid)},
-            {"instituicoes_ids": str(ctx.inst_oid)}
-        ]
+        "instituicao_id": str(ctx.inst_oid) # Filtra pelo ID da instituição do token
     }
     
-    usuarios = list(db["usuario"].find(filtro, {"senha": 0}))
-
-    for u in usuarios:
+    # 2. Busca no banco ordenando por nome
+    # Removemos o campo 'senha' da resposta por segurança
+    cursor = db["usuario"].find(filtro, {"senha": 0}).sort("nome", 1)
+    
+    lista_usuarios = []
+    for u in cursor:
+        # Conversão de ObjectId para string para o JSON
         u["id"] = str(u["_id"])
         del u["_id"]
         
-    return usuarios
+        # Tratamento de datas para ISO String (para o JS formatar)
+        if "data_criacao" in u and isinstance(u["data_criacao"], datetime):
+            u["data_criacao"] = u["data_criacao"].isoformat()
+            
+        # Garante que status exista (fallback)
+        if "status" not in u:
+            u["status"] = "Ativo" if u.get("ativo") is True else "Inativo"
+
+        lista_usuarios.append(u)
+        
+    return lista_usuarios
 
 @router.post("/api/usuarios", status_code=201)
 def criar_usuario(dados: dict, ctx: RequestCtx = Depends(get_ctx)):
