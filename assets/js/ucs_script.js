@@ -50,7 +50,7 @@
     fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
     viewFields: {
       descricao: $('#viewDescricaoUc'),
-      tipo: $('#viewTipoUc'),
+      tipo: $('#viewSalaIdealUc'),
       status: $('#viewStatusUc')
     },
     pagElements: {
@@ -84,12 +84,9 @@
 
   function popularSelectModal() {
     if (refs.selectInstituicao) {
-      refs.selectInstituicao.innerHTML = STATE.instituicoes.map(i => 
-        `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`
-      ).join('');
-      if (STATE.instituicoes.length > 0) {
-        refs.selectInstituicao.value = STATE.instituicoes[0]._id;
-      }
+      refs.selectInstituicao.innerHTML = ['<option value="">Selecione...</option>']
+        .concat(STATE.instituicoes.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`))
+        .join('');
     }
   }
 
@@ -210,32 +207,23 @@
       if (btnView) {
         const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
         if (!uc) return;
-        
         refs.viewFields.descricao.value = uc.descricao;
-        refs.viewFields.tipo.value = uc.tipo_uc; 
+        refs.viewFields.sala.value = uc.tipo_uc;
+        refs.tipoUcInput.value = uc.tipo_uc;
         refs.viewFields.status.value = uc.status;
-        
         App.ui.showModal(refs.visualizarUcModal);
       }
 
       if (btnEdit) {
         const uc = STATE.ucs.find(u => u._id === btnEdit.dataset.id);
         if (!uc) return;
-
-        STATE.ucEditId = uc._id; 
+        STATE.ucEditId = uc._id;
         refs.ucIdInput.value = uc._id;
-
-        refs.selectInstituicao.value = uc.instituicao_id || '';
+        refs.selectInstituicao.value = uc.instituicao_id;
         refs.descricaoUcInput.value = uc.descricao;
-        refs.tipoUcInput.value = uc.tipo_uc;
-        
-
-        if (refs.statusUc) {
-             refs.statusUc.disabled = false; 
-             refs.statusUc.value = uc.status; 
-        }
-
-        refs.modalTitleUc.textContent = 'Editar/Alterar Unidade Curricular';
+        refs.salaIdealInput.value = uc.tipo_uc;
+        refs.statusUc.value = uc.status;
+        refs.modalTitleUc.textContent = 'Editar UC';
         App.ui.showModal(refs.ucModal);
       }
 
@@ -249,72 +237,44 @@
       }
     });
 
-
     refs.addUcBtn?.addEventListener('click', () => {
-      if (!refs.ucModal) return;
-      
+      if (!refs.ucModal) {
+        console.error('Erro crítico: Modal não encontrado no DOM.');
+        return;
+      }
       STATE.ucEditId = null;
       refs.ucForm.reset();
-      refs.ucIdInput.value = ''; 
+      refs.ucIdInput.value = '';          // garante novo cadastro
       refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
-      
-      if (STATE.instituicoes.length > 0) {
-          refs.selectInstituicao.value = STATE.instituicoes[0]._id;
-      }
-
-
-      if (refs.statusUc) {
-        refs.statusUc.value = 'Ativo'; 
-        refs.statusUc.disabled = true; 
-      }
-
       App.ui.showModal(refs.ucModal);
+
     });
 
     const closeModal = () => App.ui.hideModal(refs.ucModal);
     refs.closeModalBtn?.addEventListener('click', closeModal);
     refs.cancelBtn?.addEventListener('click', closeModal);
 
-   
     refs.ucForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const isEdit = !!STATE.ucEditId;
 
-      const idInstituicao = refs.selectInstituicao.value;
-      if (!idInstituicao) {
-          exibirMensagem("Erro: Instituição não identificada.");
-          return;
-      }
-
       const payload = {
         descricao: refs.descricaoUcInput.value.trim(),
         tipo_uc: refs.tipoUcInput.value.trim(),
-        instituicao_id: idInstituicao,
+        instituicao_id: refs.selectInstituicao.value,
         status: isEdit ? (refs.statusUc?.value ?? 'Ativo') : 'Ativo'
       };
+
 
       const url = isEdit ? `${API.uc}?id=${STATE.ucEditId}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
       try {
-        await safeFetch(url, { 
-            method, 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(payload) 
-        });
-
+        await safeFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         closeModal();
-
         await carregarDadosIniciais();
-
-        renderizarConteudo();
-        
-        exibirMensagem('Salvo com sucesso!');
-        
-      } catch (err) { 
-          console.error(err); 
-          exibirMensagem('Erro ao salvar. Tente novamente.'); 
-      }
+        alert('Salvo com sucesso!');
+      } catch (err) { alert('Erro ao salvar.'); }
     });
 
     const closeView = () => App.ui.hideModal(refs.visualizarUcModal);
@@ -323,18 +283,26 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Mostra o loader imediatamente
     App.loader.show();
 
+    // Configura eventos de UI (botões) para que o usuário veja a interface pronta por trás do loader,
+    // ou você pode mover isso para depois do await se preferir que nada seja interativo.
+    // Manter aqui permite que o DOM esteja pronto.
     setupEvents();
 
     try {
+      // 2. Aguarda o carregamento dos dados da API
       await carregarDadosIniciais();
 
+      // 3. Renderiza a tabela
       setupFiltersAndRender();
     } catch (err) {
       console.error('Falha na inicialização:', err);
+      // Opcional: Mostrar mensagem de erro na tela
       alert('Erro ao carregar dados do sistema. Verifique sua conexão.');
     } finally {
+      // 4. Esconde o loader independentemente de sucesso ou erro
       App.loader.hide();
     }
   });

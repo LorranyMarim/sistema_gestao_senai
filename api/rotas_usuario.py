@@ -147,8 +147,6 @@ def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
     """Lista apenas usuários da mesma instituição do admin logado"""
     db = get_mongo_db()
 
-    # CORREÇÃO 1: Usar ctx.inst_oid diretamente (assumindo que seja ObjectId)
-    # Se ctx.inst_oid não for ObjectId, use: ObjectId(ctx.inst_oid)
     filtro = {
         "$or": [
             {"instituicao_id": ctx.inst_oid}, 
@@ -159,12 +157,11 @@ def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
     usuarios = list(db["usuario"].find(filtro, {"senha": 0}))
 
     for u in usuarios:
-        # CORREÇÃO 2: Manter a chave "_id" convertida para string
-        # O Frontend espera receber "_id", não apenas "id"
+
         u["_id"] = str(u["_id"]) 
-        u["id"] = u["_id"] # Mantém compatibilidade extra se necessário
+        u["id"] = u["_id"]
         
-        # Converte datas para string ISO se necessário
+
         if "data_criacao" in u:
             u["data_criacao"] = u["data_criacao"].isoformat()
 

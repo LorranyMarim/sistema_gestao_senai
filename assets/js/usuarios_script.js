@@ -1,83 +1,64 @@
 (() => {
   'use strict';
 
-  if (!window.App) throw new Error('Carregue geral_script.js antes de usuarios_script.js.');
+  if (!window.App) throw new Error('Carregue geral_script.js antes de ucs_script.js.');
 
   const { $, $$ } = App.dom;
   const { debounce, toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.utils;
   const { safeFetch } = App.net;
   const { paginateData, bindControls, updateUI } = App.pagination;
 
-  const LS_KEY = 'usuarios_gestao_state_v1';
-
-  // Configuração da API
+  const LS_KEY = 'ucs_gestao_state_v2';
+  
   const API = Object.freeze({
-    bootstrap: '../backend/processa_usuarios.php?action=bootstrap',
-    users: '../backend/processa_usuarios.php',
+    bootstrap: '../backend/processa_ucs.php?action=bootstrap',
+    uc: '../backend/processa_ucs.php',
   });
 
   const DEFAULT_STATE = {
     instituicoes: [],
-    users: [],
-    userEditId: null,
+    ucs: [],
+    ucEditId: null,
     pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
-    filters: { q: '', status: ['Todos'], created_from: '', created_to: '' },
+    filters: { q: '', instituicoes: [], status: ['Todos'], created_from: '', created_to: '' },
   };
 
   let savedState = {};
-  try { savedState = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { }
+  try { savedState = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch {}
 
   const STATE = {
     ...DEFAULT_STATE,
     pagination: { ...DEFAULT_STATE.pagination, ...savedState.pagination },
     filters: { ...DEFAULT_STATE.filters, ...savedState.filters }
   };
-
   const refs = {
-    // Modais e Botões Principais
-    userModal: $('#userModal'),
-    addUserBtn: $('#addUserBtn'),
+    ucModal: $('#ucModal'),
+    addUcBtn: $('#addUcBtn'),
     closeModalBtn: $('#closeModalBtn'),
     cancelBtn: $('#cancelBtn'),
-    userForm: $('#userForm'),
-    modalTitleUser: $('#modalTitleUser'),
-    
-    // Campos do Formulário
-    userIdInput: $('#userId'),
-    nomeUserInput: $('#nomeUser'),
-    emailUserInput: $('#emailUser'),
-    tipoUserInput: $('#tipoUser'),
-    senhaUserInput: $('#senhaUser'),
-    confirmaSenhaInput: $('#confirmaSenhaUser'),
-    lblSenha: $('#lblSenha'),
-    lblConfirmaSenha: $('#lblConfirmaSenha'),
-    selectInstituicao: $('#instituicaoUser'),
-    statusUser: $('#statusUser'),
-    
-    // Tabela e Paginação
-    userTableBody: $('#userTableBody'),
+    ucForm: $('#ucForm'),
+    modalTitleUc: $('#modalTitleUc'),
+    ucIdInput: $('#ucId'),
+    descricaoUcInput: $('#descricaoUc'),
+    salaIdealInput: $('#salaIdeal'),
+    selectInstituicao: $('#instituicaoUc'), 
+    statusUc: $('#statusUc'),
+    alertUc: $('#alertUc'),
+    ucTableBody: $('#ucTableBody'),
+    visualizarUcModal: $('#visualizarUcModal'),
+    closeVisualizarUcBtn: $('#closeVisualizarUcBtn'),
+    fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
+    viewFields: {
+      descricao: $('#viewDescricaoUc'),
+      sala: $('#viewSalaIdealUc'),
+      status: $('#viewStatusUc')
+    },
     pagElements: {
       prev: $('#prevPage'),
       next: $('#nextPage'),
       info: $('#pageInfo'),
-      sizeSel: null
-    },
-
-    // Modal de Visualização
-    visualizarUserModal: $('#visualizarUserModal'),
-    closeVisualizarUserBtn: $('#closeVisualizarUserBtn'),
-    fecharVisualizarUserBtn: $('#fecharVisualizarUserBtn'),
-    viewFields: {
-      nome: $('#viewNomeUser'),
-      email: $('#viewEmailUser'),
-      tipo: $('#viewTipoUser'),
-      status: $('#viewStatusUser')
-    },
-
-    // Modal de Mensagem do Sistema
-    systemMessageModal: $('#systemMessageModal'),
-    systemMessageText: $('#systemMessageText'),
-    closeSystemMessageBtn: $('#closeSystemMessageBtn')
+      sizeSel: null 
+    }
   };
 
   function saveState() {
@@ -87,54 +68,65 @@
     }));
   }
 
-  // --- Função para Exibir Mensagem Personalizada ---
-  const exibirMensagem = (texto) => {
-    if (refs.systemMessageModal && refs.systemMessageText) {
-        refs.systemMessageText.textContent = texto;
-        App.ui.showModal(refs.systemMessageModal);
-    } else {
-        alert(texto);
-    }
-  };
-
-  // Substitua a função carregarDadosIniciais atual por esta:
+  
   async function carregarDadosIniciais() {
     try {
-      // O App.loader já foi iniciado no DOMContentLoaded, então aqui só buscamos os dados
-      const data = await safeFetch(API.users); 
+      const data = await safeFetch(API.bootstrap);
+      STATE.instituicoes = data.instituicoes || [];
+      STATE.ucs = data.ucs || [];
       
-      // Ajuste para garantir que STATE.users seja sempre um array
-      // Verifica se a API retornou array direto ou um objeto com chave "items" ou "usuarios"
-      if (Array.isArray(data)) {
-         STATE.users = data;
-      } else if (data.items) {
-         STATE.users = data.items;
-      } else {
-         STATE.users = []; 
-      }
-      
+      popularSelectModal();
     } catch (err) {
       console.error(err);
-      refs.userTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
+      refs.ucTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
     }
   }
 
   function popularSelectModal() {
-    // Se houver lógica de instituição vinda do backend, popula aqui.
-    // Caso contrário, deixa vazio ou com valor fixo se o backend pegar do token.
+    if (refs.selectInstituicao) {
+       refs.selectInstituicao.innerHTML = ['<option value="">Selecione...</option>']
+        .concat(STATE.instituicoes.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`))
+        .join('');
+    }
   }
 
   function applyFiltersFromUI() {
-    // Filtros podem ser implementados se houver UI para eles na tela
+    const elSearch = document.getElementById('gen_search');
+    STATE.filters.q = (elSearch?.value || '').trim();
+    
+    const elStatus = document.getElementById('gen_status');
+    STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
+
+    const elFrom = document.getElementById('gen_created_from');
+    const elTo = document.getElementById('gen_created_to');
+    STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
+    STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
+
+    STATE.filters.instituicoes = [];
+
+    const elSize = document.getElementById('gen_pagesize');
+    if (elSize) {
+        STATE.pagination.pageSize = parseInt(elSize.value, 10);
+        refs.pagElements.sizeSel = elSize;
+    }
   }
 
   function renderizarConteudo() {
+    applyFiltersFromUI();
     saveState();
 
-    // Filtros básicos no frontend (Busca textual)
-    const filtered = STATE.users.filter(u => {
-      // Exemplo de filtro simples
-      return true; 
+    const filtered = STATE.ucs.filter(uc => {
+      const f = STATE.filters;
+      if (f.q) {
+        const text = `${uc.descricao} ${uc.tipo_uc}`.toLowerCase();
+        if (!text.includes(f.q.toLowerCase())) return false;
+      }
+      if (f.status[0] !== 'Todos' && uc.status !== f.status[0]) return false;
+      if (f.instituicoes.length && !f.instituicoes.includes(uc.instituicao_id)) return false;
+      if (f.created_from && uc.data_criacao < f.created_from) return false;
+      if (f.created_to && uc.data_criacao > f.created_to) return false;
+      
+      return true;
     });
 
     const { pagedData, meta } = paginateData(filtered, STATE.pagination.page, STATE.pagination.pageSize);
@@ -144,220 +136,216 @@
     renderTable(pagedData);
   }
 
-  // Dentro de usuarios_script.js
-// ...
   function renderTable(lista) {
     if (!lista.length) {
-      refs.userTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
+      refs.ucTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
       return;
     }
 
+    const mapInst = new Map(STATE.instituicoes.map(i => [i._id, i.razao_social ?? i.nome]));
+    
     const fmtData = (d) => {
-      if (!d) return '-';
-      try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return '-'; }
+        if(!d) return '-';
+        try { return new Date(d).toLocaleDateString('pt-BR'); } catch{ return '-'; }
     };
 
-    refs.userTableBody.innerHTML = lista.map(u => {
-        // Lógica para badge de status visual
-        // O banco retorna string "Ativo", "Inativo" ou "Bloqueado" no campo 'status'
-        const statusTexto = u.status || 'Inativo';
-        
-        // Define cor do texto baseado no status (opcional, para melhor UX)
-        let statusClass = 'text-gray-600';
-        if(statusTexto === 'Ativo') statusClass = 'text-green-600 font-bold';
-        if(statusTexto === 'Inativo') statusClass = 'text-red-600';
-
-        return `
+    refs.ucTableBody.innerHTML = lista.map(uc => `
       <tr>
-        <td class="hidden-col">${u.id}</td> 
-        <td class="hidden-col">${u.instituicao_id || '-'}</td>
-        <td>${u.nome || '(Sem Nome)'}</td>
-        <td>${u.user_name || ''}</td> 
-        <td>${u.tipo_acesso || 'Padrao'}</td>
-        <td><span class="${statusClass}">${statusTexto}</span></td>
-        <td>${fmtData(u.data_criacao)}</td>
+       
+        <td>${uc.descricao || ''}</td>
+        <td>${uc.tipo_uc || ''}</td>
+        <td>${uc.status || 'Ativa'}</td>
+        <td>${fmtData(uc.data_criacao)}</td>
         <td>
           <div class="action-buttons flex gap-2 justify-center">
-            <button class="btn btn-icon btn-view text-blue-500" data-id="${u.id}" title="Ver"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-icon btn-edit text-yellow-500" data-id="${u.id}" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-icon btn-delete text-red-500" data-id="${u.id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            <button class="btn btn-icon btn-view text-white-500" data-id="${uc._id}" title="Ver"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-icon btn-edit text-white-500" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-icon btn-delete text-white-500" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
           </div>
         </td>
       </tr>
-    `}).join('');
+    `).join('');
   }
-// ...
+
+function setupFiltersAndRender() {
+   
+    if (App.filters && App.filters.render) {
+        App.filters.render(
+            'filter_area', 
+            { search: true, date: true, status: true, pageSize: true }, 
+            null, 
+            () => { 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            },
+            () => { 
+                STATE.filters = { ...DEFAULT_STATE.filters }; 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            }
+        );
+    }
+
+    if(STATE.filters.q && document.getElementById('gen_search')) 
+        document.getElementById('gen_search').value = STATE.filters.q;
+        
+    renderizarConteudo();
+  }
 
   function setupEvents() {
-    // Paginação
     bindControls(refs.pagElements, (action, val) => {
-      if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
-      if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
-      renderizarConteudo();
+        if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
+        if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
+        renderizarConteudo();
     });
 
-    // Mensagem do Sistema
-    refs.closeSystemMessageBtn?.addEventListener('click', () => {
-        App.ui.hideModal(refs.systemMessageModal);
-    });
-
-    // Eventos da Tabela (View, Edit, Delete)
-    refs.userTableBody?.addEventListener('click', async (e) => {
+    refs.ucTableBody?.addEventListener('click', async (e) => {
       const btnView = e.target.closest('.btn-view');
       const btnEdit = e.target.closest('.btn-edit');
       const btnDel = e.target.closest('.btn-delete');
 
-      // --- MUDANÇA 5: DETALHES DO USUÁRIO ---
       if (btnView) {
-        const user = STATE.users.find(u => (u.id || u._id) === btnView.dataset.id);
-        if (!user) return;
-        
-        refs.viewFields.nome.value = user.nome;
-        refs.viewFields.email.value = user.user_name;
-        refs.viewFields.tipo.value = user.tipo_acesso;
-        refs.viewFields.status.value = (user.ativo === true || user.ativo === 'true' || user.ativo === 1) ? 'Ativo' : 'Inativo';
-        
-        App.ui.showModal(refs.visualizarUserModal);
+        const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
+        if(!uc) return;
+        refs.viewFields.descricao.value = uc.descricao;
+        refs.viewFields.sala.value = uc.tipo_uc;
+        refs.viewFields.status.value = uc.status;
+        App.ui.showModal(refs.visualizarUcModal);
       }
 
-      // --- MUDANÇA 6: EDITAR USUÁRIO ---
       if (btnEdit) {
-        const user = STATE.users.find(u => (u.id || u._id) === btnEdit.dataset.id);
-        if (!user) return;
-
-        STATE.userEditId = user.id || user._id;
-        refs.userIdInput.value = STATE.userEditId;
-        
-        // Preenche campos
-        refs.nomeUserInput.value = user.nome;
-        refs.emailUserInput.value = user.user_name;
-        refs.tipoUserInput.value = user.tipo_acesso;
-        
-        // Ajusta Status
-        refs.statusUser.disabled = false;
-        refs.statusUser.value = (user.ativo === true || user.ativo === 'true' || user.ativo === 1) ? 'Ativo' : 'Inativo';
-
-        // Título e Labels
-        refs.modalTitleUser.textContent = 'Editar/Alterar Dados do Usuário';
-        refs.lblSenha.textContent = 'Cadastrar Nova Senha:';
-        refs.lblConfirmaSenha.textContent = 'Repetir Nova Senha:';
-        
-        // Limpa senhas (não mostramos senha antiga)
-        refs.senhaUserInput.value = '';
-        refs.confirmaSenhaInput.value = '';
-        
-        App.ui.showModal(refs.userModal);
+        const uc = STATE.ucs.find(u => u._id === btnEdit.dataset.id);
+        if(!uc) return;
+        STATE.ucEditId = uc._id;
+        refs.ucIdInput.value = uc._id;
+        refs.selectInstituicao.value = uc.instituicao_id;
+        refs.descricaoUcInput.value = uc.descricao;
+        refs.salaIdealInput.value = uc.tipo_uc;
+        refs.statusUc.value = uc.status;
+        refs.modalTitleUc.textContent = 'Editar UC';
+        App.ui.showModal(refs.ucModal);
       }
 
       if (btnDel) {
-        if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+        if (!confirm('Tem certeza que deseja excluir esta UC?')) return;
         try {
-          await safeFetch(`${API.users}/${btnDel.dataset.id}`, { method: 'DELETE' }); // Ajuste de rota RESTful se necessário
+          await safeFetch(`${API.uc}?id=${btnDel.dataset.id}`, { method: 'DELETE' });
           await carregarDadosIniciais();
           renderizarConteudo();
-          exibirMensagem('Usuário removido com sucesso!');
-        } catch (err) { 
-            exibirMensagem('Erro ao excluir usuário.'); 
-        }
+        } catch(err) { alert('Erro ao excluir.'); }
       }
     });
 
-    // --- MUDANÇA 3: CADASTRAR USUÁRIO ---
-    refs.addUserBtn?.addEventListener('click', () => {
-      if (!refs.userModal) return;
-      
-      STATE.userEditId = null;
-      refs.userForm.reset();
-      refs.userIdInput.value = ''; 
-      
-      // Configuração Visual
-      refs.modalTitleUser.textContent = 'Cadastrar Novo Usuário';
-      refs.lblSenha.textContent = 'Cadastrar Senha:';
-      refs.lblConfirmaSenha.textContent = 'Confirme a Senha:';
-      
-      // Status Default e Travado
-      refs.statusUser.value = 'Ativo';
-      refs.statusUser.disabled = true;
-
-      App.ui.showModal(refs.userModal);
+    refs.addUcBtn?.addEventListener('click', () => {
+      if (!refs.ucModal) {
+        console.error('Erro crítico: Modal não encontrado no DOM.');
+        return;
+    }
+      STATE.ucEditId = null;
+      refs.ucForm.reset();
+      refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
+      App.ui.showModal(refs.ucModal);
     });
 
-    // Fechar Modais
-    const closeModal = () => App.ui.hideModal(refs.userModal);
+    const closeModal = () => App.ui.hideModal(refs.ucModal);
     refs.closeModalBtn?.addEventListener('click', closeModal);
     refs.cancelBtn?.addEventListener('click', closeModal);
-    
-    const closeView = () => App.ui.hideModal(refs.visualizarUserModal);
-    refs.closeVisualizarUserBtn?.addEventListener('click', closeView);
-    refs.fecharVisualizarUserBtn?.addEventListener('click', closeView);
 
-    // --- SALVAR (SUBMIT) ---
-    refs.userForm?.addEventListener('submit', async (e) => {
+    refs.ucForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const isEdit = !!STATE.userEditId;
-
-      // Validação de Senha
-      const senha = refs.senhaUserInput.value;
-      const confirma = refs.confirmaSenhaInput.value;
-
-      if (!isEdit && !senha) {
-          exibirMensagem("A senha é obrigatória para novos usuários.");
-          return;
-      }
-      if (senha && senha !== confirma) {
-          exibirMensagem("As senhas não conferem.");
-          return;
-      }
-
-      // Monta Payload
       const payload = {
-        nome: refs.nomeUserInput.value.trim(),
-        user_name: refs.emailUserInput.value.trim(),
-        tipo_acesso: refs.tipoUserInput.value,
-        // Backend espera booleano para 'ativo'
-        ativo: isEdit ? (refs.statusUser.value === 'Ativo') : true 
+        descricao: refs.descricaoUcInput.value.trim(),
+        tipo_uc: refs.salaIdealInput.value.trim(),
+        instituicao_id: refs.selectInstituicao.value,
+        status: refs.statusUc.value
       };
-
-      // Se tiver senha preenchida, adiciona ao payload
-      if (senha) {
-          payload.senha = senha;
-      }
-
-      const url = isEdit ? `${API.users}/${STATE.userEditId}` : API.users;
+      const isEdit = !!STATE.ucEditId;
+      const url = isEdit ? `${API.uc}?id=${STATE.ucEditId}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
       try {
-        await safeFetch(url, { 
-            method, 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(payload) 
-        });
-        
+        await safeFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         closeModal();
         await carregarDadosIniciais();
-        renderizarConteudo();
-        exibirMensagem('Salvo com sucesso!');
-        
-      } catch (err) { 
-          console.error(err); 
-          // Tenta extrair mensagem de erro da API se possível
-          exibirMensagem('Erro ao salvar. Verifique os dados.'); 
-      }
+        alert('Salvo com sucesso!');
+      } catch (err) { alert('Erro ao salvar.'); }
     });
+    
+    const closeView = () => App.ui.hideModal(refs.visualizarUcModal);
+    refs.closeVisualizarUcBtn?.addEventListener('click', closeView);
+    refs.fecharVisualizarUcBtn?.addEventListener('click', closeView);
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    App.loader.show();
+    // 1. Mostra o loader imediatamente
+    App.loader.show(); 
+
+    // Configura eventos de UI (botões) para que o usuário veja a interface pronta por trás do loader,
+    // ou você pode mover isso para depois do await se preferir que nada seja interativo.
+    // Manter aqui permite que o DOM esteja pronto.
     setupEvents();
+
     try {
-      await carregarDadosIniciais();
-      renderizarConteudo();
+        // 2. Aguarda o carregamento dos dados da API
+        await carregarDadosIniciais(); 
+        
+        // 3. Renderiza a tabela
+        setupFiltersAndRender();       
     } catch (err) {
-      console.error(err);
-      alert('Erro ao carregar dados.');
+        console.error('Falha na inicialização:', err);
+        // Opcional: Mostrar mensagem de erro na tela
+        alert('Erro ao carregar dados do sistema. Verifique sua conexão.');
     } finally {
-      App.loader.hide();
+        // 4. Esconde o loader independentemente de sucesso ou erro
+        App.loader.hide();
     }
   });
+
+
+  function setupFiltersAndRender() {
+    
+    if (App.filters && App.filters.render) {
+        App.filters.render(
+            'filter_area', 
+            { search: true, date: true, status: true, pageSize: true }, 
+            null, 
+            () => { 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            },
+            () => { 
+                STATE.filters = { ...DEFAULT_STATE.filters }; 
+                STATE.pagination.page = 1;
+                renderizarConteudo();
+            }
+        );
+    }
+
+    if(STATE.filters.q && document.getElementById('gen_search')) 
+        document.getElementById('gen_search').value = STATE.filters.q;
+        
+    renderizarConteudo();
+  }
+
+  function applyFiltersFromUI() {
+    const elSearch = document.getElementById('gen_search');
+    STATE.filters.q = (elSearch?.value || '').trim();
+    
+    const elStatus = document.getElementById('gen_status');
+    STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
+
+    const elFrom = document.getElementById('gen_created_from');
+    const elTo = document.getElementById('gen_created_to');
+    STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
+    STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
+
+    STATE.filters.instituicoes = []; 
+
+    const elSize = document.getElementById('gen_pagesize');
+    if (elSize) {
+        STATE.pagination.pageSize = parseInt(elSize.value, 10);
+        refs.pagElements.sizeSel = elSize;
+    }
+  }
 
 })();
