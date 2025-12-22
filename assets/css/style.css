@@ -1206,3 +1206,25 @@ select:focus,
     transition: background-color 0.3s ease, transform 0.2s ease;
 
 }
+/* --- Estilo para Campos Bloqueados (Readonly/Disabled) --- */
+
+input:read-only,
+textarea:read-only,
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background-color: #e9ecef !important; /* Fundo cinza claro */
+    color: #6c757d !important;            /* Texto cinza escuro (menos contraste) */
+    cursor: not-allowed;                  /* Mostra o ícone de bloqueio no mouse */
+    border-color: #ced4da;                /* Borda sutil */
+    opacity: 1;                           /* Correção para alguns navegadores mobile */
+}
+
+/* Opcional: Efeito hover para reforçar que não é clicável */
+input:read-only:hover,
+textarea:read-only:hover,
+input:disabled:hover,
+textarea:disabled:hover,
+select:disabled:hover {
+    background-color: #e2e6ea !important;
+}

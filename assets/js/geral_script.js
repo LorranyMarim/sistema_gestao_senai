@@ -98,7 +98,13 @@
   }
 
   function fmtDateBR(input, tz = 'America/Sao_Paulo') {
-    return fmtDateTimeBR(input, tz);
+    if (!input) return '—';
+    const d = (input instanceof Date) ? input : parseIsoAssumindoUtc(input) || new Date(input);
+    if (isNaN(+d)) return '—';
+    try {
+      // dateStyle: 'short' retorna apenas dd/mm/aaaa
+      return new Intl.DateTimeFormat('pt-BR', { timeZone: tz, dateStyle: 'short' }).format(d);
+    } catch { return d.toLocaleDateString('pt-BR'); }
   }
 
   const OBJECTID_24 = /^[a-f\d]{24}$/i;

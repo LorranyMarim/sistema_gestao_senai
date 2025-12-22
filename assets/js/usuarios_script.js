@@ -409,7 +409,9 @@
           refs.viewFields.nome.value = u.nome;
           refs.viewFields.email.value = u.user_name;
           refs.viewFields.tipo.value = u.tipo_acesso;
-          refs.viewFields.status.value = u.status;format.fmtDateBR(u.data_criacao);
+          // Apenas atribui o status. A parte da data (format.fmtDateBR...) foi removida.
+          refs.viewFields.status.value = u.status;
+          
           App.ui.showModal(refs.visualizarModal);
         }
       }
