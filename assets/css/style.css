@@ -1193,3 +1193,16 @@ select:focus,
   margin-bottom: 16px;
 }
 
+#btnOpenChangePassword{
+    background-color: rgb(255, 153, 0);
+    color: white;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    width: 100%;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+}

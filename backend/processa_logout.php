@@ -4,6 +4,6 @@ if (isset($_COOKIE['session_token'])) {
     unset($_COOKIE['session_token']);
 }
 
-header("Location: ../views/login.php");
+header("Location: ../views/index.php");
 exit();
 ?>
