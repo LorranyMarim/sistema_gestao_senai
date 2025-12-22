@@ -158,9 +158,9 @@
         <td>${fmtData(uc.data_criacao)}</td>
         <td>
           <div class="action-buttons flex gap-2 justify-center">
-            <button class="btn btn-icon btn-view text-white-500" data-id="${uc._id}" title="Ver"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-icon btn-edit text-white-500" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-icon btn-delete text-white-500" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            <button class="btn btn-icon btn-view" data-id="${uc._id}" title="Ver"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-icon btn-edit" data-id="${uc._id}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-icon btn-delete" data-id="${uc._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
           </div>
         </td>
       </tr>

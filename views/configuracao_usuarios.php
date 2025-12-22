@@ -10,13 +10,16 @@ require_once("../config/verifica_login.php");
     <title>Configuração de Usuários - SENAI</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="../assets/css/style.css">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
         .hidden-col { display: none; }
+        /* Estilo para garantir que o sub-modal fique sobre o modal pai */
+        #changePasswordModal {
+            background-color: rgba(0, 0, 0, 0.7); /* Fundo um pouco mais escuro */
+            z-index: 1060; /* Maior que o modal padrão */
+        }
     </style>
 </head>
 
@@ -48,7 +51,7 @@ require_once("../config/verifica_login.php");
                     </li>
                     
                     <li id="nav-config" class="has-submenu active open">
-                        <a href="#" class="submenu-toggle" aria-expanded="true" aria-controls="submenu-config"  class="active">
+                        <a href="#" class="submenu-toggle" aria-expanded="true" aria-controls="submenu-config" class="active">
                             <span><i class="fas fa-tools"></i> Configuração</span>
                             <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
                         </a>
@@ -79,14 +82,15 @@ require_once("../config/verifica_login.php");
                                 <th class="hidden-col">ID</th>
                                 <th class="hidden-col">Instituição</th>
                                 <th>Nome</th>
-                                <th>User Name</th>
+                                <th>E-mail (Login)</th>
                                 <th>Tipo de Usuário</th>
                                 <th>Status</th>
                                 <th>Criado Em</th>
                                 <th class="actions">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="userTableBody"></tbody>
+                        <tbody id="userTableBody">
+                            </tbody>
                     </table>
                     <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
                         <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
@@ -108,17 +112,17 @@ require_once("../config/verifica_login.php");
                 
                 <div class="form-group" style="display:none;">
                     <label for="instituicaoUser">Instituição:</label>
-                    <select id="instituicaoUser" class="form-control" required></select>
+                    <select id="instituicaoUser" class="form-control"></select>
                 </div>
 
                 <div class="form-group">
                     <label for="nomeUser">Nome Completo:</label>
-                    <input type="text" id="nomeUser" class="form-control" required minlength="4" maxlength="100">
+                    <input type="text" id="nomeUser" class="form-control" required minlength="3" maxlength="100">
                 </div>
 
                 <div class="form-group">
-                    <label for="emailUser">E-mail FIEMG:</label>
-                    <input type="email" id="emailUser" class="form-control" required placeholder="Ex: nome.sobrenome@fiemg.com.br">
+                    <label for="emailUser">E-mail FIEMG (Login):</label>
+                    <input type="email" id="emailUser" class="form-control" required placeholder="Ex: usuario@fiemg.com.br">
                 </div>
 
                 <div class="form-group">
@@ -128,17 +132,27 @@ require_once("../config/verifica_login.php");
                         <option value="Coordenador">Coordenador</option>
                         <option value="Pedagogo">Pedagogo</option>
                         <option value="Instrutor">Instrutor</option>
+                        <option value="Administrador">Administrador</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="senhaUser" id="lblSenha">Cadastrar Senha:</label>
-                    <input type="password" id="senhaUser" class="form-control" autocomplete="new-password">
+                <div id="divSenhaCadastro">
+                    <div class="form-group">
+                        <label for="senhaUser">Senha:</label>
+                        <input type="password" id="senhaUser" class="form-control" autocomplete="new-password" minlength="6">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmaSenhaUser">Confirme a Senha:</label>
+                        <input type="password" id="confirmaSenhaUser" class="form-control" autocomplete="new-password" minlength="6">
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="confirmaSenhaUser" id="lblConfirmaSenha">Confirme a Senha:</label>
-                    <input type="password" id="confirmaSenhaUser" class="form-control" autocomplete="new-password">
+                <div id="divBtnAlterarSenha" class="form-group" style="display:none; margin-top: 15px;">
+                    <label>Segurança:</label><br>
+                    <button type="button" class="btn btn-warning" id="btnOpenChangePassword">
+                        <i class="fas fa-key"></i> Alterar Senha
+                    </button>
                 </div>
 
                 <div class="form-group">
@@ -161,6 +175,27 @@ require_once("../config/verifica_login.php");
         </div>
     </div>
 
+    <div id="changePasswordModal" class="modal modal-dialog-centered">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2 style="font-size: 1.2rem; margin-bottom: 15px;">Alterar Senha do Usuário</h2>
+            <form id="changePasswordForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="novaSenha">Nova Senha:</label>
+                    <input type="password" id="novaSenha" class="form-control" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="confirmaNovaSenha">Confirmar Nova Senha:</label>
+                    <input type="password" id="confirmaNovaSenha" class="form-control" required minlength="6">
+                </div>
+                
+                <div class="modal-footer" style="display: flex; justify-content: space-between; margin-top: 15px;">
+                    <button type="button" class="btn btn-secondary" id="cancelChangePasswordBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="visualizarUserModal" class="modal modal-dialog-centered">
         <div class="modal-content">
             <span class="close-button" id="closeVisualizarUserBtn">&times;</span>
@@ -169,34 +204,40 @@ require_once("../config/verifica_login.php");
             <form>
                 <div class="form-group">
                     <label>Nome Completo:</label>
-                    <input type="text" id="viewNomeUser" readonly disabled>
+                    <input type="text" id="viewNomeUser" readonly disabled class="form-control">
                 </div>
                 <div class="form-group">
                     <label>E-mail FIEMG:</label>
-                    <input type="text" id="viewEmailUser" readonly disabled>
+                    <input type="text" id="viewEmailUser" readonly disabled class="form-control">
                 </div>
                 <div class="form-group">
                     <label>Tipo de Usuário:</label>
-                    <input type="text" id="viewTipoUser" readonly disabled>
+                    <input type="text" id="viewTipoUser" readonly disabled class="form-control">
                 </div>
                 <div class="form-group">
                     <label>Status:</label>
-                    <input type="text" id="viewStatusUser" readonly disabled>
+                    <input type="text" id="viewStatusUser" readonly disabled class="form-control">
                 </div>
-                <button type="button" class="btn btn-secondary" id="fecharVisualizarUserBtn">Fechar</button>
+                <div class="form-group">
+                    <label>Criado Em:</label>
+                    <input type="text" id="viewCriadoEmUser" readonly disabled class="form-control">
+                </div>
+                <div class="modal-footer" style="margin-top: 10px; text-align: right;">
+                    <button type="button" class="btn btn-secondary" id="fecharVisualizarUserBtn">Fechar</button>
+                </div>
             </form>
         </div>
     </div>
 
     <div id="systemMessageModal" class="modal modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: var(--cor-primaria); color: white;">
-                <h3 style="font-size: 1.1rem; margin: 0;">Sistema de Gestão e Coordenação Senai Betim (SGCS - Betim)</h3>
+            <div class="modal-header" style="background-color: var(--cor-primaria); color: white; padding: 10px;">
+                <h3 style="font-size: 1.1rem; margin: 0;">Aviso do Sistema</h3>
             </div>
-            <div class="modal-body" style="padding: 30px; text-align: center; font-size: 1.1rem;">
+            <div class="modal-body" style="padding: 20px; text-align: center; font-size: 1rem;">
                 <p id="systemMessageText"></p>
             </div>
-            <div class="modal-footer" style="justify-content: center;">
+            <div class="modal-footer" style="justify-content: center; padding-bottom: 15px;">
                 <button type="button" class="btn btn-primary" id="closeSystemMessageBtn">OK</button>
             </div>
         </div>

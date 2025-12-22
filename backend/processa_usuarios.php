@@ -1,69 +1,102 @@
 <?php
-// Arquivo: backend/processa_usuarios.php
+// backend/processa_usuarios.php
 
-header("Content-Type: application/json; charset=UTF-8");
-require_once("../config/verifica_login.php"); // Garante segurança de sessão PHP
+// Inicia sessão para acesso a cookies/tokens se necessário, 
+// mas o principal é o repasse do Cookie 'session_token' para a API.
+session_start();
 
-// Configuração da URL da API Python
-$api_base_url = 'http://localhost:8000/api';
-$api_url = $api_base_url . '/usuarios'; // Rota da API Python
+// Configuração da API Python
+$apiUrl = getenv('API_URL') ?: 'http://localhost:8000'; // Ajuste conforme seu ambiente
+$endpoint = '/api/usuarios';
 
-function getRequestData() {
-    $raw = file_get_contents('php://input');
-    return ($raw && $raw !== '') ? json_decode($raw, true) : null;
-}
-
-function curl_json($method, $url, $payload = null) {
-    $ch = curl_init($url);
-    $opts = [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CUSTOMREQUEST  => $method,
-        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
-        CURLOPT_TIMEOUT        => 10
-    ];
-
-    // Repassa o Token da sessão para a API Python
-    if (isset($_COOKIE['session_token'])) {
-        $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
-    }
-
-    if ($payload !== null) {
-        $opts[CURLOPT_POSTFIELDS] = json_encode($payload);
-        $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/json';
-    }
-
-    curl_setopt_array($ch, $opts);
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    http_response_code($http_code);
-    echo $response;
-}
-
+// Captura dados da requisição
 $method = $_SERVER['REQUEST_METHOD'];
-$id = $_GET['id'] ?? ''; // Pega ID da URL se houver (ex: processa_usuarios.php?id=123)
+$action = $_GET['action'] ?? '';
+$id = $_GET['id'] ?? '';
 
-// Roteamento Simples
+// URL Final da API
+$url = $apiUrl . $endpoint;
+
+// Lógica de Roteamento de Ações
+if ($action === 'list') {
+    // GET /api/usuarios
+    // Não precisa alterar a URL base
+} 
+elseif ($action === 'update_password' && $id) {
+    // Rota específica de senha: PATCH /api/usuarios/{id}/senha
+    // O Frontend envia POST, nós convertemos para PATCH
+    $url = $apiUrl . "/api/usuarios/{$id}/senha";
+    $method = 'PATCH'; 
+} 
+elseif ($id) {
+    // Operações em usuário específico (PUT, DELETE, GET ID)
+    $url = $apiUrl . "/api/usuarios/{$id}";
+}
+
+// Inicializa cURL
+$ch = curl_init($url);
+
+// Captura o payload (JSON) enviado pelo JS
+$inputData = file_get_contents('php://input');
+
+// Configurações comuns do cURL
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'Accept: application/json'
+]);
+
+// Repassa o Cookie de sessão (Autenticação)
+if (isset($_COOKIE['session_token'])) {
+    curl_setopt($ch, CURLOPT_COOKIE, "session_token=" . $_COOKIE['session_token']);
+}
+
+// Configura o Método HTTP e Body
 switch ($method) {
-    case 'GET':
-        // Se tiver ID, busca um específico, senão lista todos
-        $url_final = ($id !== '') ? "$api_url/$id" : $api_url;
-        curl_json('GET', $url_final);
-        break;
-
     case 'POST':
-        curl_json('POST', $api_url, getRequestData());
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $inputData);
         break;
-
+    
     case 'PUT':
-        if ($id === '') { http_response_code(400); echo json_encode(['msg' => 'ID necessário']); exit; }
-        curl_json('PUT', "$api_url/$id", getRequestData());
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $inputData);
         break;
 
+    case 'PATCH':
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $inputData);
+        break;
+        
     case 'DELETE':
-        if ($id === '') { http_response_code(400); echo json_encode(['msg' => 'ID necessário']); exit; }
-        curl_json('DELETE', "$api_url/$id");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        break;
+        
+    case 'GET':
+    default:
+        curl_setopt($ch, CURLOPT_HTTPGET, true);
+        // Se houver query params extras (filtros), poderíamos repassar aqui
         break;
 }
-?>
+
+// Executa a requisição
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+// Tratamento de erros de conexão com a API
+if (curl_errno($ch)) {
+    http_response_code(502); // Bad Gateway
+    echo json_encode(['error' => 'Erro de comunicação com o serviço de usuários: ' . curl_error($ch)]);
+    curl_close($ch);
+    exit;
+}
+
+curl_close($ch);
+
+// Repassa o código HTTP da API para o Frontend
+http_response_code($httpCode);
+
+// Retorna a resposta da API
+header('Content-Type: application/json');
+echo $response;
+exit;
