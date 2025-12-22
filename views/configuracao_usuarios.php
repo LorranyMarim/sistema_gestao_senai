@@ -218,10 +218,6 @@ require_once("../config/verifica_login.php");
                     <label>Status:</label>
                     <input type="text" id="viewStatusUser" readonly disabled class="form-control">
                 </div>
-                <div class="form-group">
-                    <label>Criado Em:</label>
-                    <input type="text" id="viewCriadoEmUser" readonly disabled class="form-control">
-                </div>
                 <div class="modal-footer" style="margin-top: 10px; text-align: right;">
                     <button type="button" class="btn btn-secondary" id="fecharVisualizarUserBtn">Fechar</button>
                 </div>

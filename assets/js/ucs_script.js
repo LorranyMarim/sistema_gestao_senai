@@ -50,7 +50,7 @@
     fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
     viewFields: {
       descricao: $('#viewDescricaoUc'),
-      tipo: $('#viewSalaIdealUc'),
+      tipo: $('#viewTipoUc'),
       status: $('#viewStatusUc')
     },
     pagElements: {
@@ -204,29 +204,38 @@
       const btnEdit = e.target.closest('.btn-edit');
       const btnDel = e.target.closest('.btn-delete');
 
+      // --- Lógica do Botão VISUALIZAR ---
       if (btnView) {
         const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
         if (!uc) return;
-        refs.viewFields.descricao.value = uc.descricao;
-        refs.viewFields.sala.value = uc.tipo_uc;
-        refs.tipoUcInput.value = uc.tipo_uc;
-        refs.viewFields.status.value = uc.status;
+        
+        // Preenche os campos de visualização (readonly)
+        refs.viewFields.descricao.value = uc.descricao || '';
+        refs.viewFields.tipo.value = uc.tipo_uc || '';      // CORRIGIDO: usa .tipo e não .sala
+        refs.viewFields.status.value = uc.status || '';
+        
         App.ui.showModal(refs.visualizarUcModal);
       }
 
+      // --- Lógica do Botão EDITAR ---
       if (btnEdit) {
         const uc = STATE.ucs.find(u => u._id === btnEdit.dataset.id);
         if (!uc) return;
+        
         STATE.ucEditId = uc._id;
+        
+        // Preenche o formulário de edição
         refs.ucIdInput.value = uc._id;
-        refs.selectInstituicao.value = uc.instituicao_id;
-        refs.descricaoUcInput.value = uc.descricao;
-        refs.salaIdealInput.value = uc.tipo_uc;
-        refs.statusUc.value = uc.status;
+        refs.selectInstituicao.value = uc.instituicao_id || '';
+        refs.descricaoUcInput.value = uc.descricao || '';
+        refs.tipoUcInput.value = uc.tipo_uc || '';          // CORRIGIDO: usa refs.tipoUcInput e não salaIdealInput
+        refs.statusUc.value = uc.status || 'Ativo';
+        
         refs.modalTitleUc.textContent = 'Editar UC';
         App.ui.showModal(refs.ucModal);
       }
 
+      // --- Lógica do Botão EXCLUIR ---
       if (btnDel) {
         if (!confirm('Tem certeza que deseja excluir esta UC?')) return;
         try {

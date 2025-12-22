@@ -23,7 +23,7 @@
     usuarios: [],
     editId: null,
     pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
-    filters: { q: '', status: ['Todos'] },
+    filters: { q: '', status: ['Todos'], tipoUsuario: 'Todos' },
     formOriginalState: null // Para controle de 'dirty' (alterações não salvas)
   };
 
@@ -87,7 +87,6 @@
       email: $('#viewEmailUser'),
       tipo: $('#viewTipoUser'),
       status: $('#viewStatusUser'),
-      criadoEm: $('#viewCriadoEmUser')
     }
   };
 
@@ -121,7 +120,8 @@
 
     const elStatus = document.getElementById('gen_status');
     STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
-
+    const elTipo = document.getElementById('gen_tipo_usuario');
+    STATE.filters.tipoUsuario = elTipo ? elTipo.value : 'Todos';
     const elSize = document.getElementById('gen_pagesize');
     if (elSize) {
       STATE.pagination.pageSize = parseInt(elSize.value, 10);
@@ -148,6 +148,9 @@
         const fSt = f.status[0].toLowerCase();
         if (st !== fSt) return false;
       }
+      if (f.tipoUsuario && f.tipoUsuario !== 'Todos') {
+        if (u.tipo_acesso !== f.tipoUsuario) return false;
+      }
       return true;
     });
 
@@ -165,7 +168,7 @@
       return;
     }
 
-    const fmtData = App.format.fmtDateTimeBR; 
+    const fmtData = App.format.fmtDateBR; 
 
     refs.tableBody.innerHTML = lista.map(u => {
       // Determina classe de status para visualização
@@ -232,6 +235,7 @@
     // ou deixa livre. Requisito diz: "Status (Disabled: Ativo)" para criação?
     // O requisito diz "Status (Disabled: Ativo)". Vamos forçar:
     refs.selStatus.value = 'Ativo';
+    refs.selStatus.disabled = true; // Desabilita o campo no cadastro
     // refs.selStatus.disabled = true; // Se quiser bloquear visualmente. Vamos manter habilitado mas padrão Ativo.
 
     App.ui.showModal(refs.userModal);
@@ -247,6 +251,7 @@
     refs.inpEmail.value = user.user_name;
     refs.selTipo.value = user.tipo_acesso;
     refs.selStatus.value = user.status || 'Ativo';
+    refs.selStatus.disabled = false;
     
     // Configuração de UI para Edição
     refs.modalTitle.textContent = 'Editar Usuário';
@@ -404,8 +409,7 @@
           refs.viewFields.nome.value = u.nome;
           refs.viewFields.email.value = u.user_name;
           refs.viewFields.tipo.value = u.tipo_acesso;
-          refs.viewFields.status.value = u.status;
-          refs.viewFields.criadoEm.value = App.format.fmtDateTimeBR(u.data_criacao);
+          refs.viewFields.status.value = u.status;format.fmtDateBR(u.data_criacao);
           App.ui.showModal(refs.visualizarModal);
         }
       }
@@ -447,8 +451,9 @@
     if (App.filters && App.filters.render) {
       App.filters.render(
         'filter_area',
-        { search: true, status: true, pageSize: true }, // Sem filtro de data por enquanto para simplificar
-        null, // elemento customizado
+        // ATIVE O NOVO FILTRO AQUI
+        { search: true, status: true, pageSize: true, tipoUsuario: true }, 
+        null, 
         () => { // onChange
           STATE.pagination.page = 1;
           renderizarConteudo();
