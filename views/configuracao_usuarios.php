@@ -15,10 +15,9 @@ require_once("../config/verifica_login.php");
     
     <style>
         .hidden-col { display: none; }
-        /* Estilo para garantir que o sub-modal fique sobre o modal pai */
         #changePasswordModal {
-            background-color: rgba(0, 0, 0, 0.7); /* Fundo um pouco mais escuro */
-            z-index: 1060; /* Maior que o modal padrão */
+            background-color: rgba(0, 0, 0, 0.7); /
+            z-index: 1060; 
         }
     </style>
 </head>

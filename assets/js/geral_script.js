@@ -102,8 +102,7 @@
     const d = (input instanceof Date) ? input : parseIsoAssumindoUtc(input) || new Date(input);
     if (isNaN(+d)) return '—';
     try {
-      // dateStyle: 'short' retorna apenas dd/mm/aaaa
-      return new Intl.DateTimeFormat('pt-BR', { timeZone: tz, dateStyle: 'short' }).format(d);
+     return new Intl.DateTimeFormat('pt-BR', { timeZone: tz, dateStyle: 'short' }).format(d);
     } catch { return d.toLocaleDateString('pt-BR'); }
   }
 
@@ -775,20 +774,14 @@
 
   window.App = App;
 
-  /* =========================================
-     MÓDULO LOADER (Spinner Global)
-     ========================================= */
   App.loader = {
-    _el: null, // Referência ao elemento do loader
-
-    // Inicializa: injeta CSS e cria o HTML do loader no final do body
+    _el: null, 
     init: function() {
       if (document.getElementById('app-loader-overlay')) {
         this._el = document.getElementById('app-loader-overlay');
         return;
       }
 
-      // 1. Injetar CSS do Loader
       const style = document.createElement('style');
       style.innerHTML = `
         .loader-overlay {
@@ -830,16 +823,14 @@
       `;
       document.head.appendChild(style);
 
-      // 2. Criar HTML do Loader
       const div = document.createElement('div');
       div.id = 'app-loader-overlay';
-      div.className = 'loader-overlay loader-hidden'; // Começa oculto
+      div.className = 'loader-overlay loader-hidden'; 
       div.innerHTML = `
         <div class="loader-spinner"></div>
         <div class="loader-text">Por favor, aguarde.</div>
       `;
       
-      // Garante que o body existe antes de anexar
       const appendToBody = () => {
           if(document.body) {
               document.body.appendChild(div);
@@ -856,7 +847,6 @@
 
     show: function() {
       if (!this._el) this.init();
-      // Remove a classe que esconde
       if(this._el) this._el.classList.remove('loader-hidden');
     },
 
@@ -867,7 +857,6 @@
     }
   };
 
-  // Inicializa o loader imediatamente
   App.loader.init();
 
 })();

@@ -16,8 +16,6 @@ router = APIRouter()
 LOCK_MINUTES = 5
 MAX_ATTEMPTS = 5
 
-# --- Modelos Pydantic ---
-
 class UsuarioBase(BaseModel):
     nome: str = Field(..., min_length=3, description="Nome Completo")
     user_name: EmailStr = Field(..., description="Email FIEMG (Login)")
@@ -41,7 +39,6 @@ class UsuarioLogin(BaseModel):
     senha: str
     instituicao_id: Optional[str] = None
 
-# --- Funções Auxiliares ---
 
 def _oid_or_400(s: str) -> ObjectId:
     try:
@@ -49,7 +46,6 @@ def _oid_or_400(s: str) -> ObjectId:
     except (InvalidId, TypeError):
         raise HTTPException(status_code=400, detail="ID inválido")
 
-# --- Rotas de Autenticação ---
 
 @router.post("/api/logout")
 def api_logout(response: Response):
@@ -67,11 +63,9 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
     ip = request.client.host
     r = get_redis()
     
-    # Chaves para controle de Brute Force no Redis
     key_attempts = f"login_attempts:{ip}"
     key_blocked = f"login_blocked:{ip}"
 
-    # 1. Verifica se o IP está bloqueado temporariamente
     if r.exists(key_blocked):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -81,42 +75,33 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
     db = get_mongo_db()
     usuario = db["usuario"].find_one({"user_name_lc": dados.user_name.lower()})
 
-    # Função local para registrar falhas
     def registrar_falha():
         attempts = r.incr(key_attempts)
         if attempts == 1:
-            r.expire(key_attempts, 3600) # Expira contagem em 1h
-            
+            r.expire(key_attempts, 3600)
+
         if attempts >= MAX_ATTEMPTS:
             r.setex(key_blocked, LOCK_MINUTES * 60, "blocked")
             r.delete(key_attempts)
     
-    # Mensagem genérica para evitar User Enumeration
     erro_credenciais = HTTPException(status_code=401, detail="Usuário ou senha incorretos.")
     
-    # 2. Validação de Credenciais (Senha)
-    # A verificação de senha OCORRE ANTES de verificar o status para evitar vazamento de informações
     hash_salvo = (usuario or {}).get("senha")
     if not usuario or not hash_salvo or not verificar_senha(dados.senha, hash_salvo):
         registrar_falha() 
         raise erro_credenciais
     
-    # 3. Limpa tentativas se login for bem-sucedido (Credenciais válidas)
     r.delete(key_attempts)
     r.delete(key_blocked)
 
-    # 4. Verificação de Status (NOVA REGRA DE NEGÓCIO)
-    # Obtém o status (padroniza para 'Ativo' se campo não existir, baseado no Model)
     status_atual = str(usuario.get("status", "Ativo"))
     
-    # Validação case-insensitive (aceita "Ativo", "ativo", "ATIVO")
     if status_atual.strip().lower() != "ativo":
         raise HTTPException(
             status_code=403, 
             detail="Usuário inativado na plataforma. Entre em contato com o administrador."
         )
 
-    # 5. Lógica de Seleção de Instituição (Multi-tenancy)
     inst_id_user = str(usuario.get("instituicao_id")) if usuario.get("instituicao_id") else None
     insts_user = [str(x) for x in (usuario.get("instituicoes_ids") or []) if x]
 
@@ -145,7 +130,6 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
              raise HTTPException(status_code=400, detail="Instituição inválida.")
         inst_final = chosen
 
-    # 6. Criação do Token de Sessão
     token = criar_token(
         {
             "sub": usuario.get("user_name"),
@@ -170,8 +154,6 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
         "instituicao_id": inst_final,
         "token": token 
     }
-
-# --- Rotas de Usuários (CRUD) ---
 
 @router.get("/api/usuarios")
 def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
