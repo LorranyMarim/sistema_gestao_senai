@@ -126,7 +126,7 @@ require_once("../config/verifica_login.php");
         <option value="EAD">EAD</option>
         <option value="Teórica">Teórica</option>
         <option value="Prática">Prática</option>
-        <option value="Teórica com Prática">Teórica com Prática</option>
+        <option value="Teórica com Prática">Teórica 70% - Prática 30%</option>
     </select>
 </div>
 

@@ -91,21 +91,26 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
             r.setex(key_blocked, LOCK_MINUTES * 60, "blocked")
             r.delete(key_attempts)
     
+    # Mensagem genérica para evitar User Enumeration
     erro_credenciais = HTTPException(status_code=401, detail="Usuário ou senha incorretos.")
     
     # 2. Validação de Credenciais (Senha)
+    # A verificação de senha OCORRE ANTES de verificar o status para evitar vazamento de informações
     hash_salvo = (usuario or {}).get("senha")
     if not usuario or not hash_salvo or not verificar_senha(dados.senha, hash_salvo):
         registrar_falha() 
         raise erro_credenciais
     
-    # 3. Limpa tentativas se login for bem-sucedido
+    # 3. Limpa tentativas se login for bem-sucedido (Credenciais válidas)
     r.delete(key_attempts)
     r.delete(key_blocked)
 
-    # 4. Verifica se o usuário está Ativo
-    status_user = usuario.get("status", "Ativo")
-    if status_user != "Ativo":
+    # 4. Verificação de Status (NOVA REGRA DE NEGÓCIO)
+    # Obtém o status (padroniza para 'Ativo' se campo não existir, baseado no Model)
+    status_atual = str(usuario.get("status", "Ativo"))
+    
+    # Validação case-insensitive (aceita "Ativo", "ativo", "ATIVO")
+    if status_atual.strip().lower() != "ativo":
         raise HTTPException(
             status_code=403, 
             detail="Usuário inativado na plataforma. Entre em contato com o administrador."

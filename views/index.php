@@ -100,7 +100,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           valid: "Dados inválidos.",
           limite: "Muitas tentativas. Tente novamente em alguns minutos.",
           auth: "Usuário ou senha incorretos.",
-          inst: "Você não tem acesso à instituição selecionada.",
+          inst: "Você não tem acesso à instituição selecionada ou seu usuário foi desativado.",
           inst_invalida: "Instituição inválida."
         };
         showError(map[code] || "Erro ao fazer login.");
