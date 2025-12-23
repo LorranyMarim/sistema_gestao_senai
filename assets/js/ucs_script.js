@@ -4,7 +4,6 @@
   if (!window.App) throw new Error('Carregue geral_script.js antes de ucs_script.js.');
 
   const { $, $$ } = App.dom;
-  const { debounce, toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.utils;
   const { safeFetch } = App.net;
   const { paginateData, bindControls, updateUI } = App.pagination;
 
@@ -20,7 +19,7 @@
     ucs: [],
     ucEditId: null,
     pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
-    filters: { q: '', instituicoes: [], status: ['Todos'], created_from: '', created_to: '' },
+    filters: { q: '', status: ['Todos'], tipoUc: 'Todos', created_from: '', created_to: '' },
   };
 
   let savedState = {};
@@ -31,6 +30,7 @@
     pagination: { ...DEFAULT_STATE.pagination, ...savedState.pagination },
     filters: { ...DEFAULT_STATE.filters, ...savedState.filters }
   };
+
   const refs = {
     ucModal: $('#ucModal'),
     addUcBtn: $('#addUcBtn'),
@@ -38,13 +38,16 @@
     cancelBtn: $('#cancelBtn'),
     ucForm: $('#ucForm'),
     modalTitleUc: $('#modalTitleUc'),
+    
     ucIdInput: $('#ucId'),
     descricaoUcInput: $('#descricaoUc'),
-    tipoUcInput: $('#tipoUc'),
+    tipoUcInput: $('#tipoUc'), 
     selectInstituicao: $('#instituicaoUc'),
     statusUc: $('#statusUc'),
     alertUc: $('#alertUc'),
+    
     ucTableBody: $('#ucTableBody'),
+    
     visualizarUcModal: $('#visualizarUcModal'),
     closeVisualizarUcBtn: $('#closeVisualizarUcBtn'),
     fecharVisualizarUcBtn: $('#fecharVisualizarUcBtn'),
@@ -53,6 +56,7 @@
       tipo: $('#viewTipoUc'),
       status: $('#viewStatusUc')
     },
+    
     pagElements: {
       prev: $('#prevPage'),
       next: $('#nextPage'),
@@ -68,25 +72,29 @@
     }));
   }
 
-
   async function carregarDadosIniciais() {
     try {
       const data = await safeFetch(API.bootstrap);
       STATE.instituicoes = data.instituicoes || [];
-      STATE.ucs = data.ucs || [];
+      
+      STATE.ucs = Array.isArray(data.ucs) ? data.ucs : (Array.isArray(data) ? data : []);
 
       popularSelectModal();
     } catch (err) {
       console.error(err);
-      refs.ucTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
+      refs.ucTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
     }
   }
 
   function popularSelectModal() {
     if (refs.selectInstituicao) {
-      refs.selectInstituicao.innerHTML = ['<option value="">Selecione...</option>']
-        .concat(STATE.instituicoes.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`))
-        .join('');
+        const options = ['<option value="">Selecione...</option>']
+            .concat(STATE.instituicoes.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`));
+        refs.selectInstituicao.innerHTML = options.join('');
+
+        if (STATE.instituicoes.length > 0) {
+            refs.selectInstituicao.value = STATE.instituicoes[0]._id;
+        }
     }
   }
 
@@ -97,12 +105,13 @@
     const elStatus = document.getElementById('gen_status');
     STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
 
+    const elTipo = document.getElementById('gen_tipo_uc');
+    STATE.filters.tipoUc = elTipo ? elTipo.value : 'Todos';
+
     const elFrom = document.getElementById('gen_created_from');
     const elTo = document.getElementById('gen_created_to');
     STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
     STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
-
-    STATE.filters.instituicoes = [];
 
     const elSize = document.getElementById('gen_pagesize');
     if (elSize) {
@@ -117,12 +126,23 @@
 
     const filtered = STATE.ucs.filter(uc => {
       const f = STATE.filters;
+      
       if (f.q) {
         const text = `${uc.descricao} ${uc.tipo_uc}`.toLowerCase();
         if (!text.includes(f.q.toLowerCase())) return false;
       }
-      if (f.status[0] !== 'Todos' && uc.status !== f.status[0]) return false;
-      if (f.instituicoes.length && !f.instituicoes.includes(uc.instituicao_id)) return false;
+      
+      if (f.status[0] !== 'Todos') {
+          const statusItem = (uc.status || 'Ativo').toLowerCase();
+          const filtroStatus = f.status[0].toLowerCase();
+          if (statusItem !== filtroStatus) return false;
+      }
+
+      if (f.tipoUc && f.tipoUc !== 'Todos') {
+          
+          if (uc.tipo_uc !== f.tipoUc) return false;
+      }
+
       if (f.created_from && uc.data_criacao < f.created_from) return false;
       if (f.created_to && uc.data_criacao > f.created_to) return false;
 
@@ -138,23 +158,20 @@
 
   function renderTable(lista) {
     if (!lista.length) {
-      refs.ucTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
+      refs.ucTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
       return;
     }
 
-    const mapInst = new Map(STATE.instituicoes.map(i => [i._id, i.razao_social ?? i.nome]));
+    const fmtData = App.format.fmtDateBR;
 
-    const fmtData = (d) => {
-      if (!d) return '-';
-      try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return '-'; }
-    };
+    refs.ucTableBody.innerHTML = lista.map(uc => {
+        const statusClass = (uc.status === 'Inativo') ? 'text-red-500 font-bold' : 'text-green-600';
 
-    refs.ucTableBody.innerHTML = lista.map(uc => `
+        return `
       <tr>
-       
         <td>${uc.descricao || ''}</td>
         <td>${uc.tipo_uc || ''}</td>
-        <td>${uc.status || 'Ativo'}</td>
+        <td><span class="${statusClass}">${uc.status || 'Ativo'}</span></td>
         <td>${fmtData(uc.data_criacao)}</td>
         <td>
           <div class="action-buttons flex gap-2 justify-center">
@@ -164,15 +181,14 @@
           </div>
         </td>
       </tr>
-    `).join('');
+    `}).join('');
   }
 
-  function setupFiltersAndRender() {
-
+  function setupFilters() {
     if (App.filters && App.filters.render) {
       App.filters.render(
         'filter_area',
-        { search: true, date: true, status: true, pageSize: true },
+        { search: true, date: true, status: true, pageSize: true, tipoUc: true },
         null,
         () => {
           STATE.pagination.page = 1;
@@ -188,12 +204,46 @@
 
     if (STATE.filters.q && document.getElementById('gen_search'))
       document.getElementById('gen_search').value = STATE.filters.q;
+      
+    if (STATE.filters.tipoUc && document.getElementById('gen_tipo_uc'))
+        document.getElementById('gen_tipo_uc').value = STATE.filters.tipoUc;
 
     renderizarConteudo();
   }
 
+  function openModalCadastro() {
+      STATE.ucEditId = null;
+      refs.ucForm.reset();
+      refs.ucIdInput.value = '';
+      refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
+      
+      refs.statusUc.value = 'Ativo';
+      refs.statusUc.disabled = true; 
+
+      if (STATE.instituicoes.length > 0 && !refs.selectInstituicao.value) {
+        refs.selectInstituicao.value = STATE.instituicoes[0]._id;
+      }
+
+      App.ui.showModal(refs.ucModal);
+  }
+
+  function openModalEdicao(uc) {
+      STATE.ucEditId = uc._id;
+      
+      refs.ucIdInput.value = uc._id;
+      refs.descricaoUcInput.value = uc.descricao || '';
+      refs.tipoUcInput.value = uc.tipo_uc || '';
+      refs.selectInstituicao.value = uc.instituicao_id || '';
+      
+      refs.statusUc.value = uc.status || 'Ativo';
+      refs.statusUc.disabled = false;
+      
+      refs.modalTitleUc.textContent = 'Editar UC';
+      App.ui.showModal(refs.ucModal);
+  }
+
   function setupEvents() {
-    bindControls(refs.pagElements, (action, val) => {
+    bindControls(refs.pagElements, (action) => {
       if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
       if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
       renderizarConteudo();
@@ -204,60 +254,37 @@
       const btnEdit = e.target.closest('.btn-edit');
       const btnDel = e.target.closest('.btn-delete');
 
-      // --- Lógica do Botão VISUALIZAR ---
       if (btnView) {
         const uc = STATE.ucs.find(u => u._id === btnView.dataset.id);
         if (!uc) return;
-        
-        // Preenche os campos de visualização (readonly)
         refs.viewFields.descricao.value = uc.descricao || '';
-        refs.viewFields.tipo.value = uc.tipo_uc || '';      // CORRIGIDO: usa .tipo e não .sala
+        refs.viewFields.tipo.value = uc.tipo_uc || '';
         refs.viewFields.status.value = uc.status || '';
-        
         App.ui.showModal(refs.visualizarUcModal);
       }
 
-      // --- Lógica do Botão EDITAR ---
       if (btnEdit) {
         const uc = STATE.ucs.find(u => u._id === btnEdit.dataset.id);
-        if (!uc) return;
-        
-        STATE.ucEditId = uc._id;
-        
-        // Preenche o formulário de edição
-        refs.ucIdInput.value = uc._id;
-        refs.selectInstituicao.value = uc.instituicao_id || '';
-        refs.descricaoUcInput.value = uc.descricao || '';
-        refs.tipoUcInput.value = uc.tipo_uc || '';          // CORRIGIDO: usa refs.tipoUcInput e não salaIdealInput
-        refs.statusUc.value = uc.status || 'Ativo';
-        
-        refs.modalTitleUc.textContent = 'Editar UC';
-        App.ui.showModal(refs.ucModal);
+        if (uc) openModalEdicao(uc);
       }
 
-      // --- Lógica do Botão EXCLUIR ---
       if (btnDel) {
         if (!confirm('Tem certeza que deseja excluir esta UC?')) return;
         try {
-          await safeFetch(`${API.uc}?id=${btnDel.dataset.id}`, { method: 'DELETE' });
-          await carregarDadosIniciais();
-          renderizarConteudo();
-        } catch (err) { alert('Erro ao excluir.'); }
+            App.loader.show();
+            await safeFetch(`${API.uc}?id=${btnDel.dataset.id}`, { method: 'DELETE' });
+            await carregarDadosIniciais();
+            renderizarConteudo();
+            alert('Excluído com sucesso.');
+        } catch (err) { 
+            alert('Erro ao excluir: ' + err.message); 
+        } finally {
+            App.loader.hide();
+        }
       }
     });
 
-    refs.addUcBtn?.addEventListener('click', () => {
-      if (!refs.ucModal) {
-        console.error('Erro crítico: Modal não encontrado no DOM.');
-        return;
-      }
-      STATE.ucEditId = null;
-      refs.ucForm.reset();
-      refs.ucIdInput.value = '';          // garante novo cadastro
-      refs.modalTitleUc.textContent = 'Adicionar Nova Unidade Curricular';
-      App.ui.showModal(refs.ucModal);
-
-    });
+    refs.addUcBtn?.addEventListener('click', openModalCadastro);
 
     const closeModal = () => App.ui.hideModal(refs.ucModal);
     refs.closeModalBtn?.addEventListener('click', closeModal);
@@ -265,25 +292,41 @@
 
     refs.ucForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      if (!refs.selectInstituicao.value) {
+          if(STATE.instituicoes.length > 0) refs.selectInstituicao.value = STATE.instituicoes[0]._id;
+          else {
+              alert('Erro: Nenhuma instituição vinculada para salvar a UC.');
+              return;
+          }
+      }
+
       const isEdit = !!STATE.ucEditId;
 
       const payload = {
         descricao: refs.descricaoUcInput.value.trim(),
         tipo_uc: refs.tipoUcInput.value.trim(),
         instituicao_id: refs.selectInstituicao.value,
-        status: isEdit ? (refs.statusUc?.value ?? 'Ativo') : 'Ativo'
+    
+        status: isEdit ? refs.statusUc.value : 'Ativo'
       };
-
 
       const url = isEdit ? `${API.uc}?id=${STATE.ucEditId}` : API.uc;
       const method = isEdit ? 'PUT' : 'POST';
 
       try {
+        App.loader.show();
         await safeFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         closeModal();
         await carregarDadosIniciais();
+        renderizarConteudo();
         alert('Salvo com sucesso!');
-      } catch (err) { alert('Erro ao salvar.'); }
+      } catch (err) { 
+          console.error(err);
+          alert('Erro ao salvar: ' + (err.message || 'Erro desconhecido.')); 
+      } finally {
+          App.loader.hide();
+      }
     });
 
     const closeView = () => App.ui.hideModal(refs.visualizarUcModal);
@@ -292,75 +335,18 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Mostra o loader imediatamente
     App.loader.show();
-
-    // Configura eventos de UI (botões) para que o usuário veja a interface pronta por trás do loader,
-    // ou você pode mover isso para depois do await se preferir que nada seja interativo.
-    // Manter aqui permite que o DOM esteja pronto.
     setupEvents();
 
     try {
-      // 2. Aguarda o carregamento dos dados da API
       await carregarDadosIniciais();
-
-      // 3. Renderiza a tabela
-      setupFiltersAndRender();
+      setupFilters();
     } catch (err) {
       console.error('Falha na inicialização:', err);
-      // Opcional: Mostrar mensagem de erro na tela
-      alert('Erro ao carregar dados do sistema. Verifique sua conexão.');
+      alert('Erro ao carregar sistema.');
     } finally {
-      // 4. Esconde o loader independentemente de sucesso ou erro
       App.loader.hide();
     }
   });
-
-
-  function setupFiltersAndRender() {
-
-    if (App.filters && App.filters.render) {
-      App.filters.render(
-        'filter_area',
-        { search: true, date: true, status: true, pageSize: true },
-        null,
-        () => {
-          STATE.pagination.page = 1;
-          renderizarConteudo();
-        },
-        () => {
-          STATE.filters = { ...DEFAULT_STATE.filters };
-          STATE.pagination.page = 1;
-          renderizarConteudo();
-        }
-      );
-    }
-
-    if (STATE.filters.q && document.getElementById('gen_search'))
-      document.getElementById('gen_search').value = STATE.filters.q;
-
-    renderizarConteudo();
-  }
-
-  function applyFiltersFromUI() {
-    const elSearch = document.getElementById('gen_search');
-    STATE.filters.q = (elSearch?.value || '').trim();
-
-    const elStatus = document.getElementById('gen_status');
-    STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
-
-    const elFrom = document.getElementById('gen_created_from');
-    const elTo = document.getElementById('gen_created_to');
-    STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
-    STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
-
-    STATE.filters.instituicoes = [];
-
-    const elSize = document.getElementById('gen_pagesize');
-    if (elSize) {
-      STATE.pagination.pageSize = parseInt(elSize.value, 10);
-      refs.pagElements.sizeSel = elSize;
-    }
-  }
 
 })();

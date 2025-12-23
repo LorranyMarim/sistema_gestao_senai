@@ -703,6 +703,23 @@
         sel.addEventListener('change', triggerChange);
         container.appendChild(createGroup('Status:', sel, 'status'));
       }
+      if (config.tipoUc) {
+        const sel = document.createElement('select');
+        sel.id = 'gen_tipo_uc';
+        sel.classList.add('form-select');
+        
+        const opcoes = ['Todos', 'EAD', 'Teórica', 'Prática', 'Teórica com Prática'];
+        
+        opcoes.forEach(optTxt => {
+          const opt = document.createElement('option');
+          opt.value = optTxt;
+          opt.textContent = optTxt;
+          sel.appendChild(opt);
+        });
+        
+        sel.addEventListener('change', triggerChange);
+        container.appendChild(createGroup('Tipo de UC:', sel, 'tipo-uc'));
+      }
       if (config.tipoUsuario) {
         const sel = document.createElement('select');
         sel.id = 'gen_tipo_usuario';
@@ -760,6 +777,7 @@
         if (document.getElementById('gen_created_to')) document.getElementById('gen_created_to').value = '';
         if (document.getElementById('gen_status')) document.getElementById('gen_status').value = 'Todos';
         if (document.getElementById('gen_tipo_usuario')) document.getElementById('gen_tipo_usuario').value = 'Todos';
+        if (document.getElementById('gen_tipo_uc')) document.getElementById('gen_tipo_uc').value = 'Todos';
         if (document.getElementById('gen_pagesize')) document.getElementById('gen_pagesize').value = 10;
 
         if (customElement && (customElement.tagName === 'SELECT' || customElement.tagName === 'INPUT')) customElement.value = '';
