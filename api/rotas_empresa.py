@@ -8,6 +8,7 @@ import re
 from pymongo.collation import Collation
 from auth_dep import get_ctx, RequestCtx
 from cache_utils import invalidate_cache
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ FORBIDDEN_CHARS = re.compile(r'[<>"\';{}]')
 class EmpresaModel(BaseModel):
     razao_social: str = Field(..., min_length=2, max_length=100)
     cnpj: Optional[str] = Field(None, max_length=20)
-    instituicao_id: str = Field(..., min_length=2, max_length=100)
+    instituicao_id: Optional[str] = Field(None) 
     status: Literal['Ativo', 'Inativo']
 
     @validator('razao_social', 'instituicao_id', pre=True)
@@ -193,13 +194,20 @@ def bootstrap_empresas(ctx: RequestCtx = Depends(get_ctx)):
     
     lista_inst = []
     if instituicao:
-        instituicao["_id"] = str(instituicao["_id"])
-        lista_inst.append(instituicao)
+        inst_data = jsonable_encoder(instituicao, custom_encoder={
+            ObjectId: str,
+            datetime: lambda d: d.isoformat()
+        })
+        lista_inst.append(inst_data)
 
     cursor = db["empresas"].find({"instituicao_id": inst_oid}).sort("data_criacao", -1)
     
     lista_empresas = []
     for emp in cursor:
+        emp_data = jsonable_encoder(emp, custom_encoder={
+            ObjectId: str,
+            datetime: lambda d: d.isoformat()
+        })
         emp["_id"] = str(emp["_id"])
         if "instituicao_id" in emp:
             emp["instituicao_id"] = str(emp["instituicao_id"])
