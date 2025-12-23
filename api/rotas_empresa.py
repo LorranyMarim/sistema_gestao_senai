@@ -179,13 +179,14 @@ def deletar_empresa(id: str, ctx: RequestCtx = Depends(get_ctx)):
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="Empresa não encontrada ou acesso negado")
+# Arquivo: api/rotas_empresa.py
 
 @router.get("/api/gestao_empresas/bootstrap")
 def bootstrap_empresas(ctx: RequestCtx = Depends(get_ctx)):
     """
     Retorna dados iniciais para a tela de gestão:
     - Dados da instituição atual
-    - Lista inicial de empresas (opcionalmente paginada, aqui trazemos todas ou as recentes para consistência com UCs)
+    - Lista inicial de empresas
     """
     db = get_mongo_db()
     
@@ -204,19 +205,17 @@ def bootstrap_empresas(ctx: RequestCtx = Depends(get_ctx)):
     
     lista_empresas = []
     for emp in cursor:
+        # AQUI: O código já prepara os dados corretamente nesta variável
         emp_data = jsonable_encoder(emp, custom_encoder={
             ObjectId: str,
             datetime: lambda d: d.isoformat()
         })
-        emp["_id"] = str(emp["_id"])
-        if "instituicao_id" in emp:
-            emp["instituicao_id"] = str(emp["instituicao_id"])
-        if isinstance(emp.get("data_criacao"), datetime):
-            emp["data_criacao"] = emp["data_criacao"].astimezone(timezone.utc).isoformat()
-        elif isinstance(emp.get("data_criacao"), ObjectId):
-             emp["data_criacao"] = emp.get("data_criacao").generation_time.isoformat()
-             
-        lista_empresas.append(emp)
+        
+        # CORREÇÃO: Remova ou comente as manipulações manuais no 'emp' abaixo,
+        # pois o jsonable_encoder já resolve isso.
+        
+        # ADICIONE A VERSÃO TRATADA À LISTA
+        lista_empresas.append(emp_data) 
 
     return {
         "instituicoes": lista_inst,
