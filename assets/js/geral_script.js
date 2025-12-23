@@ -708,7 +708,7 @@
         sel.id = 'gen_tipo_uc';
         sel.classList.add('form-select');
         
-        const opcoes = ['Todos', 'EAD', 'Teórica', 'Prática', 'Teórica com Prática'];
+        const opcoes = ['Todos', 'EAD', 'Teórica', 'Prática', 'Teórica 70% - Prática 30%'];
         
         opcoes.forEach(optTxt => {
           const opt = document.createElement('option');

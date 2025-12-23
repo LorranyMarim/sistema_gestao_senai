@@ -31,7 +31,7 @@ require_once("../config/verifica_login.php");
                     <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
                             Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_unidades_curriculares.php" class="active"><i class="fas fa-graduation-cap"></i>
+                    <li><a href="gestao_ucs.php" class="active"><i class="fas fa-graduation-cap"></i>
                             Gestão de UCs</a></li>
                     <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a>
                     </li>
@@ -126,7 +126,7 @@ require_once("../config/verifica_login.php");
         <option value="EAD">EAD</option>
         <option value="Teórica">Teórica</option>
         <option value="Prática">Prática</option>
-        <option value="Teórica com Prática">Teórica 70% - Prática 30%</option>
+        <option value="Teórica 70% - Prática 30%">Teórica 70% - Prática 30%</option>
     </select>
 </div>
 
