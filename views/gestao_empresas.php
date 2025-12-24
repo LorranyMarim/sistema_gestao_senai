@@ -10,9 +10,7 @@ require_once("../config/verifica_login.php");
     <title>Gestão de Empresas - SENAI</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="../assets/css/style.css">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
@@ -69,7 +67,8 @@ require_once("../config/verifica_login.php");
             <section class="table-section">
                 <h2>Empresas Cadastradas</h2>
 
-                <div id="filter_area" class="mb-3"></div>
+                <div id="filter_area" class="mb-3">
+                    </div>
 
                 <div class="table-responsive">
                     <table id="empresaTable" class="data-table">
@@ -84,7 +83,6 @@ require_once("../config/verifica_login.php");
                         </thead>
                         <tbody id="empresaTableBody"></tbody>
                     </table>
-                    
                     <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
                         <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
                         <span id="pageInfo">Página 1 de 1 • 0 registros</span>
@@ -106,7 +104,7 @@ require_once("../config/verifica_login.php");
                 
                 <div class="form-group" style="display:none;">
                     <label for="instituicaoEmpresa">Instituição:</label>
-                    <select id="instituicaoEmpresa" class="form-control">
+                    <select id="instituicaoEmpresa" class="form-control" required>
                     </select>
                 </div>
 
@@ -114,13 +112,13 @@ require_once("../config/verifica_login.php");
 
                 <div class="form-group">
                     <label for="razaoSocial">Razão Social:</label>
-                    <input type="text" id="razaoSocial" class="form-control" required minlength="2" maxlength="100"
-                        placeholder="Ex: Indústria Metalúrgica LTDA">
+                    <input type="text" id="razaoSocial" class="form-control" required minlength="3" maxlength="150"
+                        placeholder="Ex: Indústria XYZ Ltda">
                 </div>
 
                 <div class="form-group">
-                    <label for="cnpj">CNPJ (Opcional):</label>
-                    <input type="text" id="cnpj" class="form-control" maxlength="20"
+                    <label for="cnpjEmpresa">CNPJ:</label>
+                    <input type="text" id="cnpjEmpresa" class="form-control" maxlength="20"
                         placeholder="00.000.000/0001-00">
                 </div>
 
@@ -167,9 +165,8 @@ require_once("../config/verifica_login.php");
             </form>
         </div>
     </div>
-
+    
     <script src="../assets/js/geral_script.js"></script>
     <script src="../assets/js/empresas_script.js" defer></script>
 </body>
-
 </html>

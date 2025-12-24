@@ -8,20 +8,21 @@ import re
 from pymongo.collation import Collation
 from auth_dep import get_ctx, RequestCtx
 from cache_utils import invalidate_cache
-from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 
 FORBIDDEN_CHARS = re.compile(r'[<>"\';{}]')
 
 class EmpresaModel(BaseModel):
-    razao_social: str = Field(..., min_length=2, max_length=100)
+    razao_social: str = Field(..., min_length=3, max_length=150)
     cnpj: Optional[str] = Field(None, max_length=20)
-    instituicao_id: Optional[str] = Field(None) 
+    instituicao_id: str = Field(..., min_length=2, max_length=100)
     status: Literal['Ativo', 'Inativo']
 
-    @validator('razao_social', 'instituicao_id', pre=True)
-    def sanitize_required(cls, v):
+    @validator('razao_social', 'cnpj', 'instituicao_id', pre=True)
+    def sanitize_and_check_chars(cls, v):
+        if v is None:
+            return v
         if not isinstance(v, str):
             raise ValueError("Valor inválido.")
         val = v.strip()
@@ -29,18 +30,13 @@ class EmpresaModel(BaseModel):
             raise ValueError("O campo contém caracteres não permitidos.")
         return val
 
-    @validator('cnpj', pre=True)
-    def sanitize_optional(cls, v):
-        if v is None:
-            return None
-        if not isinstance(v, str):
-            v = str(v)
-        val = v.strip()
-        if not val:
-            return None
-        if FORBIDDEN_CHARS.search(val):
-            raise ValueError("CNPJ contém caracteres não permitidos.")
-        return val
+    @validator('cnpj')
+    def validate_cnpj_format(cls, v):
+        # Validação simples de formato, removendo não numéricos se necessário no futuro
+        # Aqui mantemos flexível mas limpo
+        if v and len(v) > 20:
+             raise ValueError("CNPJ muito longo.")
+        return v
 
 def _try_objectid(s: str):
     try:
@@ -60,9 +56,11 @@ def listar_empresas(
 ):
     db = get_mongo_db()
     filtro: dict = {}
+
     filtro["instituicao_id"] = ctx.inst_oid 
 
     if q:
+        # Busca por Razão Social ou CNPJ
         filtro["$or"] = [
             {"razao_social":  {"$regex": q, "$options": "i"}},
             {"cnpj": {"$regex": q, "$options": "i"}},
@@ -73,6 +71,8 @@ def listar_empresas(
         for s in status:
             if not s: continue
             v = s.strip().capitalize()
+            if v == "Ativo": v = "Ativo"
+            elif v == "Inativo": v = "Inativo"
             if v in ("Ativo", "Inativo"):
                 norm.append(v)
         if norm:
@@ -95,7 +95,8 @@ def listar_empresas(
     page = max(1, int(page))
     page_size = min(max(1, int(page_size)), 100)
 
-    col = db["empresas"]
+    col = db["empresa"]
+    # Collation para ordenação correta em PT-BR (case insensitive)
     coll = Collation('pt', strength=1)
 
     total = col.count_documents(filtro, collation=coll)
@@ -127,13 +128,14 @@ def listar_empresas(
 def criar_empresa(emp: EmpresaModel, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     data = emp.dict()
+
     data['instituicao_id'] = ctx.inst_oid 
     
     data['status'] = data['status'].capitalize()
     data['data_criacao'] = datetime.now(timezone.utc)
     data.pop('_id', None)
 
-    inserted = db["empresas"].insert_one(data)
+    inserted = db["empresa"].insert_one(data)
     
     invalidate_cache(str(ctx.inst_oid))
     
@@ -153,7 +155,7 @@ def atualizar_empresa(id: str, emp: EmpresaModel, ctx: RequestCtx = Depends(get_
     
     data['instituicao_id'] = ctx.inst_oid
 
-    res = db["empresas"].update_one(
+    res = db["empresa"].update_one(
         {"_id": oid, "instituicao_id": ctx.inst_oid}, 
         {"$set": data}
     )
@@ -171,7 +173,7 @@ def deletar_empresa(id: str, ctx: RequestCtx = Depends(get_ctx)):
 
     db = get_mongo_db()
     
-    res = db["empresas"].delete_one(
+    res = db["empresa"].delete_one(
         {"_id": oid, "instituicao_id": ctx.inst_oid}
     )
     
@@ -179,15 +181,9 @@ def deletar_empresa(id: str, ctx: RequestCtx = Depends(get_ctx)):
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
     raise HTTPException(status_code=404, detail="Empresa não encontrada ou acesso negado")
-# Arquivo: api/rotas_empresa.py
 
 @router.get("/api/gestao_empresas/bootstrap")
 def bootstrap_empresas(ctx: RequestCtx = Depends(get_ctx)):
-    """
-    Retorna dados iniciais para a tela de gestão:
-    - Dados da instituição atual
-    - Lista inicial de empresas
-    """
     db = get_mongo_db()
     
     inst_oid = ctx.inst_oid
@@ -195,29 +191,24 @@ def bootstrap_empresas(ctx: RequestCtx = Depends(get_ctx)):
     
     lista_inst = []
     if instituicao:
-        inst_data = jsonable_encoder(instituicao, custom_encoder={
-            ObjectId: str,
-            datetime: lambda d: d.isoformat()
-        })
-        lista_inst.append(inst_data)
+        instituicao["_id"] = str(instituicao["_id"])
+        lista_inst.append(instituicao)
 
-    cursor = db["empresas"].find({"instituicao_id": inst_oid}).sort("data_criacao", -1)
+    cursor_emps = db["empresa"].find({"instituicao_id": inst_oid}).sort("data_criacao", -1)
     
-    lista_empresas = []
-    for emp in cursor:
-        # AQUI: O código já prepara os dados corretamente nesta variável
-        emp_data = jsonable_encoder(emp, custom_encoder={
-            ObjectId: str,
-            datetime: lambda d: d.isoformat()
-        })
-        
-        # CORREÇÃO: Remova ou comente as manipulações manuais no 'emp' abaixo,
-        # pois o jsonable_encoder já resolve isso.
-        
-        # ADICIONE A VERSÃO TRATADA À LISTA
-        lista_empresas.append(emp_data) 
+    lista_emps = []
+    for emp in cursor_emps:
+        emp["_id"] = str(emp["_id"])
+        if "instituicao_id" in emp:
+            emp["instituicao_id"] = str(emp["instituicao_id"])
+        if isinstance(emp.get("data_criacao"), datetime):
+            emp["data_criacao"] = emp["data_criacao"].astimezone(timezone.utc).isoformat()
+        elif isinstance(emp.get("data_criacao"), ObjectId):
+             emp["data_criacao"] = emp["data_criacao"].generation_time.isoformat()
+             
+        lista_emps.append(emp)
 
     return {
         "instituicoes": lista_inst,
-        "empresas": lista_empresas
+        "empresas": lista_emps
     }

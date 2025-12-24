@@ -1,346 +1,346 @@
 (() => {
   'use strict';
 
-  const MODULE_PATH = '../backend/processa_empresa.php';
-  const MODAL_ID = 'empresaModal';
-  const TABLE_BODY_ID = 'empresaTableBody';
-  const PAGE_INFO_ID = 'pageInfo';
+  if (!window.App) throw new Error('Carregue geral_script.js antes de empresas_script.js.');
 
-  let state = {
-    page: 1,
-    pageSize: 10,
-    total: 0,
-    filters: {},
-    empresas: [] 
-  };
+  const { $, $$ } = App.dom;
+  const { safeFetch } = App.net;
+  const { paginateData, bindControls, updateUI } = App.pagination;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    init();
-    setupEvents();
+  const LS_KEY = 'empresas_gestao_state_v1';
+
+  const API = Object.freeze({
+    bootstrap: '../backend/processa_empresa.php?action=bootstrap',
+    empresa: '../backend/processa_empresa.php',
   });
 
-  async function init() {
-    App.loader.show();
+  const DEFAULT_STATE = {
+    instituicoes: [],
+    empresas: [],
+    empresaEditId: null,
+    pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
+    filters: { q: '', status: ['Todos'], created_from: '', created_to: '' },
+  };
 
+  let savedState = {};
+  try { savedState = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { }
+
+  const STATE = {
+    ...DEFAULT_STATE,
+    pagination: { ...DEFAULT_STATE.pagination, ...savedState.pagination },
+    filters: { ...DEFAULT_STATE.filters, ...savedState.filters }
+  };
+
+  const refs = {
+    empresaModal: $('#empresaModal'),
+    addEmpresaBtn: $('#addEmpresaBtn'),
+    closeModalBtn: $('#closeModalBtn'),
+    cancelBtn: $('#cancelBtn'),
+    empresaForm: $('#empresaForm'),
+    modalTitleEmpresa: $('#modalTitleEmpresa'),
+    
+    empresaIdInput: $('#empresaId'),
+    razaoSocialInput: $('#razaoSocial'),
+    cnpjInput: $('#cnpjEmpresa'), 
+    selectInstituicao: $('#instituicaoEmpresa'),
+    statusEmpresa: $('#statusEmpresa'),
+    alertEmpresa: $('#alertEmpresa'),
+    
+    empresaTableBody: $('#empresaTableBody'),
+    
+    visualizarEmpresaModal: $('#visualizarEmpresaModal'),
+    closeVisualizarEmpresaBtn: $('#closeVisualizarEmpresaBtn'),
+    fecharVisualizarEmpresaBtn: $('#fecharVisualizarEmpresaBtn'),
+    viewFields: {
+      razaoSocial: $('#viewRazaoSocial'),
+      cnpj: $('#viewCnpj'),
+      status: $('#viewStatusEmpresa')
+    },
+    
+    pagElements: {
+      prev: $('#prevPage'),
+      next: $('#nextPage'),
+      info: $('#pageInfo'),
+      sizeSel: null
+    }
+  };
+
+  function saveState() {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      pagination: { pageSize: STATE.pagination.pageSize },
+      filters: STATE.filters
+    }));
+  }
+
+  async function carregarDadosIniciais() {
     try {
-      const res = await App.net.get(`${MODULE_PATH}?action=bootstrap`);
+      const data = await safeFetch(API.bootstrap);
+      STATE.instituicoes = data.instituicoes || [];
+      
+      STATE.empresas = Array.isArray(data.empresas) ? data.empresas : (Array.isArray(data) ? data : []);
 
-      if (res.instituicoes && res.instituicoes.length > 0) {
-        populateSelect('instituicaoEmpresa', res.instituicoes, '_id', 'nome');
-      }
-
-      if (res.empresas) {
-        state.empresas = res.empresas; 
-        state.total = res.empresas.length;
-        renderTable(state.empresas);
-        updatePaginationInfo(state.total, state.page, state.pageSize);
-      }
-
-      setupFiltersComponent();
-
-    } catch (error) {
-      console.error('Erro na inicialização:', error);
-      const tbody = document.getElementById(TABLE_BODY_ID);
-      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar o módulo.</td></tr>';
-    } finally {
-      App.loader.hide();
+      popularSelectModal();
+    } catch (err) {
+      console.error(err);
+      refs.empresaTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
     }
   }
 
-  function setupEvents() {
-    document.getElementById('addEmpresaBtn')?.addEventListener('click', openModalCreate);
+  function popularSelectModal() {
+    if (refs.selectInstituicao) {
+        const options = ['<option value="">Selecione...</option>']
+            .concat(STATE.instituicoes.map(i => `<option value="${i._id}">${i.razao_social ?? i.nome}</option>`));
+        refs.selectInstituicao.innerHTML = options.join('');
 
-    document.getElementById('closeModalBtn')?.addEventListener('click', closeModal);
-    document.getElementById('cancelBtn')?.addEventListener('click', closeModal);
-
-    document.getElementById('empresaForm')?.addEventListener('submit', handleSave);
-
-    const closeView = () => {
-      document.getElementById('visualizarEmpresaModal').style.display = 'none';
-    };
-    document.getElementById('closeVisualizarEmpresaBtn')?.addEventListener('click', closeView);
-    document.getElementById('fecharVisualizarEmpresaBtn')?.addEventListener('click', closeView);
-  }
-
-  function setupFiltersComponent() {
-    if (App.filters) {
-      App.filters.render('filter_area', [
-        {
-          name: 'q',
-          label: 'Buscar',
-          type: 'text',
-          placeholder: 'Razão Social ou CNPJ'
-        },
-        {
-          name: 'status',
-          label: 'Status',
-          type: 'select',
-          options: [
-            { value: '', label: 'Todos' },
-            { value: 'Ativo', label: 'Ativo' },
-            { value: 'Inativo', label: 'Inativo' }
-          ]
+        if (STATE.instituicoes.length > 0) {
+            refs.selectInstituicao.value = STATE.instituicoes[0]._id;
         }
-      ], (filters) => {
-        state.filters = filters;
-        state.page = 1;
-        carregarEmpresas();
-      });
     }
   }
 
-  async function carregarEmpresas() {
-    App.loader.show();
-    const tbody = document.getElementById(TABLE_BODY_ID);
+  function applyFiltersFromUI() {
+    const elSearch = document.getElementById('gen_search');
+    STATE.filters.q = (elSearch?.value || '').trim();
 
-    try {
-      const params = new URLSearchParams({
-        page: state.page,
-        page_size: state.pageSize,
-        ...state.filters
-      });
+    const elStatus = document.getElementById('gen_status');
+    STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
 
-      const res = await App.net.get(`${MODULE_PATH}?${params.toString()}`);
+    const elFrom = document.getElementById('gen_created_from');
+    const elTo = document.getElementById('gen_created_to');
+    STATE.filters.created_from = elFrom?.value ? toIsoStartOfDayLocal(elFrom.value) : '';
+    STATE.filters.created_to = elTo?.value ? toIsoEndOfDayLocal(elTo.value) : '';
 
-      state.total = res.total || 0;
-      state.empresas = res.items || []; 
-
-      renderTable(state.empresas);
-      updatePaginationInfo(res.total, res.page, res.page_size);
-
-    } catch (error) {
-      console.error('Erro ao listar empresas:', error);
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500">Erro ao carregar dados.</td></tr>';
-    } finally {
-      App.loader.hide();
+    const elSize = document.getElementById('gen_pagesize');
+    if (elSize) {
+      STATE.pagination.pageSize = parseInt(elSize.value, 10);
+      refs.pagElements.sizeSel = elSize;
     }
+  }
+
+  function renderizarConteudo() {
+    applyFiltersFromUI();
+    saveState();
+
+    const filtered = STATE.empresas.filter(emp => {
+      const f = STATE.filters;
+      
+      if (f.q) {
+        const text = `${emp.razao_social} ${emp.cnpj || ''}`.toLowerCase();
+        if (!text.includes(f.q.toLowerCase())) return false;
+      }
+      
+      if (f.status[0] !== 'Todos') {
+          const statusItem = (emp.status || 'Ativo').toLowerCase();
+          const filtroStatus = f.status[0].toLowerCase();
+          if (statusItem !== filtroStatus) return false;
+      }
+
+      if (f.created_from && emp.data_criacao < f.created_from) return false;
+      if (f.created_to && emp.data_criacao > f.created_to) return false;
+
+      return true;
+    });
+
+    const { pagedData, meta } = paginateData(filtered, STATE.pagination.page, STATE.pagination.pageSize);
+    STATE.pagination = { ...STATE.pagination, ...meta };
+
+    updateUI(refs.pagElements, meta);
+    renderTable(pagedData);
   }
 
   function renderTable(lista) {
-    const tbody = document.getElementById(TABLE_BODY_ID);
-    tbody.innerHTML = '';
-
-    if (!lista || lista.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">Nenhuma empresa encontrada.</td></tr>';
+    if (!lista.length) {
+      refs.empresaTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
       return;
     }
 
-    lista.forEach(emp => {
-      const tr = document.createElement('tr');
+    const fmtData = App.format.fmtDateBR;
 
-      const dataCriacao = emp.data_criacao
-        ? new Date(emp.data_criacao).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-        : '-';
-
-      let statusClass = 'text-gray-600';
-      if (emp.status === 'Ativo') statusClass = 'text-green-600 font-semibold';
-      else if (emp.status === 'Inativo') statusClass = 'text-red-500 font-semibold';
-
-      const razao = safeHtml(emp.razao_social);
-      const cnpj = safeHtml(emp.cnpj || '-');
-
-      tr.innerHTML = `
-        <td>${razao}</td>
-        <td>${cnpj}</td>
-        <td><span class="${statusClass}">${emp.status}</span></td>
-        <td>${dataCriacao}</td>
-        <td class="actions">
-          <button class="btn-icon view-btn" title="Visualizar" onclick="abrirVisualizar('${emp._id}')">
-            <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn-icon edit-btn" title="Editar" onclick="abrirModalEditar('${emp._id}')">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn-icon delete-btn" title="Excluir" onclick="deletarEmpresa('${emp._id}', '${safeHtml(emp.razao_social, true)}')">
-            <i class="fas fa-trash-alt"></i>
-          </button>
+    refs.empresaTableBody.innerHTML = lista.map(emp => {
+        // Regra de estilização do Status
+        const statusClass = (emp.status === 'Inativo') ? 'text-red-500 font-bold' : 'text-green-600 font-bold';
+        
+        return `
+      <tr>
+        <td>${emp.razao_social || ''}</td>
+        <td>${emp.cnpj || '—'}</td>
+        <td><span class="${statusClass}">${emp.status || 'Ativo'}</span></td>
+        <td>${fmtData(emp.data_criacao)}</td>
+        <td>
+          <div class="action-buttons flex gap-2 justify-center">
+            <button class="btn btn-icon btn-view" data-id="${emp._id}" title="Ver"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-icon btn-edit" data-id="${emp._id}" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-icon btn-delete" data-id="${emp._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </td>
-      `;
-      tbody.appendChild(tr);
+      </tr>
+    `}).join('');
+  }
+
+  function setupFilters() {
+    if (App.filters && App.filters.render) {
+      // Configuração dos filtros: search, date, status, pageSize. "tipoUc" removido.
+      App.filters.render(
+        'filter_area',
+        { search: true, date: true, status: true, pageSize: true },
+        null,
+        () => {
+          STATE.pagination.page = 1;
+          renderizarConteudo();
+        },
+        () => {
+          STATE.filters = { ...DEFAULT_STATE.filters };
+          STATE.pagination.page = 1;
+          renderizarConteudo();
+        }
+      );
+    }
+
+    if (STATE.filters.q && document.getElementById('gen_search'))
+      document.getElementById('gen_search').value = STATE.filters.q;
+
+    renderizarConteudo();
+  }
+
+  function openModalCadastro() {
+      STATE.empresaEditId = null;
+      refs.empresaForm.reset();
+      refs.empresaIdInput.value = '';
+      refs.modalTitleEmpresa.textContent = 'Adicionar Nova Empresa';
+      
+      // Regra: Status readonly e disabled na criação, valor padrão Ativo
+      refs.statusEmpresa.value = 'Ativo';
+      refs.statusEmpresa.disabled = true; 
+
+      if (STATE.instituicoes.length > 0 && !refs.selectInstituicao.value) {
+        refs.selectInstituicao.value = STATE.instituicoes[0]._id;
+      }
+
+      App.ui.showModal(refs.empresaModal);
+  }
+
+  function openModalEdicao(emp) {
+      STATE.empresaEditId = emp._id;
+      
+      refs.empresaIdInput.value = emp._id;
+      refs.razaoSocialInput.value = emp.razao_social || '';
+      refs.cnpjInput.value = emp.cnpj || '';
+      refs.selectInstituicao.value = emp.instituicao_id || '';
+      
+      refs.statusEmpresa.value = emp.status || 'Ativo';
+      // Na edição, o status pode ser alterado
+      refs.statusEmpresa.disabled = false;
+      
+      refs.modalTitleEmpresa.textContent = 'Editar/Alterar Dados da Empresa';
+      App.ui.showModal(refs.empresaModal);
+  }
+
+  function setupEvents() {
+    bindControls(refs.pagElements, (action) => {
+      if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
+      if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
+      renderizarConteudo();
     });
-  }
-  function updatePaginationInfo(total, page, pageSize) {
-    const totalPages = Math.ceil(total / pageSize) || 1;
-    const infoEl = document.getElementById(PAGE_INFO_ID);
 
-    if (infoEl) {
-      infoEl.textContent = `Página ${page} de ${totalPages} • ${total} registros`;
-    }
+    refs.empresaTableBody?.addEventListener('click', async (e) => {
+      const btnView = e.target.closest('.btn-view');
+      const btnEdit = e.target.closest('.btn-edit');
+      const btnDel = e.target.closest('.btn-delete');
 
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
+      if (btnView) {
+        const emp = STATE.empresas.find(u => u._id === btnView.dataset.id);
+        if (!emp) return;
+        refs.viewFields.razaoSocial.value = emp.razao_social || '';
+        refs.viewFields.cnpj.value = emp.cnpj || '';
+        refs.viewFields.status.value = emp.status || '';
+        App.ui.showModal(refs.visualizarEmpresaModal);
+      }
 
-    if (prevBtn) {
-      prevBtn.disabled = page <= 1;
-      prevBtn.onclick = () => {
-        if (page > 1) {
-          state.page--;
-          carregarEmpresas();
+      if (btnEdit) {
+        const emp = STATE.empresas.find(u => u._id === btnEdit.dataset.id);
+        if (emp) openModalEdicao(emp);
+      }
+
+      if (btnDel) {
+        if (!confirm('Tem certeza que deseja excluir esta Empresa?')) return;
+        try {
+            App.loader.show();
+            await safeFetch(`${API.empresa}?id=${btnDel.dataset.id}`, { method: 'DELETE' });
+            await carregarDadosIniciais();
+            renderizarConteudo();
+            alert('Removido com sucesso.');
+        } catch (err) { 
+            alert('Erro ao excluir: ' + err.message); 
+        } finally {
+            App.loader.hide();
         }
+      }
+    });
+
+    refs.addEmpresaBtn?.addEventListener('click', openModalCadastro);
+
+    const closeModal = () => App.ui.hideModal(refs.empresaModal);
+    refs.closeModalBtn?.addEventListener('click', closeModal);
+    refs.cancelBtn?.addEventListener('click', closeModal);
+
+    refs.empresaForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!refs.selectInstituicao.value) {
+          if(STATE.instituicoes.length > 0) refs.selectInstituicao.value = STATE.instituicoes[0]._id;
+          else {
+              alert('Erro: Nenhuma instituição vinculada para salvar a empresa.');
+              return;
+          }
+      }
+
+      const isEdit = !!STATE.empresaEditId;
+
+      const payload = {
+        razao_social: refs.razaoSocialInput.value.trim(),
+        cnpj: refs.cnpjInput.value.trim(),
+        instituicao_id: refs.selectInstituicao.value,
+        // Se for edição, pega o valor do select, senão força Ativo
+        status: isEdit ? refs.statusEmpresa.value : 'Ativo'
       };
-    }
 
-    if (nextBtn) {
-      nextBtn.disabled = page >= totalPages;
-      nextBtn.onclick = () => {
-        if (page < totalPages) {
-          state.page++;
-          carregarEmpresas();
-        }
-      };
-    }
+      const url = isEdit ? `${API.empresa}?id=${STATE.empresaEditId}` : API.empresa;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        App.loader.show();
+        await safeFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        closeModal();
+        await carregarDadosIniciais();
+        renderizarConteudo();
+        alert('Salvo com sucesso!');
+      } catch (err) { 
+          console.error(err);
+          alert('Erro ao salvar: ' + (err.message || 'Erro desconhecido.')); 
+      } finally {
+          App.loader.hide();
+      }
+    });
+
+    const closeView = () => App.ui.hideModal(refs.visualizarEmpresaModal);
+    refs.closeVisualizarEmpresaBtn?.addEventListener('click', closeView);
+    refs.fecharVisualizarEmpresaBtn?.addEventListener('click', closeView);
   }
 
-  function openModalCreate() {
-    const modal = document.getElementById(MODAL_ID);
-    const form = document.getElementById('empresaForm');
-    const title = document.getElementById('modalTitleEmpresa');
-    const statusSelect = document.getElementById('statusEmpresa');
-    const alertArea = document.getElementById('alertEmpresa');
-
-    form.reset();
-    document.getElementById('empresaId').value = '';
-
-    title.textContent = 'Adicionar Nova Empresa';
-    
-    statusSelect.value = 'Ativo';
-    statusSelect.disabled = true;
-
-    if (alertArea) {
-      alertArea.style.display = 'none';
-      alertArea.innerHTML = '';
-    }
-
-    modal.style.display = 'block';
-  }
-
-  function closeModal() {
-    document.getElementById(MODAL_ID).style.display = 'none';
-  }
-
-  async function handleSave(event) {
-    event.preventDefault();
-
-    const id = document.getElementById('empresaId').value;
-    const razaoSocial = document.getElementById('razaoSocial').value.trim();
-    const cnpj = document.getElementById('cnpj').value.trim();
-    
-    let statusVal = document.getElementById('statusEmpresa').value;
-    if (!id) statusVal = 'Ativo';
-
-    const payload = {
-      razao_social: razaoSocial,
-      cnpj: cnpj || null,
-      status: statusVal
-    };
-
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Exibe o loader ao carregar
     App.loader.show();
-    const alertArea = document.getElementById('alertEmpresa');
-    if (alertArea) alertArea.style.display = 'none';
+    setupEvents();
 
     try {
-      let url = MODULE_PATH;
-      let method = 'POST';
-
-      if (id) {
-        url = `${MODULE_PATH}?id=${id}`;
-        method = 'PUT';
-      }
-
-      if (method === 'POST') await App.net.post(url, payload);
-      else await App.net.put(url, payload);
-
-      closeModal();
-      carregarEmpresas();
-
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
-      if (alertArea) {
-        alertArea.style.display = 'block';
-        alertArea.className = 'alert alert-danger';
-        alertArea.textContent = error.detail || error.message || 'Erro ao salvar dados.';
-      }
+      await carregarDadosIniciais();
+      setupFilters();
+    } catch (err) {
+      console.error('Falha na inicialização:', err);
+      alert('Erro ao carregar sistema.');
     } finally {
       App.loader.hide();
     }
-  }
-
-  window.abrirVisualizar = function(id) {
-    const empresa = state.empresas.find(e => e._id === id);
-    if (!empresa) return;
-
-    document.getElementById('viewRazaoSocial').value = empresa.razao_social || '';
-    document.getElementById('viewCnpj').value = empresa.cnpj || '';
-    document.getElementById('viewStatusEmpresa').value = empresa.status || '';
-
-    document.getElementById('visualizarEmpresaModal').style.display = 'block';
-  };
-
-  window.abrirModalEditar = function(id) {
-    const empresa = state.empresas.find(e => e._id === id);
-    if (!empresa) return;
-
-    const modal = document.getElementById(MODAL_ID);
-    const title = document.getElementById('modalTitleEmpresa');
-    const statusSelect = document.getElementById('statusEmpresa');
-    const alertArea = document.getElementById('alertEmpresa');
-
-    if (alertArea) alertArea.style.display = 'none';
-
-    document.getElementById('empresaId').value = empresa._id;
-    document.getElementById('razaoSocial').value = empresa.razao_social || '';
-    document.getElementById('cnpj').value = empresa.cnpj || '';
-
-    title.textContent = 'Editar Empresa';
-
-    statusSelect.value = empresa.status || 'Ativo';
-    statusSelect.disabled = false;
-
-    modal.style.display = 'block';
-  };
-
-  window.deletarEmpresa = async function(id, razaoSocial) {
-    if (!confirm(`Tem certeza que deseja remover a empresa "${razaoSocial}"?\nEsta ação não pode ser desfeita.`)) {
-      return;
-    }
-
-    App.loader.show();
-    try {
-      await App.net.delete(`${MODULE_PATH}?id=${id}`);
-      await carregarEmpresas();
-    } catch (error) {
-      console.error('Erro ao deletar:', error);
-      alert('Erro ao excluir empresa: ' + (error.detail || error.message || 'Erro desconhecido.'));
-    } finally {
-      App.loader.hide();
-    }
-  };
-
-  function populateSelect(elementId, data, keyField, labelField) {
-    const sel = document.getElementById(elementId);
-    if (!sel) return;
-    sel.innerHTML = '';
-    data.forEach(item => {
-      const opt = document.createElement('option');
-      opt.value = item[keyField];
-      opt.textContent = item[labelField];
-      sel.appendChild(opt);
-    });
-  }
-
-  function safeHtml(text, isAttribute = false) {
-    if (!text) return '';
-    let str = text.toString()
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    
-    if (!isAttribute) {
-      str = str.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    } else {
-      str = str.replace(/'/g, "\\'"); 
-    }
-    return str;
-  }
+  });
 
 })();

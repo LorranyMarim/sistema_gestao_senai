@@ -1,73 +1,93 @@
 <?php
-require_once '../config/verifica_login.php';
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 
-$python_host = 'http://localhost:8000';
-$base_path = '/api/empresas';
+$api_base_url = 'http://localhost:8000/api';
+$api_empresa_url = $api_base_url . '/empresas';
+$api_bootstrap_url = $api_base_url . '/gestao_empresas/bootstrap';
 
-$method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
-$id = $_GET['id'] ?? '';
-
-$url = $python_host;
-
-if ($method === 'GET') {
-    if ($action === 'bootstrap') {
-        $url .= '/api/gestao_empresas/bootstrap';
-    } else {
-        $query_params = $_GET;
-        unset($query_params['action']); 
-        unset($query_params['id']);
-        
-        $query = http_build_query($query_params);
-        $url .= $base_path . '?' . $query;
-    }
-} elseif ($method === 'POST') {
-    $url .= $base_path;
-} elseif ($method === 'PUT') {
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode(["detail" => "ID não fornecido"]);
-        exit;
-    }
-    $url .= $base_path . '/' . $id;
-} elseif ($method === 'DELETE') {
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode(["detail" => "ID não fornecido"]);
-        exit;
-    }
-    $url .= $base_path . '/' . $id;
+function getRequestData() {
+    $raw = file_get_contents('php://input');
+    if ($raw === false || $raw === '') return null;
+    $data = json_decode($raw, true);
+    return is_array($data) ? $data : null;
 }
 
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+function curl_json($method, $url, $payload = null) {
+    $ch = curl_init($url);
+    $opts = [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CUSTOMREQUEST  => $method,
+        CURLOPT_CONNECTTIMEOUT => 3,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+    ];
 
-$input_data = file_get_contents('php://input');
-if ($input_data && in_array($method, ['POST', 'PUT'])) {
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $input_data);
-}
+    if (isset($_COOKIE['session_token'])) {
+        $opts[CURLOPT_COOKIE] = 'session_token=' . $_COOKIE['session_token'];
+    }
 
-$headers = [
-    'Content-Type: application/json',
-];
+    if ($payload !== null) {
+        $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: application/json';
+        $opts[CURLOPT_POSTFIELDS]   = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+    
+    curl_setopt_array($ch, $opts);
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE) ?: 500;
+    curl_close($ch);
 
-if (isset($_COOKIE['session_token'])) {
-    $headers[] = 'Cookie: session_token=' . $_COOKIE['session_token'];
-}
-
-curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-$response = curl_exec($ch);
-$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-if (curl_errno($ch)) {
-    http_response_code(500);
-    echo json_encode(["detail" => "Erro de comunicação com API Python: " . curl_error($ch)]);
-} else {
     http_response_code($http_code);
-    echo $response;
+    echo ($response !== false) ? $response : json_encode(['error' => 'Falha na conexão com API']);
+    exit;
 }
 
-curl_close($ch);
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$id     = $_GET['id'] ?? '';
+$action = $_GET['action'] ?? '';
+
+if ($method === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+switch ($method) {
+    case 'GET':
+        if ($action === 'bootstrap') {
+            curl_json('GET', $api_bootstrap_url);
+        } elseif ($id !== '') {
+            curl_json('GET', $api_empresa_url . '/' . rawurlencode($id));
+        } else {
+            $qs = $_SERVER['QUERY_STRING'] ?? '';
+            parse_str($qs, $params);
+            unset($params['action']);
+            $final_qs = http_build_query($params);
+            curl_json('GET', $api_empresa_url . ($final_qs ? '?' . $final_qs : ''));
+        }
+        break;
+
+    case 'POST':
+        $data = getRequestData() ?? [];
+        curl_json('POST', $api_empresa_url, $data);
+        break;
+
+    case 'PUT':
+        if ($id === '') { http_response_code(400); echo json_encode(['error' => 'ID obrigatório']); exit; }
+        $data = getRequestData() ?? [];
+        unset($data['data_criacao']);
+        curl_json('PUT', $api_empresa_url . '/' . rawurlencode($id), $data);
+        break;
+
+    case 'DELETE':
+        if ($id === '') { http_response_code(400); echo json_encode(['error' => 'ID obrigatório']); exit; }
+        curl_json('DELETE', $api_empresa_url . '/' . rawurlencode($id));
+        break;
+
+    default:
+        http_response_code(405);
+        echo json_encode(['error' => 'Método não permitido']);
+}
 ?>
