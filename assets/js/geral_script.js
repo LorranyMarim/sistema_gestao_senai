@@ -162,6 +162,165 @@
     } catch { return fallback; }
   }
 
+  // --- MULTISELECT COMPONENT START ---
+  function qs(el, sel) { return el.querySelector(sel); }
+  function qsa(el, sel) { return Array.from(el.querySelectorAll(sel)); }
+
+  class MultiSelect {
+    constructor(root) {
+      this.root = root;
+      this.btn = qs(root, ".ms__control");
+      this.valueArea = qs(root, ".ms__value");
+      this.placeholder = qs(root, ".ms__placeholder");
+      this.dropdown = qs(root, ".ms__dropdown");
+      this.search = qs(root, ".ms__search-input");
+      this.optionsList = qs(root, ".ms__options");
+      this.hidden = qs(root, 'input[type="hidden"]');
+      this.btnClear = qs(root, ".ms__clear");
+      this.btnClose = qs(root, ".ms__close");
+
+      this.checkboxes = qsa(root, '.ms__options input[type="checkbox"]');
+
+      this.bind();
+      this.syncUI();
+    }
+
+    bind() {
+      if(this.btn) this.btn.addEventListener("click", () => this.toggle());
+
+      if(this.btnClear) {
+          this.btnClear.addEventListener("click", (e) => {
+            e.preventDefault();
+            this.checkboxes.forEach(cb => cb.checked = false);
+            if(this.search) this.search.value = "";
+            this.filterOptions("");
+            this.syncUI();
+            // Trigger change event on the hidden input to notify listeners
+            this.hidden.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+      }
+
+      if(this.btnClose) {
+          this.btnClose.addEventListener("click", (e) => {
+            e.preventDefault();
+            this.close();
+          });
+      }
+
+      this.checkboxes.forEach(cb => {
+        cb.addEventListener("change", () => {
+             this.syncUI();
+             this.hidden.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+
+      if(this.search) {
+          this.search.addEventListener("input", () => {
+            this.filterOptions(this.search.value);
+          });
+      }
+
+      document.addEventListener("click", (e) => {
+        if (!this.root.contains(e.target)) this.close();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") this.close();
+      });
+    }
+
+    open() {
+      this.root.classList.add("ms--open");
+      if(this.btn) {
+          this.btn.classList.add("ms--open");
+          this.btn.setAttribute("aria-expanded", "true");
+      }
+      if(this.search) setTimeout(() => this.search.focus(), 0);
+    }
+
+    close() {
+      this.root.classList.remove("ms--open");
+      if(this.btn) {
+          this.btn.classList.remove("ms--open");
+          this.btn.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    toggle() {
+      if (this.root.classList.contains("ms--open")) this.close();
+      else this.open();
+    }
+
+    getSelected() {
+      return this.checkboxes
+        .filter(cb => cb.checked)
+        .map(cb => ({
+          value: cb.value,
+          label: cb.closest("label")?.innerText?.trim() || cb.value
+        }));
+    }
+
+    setHiddenValue(selected) {
+      // Salva como JSON array: ["banco_dados","frontend",...]
+      if(this.hidden) this.hidden.value = JSON.stringify(selected.map(s => s.value));
+    }
+
+    renderTags(selected) {
+      qsa(this.valueArea, ".ms__tag").forEach(t => t.remove());
+
+      if (selected.length === 0) {
+        if(this.placeholder) this.placeholder.style.display = "inline";
+        return;
+      }
+
+      if(this.placeholder) this.placeholder.style.display = "none";
+
+      selected.forEach(item => {
+        const tag = document.createElement("span");
+        tag.className = "ms__tag";
+
+        const text = document.createElement("span");
+        text.className = "ms__tag-text";
+        text.textContent = item.label;
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "ms__tag-remove";
+        remove.setAttribute("aria-label", `Remover ${item.label}`);
+        remove.textContent = "×";
+
+        remove.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const cb = this.checkboxes.find(c => c.value === item.value);
+          if (cb) {
+              cb.checked = false;
+              this.syncUI();
+              this.hidden.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+
+        tag.appendChild(text);
+        tag.appendChild(remove);
+        this.valueArea.appendChild(tag);
+      });
+    }
+
+    filterOptions(term) {
+      const t = (term || "").toLowerCase().trim();
+      qsa(this.optionsList, ".ms__option").forEach(li => {
+        const label = li.innerText.toLowerCase();
+        li.style.display = label.includes(t) ? "" : "none";
+      });
+    }
+
+    syncUI() {
+      const selected = this.getSelected();
+      this.setHiddenValue(selected);
+      this.renderTags(selected);
+    }
+  }
+  // --- MULTISELECT COMPONENT END ---
+
   function initRelatoriosDropdown() {
     const relatoriosLi = document.getElementById('nav-item-relatorios');
     if (!relatoriosLi) return;
@@ -539,7 +698,11 @@
     bindSimplePagination,
     showModal, hideModal,
     initSidebarSubmenusGeneric,
+    initMultiSelects: () => {
+        document.querySelectorAll(".ms").forEach(el => new MultiSelect(el));
+    }
   };
+  App.components = { MultiSelect };
 
   runNowOrOnReady(() => {
     safe('Relatorios', App.ui.initRelatoriosDropdown);
@@ -548,8 +711,8 @@
     safe('OverlayClose', App.ui.enableModalOverlayClose);
 
     safe('SubmenusGeneric', App.ui.initSidebarSubmenusGeneric);
-
   });
+
   App.pagination = {
 
     paginateData: (items, page, pageSize) => {
@@ -638,9 +801,9 @@
         const label = document.createElement('label');
         label.textContent = lbl;
         label.id = `filter-label-${idSuffix}`;
-        label.setAttribute('for', input.id);
+        if(input.id) label.setAttribute('for', input.id);
 
-        if (!input.classList.contains('filter-input')) {
+        if (!input.classList.contains('filter-input') && !input.classList.contains('ms')) {
           input.classList.add('filter-input');
           if (!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
             input.classList.add('form-control');
@@ -688,6 +851,157 @@
         container.appendChild(createGroup('Criado de:', from, 'date-from'));
         container.appendChild(createGroup('Criado até:', to, 'date-to'));
       }
+
+      // -- NOVOS FILTROS INSTRUTORES --
+
+      // Carga Horária
+      if (config.cargaHoraria) {
+        const sel = document.createElement('select');
+        sel.id = 'gen_carga_horaria';
+        sel.className = 'form-select filter-input';
+        ['Todos', '20', '30', '40'].forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v; opt.textContent = v;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', triggerChange);
+        container.appendChild(createGroup('Carga Horária:', sel, 'carga-horaria'));
+      }
+
+      // Categoria
+      if (config.categoria) {
+        const sel = document.createElement('select');
+        sel.id = 'gen_categoria';
+        sel.className = 'form-select filter-input';
+        ['Todos', 'A', 'C'].forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v; opt.textContent = v;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', triggerChange);
+        container.appendChild(createGroup('Categoria:', sel, 'categoria'));
+      }
+
+      // Tipo de Contrato
+      if (config.tipoContrato) {
+        const sel = document.createElement('select');
+        sel.id = 'gen_tipo_contrato';
+        sel.className = 'form-select filter-input';
+        ['Todos', 'Efetivo', 'Empréstimo', 'RPA'].forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v; opt.textContent = v;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', triggerChange);
+        container.appendChild(createGroup('Tipo de Contrato:', sel, 'tipo-contrato'));
+      }
+
+      // Helper para criar Multiselect
+      const createMultiselectHTML = (id, placeholder, options, defaultAll = false) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ms filter-input';
+        wrapper.id = id;
+        
+        // Control
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ms__control';
+        btn.setAttribute('aria-haspopup', 'listbox');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.innerHTML = `
+            <div class="ms__value" aria-live="polite">
+                <span class="ms__placeholder">${placeholder}</span>
+            </div>
+            <span class="ms__caret" aria-hidden="true">▾</span>
+        `;
+        wrapper.appendChild(btn);
+
+        // Dropdown
+        const dropdown = document.createElement('div');
+        dropdown.className = 'ms__dropdown';
+        dropdown.setAttribute('role', 'listbox');
+        dropdown.setAttribute('aria-multiselectable', 'true');
+
+        // Search inside dropdown
+        const searchDiv = document.createElement('div');
+        searchDiv.className = 'ms__search';
+        searchDiv.innerHTML = '<input type="text" class="ms__search-input" placeholder="Pesquisar..." />';
+        dropdown.appendChild(searchDiv);
+
+        // Options List
+        const ul = document.createElement('ul');
+        ul.className = 'ms__options';
+        
+        options.forEach(opt => {
+             const li = document.createElement('li');
+             li.className = 'ms__option';
+             const isChecked = defaultAll ? 'checked' : '';
+             li.innerHTML = `
+                <label>
+                    <input type="checkbox" value="${opt}" ${isChecked} />
+                    ${opt}
+                </label>
+             `;
+             ul.appendChild(li);
+        });
+        dropdown.appendChild(ul);
+
+        // Footer
+        const footer = document.createElement('div');
+        footer.className = 'ms__footer';
+        footer.innerHTML = `
+            <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+            <button type="button" class="btn btn-primary ms__close">OK</button>
+        `;
+        dropdown.appendChild(footer);
+        
+        wrapper.appendChild(dropdown);
+
+        // Hidden input
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.id = id + '-hidden';
+        hidden.value = defaultAll ? JSON.stringify(options) : '[]';
+        // Listener for changes on hidden input to trigger global filter change
+        hidden.addEventListener('change', triggerChange); 
+        wrapper.appendChild(hidden);
+
+        return wrapper;
+      };
+
+      // Área (Multiselect)
+      if (config.area) {
+         const ms = createMultiselectHTML(
+             'gen_area', 
+             'Selecione...', 
+             ['Tecnologia da Informação', 'Automação', 'Metal Mecânica', 'Gestão']
+         );
+         container.appendChild(createGroup('Área:', ms, 'area'));
+      }
+
+      // Turno (Multiselect)
+      if (config.turno) {
+         // Default all selected
+         const ms = createMultiselectHTML(
+             'gen_turno', 
+             'Selecione...', 
+             ['Manhã', 'Tarde', 'Noite'],
+             true // defaultAll
+         );
+         container.appendChild(createGroup('Turno:', ms, 'turno'));
+      }
+
+      // Por Competências (Multiselect)
+      if (config.competencia) {
+         const ms = createMultiselectHTML(
+             'gen_competencia', 
+             'Selecione...', 
+             [] // Populated later via API
+         );
+         container.appendChild(createGroup('Por Competência:', ms, 'competencia'));
+      }
+
+      // -------------------------------
 
       if (config.status) {
         const sel = document.createElement('select');
@@ -772,6 +1086,7 @@
       btn.type = 'button';
 
       btn.addEventListener('click', () => {
+        // Clear standard inputs
         if (document.getElementById('gen_search')) document.getElementById('gen_search').value = '';
         if (document.getElementById('gen_created_from')) document.getElementById('gen_created_from').value = '';
         if (document.getElementById('gen_created_to')) document.getElementById('gen_created_to').value = '';
@@ -780,6 +1095,18 @@
         if (document.getElementById('gen_tipo_uc')) document.getElementById('gen_tipo_uc').value = 'Todos';
         if (document.getElementById('gen_pagesize')) document.getElementById('gen_pagesize').value = 10;
 
+        // Clear new inputs
+        if (document.getElementById('gen_carga_horaria')) document.getElementById('gen_carga_horaria').value = 'Todos';
+        if (document.getElementById('gen_categoria')) document.getElementById('gen_categoria').value = 'Todos';
+        if (document.getElementById('gen_tipo_contrato')) document.getElementById('gen_tipo_contrato').value = 'Todos';
+
+        // Clear Multiselects
+        // We find the .ms__clear buttons inside the multiselects and click them
+        document.querySelectorAll('.ms__clear').forEach(clearBtn => {
+             // Avoid triggering multiple fetches if possible, but the button click triggers default clear behavior
+             clearBtn.click();
+        });
+
         if (customElement && (customElement.tagName === 'SELECT' || customElement.tagName === 'INPUT')) customElement.value = '';
 
         if (typeof onClear === 'function') onClear();
@@ -787,6 +1114,9 @@
 
       btnDiv.appendChild(btn);
       container.appendChild(btnDiv);
+
+      // Initialize any multiselects added to the DOM
+      App.ui.initMultiSelects();
     }
   };
 
