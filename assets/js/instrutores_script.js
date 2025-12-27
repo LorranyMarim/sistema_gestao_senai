@@ -39,7 +39,41 @@
     setupFilters();
     setupPagination();
     setupModals();
+    setupModalDropdowns();
     loadCompetenciasAndInit(); // Carrega UCs primeiro, depois busca dados
+  }
+  // --- Fix MultiSelects in Modal ---
+  function setupModalDropdowns() {
+    // Seleciona todos os controles de multiselect dentro do modal
+    const multiselects = document.querySelectorAll('.modal .ms__control');
+
+    multiselects.forEach(control => {
+        // Remove listeners antigos para evitar duplicação (boa prática)
+        const newControl = control.cloneNode(true);
+        control.parentNode.replaceChild(newControl, control);
+
+        newControl.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Fecha outros dropdowns abertos primeiro (UX behavior)
+            document.querySelectorAll('.ms__control.ms--open').forEach(other => {
+                if (other !== newControl) other.classList.remove('ms--open');
+            });
+
+            // Alterna o estado do atual
+            newControl.classList.toggle('ms--open');
+        });
+    });
+
+    // Fecha o dropdown se clicar fora dele
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.ms')) {
+            document.querySelectorAll('.ms__control.ms--open').forEach(el => {
+                el.classList.remove('ms--open');
+            });
+        }
+    });
   }
 
   // --- Filters ---

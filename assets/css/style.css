@@ -1356,3 +1356,18 @@ select:disabled:hover {
   padding: 0;
 }
 .ms__tag-remove:hover{ color: var(--cor-perigo); }
+/* CORREÇÃO: Filtros Responsivos */
+#filter_area {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+    gap: 15px; /* Espaçamento consistente entre os filtros */
+    align-items: flex-end; /* Alinha os inputs pela base */
+    width: 100%;
+}
+
+/* Garante que os grupos de filtro injetados pelo JS tenham comportamento flexível */
+#filter_area .filter-group {
+    flex: 1 1 200px; /* Cresce, encolhe, base de 200px */
+    min-width: 200px; /* Impede que fiquem muito espremidos */
+    max-width: 100%;
+}
