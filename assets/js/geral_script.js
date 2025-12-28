@@ -230,6 +230,22 @@
     }
 
     open() {
+      // --- INÍCIO DA ALTERAÇÃO: Fecha outros dropdowns abertos ---
+      document.querySelectorAll('.ms.ms--open').forEach(otherRoot => {
+        // Se o elemento encontrado não for o dropdown atual, fecha-o
+        if (otherRoot !== this.root) {
+          otherRoot.classList.remove("ms--open");
+          
+          // Encontra o botão dentro dele para atualizar o ícone/estado visual
+          const otherBtn = otherRoot.querySelector(".ms__control");
+          if (otherBtn) {
+            otherBtn.classList.remove("ms--open");
+            otherBtn.setAttribute("aria-expanded", "false");
+          }
+        }
+      });
+      // --- FIM DA ALTERAÇÃO ---
+
       this.root.classList.add("ms--open");
       if(this.btn) {
           this.btn.classList.add("ms--open");
@@ -266,6 +282,7 @@
     }
 
     renderTags(selected) {
+      // Limpa as tags atuais
       qsa(this.valueArea, ".ms__tag").forEach(t => t.remove());
 
       if (selected.length === 0) {
@@ -275,7 +292,14 @@
 
       if(this.placeholder) this.placeholder.style.display = "none";
 
-      selected.forEach(item => {
+      // --- CONFIGURAÇÃO DO LIMITE ---
+      const MAX_ITEMS = 2; // Exibe apenas os 2 primeiros
+      const total = selected.length;
+      const itemsToShow = selected.slice(0, MAX_ITEMS);
+      const remaining = total - MAX_ITEMS;
+      // -----------------------------
+
+      itemsToShow.forEach(item => {
         const tag = document.createElement("span");
         tag.className = "ms__tag";
 
@@ -303,6 +327,23 @@
         tag.appendChild(remove);
         this.valueArea.appendChild(tag);
       });
+
+      // --- CRIA A TAG DE CONTADOR (+X) ---
+      if (remaining > 0) {
+        const moreTag = document.createElement("span");
+        moreTag.className = "ms__tag ms__tag--more"; // Classe especial para estilizar diferente
+        moreTag.style.backgroundColor = "#e9ecef"; // Um cinza mais escuro para diferenciar
+        moreTag.style.color = "#495057";
+        
+        const text = document.createElement("span");
+        text.className = "ms__tag-text";
+        text.textContent = `+ ${remaining}`;
+        text.title = selected.slice(MAX_ITEMS).map(i => i.label).join(", "); // Tooltip com os nomes ocultos
+
+        moreTag.appendChild(text);
+        this.valueArea.appendChild(moreTag);
+      }
+      // -----------------------------------
     }
 
     filterOptions(term) {

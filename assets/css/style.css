@@ -685,9 +685,8 @@ select:focus,
 
 .modal-body {
     padding: 25px;
-    overflow-y: auto;
+    overflow-y: visible; /* ALTERADO: De 'auto' para 'visible' */
 }
-
 .modal-footer, 
 .modal-actions {
     padding: 15px 25px;
@@ -1129,9 +1128,11 @@ select:focus,
   box-shadow: var(--sombra-caixa);
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
+  
+  /* max-height: 90vh;  <-- RECOMENDADO: Remova ou comente essa linha para o modal crescer conforme o conteúdo se necessário */
   position: relative;
-  overflow: hidden; 
+  
+  overflow: visible; /* ALTERADO: De 'hidden' para 'visible' para permitir que o dropdown saia */
 }
 
 #ucModal .modal-content {
@@ -1276,10 +1277,11 @@ select:disabled:hover {
   background: #fff;
   border: 1px solid var(--cor-borda);
   border-radius: 8px;
-  box-shadow: var(--sombra-caixa);
-  z-index: 50;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Sombra mais destacada para sobreposição */
+  z-index: 1050; /* Z-index alto para sobrepor os campos abaixo no modal */
   display: none;
-  overflow: hidden;
+  overflow: visible; /* IMPORTANTE: Permite que o dropdown não corte sombras */
+  /* Remova 'max-height' e 'overflow: hidden' daqui se existirem */
 }
 .ms--open + .ms__dropdown,
 .ms.ms--open .ms__dropdown{ display: block; }
@@ -1300,12 +1302,14 @@ select:disabled:hover {
   border-color: var(--cor-sidebar);
   box-shadow: 0 0 0 3px rgba(0, 75, 141, 0.1);
 }
-.ms__options{
+.ms__options {
   list-style: none;
   margin: 0;
   padding: 6px;
-  max-height: 220px;
-  overflow-y: auto;
+  
+  /* CÁLCULO: Aprox. 36px por item * 4 itens = ~145px */
+  max-height: 150px; 
+  overflow-y: auto; /* Adiciona a barra de rolagem apenas na lista de opções */
 }
 .ms__option{
   padding: 8px 10px;
@@ -1370,4 +1374,18 @@ select:disabled:hover {
     flex: 1 1 200px; /* Cresce, encolhe, base de 200px */
     min-width: 200px; /* Impede que fiquem muito espremidos */
     max-width: 100%;
+}
+
+.ms__value {
+    display: flex;
+    flex-wrap: nowrap; /* Impede que caia para a linha de baixo */
+    overflow: hidden;  /* Esconde qualquer excesso se ainda houver */
+    align-items: center;
+    gap: 5px;
+}
+
+/* Estilo para o contador (+X) */
+.ms__tag--more {
+    font-weight: bold;
+    flex-shrink: 0; /* Garante que o contador nunca seja esmagado */
 }

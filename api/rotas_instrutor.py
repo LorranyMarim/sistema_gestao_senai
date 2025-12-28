@@ -21,6 +21,7 @@ class InstrutorModel(BaseModel):
     tipo_contrato: str = Field(..., min_length=2, max_length=50)
     turno: List[str] = Field(..., min_items=1, max_items=2)
     status: Literal['Ativo', 'Inativo']
+    mapa_competencias: List[str] = Field(default_factory=list)
     
     # Optional fields for saving references if needed, but not strictly required by prompt
     # competencias: List[str] = Field(default_factory=list)
@@ -37,7 +38,7 @@ class InstrutorModel(BaseModel):
             raise ValueError("O campo contém caracteres não permitidos.")
         return val
 
-    @validator('area', 'turno', pre=True)
+    @validator('area', 'turno', 'mapa_competencias', pre=True)
     def check_list_chars(cls, v):
         if isinstance(v, str):
             # In case it comes as a string representation of list or single item
@@ -171,6 +172,9 @@ def listar_instrutores(
 
         if isinstance(doc.get("data_criacao"), datetime):
             doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
+        if "mapa_competencias" in doc and isinstance(doc["mapa_competencias"], list):
+            doc["mapa_competencias"] = [str(uc_id) for uc_id in doc["mapa_competencias"]]
+            
 
         doc["_id"] = str(oid)
         items.append(doc)
@@ -183,13 +187,20 @@ def criar_instrutor(instrutor: InstrutorModel, ctx: RequestCtx = Depends(get_ctx
     data = instrutor.dict()
 
     data['instituicao_id'] = ctx.inst_oid
-    
     data['status'] = data['status'].capitalize()
     data['data_criacao'] = datetime.now(timezone.utc)
-    data.pop('_id', None)
+    
+    # --- NOVO: Conversão de String para ObjectId ---
+    # Isso garante que no banco seja salvo como referência real
+    if 'mapa_competencias' in data and data['mapa_competencias']:
+        try:
+            data['mapa_competencias'] = [ObjectId(uc_id) for uc_id in data['mapa_competencias']]
+        except Exception:
+            # Opcional: Levantar erro se algum ID for inválido
+            pass 
+    # -----------------------------------------------
 
-    # Extra fields not in Pydantic but might be sent or handled?
-    # For now strictly following Model.
+    data.pop('_id', None)
     
     inserted = db["instrutor"].insert_one(data)
     
@@ -210,7 +221,13 @@ def atualizar_instrutor(id: str, instrutor: InstrutorModel, ctx: RequestCtx = De
     data.pop('data_criacao', None)
     
     data['instituicao_id'] = ctx.inst_oid
-
+    if 'mapa_competencias' in data and data['mapa_competencias']:
+        try:
+            # Converte cada ID de string para ObjectId do BSON
+            data['mapa_competencias'] = [ObjectId(uc_id) for uc_id in data['mapa_competencias']]
+        except Exception:
+            # Se houver algum ID inválido, ignoramos ou deixamos passar (opcional: logar erro)
+            pass
     res = db["instrutor"].update_one(
         {"_id": oid, "instituicao_id": ctx.inst_oid}, 
         {"$set": data}

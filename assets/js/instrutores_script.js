@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const API_URL = '../backend/processa_instrutores.php';
+  const API_URL = '../backend/processa_instrutor.php';
   const API_UCS = '../backend/processa_ucs.php'; // Para carregar UCs nos selects
 
   // State
@@ -316,7 +316,7 @@
             status: document.getElementById('statusInstructor').value,
             turno: turnos,
             area: JSON.parse(document.getElementById('areaInstructor').value || '[]'),
-            competencias: JSON.parse(document.getElementById('competenciasInstructor').value || '[]')
+            mapa_competencias: JSON.parse(document.getElementById('competenciasInstructor').value || '[]')
         };
 
         const method = id ? 'PUT' : 'POST';
@@ -362,7 +362,7 @@
         // Set Multiselects
         setMultiselectValue('ms-turno-modal', item.turno);
         setMultiselectValue('ms-area-modal', item.area);
-        setMultiselectValue('ms-competencia-modal', item.competencias || []);
+        setMultiselectValue('ms-competencia-modal', item.mapa_competencias || []);
 
     } else {
         modalTitle.textContent = 'Adicionar Novo Instrutor';
@@ -394,9 +394,9 @@
       const compList = document.getElementById('viewCompetenciasList');
       compList.innerHTML = '';
 
-      if (item.status === 'Ativo' && item.competencias && item.competencias.length > 0) {
+      if (item.status === 'Ativo' && item.mapa_competencias && item.mapa_competencias.length > 0) {
           compContainer.style.display = 'block';
-          item.competencias.forEach(compId => {
+          item.mapa_competencias.forEach(compId => { // Use item.mapa_competencias
               const li = document.createElement('li');
               li.textContent = ucsMap[compId] || 'UC não encontrada (ID: ' + compId + ')';
               compList.appendChild(li);
@@ -404,7 +404,7 @@
       } else {
           compContainer.style.display = 'none';
       }
-
+      
       App.ui.showModal(viewModal);
   }
 
