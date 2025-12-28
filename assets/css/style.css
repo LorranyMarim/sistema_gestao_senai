@@ -1389,3 +1389,30 @@ select:disabled:hover {
     font-weight: bold;
     flex-shrink: 0; /* Garante que o contador nunca seja esmagado */
 }
+/* Correção para o Modal de Visualização */
+#viewCompetenciasList {
+    max-height: 250px; /* Define uma altura máxima (aprox. 6 a 7 itens) */
+    overflow-y: auto;  /* Cria a barra de rolagem vertical se passar da altura */
+    
+    /* Melhorias visuais opcionais para a lista com rolagem */
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 10px 10px 10px 30px !important; /* !important para garantir o padding esquerdo */
+    background-color: #f8f9fa;
+}
+
+/* Estilização da barra de rolagem (Scrollbar) para ficar mais elegante */
+#viewCompetenciasList::-webkit-scrollbar {
+    width: 8px;
+}
+#viewCompetenciasList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+#viewCompetenciasList::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+#viewCompetenciasList::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
+}
