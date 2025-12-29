@@ -101,16 +101,15 @@ require_once("../config/verifica_login.php");
   </div>
 
   <div id="instructorModal" class="modal modal-dialog-centered">
-    <div class="modal-content">
-      <span class="close-button" id="closeModalBtn">&times;</span>
-      <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
 
-      <form id="instructorForm" autocomplete="off">
-        <input type="hidden" id="instructorId">
+            <form id="instructorForm" autocomplete="off">
+                <input type="hidden" id="instructorId">
 
-        <div id="alertInstructor" style="display:none"></div>
-
-        <div class="form-group">
+                
+              <div class="form-group">
           <label for="nomeInstructor">Nome:</label>
           <input type="text" id="nomeInstructor" class="form-control" required minlength="2" maxlength="100"
             placeholder="Nome completo">
@@ -234,19 +233,20 @@ require_once("../config/verifica_login.php");
             <option value="Inativo">Inativo</option>
           </select>
         </div>
-
-        <div class="modal-footer"
-          style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-          <button type="button" class="btn btn-secondary" id="cancelBtn">
-            <i class="fas fa-times-circle"></i> Cancelar
-          </button>
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> Salvar
-          </button>
-        </div>
       </form>
+
+                <div class="modal-footer"
+                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        <i class="fas fa-times-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 
   <div id="visualizarInstructorModal" class="modal modal-dialog-centered">
     <div class="modal-content">
@@ -293,9 +293,10 @@ require_once("../config/verifica_login.php");
           <label style="font-weight:bold; display:block; margin-bottom:5px;">Mapa de Competências:</label>
           <ul id="viewCompetenciasList" style="list-style: disc; padding-left: 20px; color: #333;"></ul>
         </div>
-
-        <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
       </form>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
+      </div>
     </div>
   </div>
 
