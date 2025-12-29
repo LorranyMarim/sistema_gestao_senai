@@ -19,6 +19,7 @@ class InstrutorModel(BaseModel):
     categoria: str = Field(..., min_length=1, max_length=50)
     area: List[str] = Field(default_factory=list)
     tipo_contrato: str = Field(..., min_length=2, max_length=50)
+    carga_horaria: int
     turno: List[str] = Field(..., min_items=1, max_items=2)
     status: Literal['Ativo', 'Inativo']
     mapa_competencias: List[str] = Field(default_factory=list)

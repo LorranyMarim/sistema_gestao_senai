@@ -313,6 +313,7 @@
             matricula: document.getElementById('matriculaInstructor').value,
             categoria: document.getElementById('categoriaInstructor').value,
             tipo_contrato: document.getElementById('tipoContratoInstructor').value,
+            carga_horaria: parseInt(document.getElementById('cargaHorariaInstructor').value),
             status: document.getElementById('statusInstructor').value,
             turno: turnos,
             area: JSON.parse(document.getElementById('areaInstructor').value || '[]'),
@@ -356,6 +357,7 @@
         document.getElementById('matriculaInstructor').value = item.matricula;
         document.getElementById('categoriaInstructor').value = item.categoria;
         document.getElementById('tipoContratoInstructor').value = item.tipo_contrato;
+        document.getElementById('cargaHorariaInstructor').value = item.carga_horaria;
         document.getElementById('statusInstructor').value = item.status;
         document.getElementById('statusInstructor').disabled = false; // Pode editar status
 
@@ -383,6 +385,7 @@
       document.getElementById('viewAreaInstructor').value = areas;
       
       document.getElementById('viewTipoContratoInstructor').value = item.tipo_contrato;
+      document.getElementById('viewCargaHorariaInstructor').value = item.carga_horaria ? item.carga_horaria + 'h' : '-';
       
       const turnos = Array.isArray(item.turno) ? item.turno.join(', ') : item.turno;
       document.getElementById('viewTurnoInstructor').value = turnos;

@@ -940,7 +940,7 @@
       // Helper para criar Multiselect
       const createMultiselectHTML = (id, placeholder, options, defaultAll = false) => {
         const wrapper = document.createElement('div');
-        wrapper.className = 'ms filter-input';
+        wrapper.className = 'ms';
         wrapper.id = id;
         
         // Control
