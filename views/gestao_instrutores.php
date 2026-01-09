@@ -102,15 +102,15 @@ require_once("../config/verifica_login.php");
 
 <div id="instructorModal" class="modal modal-dialog-centered">
     <div class="modal-content">
+      <span class="close-button" id="closeModalBtn">&times;</span>
       
-      <div class="modal-header">
         <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
-        <span class="close-button" id="closeModalBtn">&times;</span>
-      </div>
+        
+      
 
       <form id="instructorForm" autocomplete="off">
-        
         <div class="modal-body">
+        
             <input type="hidden" id="instructorId">
 
             <div id="alertInstructor" class="alert alert-danger"
@@ -239,7 +239,9 @@ require_once("../config/verifica_login.php");
                 <option value="Inativo">Inativo</option>
               </select>
             </div>
-            </div> <div class="modal-footer">
+            </div>
+             <div class="modal-footer"
+                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
             <button type="button" class="btn btn-secondary" id="cancelBtn">
               <i class="fas fa-times-circle"></i> Cancelar
             </button>
@@ -254,55 +256,64 @@ require_once("../config/verifica_login.php");
 
   <div id="visualizarInstructorModal" class="modal modal-dialog-centered">
     <div class="modal-content">
-      <span class="close-button" id="closeVisualizarBtn">&times;</span>
-      <h2>Detalhes do Instrutor</h2>
+        <span class="close-button" id="closeVisualizarBtn">&times;</span>
+        <h2>Detalhes do Instrutor</h2>
 
-      <form>
-        <div class="form-group">
-          <label>Nome:</label>
-          <input type="text" id="viewNomeInstructor" readonly disabled>
-        </div>
-        <div class="form-group">
-          <label>Matrícula:</label>
-          <input type="text" id="viewMatriculaInstructor" readonly disabled>
-        </div>
-        <div class="form-group">
-          <label>Categoria:</label>
-          <input type="text" id="viewCategoriaInstructor" readonly disabled>
-        </div>
-        <div class="form-group">
-          <label>Área:</label>
-          <input type="text" id="viewAreaInstructor" readonly disabled>
-        </div>
-        <div class="form-group">
-          <label>Tipo de Contrato:</label>
-          <input type="text" id="viewTipoContratoInstructor" readonly disabled>
-        </div>
-        <div class="col-md-6 form-group">
-          <label class="form-label">Carga Horária</label>
-          <input type="text" class="form-control" id="viewCargaHorariaInstructor" readonly>
-        </div>
+        <form>
+            <div class="modal-body">
+                
+                <div class="form-group">
+                    <label>Nome:</label>
+                    <input type="text" id="viewNomeInstructor" class="form-control" readonly disabled>
+                </div>
 
-        <div class="form-group">
-          <label>Turno:</label>
-          <input type="text" id="viewTurnoInstructor" readonly disabled>
-        </div>
-        <div class="form-group">
-          <label>Status:</label>
-          <input type="text" id="viewStatusInstructor" readonly disabled>
-        </div>
+                <div class="form-group">
+                    <label>Matrícula:</label>
+                    <input type="text" id="viewMatriculaInstructor" class="form-control" readonly disabled>
+                </div>
 
-        <div id="viewCompetenciasContainer"
-          style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
-          <label style="font-weight:bold; display:block; margin-bottom:5px;">Mapa de Competências:</label>
-          <ul id="viewCompetenciasList" style="list-style: disc; padding-left: 20px; color: #333;"></ul>
-        </div>
-      </form>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
-      </div>
+                <div class="form-group">
+                    <label>Categoria:</label>
+                    <input type="text" id="viewCategoriaInstructor" class="form-control" readonly disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Área:</label>
+                    <input type="text" id="viewAreaInstructor" class="form-control" readonly disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Contrato:</label>
+                    <input type="text" id="viewTipoContratoInstructor" class="form-control" readonly disabled>
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label class="form-label">Carga Horária</label>
+                    <input type="text" class="form-control" id="viewCargaHorariaInstructor" readonly disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Turno:</label>
+                    <input type="text" id="viewTurnoInstructor" class="form-control" readonly disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Status:</label>
+                    <input type="text" id="viewStatusInstructor" class="form-control" readonly disabled>
+                </div>
+
+                <div id="viewCompetenciasContainer" class="form-group" style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
+                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Mapa de Competências:</label>
+                    <ul id="viewCompetenciasList" style="list-style: disc; padding-left: 20px; color: #333;">
+                        </ul>
+                </div>
+
+            </div> <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
+            </div>
+        </form>
     </div>
-  </div>
+</div>
 
   <script src="../assets/js/geral_script.js"></script>
   <script src="../assets/js/instrutores_script.js" defer></script>
