@@ -301,11 +301,16 @@
         try { turnos = JSON.parse(turnoInput.value); } catch {}
         
         if (!turnos || turnos.length === 0 || turnos.length > 2) {
-            alertBox.style.display = 'block';
-            alertBox.className = 'alert alert-danger';
-            alertBox.textContent = 'Selecione no mínimo 1 e no máximo 2 turnos.';
-            return;
-        }
+    if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Selecione no mínimo 1 e no máximo 2 turnos.';
+    } else {
+        // Fallback caso o elemento HTML tenha sido removido acidentalmente
+        alert('Selecione no mínimo 1 e no máximo 2 turnos.');
+    }
+    return;
+}
 
         const id = document.getElementById('instructorId').value;
         const payload = {
@@ -343,7 +348,9 @@
 
   function openModal(item = null) {
     form.reset();
-    alertBox.style.display = 'none';
+    if (alertBox) {
+        alertBox.style.display = 'none';
+    }
     
     // Reset Multiselects UI
     resetMultiselect('ms-turno-modal');

@@ -1417,3 +1417,45 @@ select:disabled:hover {
     background: #bbb;
 }
 
+/* --- Estilos Específicos para o Modal de Instrutores --- */
+/* Aplica-se APENAS ao #instructorModal para não quebrar os outros */
+
+/* 1. Define a altura fixa e trava o container principal */
+#instructorModal .modal-content {
+    height: 700px !important;    /* Força a altura solicitada */
+    max-height: 90vh !important; /* Garante que cabe na tela */
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;       /* Remove padding do pai para header/footer encostarem nas bordas */
+    overflow: hidden !important; /* Impede rolagem no container pai */
+}
+
+/* 2. O formulário passa a ser o container flexível que ocupa o miolo */
+#instructorModal form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;                     /* Cresce para ocupar todo espaço entre header e o fim do modal */
+    overflow: hidden;            /* Impede que o form em si role */
+    padding: 0 !important;       /* Remove padding do form para controlar via body */
+    margin: 0 !important;
+}
+
+/* 3. O Body é quem ganha a barra de rolagem */
+#instructorModal .modal-body {
+    flex: 1;                     /* Ocupa o espaço disponível */
+    overflow-y: auto !important; /* FORÇA a barra de rolagem vertical aqui */
+    overflow-x: hidden;
+    padding: 20px 25px !important; /* Restaura o padding interno visual */
+}
+
+/* 4. Footer fixo na base */
+#instructorModal .modal-footer {
+    flex-shrink: 0;              /* Não deixa o footer encolher */
+    background-color: #fff;
+    z-index: 10;                 /* Garante que fique sobre o conteúdo scrollável */
+}
+/* Correção de cor para o Título do Modal de Instrutores */
+#instructorModal .modal-header h2 {
+    font-size: 1.5rem !important;
+    color: #ffffff !important;
+}

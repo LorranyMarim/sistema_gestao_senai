@@ -100,153 +100,157 @@ require_once("../config/verifica_login.php");
     </main>
   </div>
 
-  <div id="instructorModal" class="modal modal-dialog-centered">
-        <div class="modal-content">
-            <span class="close-button" id="closeModalBtn">&times;</span>
-            <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
+<div id="instructorModal" class="modal modal-dialog-centered">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
+        <span class="close-button" id="closeModalBtn">&times;</span>
+      </div>
 
-            <form id="instructorForm" autocomplete="off">
-                <input type="hidden" id="instructorId">
+      <form id="instructorForm" autocomplete="off">
+        
+        <div class="modal-body">
+            <input type="hidden" id="instructorId">
 
-                
-              <div class="form-group">
-          <label for="nomeInstructor">Nome:</label>
-          <input type="text" id="nomeInstructor" class="form-control" required minlength="2" maxlength="100"
-            placeholder="Nome completo">
-        </div>
-
-        <div class="form-group">
-          <label for="matriculaInstructor">Matrícula:</label>
-          <input type="text" id="matriculaInstructor" class="form-control" required minlength="2" maxlength="50"
-            placeholder="Ex: 12345">
-        </div>
-
-        <div class="form-group">
-          <label for="categoriaInstructor">Categoria:</label>
-          <select id="categoriaInstructor" class="form-control" required>
-            <option value="">Selecione</option>
-            <option value="A">A</option>
-            <option value="C">C</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="tipoContratoInstructor">Tipo de Contrato:</label>
-          <select id="tipoContratoInstructor" class="form-control" required>
-            <option value="">Selecione</option>
-            <option value="Efetivo">Efetivo</option>
-            <option value="Empréstimo">Empréstimo</option>
-            <option value="RPA">RPA</option>
-          </select>
-        </div>
-        <div class="col-md-6 form-group">
-          <label for="cargaHorariaInstructor" class="form-label">Carga Horária</label>
-          <select class="form-select" id="cargaHorariaInstructor" required>
-            <option value="" disabled selected>Selecione...</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-            <option value="40">40</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Turno (Selecione 1 ou 2):</label>
-          <div class="ms" id="ms-turno-modal">
-            <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-              <div class="ms__value" aria-live="polite">
-                <span class="ms__placeholder">Selecione...</span>
-              </div>
-              <span class="ms__caret" aria-hidden="true">▾</span>
-            </button>
-            <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-              <ul class="ms__options">
-                <li class="ms__option"><label><input type="checkbox" value="Manhã"> Manhã</label></li>
-                <li class="ms__option"><label><input type="checkbox" value="Tarde"> Tarde</label></li>
-                <li class="ms__option"><label><input type="checkbox" value="Noite"> Noite</label></li>
-              </ul>
-              <div class="ms__footer">
-                <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                <button type="button" class="btn btn-primary ms__close">OK</button>
-              </div>
+            <div id="alertInstructor" class="alert alert-danger"
+              style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
             </div>
-            <input type="hidden" id="turnoInstructor" name="turno" value="[]" required>
-          </div>
-        </div>
 
-        <div class="form-group">
-          <label>Área de Atuação:</label>
-          <div class="ms" id="ms-area-modal">
-            <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-              <div class="ms__value" aria-live="polite">
-                <span class="ms__placeholder">Selecione...</span>
-              </div>
-              <span class="ms__caret" aria-hidden="true">▾</span>
-            </button>
-            <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-              <div class="ms__search">
-                <input type="text" class="ms__search-input" placeholder="Pesquisar..." />
-              </div>
-              <ul class="ms__options">
-                <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da
-                    Informação</label></li>
-                <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
-                <li class="ms__option"><label><input type="checkbox" value="Metal Mecânica"> Metal Mecânica</label></li>
-                <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
-              </ul>
-              <div class="ms__footer">
-                <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                <button type="button" class="btn btn-primary ms__close">OK</button>
-              </div>
+            <div class="form-group">
+              <label for="nomeInstructor">Nome:</label>
+              <input type="text" id="nomeInstructor" class="form-control" required minlength="2" maxlength="100" placeholder="Nome completo">
             </div>
-            <input type="hidden" id="areaInstructor" name="area" value="[]">
-          </div>
-        </div>
 
-        <div class="form-group">
-          <label>Mapa de Competências (UCs):</label>
-          <div class="ms" id="ms-competencia-modal">
-            <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-              <div class="ms__value" aria-live="polite">
-                <span class="ms__placeholder">Selecione as UCs...</span>
-              </div>
-              <span class="ms__caret" aria-hidden="true">▾</span>
-            </button>
-            <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-              <div class="ms__search">
-                <input type="text" class="ms__search-input" placeholder="Pesquisar UCs..." />
-              </div>
-              <ul class="ms__options" id="competenciasOptionsList">
-              </ul>
-              <div class="ms__footer">
-                <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                <button type="button" class="btn btn-primary ms__close">OK</button>
-              </div>
+            <div class="form-group">
+              <label for="matriculaInstructor">Matrícula:</label>
+              <input type="text" id="matriculaInstructor" class="form-control" required minlength="2" maxlength="50" placeholder="Ex: 12345">
             </div>
-            <input type="hidden" id="competenciasInstructor" name="competencias" value="[]">
-          </div>
-        </div>
 
-        <div class="form-group">
-          <label for="statusInstructor">Status:</label>
-          <select id="statusInstructor" class="form-control">
-            <option value="Ativo">Ativo</option>
-            <option value="Inativo">Inativo</option>
-          </select>
-        </div>
-      </form>
+            <div class="form-group">
+              <label for="categoriaInstructor">Categoria:</label>
+              <select id="categoriaInstructor" class="form-control" required>
+                <option value="">Selecione</option>
+                <option value="A">A</option>
+                <option value="C">C</option>
+              </select>
+            </div>
 
-                <div class="modal-footer"
-                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-                    <button type="button" class="btn btn-secondary" id="cancelBtn">
-                        <i class="fas fa-times-circle"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Salvar
-                    </button>
+            <div class="form-group">
+              <label for="tipoContratoInstructor">Tipo de Contrato:</label>
+              <select id="tipoContratoInstructor" class="form-control" required>
+                <option value="">Selecione</option>
+                <option value="Efetivo">Efetivo</option>
+                <option value="Empréstimo">Empréstimo</option>
+                <option value="RPA">RPA</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 form-group">
+              <label for="cargaHorariaInstructor" class="form-label">Carga Horária</label>
+              <select class="form-select" id="cargaHorariaInstructor" required>
+                <option value="" disabled selected>Selecione...</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Turno (Selecione 1 ou 2):</label>
+              <div class="ms" id="ms-turno-modal">
+                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                  <div class="ms__value" aria-live="polite">
+                    <span class="ms__placeholder">Selecione...</span>
+                  </div>
+                  <span class="ms__caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                  <ul class="ms__options">
+                    <li class="ms__option"><label><input type="checkbox" value="Manhã"> Manhã</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Tarde"> Tarde</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Noite"> Noite</label></li>
+                  </ul>
+                  <div class="ms__footer">
+                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                    <button type="button" class="btn btn-primary ms__close">OK</button>
+                  </div>
                 </div>
-            </form>
+                <input type="hidden" id="turnoInstructor" name="turno" value="[]" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Área de Atuação:</label>
+              <div class="ms" id="ms-area-modal">
+                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                  <div class="ms__value" aria-live="polite">
+                    <span class="ms__placeholder">Selecione...</span>
+                  </div>
+                  <span class="ms__caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                  <div class="ms__search">
+                    <input type="text" class="ms__search-input" placeholder="Pesquisar..." />
+                  </div>
+                  <ul class="ms__options">
+                    <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da Informação</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Metal Mecânica"> Metal Mecânica</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
+                  </ul>
+                  <div class="ms__footer">
+                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                    <button type="button" class="btn btn-primary ms__close">OK</button>
+                  </div>
+                </div>
+                <input type="hidden" id="areaInstructor" name="area" value="[]">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Mapa de Competências (UCs):</label>
+              <div class="ms" id="ms-competencia-modal">
+                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                  <div class="ms__value" aria-live="polite">
+                    <span class="ms__placeholder">Selecione as UCs...</span>
+                  </div>
+                  <span class="ms__caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                  <div class="ms__search">
+                    <input type="text" class="ms__search-input" placeholder="Pesquisar UCs..." />
+                  </div>
+                  <ul class="ms__options" id="competenciasOptionsList">
+                    </ul>
+                  <div class="ms__footer">
+                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                    <button type="button" class="btn btn-primary ms__close">OK</button>
+                  </div>
+                </div>
+                <input type="hidden" id="competenciasInstructor" name="competencias" value="[]">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="statusInstructor">Status:</label>
+              <select id="statusInstructor" class="form-control">
+                <option value="Ativo">Ativo</option>
+                <option value="Inativo">Inativo</option>
+              </select>
+            </div>
+            </div> <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelBtn">
+              <i class="fas fa-times-circle"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Salvar
+            </button>
         </div>
+
+      </form>
     </div>
+  </div>
 
   <div id="visualizarInstructorModal" class="modal modal-dialog-centered">
     <div class="modal-content">
