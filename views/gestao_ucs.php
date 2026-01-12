@@ -26,6 +26,7 @@ require_once("../config/verifica_login.php");
             <nav class="sidebar-nav">
                 <ul>
                     <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
                     <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
@@ -33,7 +34,7 @@ require_once("../config/verifica_login.php");
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_ucs.php" class="active"><i class="fas fa-graduation-cap"></i>
                             Gestão de UCs</a></li>
-                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-alt"></i>Gestão de Calendários</a>
+                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
                     </li>
 
                     <li id="nav-relatorios" class="has-submenu">
