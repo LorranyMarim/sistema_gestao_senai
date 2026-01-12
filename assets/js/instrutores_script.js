@@ -99,8 +99,8 @@
     };
 
     currentState.filters = {
-      q: getVal('gen_search'),
-      status: getVal('gen_status') !== 'Todos' ? [getVal('gen_status')] : null,
+      busca: getVal('gen_search'), // Agora enviamos explicitamente como 'busca'
+  status: getVal('gen_status') !== 'Todos' ? [getVal('gen_status')] : null,
       carga_horaria: getVal('gen_carga_horaria'),
       categoria: getVal('gen_categoria'),
       tipo_contrato: getVal('gen_tipo_contrato'),

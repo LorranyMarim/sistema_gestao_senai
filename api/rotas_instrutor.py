@@ -69,7 +69,7 @@ def _try_objectid(s: str):
 
 @router.get("/api/instrutores")
 def listar_instrutores(
-    q: Optional[str] = None,
+    busca: Optional[str] = None,
     status: Optional[List[str]] = Query(None),
     carga_horaria: Optional[str] = None, # Not in model but in filters requirements (though DB model should support it if we want to filter by it, but user didn't ask to add column in model for CH, just filter. Assuming CH is implicit or derived or I should add it? Prompt says 'Colunas da tabela... Nome, Matrícula, Categoria, Área, Tipo de Contrato, Turno, Status'. Filter 'Carga Horária' select exists. I will add to filter logic but if data doesn't exist it won't work well. I will assume it's part of the flexible schema or I should add it to model? Prompt doesn't list CH in "Colunas da Tabela" but lists it in "Filtros". I will support the filter param.)
     categoria: Optional[str] = None,
@@ -88,12 +88,12 @@ def listar_instrutores(
 
     filtro["instituicao_id"] = ctx.inst_oid
 
-    if q:
+    if busca:
         filtro["$or"] = [
-            {"nome": {"$regex": q, "$options": "i"}},
-            {"matricula": {"$regex": q, "$options": "i"}},
+            {"nome": {"$regex": busca, "$options": "i"}},
+            {"matricula": {"$regex": busca, "$options": "i"}},
             # Search in areas too?
-            {"area": {"$regex": q, "$options": "i"}}
+            {"area": {"$regex": busca, "$options": "i"}}
         ]
 
     if status:
