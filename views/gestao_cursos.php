@@ -93,7 +93,7 @@ require_once("../config/verifica_login.php");
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
                             Gestão de UCs</a></li>
-                    <li><a href="gestao_calendario.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
+                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
                     </li>
 
                     <li id="nav-relatorios" class="has-submenu">
