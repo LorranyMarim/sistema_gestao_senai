@@ -124,8 +124,8 @@ require_once("../config/verifica_login.php");
             </div>
 
             <div class="form-group">
-              <label for="matriculaInstructor">Matrícula:</label>
-              <input type="text" id="matriculaInstructor" class="form-control" required minlength="2" maxlength="50" placeholder="Ex: 12345">
+              <label for="matriculaInstructor">Matrícula (Opcional):</label>
+              <input type="text" id="matriculaInstructor" class="form-control" minlength="2" maxlength="50" placeholder="Ex: 0012345">
             </div>
 
             <div class="form-group">
@@ -195,10 +195,14 @@ require_once("../config/verifica_login.php");
                     <input type="text" class="ms__search-input" placeholder="Pesquisar..." />
                   </div>
                   <ul class="ms__options">
-                    <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da Informação</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Metal Mecânica"> Metal Mecânica</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> Eletroeletrônica</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do Trabalho</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da Informação</label></li>                 
+                    
                   </ul>
                   <div class="ms__footer">
                     <button type="button" class="btn btn-secondary ms__clear">Limpar</button>

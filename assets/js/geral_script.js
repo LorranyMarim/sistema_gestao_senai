@@ -1015,7 +1015,7 @@
          const ms = createMultiselectHTML(
              'gen_area', 
              'Selecione...', 
-             ['Tecnologia da Informação', 'Automação', 'Metal Mecânica', 'Gestão']
+             ['Tecnologia da Informação', 'Automação', 'Metalmecânica', 'Gestão', 'Automotiva', 'Segurança do Trabalho', 'Eletroeletrônica']
          );
          container.appendChild(createGroup('Área:', ms, 'area'));
       }
