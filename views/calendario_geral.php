@@ -276,7 +276,7 @@
   <!-- JS da página -->
   <!-- JS da página -->
   <script src="../assets/js/geral_script.js"></script>
-  <script src="../assets/js/calendario_script.js"></script>
+  <script src="../assets/js/calendario_geral_script.js"></script>
 
 </body>
 

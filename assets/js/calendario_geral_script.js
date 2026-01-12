@@ -10,7 +10,7 @@ const { attachDateRangeValidation, setupClearFilters, bindSimplePagination, show
 
 // ===================== Config & State =====================
 const API = Object.freeze({
-  calendario: "../backend/processa_calendario.php",
+  calendario: "../backend/processa_calendario_geral.php",
   empresa: "../backend/processa_empresa.php",
   instituicao: "../backend/processa_instituicao.php",
 });

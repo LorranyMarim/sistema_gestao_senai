@@ -60,7 +60,7 @@ def _as_str_id(doc: Dict[str, Any]) -> Dict[str, Any]:
         doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
     return doc
 
-@router.get("/api/calendarios")
+@router.get("/api/calendario_geral")
 def listar_calendarios(
     page: int = Query(1, ge=1),
     limit: int = Query(25, ge=1, le=1000),
@@ -115,7 +115,7 @@ def listar_calendarios(
     items = [_as_str_id(x) for x in cursor]
     return {"items": items, "total": total, "page": page, "limit": limit}
 
-@router.post("/api/calendarios")
+@router.post("/api/calendario_geral")
 def adicionar_calendario(calendario: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     obrig = ["nome_calendario", "id_empresa", "data_inicial", "data_final"]
@@ -159,7 +159,7 @@ def adicionar_calendario(calendario: Dict[str, Any], ctx: RequestCtx = Depends(g
     calendario["_id"] = str(result.inserted_id)
     return _as_str_id(calendario)
 
-@router.put("/api/calendarios/{calendario_id}")
+@router.put("/api/calendario_geral/{calendario_id}")
 def editar_calendario(calendario_id: str, calendario: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
 
@@ -186,7 +186,7 @@ def editar_calendario(calendario_id: str, calendario: Dict[str, Any], ctx: Reque
     atualizado = db["calendario"].find_one(_id_filter(calendario_id, ctx.inst_oid))
     return _as_str_id(atualizado)
 
-@router.delete("/api/calendarios/{calendario_id}")
+@router.delete("/api/calendario_geral/{calendario_id}")
 def excluir_calendario(calendario_id: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     result = db["calendario"].delete_one(_id_filter(calendario_id, ctx.inst_oid))
@@ -197,7 +197,7 @@ def excluir_calendario(calendario_id: str, ctx: RequestCtx = Depends(get_ctx)):
     
     return {"msg": "Calendário excluído"}
 
-@router.post("/api/calendarios/adicionar_evento")
+@router.post("/api/calendario_geral/adicionar_evento")
 def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)): 
     db = get_mongo_db()
     obrig = ["calendarios_ids", "descricao", "data_inicial", "data_final"]
@@ -272,7 +272,7 @@ def adicionar_evento(evento: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx))
         resumo["msg"] = "Dias adicionados com sucesso."
     return resumo
 
-@router.put("/api/calendarios/{calendario_id}/editar_dia_nao_letivo")
+@router.put("/api/calendario_geral/{calendario_id}/editar_dia_nao_letivo")
 def editar_dia_nao_letivo(calendario_id: str, payload: Dict[str, Any], ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     req = ["data_original", "data_nova", "descricao"]
@@ -296,7 +296,7 @@ def editar_dia_nao_letivo(calendario_id: str, payload: Dict[str, Any], ctx: Requ
     
     return {"msg": "Dia não letivo editado."}
 
-@router.delete("/api/calendarios/{calendario_id}/remover_dia_nao_letivo")
+@router.delete("/api/calendario_geral/{calendario_id}/remover_dia_nao_letivo")
 def remover_dia_nao_letivo(calendario_id: str, data: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     result = db["calendario"].update_one(
@@ -310,7 +310,7 @@ def remover_dia_nao_letivo(calendario_id: str, data: str, ctx: RequestCtx = Depe
     
     return {"msg": "Dia não letivo removido."}
 
-@router.get("/api/calendarios/eventos_range")
+@router.get("/api/calendario_geral/eventos_range")
 def eventos_range(start: str, end: str, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
 

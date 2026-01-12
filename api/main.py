@@ -5,7 +5,7 @@ from rotas_curso import router as curso_router
 from rotas_instituicao import router as instituicao_router
 from rotas_uc import router as uc_router
 from rotas_empresa import router as empresa_router
-from sistema_gestao_senai.api.rotas_calendario_geral import router as calendario_router
+from rotas_calendario_geral import router as calendario_geral_router
 from rotas_instrutor import router as instrutor_router
 from rotas_turma import router as turma_router
 from rotas_dashboard import router as dashboard_router
@@ -34,7 +34,7 @@ app.include_router(curso_router)
 app.include_router(instituicao_router)
 app.include_router(uc_router)  
 app.include_router(empresa_router)
-app.include_router(calendario_router)
+app.include_router(calendario_geral_router)
 app.include_router(instrutor_router)
 app.include_router(turma_router)    
 app.include_router(dashboard_router)
