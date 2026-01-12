@@ -122,17 +122,16 @@ require_once("../config/verifica_login.php");
                         <option value="Inativo">Inativo</option>
                     </select>
                 </div>
-
-                <div id="editDaysArea" class="hidden mt-4 pt-4 border-t border-gray-200">
-                    <button type="button" class="btn w-full text-white" style="background-color: #e67e22;" id="openManageDaysBtn">
-                        <i class="fas fa-list-ul"></i> Editar Dias/Períodos Deste Calendário
+                <div class="modal-footer"
+                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                    <button type="button" class="btn btn-secondary" id="cancelCalBtn">
+                        <i class="fas fa-times-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="salvarCalBtn">
+                        <i class="fas fa-save"></i> Salvar
                     </button>
                 </div>
-
-                <div class="modal-footer mt-4 flex justify-between">
-                    <button type="button" class="btn btn-secondary" id="cancelCalBtn">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="salvarCalBtn">Salvar</button>
-                </div>
+                
             </form>
         </div>
     </div>
@@ -179,9 +178,14 @@ require_once("../config/verifica_login.php");
                     </div>
                 </div>
             
-                <div class="modal-footer mt-4 flex justify-between">
-                    <button type="button" class="btn btn-secondary" id="cancelDiaBtn">Cancelar</button>
-                    <button type="submit" class="btn btn-info text-white" id="salvarDiaBtn">Salvar</button>
+                <div class="modal-footer"
+                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                    <button type="button" class="btn btn-secondary" id="cancelDiaBtn">
+                        <i class="fas fa-times-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="salvarDiaBtn">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
                 </div>
             </form>
         </div>
@@ -209,20 +213,38 @@ require_once("../config/verifica_login.php");
     <div id="viewModal" class="modal modal-dialog-centered">
         <div class="modal-content">
             <span class="close-button" id="closeViewBtn">&times;</span>
-            <h2>Detalhes do Calendário</h2>
+            <h2>Detalhes do Calendário Acadêmico</h2>
+            <form id="viewCalForm">
             <div class="form-group">
                 <label>Título:</label>
                 <input type="text" id="viewTitulo" readonly disabled class="form-control">
             </div>
             <div class="grid grid-cols-2 gap-4">
-                <div class="form-group"><label>Início:</label><input type="text" id="viewInicio" readonly disabled class="form-control"></div>
-                <div class="form-group"><label>Fim:</label><input type="text" id="viewFim" readonly disabled class="form-control"></div>
+                <div class="form-group">
+                    <label>Início:</label>
+                    <input type="text" id="viewInicio" readonly disabled class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Fim:</label>
+                    <input type="text" id="viewFim" readonly disabled class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <input type="text" id="viewStatus" readonly disabled>
+                </div>
             </div>
-            <div class="mt-4">
-                <button type="button" class="btn w-full text-white font-bold" style="background-color: #f39c12;" id="openFullCalendarBtn">
-                    <i class="fas fa-calendar-week"></i> Visualizar Dias Letivos (Calendário)
-                </button>
-            </div>
+            <div class="modal-footer"
+                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                    <button type="button" class="btn btn-secondary" id="cancelCalBtn">Fechar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="salvarCalBtn">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <button type="button" class="btn btn-warning" style="background-color: #f39c12;" id="openFullCalendarBtn">
+                    <i class="fas fa-calendar-month"></i> Visualizar Dias Letivos
+                    </button>
+                </div>
+                </form>
         </div>
     </div>
 

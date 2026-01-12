@@ -29,7 +29,8 @@ class CalendarioLetivoModel(BaseModel):
     calendario_id: str
     tipo: Literal['Presencial', 'EAD', 'Prática na Unidade', 'Reposição']
     data_inicio: datetime
-    data_fim: Optional[datetime] = None
+    data_final_check: bool = False # Cenário 6 e 7: Novo campo booleano
+    data_fim: Optional[datetime] = None # Cenário 6: Pode ser null
     
     @field_validator('calendario_id')
     @classmethod
@@ -40,8 +41,10 @@ class CalendarioLetivoModel(BaseModel):
 
     @model_validator(mode='after')
     def check_dates_letivo(self):
-        if self.data_fim and self.data_fim < self.data_inicio:
-            raise ValueError('A data final do período não pode ser anterior à data de início.')
+        # Validação apenas se o check estiver true (Cenário 7)
+        if self.data_final_check and self.data_fim:
+            if self.data_fim < self.data_inicio:
+                raise ValueError('A data final do período não pode ser anterior à data de início.')
         return self
 
 def _try_objectid(s: str):
@@ -199,8 +202,12 @@ def criar_dia_letivo(dia: CalendarioLetivoModel, ctx: RequestCtx = Depends(get_c
     d_inicio, d_fim = normalize_dates(dia.data_inicio, dia.data_fim)
     p_inicio, p_fim = normalize_dates(pai['inicio_calendario'], pai['final_calendario'])
 
-    if d_inicio < p_inicio or d_fim > p_fim:
-        raise HTTPException(400, "O dia/período deve estar dentro das datas do calendário acadêmico.")
+    # Validação de range (Cenário 5 - Backend safety)
+    if d_inicio < p_inicio:
+        raise HTTPException(400, "Data de início fora do período do calendário acadêmico.")
+    
+    if dia.data_final_check and d_fim and d_fim > p_fim:
+         raise HTTPException(400, "Data final fora do período do calendário acadêmico.")
 
     collision = db["calendario_letivo"].find_one({
         "calendario_id": cal_oid,
@@ -217,6 +224,13 @@ def criar_dia_letivo(dia: CalendarioLetivoModel, ctx: RequestCtx = Depends(get_c
 
     data = dia.model_dump()
     data['calendario_id'] = cal_oid
+    
+    # Cenário 6 e 7: Forçar persistência correta
+    data['criado_em'] = datetime.now(timezone.utc) # Data de criação Timestamp
+    
+    if not data['data_final_check']:
+        data['data_fim'] = None # Garante nulo se check for false
+
     inserted = db["calendario_letivo"].insert_one(data)
     
     return {"_id": str(inserted.inserted_id)}

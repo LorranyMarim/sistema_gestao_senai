@@ -76,7 +76,7 @@ if (!empty($user_data['token'])) {
         'session_token',
         $user_data['token'],
         [
-            'expires'  => time() + (30 * 60), 
+            'expires'  => time() + (2 * 60 * 60), 
             'path'     => '/',                
             'secure'   => false, 
             'httponly' => true,  

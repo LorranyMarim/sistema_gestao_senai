@@ -87,26 +87,31 @@
     }
 
     async function carregarDados() {
-        // Carrega lista principal e dados para selects
-        const [listaData, bootstrapData] = await Promise.all([
-            safeFetch(`${API.base}?action=list`),
-            safeFetch(API.bootstrap)
-        ]);
+    // Carrega lista principal e dados para selects
+    const [listaData, bootstrapData] = await Promise.all([
+        safeFetch(`${API.base}?action=list`),
+        safeFetch(API.bootstrap)
+    ]);
 
-        STATE.calendarios = listaData.items || [];
-        STATE.pagination.total = listaData.total;
-        
-        STATE.activeCalendars = bootstrapData.calendarios_ativos || [];
-        populateCalendarSelect();
-    }
+    // Proteção com Optional Chaining (?.) e fallback
+    STATE.calendarios = listaData?.items || []; 
+    STATE.pagination.total = listaData?.total || 0;
+    
+    STATE.activeCalendars = bootstrapData?.calendarios_ativos || [];
+    populateCalendarSelect();
+}
 
-    function populateCalendarSelect() {
-        const opts = ['<option value="">Selecione...</option>']
-            .concat(STATE.activeCalendars.map(c => 
-                `<option value="${c._id}" data-min="${c.inicio_calendario.split('T')[0]}" data-max="${c.final_calendario.split('T')[0]}">${c.titulo}</option>`
-            ));
-        refs.selectCalDia.innerHTML = opts.join('');
-    }
+   function populateCalendarSelect() {
+    const opts = ['<option value="">Selecione...</option>']
+        .concat(STATE.activeCalendars.map(c => {
+            // Proteção contra datas nulas ou indefinidas
+            const inicio = (c.inicio_calendario || '').split('T')[0] || '';
+            const fim = (c.final_calendario || '').split('T')[0] || '';
+            
+            return `<option value="${c._id}" data-min="${inicio}" data-max="${fim}">${c.titulo}</option>`;
+        }));
+    refs.selectCalDia.innerHTML = opts.join('');
+}
 
     // --- Renderização ---
 
@@ -175,13 +180,20 @@
     }
 
     function openDiaModal() {
-        refs.diaForm.reset();
-        refs.tipoDia.disabled = true;
-        refs.inicioDia.disabled = true;
-        refs.checkRange.disabled = true;
-        refs.divFinalDia.classList.add('hidden');
-        App.ui.showModal(refs.diaModal);
-    }
+    refs.diaForm.reset();
+    
+    // Cenário 1: Desabilitar campos por default ao abrir
+    refs.tipoDia.disabled = true;
+    refs.inicioDia.disabled = true;
+    refs.checkRange.disabled = true;
+    refs.checkRange.checked = false; // Resetar checkbox
+    
+    // Ocultar e resetar o campo final
+    refs.finalDia.disabled = true; 
+    refs.finalDia.value = '';
+    refs.finalDia.required = false;
+    App.ui.showModal(refs.diaModal);
+}
 
     // --- Event Listeners ---
 
@@ -256,44 +268,92 @@
 
         // Lógica Modal Dias Letivos (Criação)
         refs.selectCalDia.addEventListener('change', (e) => {
-            const opt = e.target.selectedOptions[0];
-            if (!opt.value) {
-                refs.tipoDia.disabled = true;
-                return;
-            }
-            refs.tipoDia.disabled = false;
-            refs.inicioDia.disabled = false;
-            refs.checkRange.disabled = false;
-            
-            // Set constraints
-            const min = opt.dataset.min;
-            const max = opt.dataset.max;
-            refs.inicioDia.min = min;
-            refs.inicioDia.max = max;
-            refs.finalDia.min = min;
-            refs.finalDia.max = max;
-        });
+    const opt = e.target.selectedOptions[0];
+    const valor = e.target.value;
 
+    // Cenário 3: Se selecionar "Selecione..." (valor vazio)
+    if (!valor) {
+        refs.tipoDia.disabled = true;
+        refs.inicioDia.disabled = true;
+        refs.checkRange.disabled = true;
+        
+        // Limpar valores para evitar inconsistência
+        refs.tipoDia.value = "";
+        refs.inicioDia.value = "";
+        refs.checkRange.checked = false;
+        refs.finalDia.disabled = true;
+        refs.finalDia.value = "";
+        
+        return; 
+    }
+
+    // Cenário 2: Se selecionar option válida -> Habilita campos
+    refs.tipoDia.disabled = false;
+    refs.inicioDia.disabled = false;
+    refs.checkRange.disabled = false;
+    
+    // Cenário 5 (Parte 1): Configurar limites baseados no calendário pai
+    // Os atributos data-min e data-max já foram populados na função populateCalendarSelect
+    const minDate = opt.dataset.min; // Data inicio do calendario pai
+    const maxDate = opt.dataset.max; // Data fim do calendario pai
+
+    // Aplica restrição >= inicio_calendario e <= final_calendario
+    refs.inicioDia.min = minDate;
+    refs.inicioDia.max = maxDate;
+    
+    refs.finalDia.min = minDate; // Inicialmente igual ao pai, será ajustado no change do inicioDia
+    refs.finalDia.max = maxDate;
+});
+refs.inicioDia.addEventListener('change', (e) => {
+    const dataInicial = e.target.value;
+    if (dataInicial) {
+        // Cenário 5: Data Final deve ser > Data inserida em inicioDia
+        // Definimos o min do finalDia como a data inicial. 
+        // HTML5 date input trata min como inclusive (>=), para garantir estritamente > (maior)
+        // a validação final ocorre no backend ou submit, mas visualmente >= é o padrão de UX aceitável.
+        refs.finalDia.min = dataInicial;
+    }
+});
         refs.checkRange.addEventListener('change', (e) => {
-            if (e.target.checked) refs.divFinalDia.classList.remove('hidden');
-            else refs.divFinalDia.classList.add('hidden');
-        });
+    if (e.target.checked) {
+        
+        refs.finalDia.disabled = false; 
+        refs.finalDia.required = true;
+    } else {
+        refs.finalDia.disabled = true;
+        refs.finalDia.value = ''; 
+        refs.finalDia.required = false;
+    }
+});
 
         refs.diaForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-                calendario_id: refs.selectCalDia.value,
-                tipo: refs.tipoDia.value,
-                data_inicio: new Date(refs.inicioDia.value).toISOString(),
-                data_fim: refs.checkRange.checked ? new Date(refs.finalDia.value).toISOString() : null
-            };
+    e.preventDefault();
+    
+    // Validação extra para garantir Cenário 5 (Frontend)
+    if (refs.checkRange.checked) {
+        if (refs.finalDia.value <= refs.inicioDia.value) {
+            alert("A data final deve ser maior ou igual à data inicial.");
+            return;
+        }
+    }
 
-            try {
-                await safeFetch(`${API.base}?action=create_day`, { method: 'POST', body: JSON.stringify(payload) });
-                App.ui.hideModal(refs.diaModal);
-                alert('Dia/Período adicionado!');
-            } catch(err) { alert(err.message); }
-        });
+    const payload = {
+        calendario_id: refs.selectCalDia.value,
+        tipo: refs.tipoDia.value,
+        data_inicio: new Date(refs.inicioDia.value).toISOString(),
+        
+        // Cenários 6 e 7: Lógica de Checkbox e Data Final
+        data_final_check: refs.checkRange.checked, // Boolean true/false
+        data_fim: refs.checkRange.checked ? new Date(refs.finalDia.value).toISOString() : null
+    };
+
+    try {
+        await safeFetch(`${API.base}?action=create_day`, { method: 'POST', body: JSON.stringify(payload) });
+        App.ui.hideModal(refs.diaModal);
+        alert('Dia/Período adicionado!');
+        // Opcional: Recarregar visualização se necessário
+    } catch(err) { alert(err.message); }
+});
 
         // Botão Gerenciar Dias (Dentro da Edição)
         $('#openManageDaysBtn').addEventListener('click', async () => {
