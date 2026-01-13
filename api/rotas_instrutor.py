@@ -15,7 +15,7 @@ FORBIDDEN_CHARS = re.compile(r'[<>"\';{}]')
 
 class InstrutorModel(BaseModel):
     nome: str = Field(..., min_length=2, max_length=100)
-    matricula: str = Field(..., min_length=2, max_length=50)
+    matricula: str = Field(default="", max_length=50)
     categoria: str = Field(..., min_length=1, max_length=50)
     area: List[str] = Field(default_factory=list)
     tipo_contrato: str = Field(..., min_length=2, max_length=50)

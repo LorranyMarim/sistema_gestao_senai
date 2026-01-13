@@ -125,7 +125,7 @@ require_once("../config/verifica_login.php");
 
             <div class="form-group">
               <label for="matriculaInstructor">Matrícula (Opcional):</label>
-              <input type="text" id="matriculaInstructor" class="form-control" minlength="2" maxlength="50" placeholder="Ex: 0012345">
+              <input type="text" id="matriculaInstructor" class="form-control" maxlength="50" placeholder="Ex: 0012345">
             </div>
 
             <div class="form-group">
@@ -197,7 +197,7 @@ require_once("../config/verifica_login.php");
                   <ul class="ms__options">
                     <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> Eletroeletrônica</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> trônica</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do Trabalho</label></li>
