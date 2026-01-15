@@ -197,7 +197,7 @@ require_once("../config/verifica_login.php");
                   <ul class="ms__options">
                     <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> trônica</label></li>
+                    <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> Eletroeletrônica</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
                     <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do Trabalho</label></li>
