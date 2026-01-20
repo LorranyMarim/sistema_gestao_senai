@@ -90,11 +90,11 @@ require_once("../config/verifica_login.php");
             </thead>
             <tbody id="instructorTableBody"></tbody>
           </table>
-          <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-            <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
-            <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-            <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
-          </div>
+           <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+    <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+    <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+    <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
+</div>
 
         </div>
       </section>

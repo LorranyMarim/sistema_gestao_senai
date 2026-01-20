@@ -2,9 +2,8 @@
   'use strict';
 
   const API_URL = '../backend/processa_instrutor.php';
-  const API_UCS = '../backend/processa_ucs.php'; // Para carregar UCs nos selects
+  const API_UCS = '../backend/processa_ucs.php'; 
 
-  // State
   let currentState = {
     page: 1,
     pageSize: 10,
@@ -12,16 +11,20 @@
     total: 0
   };
 
-  // Cache para mapear UCs (ID -> Nome) para exibição
   let ucsMap = {}; 
 
-  // DOM Elements
   const tableBody = document.getElementById('instructorTableBody');
   const pageInfo = document.getElementById('pageInfo');
   const prevBtn = document.getElementById('prevPage');
   const nextBtn = document.getElementById('nextPage');
+
+  const pagElements = {
+      prev: document.getElementById('prevPage'),
+      next: document.getElementById('nextPage'),
+      info: document.getElementById('pageInfo'),
+      sizeSel: document.getElementById('gen_pagesize') 
+  };
   
-  // Modal Elements
   const modal = document.getElementById('instructorModal');
   const form = document.getElementById('instructorForm');
   const modalTitle = document.getElementById('modalTitleInstructor');
@@ -29,32 +32,48 @@
   const closeModalBtn = document.getElementById('closeModalBtn');
   const cancelBtn = document.getElementById('cancelBtn');
 
-  // View Modal Elements
   const viewModal = document.getElementById('visualizarInstructorModal');
   const closeViewBtn = document.getElementById('closeVisualizarBtn');
   const closeViewBtnFooter = document.getElementById('fecharVisualizarBtn');
 
 function init() {
     setupFilters();
-    setupPagination();
     setupModals();
-    setupAsyncCompetencias(); // <--- ADICIONAR ISSO
-    fetchData(); // Busca os dados iniciais da tabela
+    setupAsyncCompetencias();
+
+    App.pagination.bindControls(pagElements, (action) => {
+        if (action === 'prev' && currentState.page > 1) {
+            currentState.page--;
+            fetchData(); 
+        }
+        if (action === 'next') {
+            const totalPages = Math.ceil(currentState.total / currentState.pageSize) || 1;
+            if (currentState.page < totalPages) {
+                currentState.page++;
+                fetchData();
+            }
+        }
+        if (action === 'size' && arguments[1]) {
+             currentState.pageSize = arguments[1];
+             currentState.page = 1;
+             fetchData();
+        }
+    });
+
+    fetchData(); 
   }
-  // --- Fix MultiSelects in Modal ---
 
 
-  // --- Filters ---
   function setupFilters() {
     App.filters.render('filter_area', {
       search: true,
-      status: true, // "Todos", "Ativo", "Inativo"
+      status: true,
       cargaHoraria: true,
       categoria: true,
       tipoContrato: true,
-      area: true, // Multiselect
-      turno: true, // Multiselect
-      competencia: true, // Multiselect (será populado depois)
+      area: true, 
+      turno: true, 
+      competencia: true, 
       pageSize: true
     }, null, onFilterChange, onFilterClear);
   }
@@ -67,7 +86,7 @@ function init() {
     };
 
     currentState.filters = {
-      busca: getVal('gen_search'), // Agora enviamos explicitamente como 'busca'
+      busca: getVal('gen_search'), 
   status: getVal('gen_status') !== 'Todos' ? [getVal('gen_status')] : null,
       carga_horaria: getVal('gen_carga_horaria'),
       categoria: getVal('gen_categoria'),
@@ -77,12 +96,10 @@ function init() {
       competencia: getJsonVal('gen_competencia-hidden')
     };
 
-    // Remove 'Todos' from selects
     ['carga_horaria', 'categoria', 'tipo_contrato'].forEach(k => {
         if (currentState.filters[k] === 'Todos') delete currentState.filters[k];
     });
 
-    // Se arrays vazios, remover do filtro para não enviar "[]"
     ['area', 'turno', 'competencia'].forEach(k => {
         if (Array.isArray(currentState.filters[k]) && currentState.filters[k].length === 0) {
             delete currentState.filters[k];
@@ -101,71 +118,64 @@ function init() {
   }
 
 
-
-  // --- Configuração do Lazy Loading (Passo 3) ---
   function setupAsyncCompetencias() {
-    // Função que conecta ao backend
     const fetchCompetencias = async (page, pageSize, term) => {
         const params = new URLSearchParams({
             page: page,
             page_size: pageSize,
             status: 'Ativo',
-            busca: term || '' // Envia 'busca' conforme corrigido no Python
+            busca: term || '' 
         });
         
-        // Chama a API
         const res = await App.net.fetchJSON(`${API_UCS}?${params.toString()}`);
-        
-        // Opcional: Atualiza o mapa global ucsMap para que a "Visualização" mostre os nomes
-        // das UCs que forem carregadas pelo dropdown.
+
         (res.items || []).forEach(uc => {
              ucsMap[uc._id] = uc.descricao;
         });
 
-        // Retorna no formato esperado pelo MultiSelect
         return (res.items || []).map(uc => ({
             value: uc._id,
             label: uc.descricao
         }));
     };
 
-    // 1. Configura o Filtro "Por Competência" da Tabela
     const msFiltroEl = document.getElementById('gen_competencia');
     if (msFiltroEl && msFiltroEl._msInstance) {
         msFiltroEl._msInstance.setupAsync(fetchCompetencias);
     }
 
-    // 2. Configura o Campo "Mapa de Competências" do Modal
     const msModalEl = document.getElementById('ms-competencia-modal');
     if (msModalEl && msModalEl._msInstance) {
         msModalEl._msInstance.setupAsync(fetchCompetencias);
     }
   }
 
-  
-
   async function fetchData() {
     App.loader.show();
     tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Carregando...</td></tr>';
 
     try {
+
       const query = new URLSearchParams();
       query.set('page', currentState.page);
       query.set('page_size', currentState.pageSize);
-      
-      Object.entries(currentState.filters).forEach(([k, v]) => {
-        if (v != null && v !== '') {
-            if(Array.isArray(v)) {
-                v.forEach(val => query.append(k, val));
-            } else {
-                query.set(k, v);
-            }
-        }
-      });
 
       const res = await App.net.fetchJSON(`${API_URL}?${query.toString()}`);
+      
       renderTable(res.items || []);
-      updatePagination(res);
+
+      currentState.total = res.total || 0;
+      const totalPages = Math.ceil(currentState.total / currentState.pageSize) || 1;
+
+      const meta = {
+          page: currentState.page,
+          pageSize: currentState.pageSize,
+          total: currentState.total,
+          totalPages: totalPages
+      };
+
+      App.pagination.updateUI(pagElements, meta);
+
     } catch (err) {
       console.error(err);
       tableBody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Erro ao carregar dados.</td></tr>';
@@ -184,14 +194,11 @@ function init() {
     items.forEach(item => {
       const tr = document.createElement('tr');
       
-      // Status formatting
       const statusClass = item.status === 'Ativo' ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
       
-      // Area Tags
       const areas = Array.isArray(item.area) ? item.area : [];
       const areaHtml = areas.map(a => `<span class="badge bg-light text-dark border me-1" style="font-size:0.8em; padding:2px 5px; border-radius:4px;">${a}</span>`).join('');
 
-      // Turno formatting
       const turnos = Array.isArray(item.turno) ? item.turno.join(', ') : item.turno;
 
       tr.innerHTML = `
@@ -210,7 +217,6 @@ function init() {
         </td>
       `;
       
-      // Bind actions
       tr.querySelector('.btn-view').addEventListener('click', () => openViewModal(item));
       tr.querySelector('.btn-edit').addEventListener('click', () => openModal(item));
       tr.querySelector('.btn-delete').addEventListener('click', () => deleteInstructor(item));
@@ -219,44 +225,20 @@ function init() {
     });
   }
 
-  // --- Pagination ---
-  function setupPagination() {
-    App.pagination.bindControls({ prev: prevBtn, next: nextBtn }, (action) => {
-      if (action === 'prev' && currentState.page > 1) currentState.page--;
-      if (action === 'next') currentState.page++;
-      fetchData();
-    });
-  }
-
-  function updatePagination(meta) {
-    currentState.total = meta.total;
-    const totalPages = Math.ceil(meta.total / currentState.pageSize) || 1;
-    pageInfo.textContent = `Página ${currentState.page} de ${totalPages} • ${meta.total} registros`;
-    
-    prevBtn.disabled = currentState.page <= 1;
-    nextBtn.disabled = currentState.page >= totalPages;
-  }
-
-  // --- Modals Logic ---
   function setupModals() {
-    // Open Add
     document.getElementById('addInstructorBtn').addEventListener('click', () => openModal());
 
-    // Close Add/Edit
     [closeModalBtn, cancelBtn].forEach(el => el.addEventListener('click', () => {
         App.ui.hideModal(modal);
     }));
 
-    // Close View
     [closeViewBtn, closeViewBtnFooter].forEach(el => el.addEventListener('click', () => {
         App.ui.hideModal(viewModal);
     }));
 
-    // Form Submit
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Validação customizada de Turno (1 ou 2)
         const turnoInput = document.getElementById('turnoInstructor');
         let turnos = [];
         try { turnos = JSON.parse(turnoInput.value); } catch {}
@@ -267,7 +249,6 @@ function init() {
         alertBox.className = 'alert alert-danger';
         alertBox.textContent = 'Selecione no mínimo 1 e no máximo 2 turnos.';
     } else {
-        // Fallback caso o elemento HTML tenha sido removido acidentalmente
         alert('Selecione no mínimo 1 e no máximo 2 turnos.');
     }
     return;
@@ -313,7 +294,6 @@ function init() {
         alertBox.style.display = 'none';
     }
     
-    // Reset Multiselects UI
     resetMultiselect('ms-turno-modal');
     resetMultiselect('ms-area-modal');
     resetMultiselect('ms-competencia-modal');
@@ -327,9 +307,8 @@ function init() {
         document.getElementById('tipoContratoInstructor').value = item.tipo_contrato;
         document.getElementById('cargaHorariaInstructor').value = item.carga_horaria;
         document.getElementById('statusInstructor').value = item.status;
-        document.getElementById('statusInstructor').disabled = false; // Pode editar status
+        document.getElementById('statusInstructor').disabled = false; 
 
-        // Set Multiselects
         setMultiselectValue('ms-turno-modal', item.turno);
         setMultiselectValue('ms-area-modal', item.area);
         setMultiselectValue('ms-competencia-modal', item.mapa_competencias || []);
@@ -338,7 +317,7 @@ function init() {
         modalTitle.textContent = 'Adicionar Novo Instrutor';
         document.getElementById('instructorId').value = '';
         document.getElementById('statusInstructor').value = 'Ativo';
-        document.getElementById('statusInstructor').disabled = true; // Disabled no cadastro
+        document.getElementById('statusInstructor').disabled = true; 
     }
 
     App.ui.showModal(modal);
@@ -360,14 +339,13 @@ function init() {
       
       document.getElementById('viewStatusInstructor').value = item.status;
 
-      // Mapa de Competencias
       const compContainer = document.getElementById('viewCompetenciasContainer');
       const compList = document.getElementById('viewCompetenciasList');
       compList.innerHTML = '';
 
       if (item.status === 'Ativo' && item.mapa_competencias && item.mapa_competencias.length > 0) {
           compContainer.style.display = 'block';
-          item.mapa_competencias.forEach(compId => { // Use item.mapa_competencias
+          item.mapa_competencias.forEach(compId => { 
               const li = document.createElement('li');
               li.textContent = ucsMap[compId] || 'UC não encontrada (ID: ' + compId + ')';
               compList.appendChild(li);
@@ -380,20 +358,15 @@ function init() {
   }
 
   function deleteInstructor(item) {
-      // Regra de bloqueio de exclusão conforme requisito
       alert("O instrutor não pode ser removido. Apenas mude o status do instrutor para Inativo para que ele não aparece mais como uma opção");
   }
 
-  // --- Multiselect Helpers for Modal ---
   function resetMultiselect(wrapperId) {
       const wrapper = document.getElementById(wrapperId);
       if(!wrapper) return;
       const checkboxes = wrapper.querySelectorAll('input[type="checkbox"]');
       checkboxes.forEach(cb => cb.checked = false);
       
-      // Dispara evento para sincronizar UI (assumindo que o componente ouve change)
-      // Ou, se o componente não expor método publico facil, recriamos ou forçamos update
-      // O componente MultiSelect em geral_script.js ouve 'change' nos checkboxes.
       checkboxes.forEach(cb => cb.dispatchEvent(new Event('change')));
   }
 
