@@ -34,47 +34,15 @@
   const closeViewBtn = document.getElementById('closeVisualizarBtn');
   const closeViewBtnFooter = document.getElementById('fecharVisualizarBtn');
 
-  // Init
-  function init() {
+function init() {
     setupFilters();
     setupPagination();
     setupModals();
-    setupModalDropdowns();
-    loadCompetenciasAndInit(); // Carrega UCs primeiro, depois busca dados
+    setupAsyncCompetencias(); // <--- ADICIONAR ISSO
+    fetchData(); // Busca os dados iniciais da tabela
   }
   // --- Fix MultiSelects in Modal ---
-  function setupModalDropdowns() {
-    // Seleciona todos os controles de multiselect dentro do modal
-    const multiselects = document.querySelectorAll('.modal .ms__control');
 
-    multiselects.forEach(control => {
-        // Remove listeners antigos para evitar duplicação (boa prática)
-        const newControl = control.cloneNode(true);
-        control.parentNode.replaceChild(newControl, control);
-
-        newControl.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Fecha outros dropdowns abertos primeiro (UX behavior)
-            document.querySelectorAll('.ms__control.ms--open').forEach(other => {
-                if (other !== newControl) other.classList.remove('ms--open');
-            });
-
-            // Alterna o estado do atual
-            newControl.classList.toggle('ms--open');
-        });
-    });
-
-    // Fecha o dropdown se clicar fora dele
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.ms')) {
-            document.querySelectorAll('.ms__control.ms--open').forEach(el => {
-                el.classList.remove('ms--open');
-            });
-        }
-    });
-  }
 
   // --- Filters ---
   function setupFilters() {
@@ -132,56 +100,49 @@
     fetchData();
   }
 
-  // --- Data Loading ---
-  async function loadCompetenciasAndInit() {
-    try {
-        // Carrega UCs para popular multiselects de filtro e modal
-        // page_size=300 conforme requisito
-        const res = await App.net.fetchJSON(`${API_UCS}?status=Ativo&page_size=300`);
-        const ucs = res.items || [];
 
-        // Popula Mapa global
-        ucs.forEach(uc => {
-            ucsMap[uc._id] = uc.descricao;
+
+  // --- Configuração do Lazy Loading (Passo 3) ---
+  function setupAsyncCompetencias() {
+    // Função que conecta ao backend
+    const fetchCompetencias = async (page, pageSize, term) => {
+        const params = new URLSearchParams({
+            page: page,
+            page_size: pageSize,
+            status: 'Ativo',
+            busca: term || '' // Envia 'busca' conforme corrigido no Python
         });
         
-        // Popula Filtro "Por Competência"
-        populateMultiselectOptions('gen_competencia', ucs.map(uc => ({ value: uc._id, label: uc.descricao })));
+        // Chama a API
+        const res = await App.net.fetchJSON(`${API_UCS}?${params.toString()}`);
+        
+        // Opcional: Atualiza o mapa global ucsMap para que a "Visualização" mostre os nomes
+        // das UCs que forem carregadas pelo dropdown.
+        (res.items || []).forEach(uc => {
+             ucsMap[uc._id] = uc.descricao;
+        });
 
-        // Popula Modal "Mapa de Competências"
-        populateMultiselectOptions('ms-competencia-modal', ucs.map(uc => ({ value: uc._id, label: uc.descricao })));
+        // Retorna no formato esperado pelo MultiSelect
+        return (res.items || []).map(uc => ({
+            value: uc._id,
+            label: uc.descricao
+        }));
+    };
 
-        // Inicializa comportamento do multiselect (re-bind events for new options)
-        App.ui.initMultiSelects();
+    // 1. Configura o Filtro "Por Competência" da Tabela
+    const msFiltroEl = document.getElementById('gen_competencia');
+    if (msFiltroEl && msFiltroEl._msInstance) {
+        msFiltroEl._msInstance.setupAsync(fetchCompetencias);
+    }
 
-        // Agora busca dados da tabela
-        fetchData();
-
-    } catch (err) {
-        console.error("Erro ao carregar UCs:", err);
-        fetchData(); // Tenta buscar dados mesmo sem UCs
+    // 2. Configura o Campo "Mapa de Competências" do Modal
+    const msModalEl = document.getElementById('ms-competencia-modal');
+    if (msModalEl && msModalEl._msInstance) {
+        msModalEl._msInstance.setupAsync(fetchCompetencias);
     }
   }
 
-  function populateMultiselectOptions(wrapperId, options) {
-      const wrapper = document.getElementById(wrapperId);
-      if(!wrapper) return;
-      const ul = wrapper.querySelector('.ms__options');
-      if(!ul) return;
-      
-      ul.innerHTML = '';
-      options.sort((a,b) => a.label.localeCompare(b.label)).forEach(opt => {
-          const li = document.createElement('li');
-          li.className = 'ms__option';
-          li.innerHTML = `
-            <label>
-                <input type="checkbox" value="${opt.value}" />
-                ${opt.label}
-            </label>
-          `;
-          ul.appendChild(li);
-      });
-  }
+  
 
   async function fetchData() {
     App.loader.show();

@@ -61,10 +61,13 @@ switch ($method) {
         } elseif ($id !== '') {
             curl_json('GET', $api_url . '/' . rawurlencode($id));
         } else {
-            $qs = $_SERVER['QUERY_STRING'] ?? '';
-            parse_str($qs, $params);
-            unset($params['action']);
-            $final_qs = http_build_query($params);
+          $qs = $_SERVER['QUERY_STRING'] ?? '';
+            $parts = explode('&', $qs);
+            $new_parts = array_filter($parts, function($p) {
+                return !empty($p) && strpos($p, 'action=') !== 0;
+            });
+            
+            $final_qs = implode('&', $new_parts);
             curl_json('GET', $api_url . ($final_qs ? '?' . $final_qs : ''));
         }
         break;

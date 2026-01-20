@@ -36,7 +36,7 @@ def _try_objectid(s: str):
 
 @router.get("/api/unidades_curriculares")
 def listar_ucs(
-    q: Optional[str] = None,
+    busca: Optional[str] = None, # CORRIGIDO: de 'q' para 'busca'
     status: Optional[List[str]] = Query(None),
     created_from: Optional[datetime] = None,
     created_to: Optional[datetime] = None,
@@ -49,10 +49,11 @@ def listar_ucs(
 
     filtro["instituicao_id"] = ctx.inst_oid 
 
-    if q:
+    # CORRIGIDO: Verifica 'busca' em vez de 'q'
+    if busca:
         filtro["$or"] = [
-            {"descricao":  {"$regex": q, "$options": "i"}},
-            {"tipo_uc": {"$regex": q, "$options": "i"}},
+            {"descricao":  {"$regex": busca, "$options": "i"}},
+            {"tipo_uc": {"$regex": busca, "$options": "i"}},
         ]
 
     if status:
@@ -82,15 +83,17 @@ def listar_ucs(
         if rng: filtro["data_criacao"] = rng
 
     page = max(1, int(page))
+    # Mantemos 100 como limite de segurança. 
+    # Como o Lazy Loading pede blocos de 50, isso funcionará perfeitamente.
     page_size = min(max(1, int(page_size)), 100)
 
-    col = db["unidade_curricular"]
+    col = db["unidade_curricular"] # Correto (mantido do seu código)
     coll = Collation('pt', strength=1)
 
     total = col.count_documents(filtro, collation=coll)
     cursor = (
         col.find(filtro, collation=coll)
-            .sort("data_criacao", -1)
+            .sort("descricao", 1) # Correto (Ordenação Alfabética A-Z)
             .skip((page - 1) * page_size)
             .limit(page_size)
     )

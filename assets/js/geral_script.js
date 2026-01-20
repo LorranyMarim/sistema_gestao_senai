@@ -166,8 +166,16 @@
   function qs(el, sel) { return el.querySelector(sel); }
   function qsa(el, sel) { return Array.from(el.querySelectorAll(sel)); }
 
+ // --- SUBSTIRUA A CLASSE MultiSelect INTEIRA POR ESTA ---
   class MultiSelect {
     constructor(root) {
+      // Singleton: Evita múltiplas instâncias no mesmo elemento
+      if (root._msInstance) {
+        root._msInstance.refresh();
+        return root._msInstance;
+      }
+      root._msInstance = this;
+
       this.root = root;
       this.btn = qs(root, ".ms__control");
       this.valueArea = qs(root, ".ms__value");
@@ -181,8 +189,105 @@
 
       this.checkboxes = qsa(root, '.ms__options input[type="checkbox"]');
 
+      // Estado para Infinite Scroll (Passo 2)
+      this.isAsync = false;
+      this.asyncState = {
+        page: 1,
+        pageSize: 50,
+        loading: false,
+        hasMore: true,
+        term: "",
+        fetchFn: null
+      };
+
       this.bind();
       this.syncUI();
+    }
+
+    // Método novo: Ativa o modo assíncrono
+    setupAsync(fetchFunction) {
+      this.isAsync = true;
+      this.asyncState.fetchFn = fetchFunction;
+      this.optionsList.innerHTML = ''; // Limpa opções iniciais
+      this.loadMoreData(true); // Carrega primeira página
+      
+      // Scroll Infinito
+      this.optionsList.addEventListener('scroll', () => {
+        const { scrollTop, scrollHeight, clientHeight } = this.optionsList;
+        // Buffer de 20px para carregar antes de chegar no fim absoluto
+        if (scrollTop + clientHeight >= scrollHeight - 20) {
+          this.loadMoreData();
+        }
+      });
+    }
+
+    // Método novo: Busca dados
+    async loadMoreData(reset = false) {
+      if (!this.isAsync || this.asyncState.loading) return;
+      if (!reset && !this.asyncState.hasMore) return;
+
+      this.asyncState.loading = true;
+      
+      if (reset) {
+        this.asyncState.page = 1;
+        this.optionsList.innerHTML = ''; 
+        this.asyncState.hasMore = true;
+      }
+
+      try {
+        const data = await this.asyncState.fetchFn(this.asyncState.page, this.asyncState.pageSize, this.asyncState.term);
+        
+        if (data && data.length > 0) {
+          // Recupera valores já selecionados para não perder o check
+          const currentVals = JSON.parse(this.hidden.value || '[]');
+
+          data.forEach(opt => {
+             const li = document.createElement('li');
+             li.className = 'ms__option';
+             
+             const isChecked = currentVals.includes(opt.value) ? 'checked' : '';
+
+             li.innerHTML = `
+                <label>
+                    <input type="checkbox" value="${opt.value}" ${isChecked} />
+                    ${opt.label}
+                </label>
+             `;
+             
+             const cb = li.querySelector('input');
+             cb.addEventListener("change", () => {
+                 this.syncUI();
+                 this.hidden.dispatchEvent(new Event('change', { bubbles: true }));
+             });
+
+             this.optionsList.appendChild(li);
+          });
+          
+          this.asyncState.page++;
+          if (data.length < this.asyncState.pageSize) {
+            this.asyncState.hasMore = false; 
+          }
+        } else {
+          this.asyncState.hasMore = false;
+        }
+
+      } catch (err) {
+        console.error("Erro no infinite scroll", err);
+      } finally {
+        this.asyncState.loading = false;
+        this.refresh(); // Atualiza lista interna de checkboxes
+      }
+    }
+
+    refresh() {
+        this.checkboxes = qsa(this.root, '.ms__options input[type="checkbox"]');
+        this.checkboxes.forEach(cb => {
+            cb.addEventListener("change", () => {
+                 this.syncUI();
+                 this.hidden.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
+        this.syncUI();
     }
 
     bind() {
@@ -192,10 +297,18 @@
           this.btnClear.addEventListener("click", (e) => {
             e.preventDefault();
             this.checkboxes.forEach(cb => cb.checked = false);
+            
             if(this.search) this.search.value = "";
-            this.filterOptions("");
+            
+            // Lógica unificada de limpeza
+            if(this.isAsync) {
+                this.asyncState.term = "";
+                this.loadMoreData(true);
+            } else {
+                this.filterOptions("");
+            }
+            
             this.syncUI();
-            // Trigger change event on the hidden input to notify listeners
             this.hidden.dispatchEvent(new Event('change', { bubbles: true }));
           });
       }
@@ -214,9 +327,20 @@
         });
       });
 
+      // Busca Unificada (Debounce)
       if(this.search) {
+          let timeout;
           this.search.addEventListener("input", () => {
-            this.filterOptions(this.search.value);
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const term = this.search.value;
+                if (this.isAsync) {
+                    this.asyncState.term = term;
+                    this.loadMoreData(true); // Reset e busca nova na API
+                } else {
+                    this.filterOptions(term); // Filtro local antigo
+                }
+            }, 300);
           });
       }
 
@@ -230,13 +354,10 @@
     }
 
     open() {
-      // --- INÍCIO DA ALTERAÇÃO: Fecha outros dropdowns abertos ---
+      // Fecha outros dropdowns abertos (Lógica mantida do seu código atual)
       document.querySelectorAll('.ms.ms--open').forEach(otherRoot => {
-        // Se o elemento encontrado não for o dropdown atual, fecha-o
         if (otherRoot !== this.root) {
           otherRoot.classList.remove("ms--open");
-          
-          // Encontra o botão dentro dele para atualizar o ícone/estado visual
           const otherBtn = otherRoot.querySelector(".ms__control");
           if (otherBtn) {
             otherBtn.classList.remove("ms--open");
@@ -244,7 +365,6 @@
           }
         }
       });
-      // --- FIM DA ALTERAÇÃO ---
 
       this.root.classList.add("ms--open");
       if(this.btn) {
@@ -277,12 +397,19 @@
     }
 
     setHiddenValue(selected) {
-      // Salva como JSON array: ["banco_dados","frontend",...]
       if(this.hidden) this.hidden.value = JSON.stringify(selected.map(s => s.value));
     }
 
+    filterOptions(term) {
+      if(this.isAsync) return; // Se é async, o filtro visual local não se aplica
+      const t = (term || "").toLowerCase().trim();
+      qsa(this.optionsList, ".ms__option").forEach(li => {
+        const label = li.innerText.toLowerCase();
+        li.style.display = label.includes(t) ? "" : "none";
+      });
+    }
+
     renderTags(selected) {
-      // Limpa as tags atuais
       qsa(this.valueArea, ".ms__tag").forEach(t => t.remove());
 
       if (selected.length === 0) {
@@ -292,12 +419,10 @@
 
       if(this.placeholder) this.placeholder.style.display = "none";
 
-      // --- CONFIGURAÇÃO DO LIMITE ---
-      const MAX_ITEMS = 2; // Exibe apenas os 2 primeiros
+      const MAX_ITEMS = 2;
       const total = selected.length;
       const itemsToShow = selected.slice(0, MAX_ITEMS);
       const remaining = total - MAX_ITEMS;
-      // -----------------------------
 
       itemsToShow.forEach(item => {
         const tag = document.createElement("span");
@@ -310,12 +435,12 @@
         const remove = document.createElement("button");
         remove.type = "button";
         remove.className = "ms__tag-remove";
-        remove.setAttribute("aria-label", `Remover ${item.label}`);
         remove.textContent = "×";
 
         remove.addEventListener("click", (e) => {
           e.stopPropagation();
-          const cb = this.checkboxes.find(c => c.value === item.value);
+          // Busca pelo valor, pois o elemento DOM do checkbox pode ter sido recriado no scroll
+          const cb = Array.from(this.checkboxes).find(c => c.value === item.value);
           if (cb) {
               cb.checked = false;
               this.syncUI();
@@ -328,30 +453,19 @@
         this.valueArea.appendChild(tag);
       });
 
-      // --- CRIA A TAG DE CONTADOR (+X) ---
       if (remaining > 0) {
         const moreTag = document.createElement("span");
-        moreTag.className = "ms__tag ms__tag--more"; // Classe especial para estilizar diferente
-        moreTag.style.backgroundColor = "#e9ecef"; // Um cinza mais escuro para diferenciar
+        moreTag.className = "ms__tag ms__tag--more";
+        moreTag.style.backgroundColor = "#e9ecef";
         moreTag.style.color = "#495057";
         
         const text = document.createElement("span");
         text.className = "ms__tag-text";
         text.textContent = `+ ${remaining}`;
-        text.title = selected.slice(MAX_ITEMS).map(i => i.label).join(", "); // Tooltip com os nomes ocultos
-
+        
         moreTag.appendChild(text);
         this.valueArea.appendChild(moreTag);
       }
-      // -----------------------------------
-    }
-
-    filterOptions(term) {
-      const t = (term || "").toLowerCase().trim();
-      qsa(this.optionsList, ".ms__option").forEach(li => {
-        const label = li.innerText.toLowerCase();
-        li.style.display = label.includes(t) ? "" : "none";
-      });
     }
 
     syncUI() {
@@ -360,7 +474,6 @@
       this.renderTags(selected);
     }
   }
-  // --- MULTISELECT COMPONENT END ---
 
   function initRelatoriosDropdown() {
     const relatoriosLi = document.getElementById('nav-item-relatorios');
@@ -1027,7 +1140,7 @@
              'gen_turno', 
              'Selecione...', 
              ['Manhã', 'Tarde', 'Noite'],
-             true // defaultAll
+             false 
          );
          container.appendChild(createGroup('Turno:', ms, 'turno'));
       }

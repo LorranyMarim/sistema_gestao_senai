@@ -106,9 +106,11 @@ def listar_instrutores(
         if norm:
             filtro["status"] = {"$in": norm}
 
-    # Custom Filters
     if carga_horaria and carga_horaria != "Todos":
-        filtro["carga_horaria"] = carga_horaria # Assuming field name
+        try:
+            filtro["carga_horaria"] = int(carga_horaria) # Converte para Inteiro
+        except ValueError:
+            pass # Se não for número, ignora o filtro
 
     if categoria and categoria != "Todos":
         filtro["categoria"] = categoria
@@ -149,7 +151,7 @@ def listar_instrutores(
         if rng: filtro["data_criacao"] = rng
 
     page = max(1, int(page))
-    page_size = min(max(1, int(page_size)), 100)
+    page_size = min(max(1, int(page_size)), 1000)
 
     col = db["instrutor"]
     coll = Collation('pt', strength=1)
