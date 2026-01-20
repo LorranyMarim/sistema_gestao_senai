@@ -7,7 +7,7 @@ require_once("../config/verifica_login.php");
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Instrutores - SENAI</title>
+  <title>Gestão de Cursos - SENAI</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -27,9 +27,9 @@ require_once("../config/verifica_login.php");
         <ul>
           <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
-                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+                    <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php" class="active"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
                             Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
@@ -62,13 +62,12 @@ require_once("../config/verifica_login.php");
 
     <main class="main-content">
       <header class="main-header">
-        <h1>Gestão de Instrutores</h1>
-        <button class="btn btn-primary" id="addInstructorBtn"><i class="fas fa-plus-circle"></i> Adicionar Novo
-          Instrutor</button>
+        <h1>Gestão de Cursos</h1>
+        <button class="btn btn-primary" id="addInstructorBtn"><i class="fas fa-plus-circle"></i> Adicionar Curso</button>
       </header>
 
       <section class="table-section">
-        <h2>Instrutores Cadastrados</h2>
+        <h2>Cursos Cadastrados</h2>
 
         <div id="filter_area" class="mb-3">
         </div>
@@ -77,12 +76,10 @@ require_once("../config/verifica_login.php");
           <table id="instructorTable" class="data-table">
             <thead>
               <tr>
-                <th>Nome do Instrutor</th>
-                <th>Matrícula</th>
-                <th>Categoria</th>
+                <th>Nome do Curso</th>
+                <th>Modalidade</th>
                 <th>Área</th>
-                <th>Tipo de Contrato</th>
-                <th>Turno</th>
+                <th>Carga Horária Total</th>
                 <th>Status</th>
                 <th>Criado em</th>
                 <th class="actions">Ações</th>
@@ -105,11 +102,8 @@ require_once("../config/verifica_login.php");
     <div class="modal-content">
       <span class="close-button" id="closeModalBtn">&times;</span>
       
-        <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
-        
-      
-
-      <form id="instructorForm" autocomplete="off">
+        <h2 id="modalTitleInstructor">Adicionar Novo Curso</h2>
+        <form id="instructorForm" autocomplete="off">
         <div class="modal-body">
         
             <input type="hidden" id="instructorId">
@@ -119,70 +113,34 @@ require_once("../config/verifica_login.php");
             </div>
 
             <div class="form-group">
-              <label for="nomeInstructor">Nome:</label>
+              <label for="nomeInstructor">Nome do Curso:</label>
               <input type="text" id="nomeInstructor" class="form-control" required minlength="2" maxlength="100" placeholder="Nome completo">
             </div>
 
             <div class="form-group">
-              <label for="matriculaInstructor">Matrícula (Opcional):</label>
-              <input type="text" id="matriculaInstructor" class="form-control" maxlength="50" placeholder="Ex: 0012345">
-            </div>
-
-            <div class="form-group">
-              <label for="categoriaInstructor">Categoria:</label>
+              <label for="categoriaInstructor">Modalidade:</label>
               <select id="categoriaInstructor" class="form-control" required>
                 <option value="">Selecione</option>
-                <option value="A">A</option>
-                <option value="C">C</option>
+                <option value="Aperfeiçoamento">Aperfeiçoamento</option>
+                <option value="Aprendizagem">Aprendizagem</option>
+                <option value="Qualificação">Qualificação</option>
+                <option value="Técnico">Técnico</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="tipoContratoInstructor">Tipo de Contrato:</label>
+              <label for="tipoContratoInstructor">Tipo de Curso:</label>
               <select id="tipoContratoInstructor" class="form-control" required>
                 <option value="">Selecione</option>
-                <option value="Efetivo">Efetivo</option>
-                <option value="Empréstimo">Empréstimo</option>
-                <option value="RPA">RPA</option>
-              </select>
-            </div>
-
-            <div class="col-md-6 form-group">
-              <label for="cargaHorariaInstructor" class="form-label">Carga Horária</label>
-              <select class="form-select" id="cargaHorariaInstructor" required>
-                <option value="" disabled selected>Selecione...</option>
-                <option value="20">20</option>
-                <option value="30">30</option>
-                <option value="40">40</option>
+                <option value="EAD">EAD</option>
+                <option value="Presencial">Prensencial</option>
+                <option value="Semipresencial">Semiprensencial</option>
+                <option value="Trilhas">Trilhas nas Escolas</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>Turno (Selecione 1 ou 2):</label>
-              <div class="ms" id="ms-turno-modal">
-                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-                  <div class="ms__value" aria-live="polite">
-                    <span class="ms__placeholder">Selecione...</span>
-                  </div>
-                  <span class="ms__caret" aria-hidden="true">▾</span>
-                </button>
-                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-                  <ul class="ms__options">
-                    <li class="ms__option"><label><input type="checkbox" value="Manhã"> Manhã</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Tarde"> Tarde</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Noite"> Noite</label></li>
-                  </ul>
-                  <div class="ms__footer">
-                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                    <button type="button" class="btn btn-primary ms__close">OK</button>
-                  </div>
-                </div>
-                <input type="hidden" id="turnoInstructor" name="turno" value="[]" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Área de Atuação:</label>
+              <label>Área Tecnologica:</label>
               <div class="ms" id="ms-area-modal">
                 <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
                   <div class="ms__value" aria-live="polite">
@@ -212,6 +170,11 @@ require_once("../config/verifica_login.php");
                 <input type="hidden" id="areaInstructor" name="area" value="[]">
               </div>
             </div>
+
+            <div class="form-group">
+              <label for="cargaTotalCurso">Carga Horária Total:</label>
+              <input type="text" id="cargaTotalCurso" class="form-control" required placeholder="Ex: 200,30 horas">
+            </div>        
 
             <div class="form-group">
               <label>Mapa de Competências (UCs):</label>
@@ -244,6 +207,12 @@ require_once("../config/verifica_login.php");
                 <option value="Inativo">Inativo</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label for="obsCurso">Observações (Opcional): </label>
+              <input type="textarea" id="obsCurso" class="form-control">
+            </div> 
+
             </div>
              <div class="modal-footer"
                     style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
@@ -262,49 +231,44 @@ require_once("../config/verifica_login.php");
   <div id="visualizarInstructorModal" class="modal modal-dialog-centered">
     <div class="modal-content">
         <span class="close-button" id="closeVisualizarBtn">&times;</span>
-        <h2>Detalhes do Instrutor</h2>
+        <h2>Detalhes do Curso</h2>
 
         <form>
             <div class="modal-body">
                 
                 <div class="form-group">
-                    <label>Nome:</label>
+                    <label>Nome do Curso:</label>
                     <input type="text" id="viewNomeInstructor" class="form-control" readonly disabled>
                 </div>
 
                 <div class="form-group">
-                    <label>Matrícula:</label>
+                    <label>Modalidade:</label>
                     <input type="text" id="viewMatriculaInstructor" class="form-control" readonly disabled>
                 </div>
 
                 <div class="form-group">
-                    <label>Categoria:</label>
+                    <label>Tipo de Curso:</label>
                     <input type="text" id="viewCategoriaInstructor" class="form-control" readonly disabled>
                 </div>
 
                 <div class="form-group">
-                    <label>Área:</label>
+                    <label>Área Tecnologica:</label>
                     <input type="text" id="viewAreaInstructor" class="form-control" readonly disabled>
                 </div>
 
                 <div class="form-group">
-                    <label>Tipo de Contrato:</label>
+                    <label>Carga Horária Total:</label>
                     <input type="text" id="viewTipoContratoInstructor" class="form-control" readonly disabled>
-                </div>
-
-                <div class="col-md-6 form-group">
-                    <label class="form-label">Carga Horária</label>
-                    <input type="text" class="form-control" id="viewCargaHorariaInstructor" readonly disabled>
-                </div>
-
-                <div class="form-group">
-                    <label>Turno:</label>
-                    <input type="text" id="viewTurnoInstructor" class="form-control" readonly disabled>
                 </div>
 
                 <div class="form-group">
                     <label>Status:</label>
                     <input type="text" id="viewStatusInstructor" class="form-control" readonly disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Observação (Opcional):</label>
+                    <input type="text" id="viewTurnoInstructor" class="form-control" readonly disabled>
                 </div>
 
                 <div id="viewCompetenciasContainer" class="form-group" style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
@@ -321,7 +285,7 @@ require_once("../config/verifica_login.php");
 </div>
 
   <script src="../assets/js/geral_script.js"></script>
-  <script src="../assets/js/instrutores_script.js" defer></script>
+  <script src="../assets/js/curso_script.js" defer></script>
 </body>
 
 </html>

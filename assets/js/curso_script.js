@@ -366,6 +366,7 @@ function init() {
       if(!wrapper) return;
       const checkboxes = wrapper.querySelectorAll('input[type="checkbox"]');
       checkboxes.forEach(cb => cb.checked = false);
+      
       checkboxes.forEach(cb => cb.dispatchEvent(new Event('change')));
   }
 

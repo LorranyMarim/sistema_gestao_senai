@@ -162,14 +162,11 @@
     } catch { return fallback; }
   }
 
-  // --- MULTISELECT COMPONENT START ---
   function qs(el, sel) { return el.querySelector(sel); }
   function qsa(el, sel) { return Array.from(el.querySelectorAll(sel)); }
 
- // --- SUBSTIRUA A CLASSE MultiSelect INTEIRA POR ESTA ---
   class MultiSelect {
     constructor(root) {
-      // Singleton: Evita múltiplas instâncias no mesmo elemento
       if (root._msInstance) {
         root._msInstance.refresh();
         return root._msInstance;
@@ -189,7 +186,6 @@
 
       this.checkboxes = qsa(root, '.ms__options input[type="checkbox"]');
 
-      // Estado para Infinite Scroll (Passo 2)
       this.isAsync = false;
       this.asyncState = {
         page: 1,
@@ -204,24 +200,20 @@
       this.syncUI();
     }
 
-    // Método novo: Ativa o modo assíncrono
     setupAsync(fetchFunction) {
       this.isAsync = true;
       this.asyncState.fetchFn = fetchFunction;
-      this.optionsList.innerHTML = ''; // Limpa opções iniciais
-      this.loadMoreData(true); // Carrega primeira página
+      this.optionsList.innerHTML = ''; 
+      this.loadMoreData(true); 
       
-      // Scroll Infinito
       this.optionsList.addEventListener('scroll', () => {
         const { scrollTop, scrollHeight, clientHeight } = this.optionsList;
-        // Buffer de 20px para carregar antes de chegar no fim absoluto
         if (scrollTop + clientHeight >= scrollHeight - 20) {
           this.loadMoreData();
         }
       });
     }
 
-    // Método novo: Busca dados
     async loadMoreData(reset = false) {
       if (!this.isAsync || this.asyncState.loading) return;
       if (!reset && !this.asyncState.hasMore) return;
@@ -238,7 +230,6 @@
         const data = await this.asyncState.fetchFn(this.asyncState.page, this.asyncState.pageSize, this.asyncState.term);
         
         if (data && data.length > 0) {
-          // Recupera valores já selecionados para não perder o check
           const currentVals = JSON.parse(this.hidden.value || '[]');
 
           data.forEach(opt => {
@@ -275,7 +266,7 @@
         console.error("Erro no infinite scroll", err);
       } finally {
         this.asyncState.loading = false;
-        this.refresh(); // Atualiza lista interna de checkboxes
+        this.refresh(); 
       }
     }
 
@@ -300,7 +291,6 @@
             
             if(this.search) this.search.value = "";
             
-            // Lógica unificada de limpeza
             if(this.isAsync) {
                 this.asyncState.term = "";
                 this.loadMoreData(true);
@@ -327,7 +317,6 @@
         });
       });
 
-      // Busca Unificada (Debounce)
       if(this.search) {
           let timeout;
           this.search.addEventListener("input", () => {
@@ -336,9 +325,9 @@
                 const term = this.search.value;
                 if (this.isAsync) {
                     this.asyncState.term = term;
-                    this.loadMoreData(true); // Reset e busca nova na API
+                    this.loadMoreData(true); 
                 } else {
-                    this.filterOptions(term); // Filtro local antigo
+                    this.filterOptions(term); 
                 }
             }, 300);
           });
@@ -354,7 +343,6 @@
     }
 
     open() {
-      // Fecha outros dropdowns abertos (Lógica mantida do seu código atual)
       document.querySelectorAll('.ms.ms--open').forEach(otherRoot => {
         if (otherRoot !== this.root) {
           otherRoot.classList.remove("ms--open");
@@ -401,7 +389,7 @@
     }
 
     filterOptions(term) {
-      if(this.isAsync) return; // Se é async, o filtro visual local não se aplica
+      if(this.isAsync) return; 
       const t = (term || "").toLowerCase().trim();
       qsa(this.optionsList, ".ms__option").forEach(li => {
         const label = li.innerText.toLowerCase();
@@ -439,7 +427,6 @@
 
         remove.addEventListener("click", (e) => {
           e.stopPropagation();
-          // Busca pelo valor, pois o elemento DOM do checkbox pode ter sido recriado no scroll
           const cb = Array.from(this.checkboxes).find(c => c.value === item.value);
           if (cb) {
               cb.checked = false;
@@ -1006,9 +993,6 @@
         container.appendChild(createGroup('Criado até:', to, 'date-to'));
       }
 
-      // -- NOVOS FILTROS INSTRUTORES --
-
-      // Carga Horária
       if (config.cargaHoraria) {
         const sel = document.createElement('select');
         sel.id = 'gen_carga_horaria';
@@ -1022,7 +1006,6 @@
         container.appendChild(createGroup('Carga Horária:', sel, 'carga-horaria'));
       }
 
-      // Categoria
       if (config.categoria) {
         const sel = document.createElement('select');
         sel.id = 'gen_categoria';
@@ -1036,7 +1019,6 @@
         container.appendChild(createGroup('Categoria:', sel, 'categoria'));
       }
 
-      // Tipo de Contrato
       if (config.tipoContrato) {
         const sel = document.createElement('select');
         sel.id = 'gen_tipo_contrato';
@@ -1050,13 +1032,11 @@
         container.appendChild(createGroup('Tipo de Contrato:', sel, 'tipo-contrato'));
       }
 
-      // Helper para criar Multiselect
       const createMultiselectHTML = (id, placeholder, options, defaultAll = false) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'ms';
         wrapper.id = id;
         
-        // Control
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'ms__control';
@@ -1070,19 +1050,16 @@
         `;
         wrapper.appendChild(btn);
 
-        // Dropdown
         const dropdown = document.createElement('div');
         dropdown.className = 'ms__dropdown';
         dropdown.setAttribute('role', 'listbox');
         dropdown.setAttribute('aria-multiselectable', 'true');
 
-        // Search inside dropdown
         const searchDiv = document.createElement('div');
         searchDiv.className = 'ms__search';
         searchDiv.innerHTML = '<input type="text" class="ms__search-input" placeholder="Pesquisar..." />';
         dropdown.appendChild(searchDiv);
 
-        // Options List
         const ul = document.createElement('ul');
         ul.className = 'ms__options';
         
@@ -1100,7 +1077,6 @@
         });
         dropdown.appendChild(ul);
 
-        // Footer
         const footer = document.createElement('div');
         footer.className = 'ms__footer';
         footer.innerHTML = `
@@ -1111,19 +1087,16 @@
         
         wrapper.appendChild(dropdown);
 
-        // Hidden input
         const hidden = document.createElement('input');
         hidden.type = 'hidden';
         hidden.id = id + '-hidden';
         hidden.value = defaultAll ? JSON.stringify(options) : '[]';
-        // Listener for changes on hidden input to trigger global filter change
         hidden.addEventListener('change', triggerChange); 
         wrapper.appendChild(hidden);
 
         return wrapper;
       };
 
-      // Área (Multiselect)
       if (config.area) {
          const ms = createMultiselectHTML(
              'gen_area', 
@@ -1133,9 +1106,7 @@
          container.appendChild(createGroup('Área:', ms, 'area'));
       }
 
-      // Turno (Multiselect)
       if (config.turno) {
-         // Default all selected
          const ms = createMultiselectHTML(
              'gen_turno', 
              'Selecione...', 
@@ -1145,17 +1116,14 @@
          container.appendChild(createGroup('Turno:', ms, 'turno'));
       }
 
-      // Por Competências (Multiselect)
       if (config.competencia) {
          const ms = createMultiselectHTML(
              'gen_competencia', 
              'Selecione...', 
-             [] // Populated later via API
+             [] 
          );
          container.appendChild(createGroup('Por Competência:', ms, 'competencia'));
       }
-
-      // -------------------------------
 
       if (config.status) {
         const sel = document.createElement('select');
@@ -1240,7 +1208,6 @@
       btn.type = 'button';
 
       btn.addEventListener('click', () => {
-        // Clear standard inputs
         if (document.getElementById('gen_search')) document.getElementById('gen_search').value = '';
         if (document.getElementById('gen_created_from')) document.getElementById('gen_created_from').value = '';
         if (document.getElementById('gen_created_to')) document.getElementById('gen_created_to').value = '';
@@ -1249,15 +1216,11 @@
         if (document.getElementById('gen_tipo_uc')) document.getElementById('gen_tipo_uc').value = 'Todos';
         if (document.getElementById('gen_pagesize')) document.getElementById('gen_pagesize').value = 10;
 
-        // Clear new inputs
         if (document.getElementById('gen_carga_horaria')) document.getElementById('gen_carga_horaria').value = 'Todos';
         if (document.getElementById('gen_categoria')) document.getElementById('gen_categoria').value = 'Todos';
         if (document.getElementById('gen_tipo_contrato')) document.getElementById('gen_tipo_contrato').value = 'Todos';
 
-        // Clear Multiselects
-        // We find the .ms__clear buttons inside the multiselects and click them
         document.querySelectorAll('.ms__clear').forEach(clearBtn => {
-             // Avoid triggering multiple fetches if possible, but the button click triggers default clear behavior
              clearBtn.click();
         });
 
@@ -1269,7 +1232,6 @@
       btnDiv.appendChild(btn);
       container.appendChild(btnDiv);
 
-      // Initialize any multiselects added to the DOM
       App.ui.initMultiSelects();
     }
   };

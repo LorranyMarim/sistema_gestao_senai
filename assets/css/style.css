@@ -1128,11 +1128,8 @@ select:focus,
   box-shadow: var(--sombra-caixa);
   display: flex;
   flex-direction: column;
-  
-  /* max-height: 90vh;  <-- RECOMENDADO: Remova ou comente essa linha para o modal crescer conforme o conteúdo se necessário */
   position: relative;
-  
-  overflow: visible; /* ALTERADO: De 'hidden' para 'visible' para permitir que o dropdown saia */
+  overflow: visible; 
 }
 
 #ucModal .modal-content {
@@ -1229,7 +1226,6 @@ select:disabled:hover {
     background-color: #e2e6ea !important;
 }
 
-/* Multiselect (combina com o padrão do seu input: altura 42, borda 5px, foco com --cor-sidebar) */
 .ms { position: relative; width: 100%; }
 .ms__control{
   width: 100%;
@@ -1277,11 +1273,10 @@ select:disabled:hover {
   background: #fff;
   border: 1px solid var(--cor-borda);
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Sombra mais destacada para sobreposição */
-  z-index: 1050; /* Z-index alto para sobrepor os campos abaixo no modal */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+  z-index: 1050; 
   display: none;
-  overflow: visible; /* IMPORTANTE: Permite que o dropdown não corte sombras */
-  /* Remova 'max-height' e 'overflow: hidden' daqui se existirem */
+  overflow: visible; 
 }
 .ms--open + .ms__dropdown,
 .ms.ms--open .ms__dropdown{ display: block; }
@@ -1306,10 +1301,8 @@ select:disabled:hover {
   list-style: none;
   margin: 0;
   padding: 6px;
-  
-  /* CÁLCULO: Aprox. 36px por item * 4 itens = ~145px */
   max-height: 150px; 
-  overflow-y: auto; /* Adiciona a barra de rolagem apenas na lista de opções */
+  overflow-y: auto; 
 }
 .ms__option{
   padding: 8px 10px;
@@ -1330,7 +1323,6 @@ select:disabled:hover {
   gap: 10px;
   border-top: 1px solid var(--cor-borda);
 }
-/* Tags (inspirado na sua .tag-turma) */
 .ms__tag{
   display: inline-flex;
   align-items: center;
@@ -1360,48 +1352,40 @@ select:disabled:hover {
   padding: 0;
 }
 .ms__tag-remove:hover{ color: var(--cor-perigo); }
-/* CORREÇÃO: Filtros Responsivos */
 #filter_area {
     display: flex;
-    flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
-    gap: 15px; /* Espaçamento consistente entre os filtros */
-    align-items: flex-end; /* Alinha os inputs pela base */
-    width: 100%;
+    flex-wrap: wrap; 
+    gap: 15px; 
+    align-items: flex-end; 
 }
 
-/* Garante que os grupos de filtro injetados pelo JS tenham comportamento flexível */
 #filter_area .filter-group {
-    flex: 1 1 200px; /* Cresce, encolhe, base de 200px */
-    min-width: 200px; /* Impede que fiquem muito espremidos */
+    flex: 1 1 200px; 
+    min-width: 200px;
     max-width: 100%;
 }
 
 .ms__value {
     display: flex;
-    flex-wrap: nowrap; /* Impede que caia para a linha de baixo */
-    overflow: hidden;  /* Esconde qualquer excesso se ainda houver */
+    flex-wrap: nowrap; 
+    overflow: hidden;  
     align-items: center;
     gap: 5px;
 }
 
-/* Estilo para o contador (+X) */
 .ms__tag--more {
     font-weight: bold;
-    flex-shrink: 0; /* Garante que o contador nunca seja esmagado */
+    flex-shrink: 0; 
 }
-/* Correção para o Modal de Visualização */
 #viewCompetenciasList {
-    max-height: 250px; /* Define uma altura máxima (aprox. 6 a 7 itens) */
-    overflow-y: auto;  /* Cria a barra de rolagem vertical se passar da altura */
-    
-    /* Melhorias visuais opcionais para a lista com rolagem */
+    max-height: 250px; 
+    overflow-y: auto;  
     border: 1px solid #e9ecef;
     border-radius: 4px;
-    padding: 10px 10px 10px 30px !important; /* !important para garantir o padding esquerdo */
+    padding: 10px 10px 10px 30px !important; 
     background-color: #f8f9fa;
 }
 
-/* Estilização da barra de rolagem (Scrollbar) para ficar mais elegante */
 #viewCompetenciasList::-webkit-scrollbar {
     width: 8px;
 }
@@ -1417,13 +1401,6 @@ select:disabled:hover {
     background: #bbb;
 }
 
-/* --- Estilos Específicos para o Modal de Instrutores --- */
-/* Aplica-se APENAS ao #instructorModal para não quebrar os outros */
-
-/* --- Estilos Específicos para Modais de Instrutores (Edição e Visualização) --- */
-/* Aplica-se a ambos os modais para garantir o mesmo layout e scroll */
-
-/* 1. Define a altura fixa e trava o container principal */
 #instructorModal .modal-content,
 #visualizarInstructorModal .modal-content {
     height: 700px !important;
@@ -1431,33 +1408,28 @@ select:disabled:hover {
     display: flex !important;
     flex-direction: column !important;
     padding: 0 !important;       
-    overflow: hidden !important; /* Impede rolagem no container pai */
+    overflow: hidden !important;
     position: relative;          
 }
 
-/* 2. O Título (h2) e o Botão Fechar são filhos diretos e ficam fixos no topo */
-
-/* 3. O formulário ocupa o espaço restante abaixo do título */
 #instructorModal form,
 #visualizarInstructorModal form {
     display: flex;
     flex-direction: column;
-    flex: 1;                     /* Cresce para ocupar todo espaço restante */
-    overflow: hidden;            /* Impede que o form em si role */
+    flex: 1;                     
+    overflow: hidden;           
     padding: 0 !important;
     margin: 0 !important;
 }
 
-/* 4. O Body é quem ganha a barra de rolagem */
 #instructorModal .modal-body,
 #visualizarInstructorModal .modal-body {
-    flex: 1;                     /* Ocupa o espaço disponível */
-    overflow-y: auto !important; /* FORÇA a barra de rolagem vertical aqui */
+    flex: 1;                     
+    overflow-y: auto !important; 
     overflow-x: hidden;
     padding: 20px 25px !important; 
 }
 
-/* 5. Footer fixo na base */
 #instructorModal .modal-footer,
 #visualizarInstructorModal .modal-footer {
     flex-shrink: 0;

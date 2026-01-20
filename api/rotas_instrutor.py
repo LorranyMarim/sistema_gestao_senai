@@ -23,16 +23,11 @@ class InstrutorModel(BaseModel):
     turno: List[str] = Field(..., min_items=1, max_items=2)
     status: Literal['Ativo', 'Inativo']
     mapa_competencias: List[str] = Field(default_factory=list)
-    
-    # Optional fields for saving references if needed, but not strictly required by prompt
-    # competencias: List[str] = Field(default_factory=list)
+
 
     @validator('nome', 'matricula', 'categoria', 'tipo_contrato', pre=True)
     def sanitize_and_check_chars(cls, v):
         if not isinstance(v, str):
-            # Allow non-string if pydantic converts, but for security, strict is better
-            # However, if it's not a string, we just pass or let Pydantic handle type error
-            # But the prompt asks for strict sanitization
             return str(v).strip()
         val = v.strip()
         if FORBIDDEN_CHARS.search(val):
@@ -42,7 +37,6 @@ class InstrutorModel(BaseModel):
     @validator('area', 'turno', 'mapa_competencias', pre=True)
     def check_list_chars(cls, v):
         if isinstance(v, str):
-            # In case it comes as a string representation of list or single item
             import json
             try:
                 v = json.loads(v)
@@ -71,7 +65,7 @@ def _try_objectid(s: str):
 def listar_instrutores(
     busca: Optional[str] = None,
     status: Optional[List[str]] = Query(None),
-    carga_horaria: Optional[str] = None, # Not in model but in filters requirements (though DB model should support it if we want to filter by it, but user didn't ask to add column in model for CH, just filter. Assuming CH is implicit or derived or I should add it? Prompt says 'Colunas da tabela... Nome, Matrícula, Categoria, Área, Tipo de Contrato, Turno, Status'. Filter 'Carga Horária' select exists. I will add to filter logic but if data doesn't exist it won't work well. I will assume it's part of the flexible schema or I should add it to model? Prompt doesn't list CH in "Colunas da Tabela" but lists it in "Filtros". I will support the filter param.)
+    carga_horaria: Optional[str] = None,
     categoria: Optional[str] = None,
     tipo_contrato: Optional[str] = None,
     area: Optional[List[str]] = Query(None),
@@ -92,7 +86,6 @@ def listar_instrutores(
         filtro["$or"] = [
             {"nome": {"$regex": busca, "$options": "i"}},
             {"matricula": {"$regex": busca, "$options": "i"}},
-            # Search in areas too?
             {"area": {"$regex": busca, "$options": "i"}}
         ]
 
@@ -108,9 +101,9 @@ def listar_instrutores(
 
     if carga_horaria and carga_horaria != "Todos":
         try:
-            filtro["carga_horaria"] = int(carga_horaria) # Converte para Inteiro
+            filtro["carga_horaria"] = int(carga_horaria) 
         except ValueError:
-            pass # Se não for número, ignora o filtro
+            pass 
 
     if categoria and categoria != "Todos":
         filtro["categoria"] = categoria
@@ -119,21 +112,22 @@ def listar_instrutores(
         filtro["tipo_contrato"] = tipo_contrato
 
     if area:
-        # Multiselect logic: Usually OR or AND. Prompt says "default: vazio". 
-        # If user selects multiple, usually finding ANY match (OR).
-        # But for tags often implies containment. Let's use $in for "Any of selected"
         filtro["area"] = {"$in": area}
 
     if turno:
-        # Multiselect Turno
         filtro["turno"] = {"$in": turno}
 
-    # Competencia filter logic (OR)
-    # The prompt says: "Por Competências (multiselect)... regra: OR"
-    # This implies we filter instructors who have at least one of these competencies.
-    # Assuming there is a field 'competencias' (list of IDs or names) in the instructor doc.
     if competencia:
-        filtro["competencias"] = {"$in": competencia}
+      
+        lista_oids = []
+        for c in competencia:
+            try:
+                lista_oids.append(ObjectId(c))
+            except:
+                pass 
+        
+        if lista_oids:
+            filtro["mapa_competencias"] = {"$in": lista_oids}
 
 
     if created_from or created_to:
@@ -193,15 +187,11 @@ def criar_instrutor(instrutor: InstrutorModel, ctx: RequestCtx = Depends(get_ctx
     data['status'] = data['status'].capitalize()
     data['data_criacao'] = datetime.now(timezone.utc)
     
-    # --- NOVO: Conversão de String para ObjectId ---
-    # Isso garante que no banco seja salvo como referência real
     if 'mapa_competencias' in data and data['mapa_competencias']:
         try:
             data['mapa_competencias'] = [ObjectId(uc_id) for uc_id in data['mapa_competencias']]
         except Exception:
-            # Opcional: Levantar erro se algum ID for inválido
             pass 
-    # -----------------------------------------------
 
     data.pop('_id', None)
     
@@ -226,10 +216,8 @@ def atualizar_instrutor(id: str, instrutor: InstrutorModel, ctx: RequestCtx = De
     data['instituicao_id'] = ctx.inst_oid
     if 'mapa_competencias' in data and data['mapa_competencias']:
         try:
-            # Converte cada ID de string para ObjectId do BSON
             data['mapa_competencias'] = [ObjectId(uc_id) for uc_id in data['mapa_competencias']]
         except Exception:
-            # Se houver algum ID inválido, ignoramos ou deixamos passar (opcional: logar erro)
             pass
     res = db["instrutor"].update_one(
         {"_id": oid, "instituicao_id": ctx.inst_oid}, 
@@ -261,15 +249,7 @@ def deletar_instrutor(id: str, ctx: RequestCtx = Depends(get_ctx)):
 @router.get("/api/gestao_instrutores/bootstrap")
 def bootstrap_instrutores(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
-    
     inst_oid = ctx.inst_oid
-    
-    # Example logic if we need to return something specific for bootstrap
-    # But usually it's just to confirm auth or return metadata. 
-    # The UC module returns institutions and UCs.
-    # Here we might not need much, but let's keep the pattern.
-    
-    # Return empty lists or necessary metadata
     return {
         "msg": "Bootstrap OK"
     }
