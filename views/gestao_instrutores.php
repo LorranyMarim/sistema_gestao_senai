@@ -26,36 +26,36 @@ require_once("../config/verifica_login.php");
       <nav class="sidebar-nav">
         <ul>
           <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
-                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php" class="active"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
-                            Gestão de UCs</a></li>
-                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
-                    </li>
+          <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
+          <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+          <li><a href="gestao_instrutores.php" class="active"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+              Instrutores</a></li>
+          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+          <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
+              Gestão de UCs</a></li>
+          <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
+          </li>
 
-                    <li id="nav-relatorios" class="has-submenu">
-                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
-                            <span><i class="fas fa-file-alt"></i> Relatórios</span>
-                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-                        </a>
-                        <ul class="submenu" id="submenu-relatorios">
-                            <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
-                        </ul>
-                    </li>
-                    <li id="nav-config" class="has-submenu">
-                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
-                            <span><i class="fas fa-tools"></i> Configuração</span>
-                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-                        </a>
-                        <ul class="submenu" id="submenu-config">
-                            <li><a href="configuracao_usuarios.php"> Usuários</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+          <li id="nav-relatorios" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+              <span><i class="fas fa-file-alt"></i> Relatórios</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-relatorios">
+              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+            </ul>
+          </li>
+          <li id="nav-config" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
+              <span><i class="fas fa-tools"></i> Configuração</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-config">
+              <li><a href="configuracao_usuarios.php"> Usuários</a></li>
+            </ul>
+          </li>
+          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
     </aside>
@@ -90,169 +90,173 @@ require_once("../config/verifica_login.php");
             </thead>
             <tbody id="instructorTableBody"></tbody>
           </table>
-           <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-    <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
-    <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-    <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
-</div>
+          <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+            <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+            <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+            <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
 
-        </div>
+
+          </div>
       </section>
     </main>
   </div>
 
-<div id="instructorModal" class="modal modal-dialog-centered">
+  <div id="instructorModal" class="modal modal-dialog-centered">
     <div class="modal-content">
       <span class="close-button" id="closeModalBtn">&times;</span>
-      
-        <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
-        
-      
+
+      <h2 id="modalTitleInstructor">Adicionar Novo Instrutor</h2>
+
+
 
       <form id="instructorForm" autocomplete="off">
         <div class="modal-body">
-        
-            <input type="hidden" id="instructorId">
 
-            <div id="alertInstructor" class="alert alert-danger"
-              style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
-            </div>
+          <input type="hidden" id="instructorId">
 
-            <div class="form-group">
-              <label for="nomeInstructor">Nome:</label>
-              <input type="text" id="nomeInstructor" class="form-control" required minlength="2" maxlength="100" placeholder="Nome completo">
-            </div>
+          <div id="alertInstructor" class="alert alert-danger"
+            style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
+          </div>
 
-            <div class="form-group">
-              <label for="matriculaInstructor">Matrícula (Opcional):</label>
-              <input type="text" id="matriculaInstructor" class="form-control" maxlength="50" placeholder="Ex: 0012345">
-            </div>
+          <div class="form-group">
+            <label for="nomeInstructor">Nome:</label>
+            <input type="text" id="nomeInstructor" class="form-control" required minlength="2" maxlength="100"
+              placeholder="Nome completo">
+          </div>
 
-            <div class="form-group">
-              <label for="categoriaInstructor">Categoria:</label>
-              <select id="categoriaInstructor" class="form-control" required>
-                <option value="">Selecione</option>
-                <option value="A">A</option>
-                <option value="C">C</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label for="matriculaInstructor">Matrícula (Opcional):</label>
+            <input type="text" id="matriculaInstructor" class="form-control" maxlength="50" placeholder="Ex: 0012345">
+          </div>
 
-            <div class="form-group">
-              <label for="tipoContratoInstructor">Tipo de Contrato:</label>
-              <select id="tipoContratoInstructor" class="form-control" required>
-                <option value="">Selecione</option>
-                <option value="Efetivo">Efetivo</option>
-                <option value="Empréstimo">Empréstimo</option>
-                <option value="RPA">RPA</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label for="categoriaInstructor">Categoria:</label>
+            <select id="categoriaInstructor" class="form-control" required>
+              <option value="">Selecione</option>
+              <option value="A">A</option>
+              <option value="C">C</option>
+            </select>
+          </div>
 
-            <div class="col-md-6 form-group">
-              <label for="cargaHorariaInstructor" class="form-label">Carga Horária</label>
-              <select class="form-select" id="cargaHorariaInstructor" required>
-                <option value="" disabled selected>Selecione...</option>
-                <option value="20">20</option>
-                <option value="30">30</option>
-                <option value="40">40</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label for="tipoContratoInstructor">Tipo de Contrato:</label>
+            <select id="tipoContratoInstructor" class="form-control" required>
+              <option value="">Selecione</option>
+              <option value="Efetivo">Efetivo</option>
+              <option value="Empréstimo">Empréstimo</option>
+              <option value="RPA">RPA</option>
+            </select>
+          </div>
 
-            <div class="form-group">
-              <label>Turno (Selecione 1 ou 2):</label>
-              <div class="ms" id="ms-turno-modal">
-                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-                  <div class="ms__value" aria-live="polite">
-                    <span class="ms__placeholder">Selecione...</span>
-                  </div>
-                  <span class="ms__caret" aria-hidden="true">▾</span>
-                </button>
-                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-                  <ul class="ms__options">
-                    <li class="ms__option"><label><input type="checkbox" value="Manhã"> Manhã</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Tarde"> Tarde</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Noite"> Noite</label></li>
-                  </ul>
-                  <div class="ms__footer">
-                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                    <button type="button" class="btn btn-primary ms__close">OK</button>
-                  </div>
+          <div class="col-md-6 form-group">
+            <label for="cargaHorariaInstructor" class="form-label">Carga Horária</label>
+            <select class="form-select" id="cargaHorariaInstructor" required>
+              <option value="" disabled selected>Selecione...</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Turno (Selecione 1 ou 2):</label>
+            <div class="ms" id="ms-turno-modal">
+              <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                <div class="ms__value" aria-live="polite">
+                  <span class="ms__placeholder">Selecione...</span>
                 </div>
-                <input type="hidden" id="turnoInstructor" name="turno" value="[]" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Área de Atuação:</label>
-              <div class="ms" id="ms-area-modal">
-                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-                  <div class="ms__value" aria-live="polite">
-                    <span class="ms__placeholder">Selecione...</span>
-                  </div>
-                  <span class="ms__caret" aria-hidden="true">▾</span>
-                </button>
-                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-                  <div class="ms__search">
-                    <input type="text" class="ms__search-input" placeholder="Pesquisar..." />
-                  </div>
-                  <ul class="ms__options">
-                    <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> Eletroeletrônica</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do Trabalho</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da Informação</label></li>                 
-                    
-                  </ul>
-                  <div class="ms__footer">
-                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                    <button type="button" class="btn btn-primary ms__close">OK</button>
-                  </div>
+                <span class="ms__caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                <ul class="ms__options">
+                  <li class="ms__option"><label><input type="checkbox" value="Manhã"> Manhã</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Tarde"> Tarde</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Noite"> Noite</label></li>
+                </ul>
+                <div class="ms__footer">
+                  <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                  <button type="button" class="btn btn-primary ms__close">OK</button>
                 </div>
-                <input type="hidden" id="areaInstructor" name="area" value="[]">
               </div>
+              <input type="hidden" id="turnoInstructor" name="turno" value="[]" required>
             </div>
+          </div>
 
-            <div class="form-group">
-              <label>Mapa de Competências (UCs):</label>
-              <div class="ms" id="ms-competencia-modal">
-                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-                  <div class="ms__value" aria-live="polite">
-                    <span class="ms__placeholder">Selecione as UCs...</span>
-                  </div>
-                  <span class="ms__caret" aria-hidden="true">▾</span>
-                </button>
-                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-                  <div class="ms__search">
-                    <input type="text" class="ms__search-input" placeholder="Pesquisar UCs..." />
-                  </div>
-                  <ul class="ms__options" id="competenciasOptionsList">
-                    </ul>
-                  <div class="ms__footer">
-                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                    <button type="button" class="btn btn-primary ms__close">OK</button>
-                  </div>
+          <div class="form-group">
+            <label>Área de Atuação:</label>
+            <div class="ms" id="ms-area-modal">
+              <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                <div class="ms__value" aria-live="polite">
+                  <span class="ms__placeholder">Selecione...</span>
                 </div>
-                <input type="hidden" id="competenciasInstructor" name="competencias" value="[]">
-              </div>
-            </div>
+                <span class="ms__caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                <div class="ms__search">
+                  <input type="text" class="ms__search-input" placeholder="Pesquisar..." />
+                </div>
+                <ul class="ms__options">
+                  <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica">
+                      Eletroeletrônica</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do
+                      Trabalho</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da
+                      Informação</label></li>
 
-            <div class="form-group">
-              <label for="statusInstructor">Status:</label>
-              <select id="statusInstructor" class="form-control">
-                <option value="Ativo">Ativo</option>
-                <option value="Inativo">Inativo</option>
-              </select>
+                </ul>
+                <div class="ms__footer">
+                  <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                  <button type="button" class="btn btn-primary ms__close">OK</button>
+                </div>
+              </div>
+              <input type="hidden" id="areaInstructor" name="area" value="[]">
             </div>
+          </div>
+
+          <div class="form-group">
+            <label>Mapa de Competências (UCs):</label>
+            <div class="ms" id="ms-competencia-modal">
+              <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                <div class="ms__value" aria-live="polite">
+                  <span class="ms__placeholder">Selecione as UCs...</span>
+                </div>
+                <span class="ms__caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                <div class="ms__search">
+                  <input type="text" class="ms__search-input" placeholder="Pesquisar UCs..." />
+                </div>
+                <ul class="ms__options" id="competenciasOptionsList">
+                </ul>
+                <div class="ms__footer">
+                  <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                  <button type="button" class="btn btn-primary ms__close">OK</button>
+                </div>
+              </div>
+              <input type="hidden" id="competenciasInstructor" name="competencias" value="[]">
             </div>
-             <div class="modal-footer"
-                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-            <button type="button" class="btn btn-secondary" id="cancelBtn">
-              <i class="fas fa-times-circle"></i> Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-save"></i> Salvar
-            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="statusInstructor">Status:</label>
+            <select id="statusInstructor" class="form-control">
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer"
+          style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">
+            <i class="fas fa-times-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salvar
+          </button>
         </div>
 
       </form>
@@ -261,64 +265,67 @@ require_once("../config/verifica_login.php");
 
   <div id="visualizarInstructorModal" class="modal modal-dialog-centered">
     <div class="modal-content">
-        <span class="close-button" id="closeVisualizarBtn">&times;</span>
-        <h2>Detalhes do Instrutor</h2>
+      <span class="close-button" id="closeVisualizarBtn">&times;</span>
+      <h2>Detalhes do Instrutor</h2>
 
-        <form>
-            <div class="modal-body">
-                
-                <div class="form-group">
-                    <label>Nome:</label>
-                    <input type="text" id="viewNomeInstructor" class="form-control" readonly disabled>
-                </div>
+      <form>
+        <div class="modal-body">
 
-                <div class="form-group">
-                    <label>Matrícula:</label>
-                    <input type="text" id="viewMatriculaInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Nome:</label>
+            <input type="text" id="viewNomeInstructor" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Categoria:</label>
-                    <input type="text" id="viewCategoriaInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Matrícula:</label>
+            <input type="text" id="viewMatriculaInstructor" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Área:</label>
-                    <input type="text" id="viewAreaInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Categoria:</label>
+            <input type="text" id="viewCategoriaInstructor" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Tipo de Contrato:</label>
-                    <input type="text" id="viewTipoContratoInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Área:</label>
+            <input type="text" id="viewAreaInstructor" class="form-control" readonly disabled>
+          </div>
 
-                <div class="col-md-6 form-group">
-                    <label class="form-label">Carga Horária</label>
-                    <input type="text" class="form-control" id="viewCargaHorariaInstructor" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Tipo de Contrato:</label>
+            <input type="text" id="viewTipoContratoInstructor" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Turno:</label>
-                    <input type="text" id="viewTurnoInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="col-md-6 form-group">
+            <label class="form-label">Carga Horária</label>
+            <input type="text" class="form-control" id="viewCargaHorariaInstructor" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Status:</label>
-                    <input type="text" id="viewStatusInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Turno:</label>
+            <input type="text" id="viewTurnoInstructor" class="form-control" readonly disabled>
+          </div>
 
-                <div id="viewCompetenciasContainer" class="form-group" style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
-                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Mapa de Competências:</label>
-                    <ul id="viewCompetenciasList" style="list-style: disc; padding-left: 20px; color: #333;">
-                        </ul>
-                </div>
+          <div class="form-group">
+            <label>Status:</label>
+            <input type="text" id="viewStatusInstructor" class="form-control" readonly disabled>
+          </div>
 
-            </div> <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
-            </div>
-        </form>
+          <div id="viewCompetenciasContainer" class="form-group"
+            style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Mapa de Competências:</label>
+            <ul id="viewCompetenciasList" style="list-style: disc; padding-left: 20px; color: #333;">
+            </ul>
+          </div>
+
+        </div>
+        <div class="modal-footer"
+          style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
+        </div>
+      </form>
     </div>
-</div>
+  </div>
 
   <script src="../assets/js/geral_script.js"></script>
   <script src="../assets/js/instrutores_script.js" defer></script>

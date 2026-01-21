@@ -13,7 +13,7 @@
 
   let ucsMap = {}; 
 
-  const tableBody = document.getElementById('instructorTableBody');
+  const tableBody = document.getElementById('cursoTableBody');
   const pageInfo = document.getElementById('pageInfo');
   const prevBtn = document.getElementById('prevPage');
   const nextBtn = document.getElementById('nextPage');
@@ -26,13 +26,13 @@
   };
   
   const modal = document.getElementById('instructorModal');
-  const form = document.getElementById('instructorForm');
-  const modalTitle = document.getElementById('modalTitleInstructor');
-  const alertBox = document.getElementById('alertInstructor');
+  const form = document.getElementById('cursoForm');
+  const modalTitle = document.getElementById('modalTitleCurso');
+  const alertBox = document.getElementById('alertCurso');
   const closeModalBtn = document.getElementById('closeModalBtn');
   const cancelBtn = document.getElementById('cancelBtn');
 
-  const viewModal = document.getElementById('visualizarInstructorModal');
+  const viewModal = document.getElementById('visualizarCursoModal');
   const closeViewBtn = document.getElementById('closeVisualizarBtn');
   const closeViewBtnFooter = document.getElementById('fecharVisualizarBtn');
 
@@ -187,7 +187,7 @@ function init() {
   function renderTable(items) {
     tableBody.innerHTML = '';
     if (!items.length) {
-      tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum instrutor encontrado.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Nenhum curso encontrado.</td></tr>';
       return;
     }
 
@@ -254,17 +254,17 @@ function init() {
     return;
 }
 
-        const id = document.getElementById('instructorId').value;
+        const id = document.getElementById('cursoId').value;
         const payload = {
-            nome: document.getElementById('nomeInstructor').value,
+            nome: document.getElementById('nomeCurso').value,
             matricula: document.getElementById('matriculaInstructor').value,
-            categoria: document.getElementById('categoriaInstructor').value,
-            tipo_contrato: document.getElementById('tipoContratoInstructor').value,
+            categoria: document.getElementById('modalidadecurso').value,
+            tipo_contrato: document.getElementById('tipoCurso').value,
             carga_horaria: parseInt(document.getElementById('cargaHorariaInstructor').value),
-            status: document.getElementById('statusInstructor').value,
+            status: document.getElementById('statusCurso').value,
             turno: turnos,
-            area: JSON.parse(document.getElementById('areaInstructor').value || '[]'),
-            mapa_competencias: JSON.parse(document.getElementById('competenciasInstructor').value || '[]')
+            area: JSON.parse(document.getElementById('areaCurso').value || '[]'),
+            mapa_competencias: JSON.parse(document.getElementById('competenciasCurso').value || '[]')
         };
 
         const method = id ? 'PUT' : 'POST';
@@ -300,14 +300,14 @@ function init() {
 
     if (item) {
         modalTitle.textContent = 'Editar Instrutor';
-        document.getElementById('instructorId').value = item._id;
-        document.getElementById('nomeInstructor').value = item.nome;
+        document.getElementById('cursoId').value = item._id;
+        document.getElementById('nomeCurso').value = item.nome;
         document.getElementById('matriculaInstructor').value = item.matricula;
-        document.getElementById('categoriaInstructor').value = item.categoria;
-        document.getElementById('tipoContratoInstructor').value = item.tipo_contrato;
+        document.getElementById('modalidadecurso').value = item.categoria;
+        document.getElementById('tipoCurso').value = item.tipo_contrato;
         document.getElementById('cargaHorariaInstructor').value = item.carga_horaria;
-        document.getElementById('statusInstructor').value = item.status;
-        document.getElementById('statusInstructor').disabled = false; 
+        document.getElementById('statusCurso').value = item.status;
+        document.getElementById('statusCurso').disabled = false; 
 
         setMultiselectValue('ms-turno-modal', item.turno);
         setMultiselectValue('ms-area-modal', item.area);
@@ -315,29 +315,29 @@ function init() {
 
     } else {
         modalTitle.textContent = 'Adicionar Novo Instrutor';
-        document.getElementById('instructorId').value = '';
-        document.getElementById('statusInstructor').value = 'Ativo';
-        document.getElementById('statusInstructor').disabled = true; 
+        document.getElementById('cursoId').value = '';
+        document.getElementById('statusCurso').value = 'Ativo';
+        document.getElementById('statusCurso').disabled = true; 
     }
 
     App.ui.showModal(modal);
   }
 
   function openViewModal(item) {
-      document.getElementById('viewNomeInstructor').value = item.nome;
-      document.getElementById('viewMatriculaInstructor').value = item.matricula;
-      document.getElementById('viewCategoriaInstructor').value = item.categoria;
+      document.getElementById('viewnomeCurso').value = item.nome;
+      document.getElementById('viewMatriculaCurso').value = item.matricula;
+      document.getElementById('viewmodalidadecurso').value = item.categoria;
       
       const areas = Array.isArray(item.area) ? item.area.join(', ') : item.area;
-      document.getElementById('viewAreaInstructor').value = areas;
+      document.getElementById('viewareaCurso').value = areas;
       
-      document.getElementById('viewTipoContratoInstructor').value = item.tipo_contrato;
+      document.getElementById('viewtipoCurso').value = item.tipo_contrato;
       document.getElementById('viewCargaHorariaInstructor').value = item.carga_horaria ? item.carga_horaria + 'h' : '-';
       
       const turnos = Array.isArray(item.turno) ? item.turno.join(', ') : item.turno;
-      document.getElementById('viewTurnoInstructor').value = turnos;
+      document.getElementById('viewObsCurso').value = turnos;
       
-      document.getElementById('viewStatusInstructor').value = item.status;
+      document.getElementById('viewstatusCurso').value = item.status;
 
       const compContainer = document.getElementById('viewCompetenciasContainer');
       const compList = document.getElementById('viewCompetenciasList');
