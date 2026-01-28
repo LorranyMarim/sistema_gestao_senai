@@ -14,9 +14,7 @@
     let ucsMap = {};
 
     const tableBody = document.getElementById('instructorTableBody');
-    const pageInfo = document.getElementById('pageInfo');
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
+
 
     const pagElements = {
         prev: document.getElementById('prevPage'),

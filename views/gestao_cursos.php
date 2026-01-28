@@ -104,10 +104,13 @@ require_once("../config/verifica_login.php");
 
       <h2 id="modalTitleCurso">Adicionar Novo Curso</h2>
 
-
-
       <form id="cursoForm" autocomplete="off">
         <div class="modal-body">
+          <input type="hidden" id="cursoId">
+
+          <div id="alertCurso" class="alert alert-danger"
+            style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
+          </div>
 
           <input type="hidden" id="cursoId">
 
@@ -144,7 +147,7 @@ require_once("../config/verifica_login.php");
           </div>
 
           <div class="form-group">
-            <label>Área Tecnologica:</label>
+            <label>Área Tecnológica:</label>
             <div class="ms" id="ms-area-modal">
               <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
                 <div class="ms__value" aria-live="polite">
@@ -167,7 +170,6 @@ require_once("../config/verifica_login.php");
                       Trabalho</label></li>
                   <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da
                       Informação</label></li>
-
                 </ul>
                 <div class="ms__footer">
                   <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
@@ -186,7 +188,7 @@ require_once("../config/verifica_login.php");
 
           <div class="form-group">
             <label>Unidades Curriculares:</label>
-            <div class="ms" id="ms-competencia-modal">
+            <div class="ms" id="ms-ucs-modal">
               <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
                 <div class="ms__value" aria-live="polite">
                   <span class="ms__placeholder">Selecione as UCs...</span>
@@ -259,7 +261,7 @@ require_once("../config/verifica_login.php");
           </div>
 
           <div class="form-group">
-            <label>Área Tecnologica:</label>
+            <label>Área Tecnológica:</label>
             <input type="text" id="viewareaCurso" class="form-control" readonly disabled>
           </div>
 

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parametrização UC - SENAI</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <div style="padding: 20px;">
+        <button id="btnAbrirExemplo" class="btn btn-primary">Abrir Modal com Acordeão</button>
+    </div>
+
+    <div id="modalAcordeon" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitleUcsCurso">Parametrização das UCs do Curso</h2>
+                <button class="close-button" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <button type="button" id="btnToggleAccordion">
+                            <i class="fas fa-chevron-right" style="transition: transform 0.2s;"></i> 
+                            Nome de cada Unidade Curricular
+                        </button>
+                    </div>
+                    
+                    <div class="accordion-collapse" id="accordionContent">
+                        <form id="ucsConfigCurso" autocomplete="off" style="padding: 15px 0;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Carga Horária UC Presencial:</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Qtd Aulas (45min) Presencial:</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Dias Letivos Presencial:</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Carga Horária UC EAD:</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Qtd Aulas (45min) EAD:</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Dias Letivos EAD:</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btnCancelar">
+                    <i class="fas fa-times-circle"></i> Cancelar
+                </button>
+                <button type="submit" form="ucsConfigCurso" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Seleção de elementos
+        const modal = document.getElementById('modalAcordeon');
+        const btnAbrir = document.getElementById('btnAbrirExemplo');
+        const btnFecharX = document.getElementById('closeModalBtn'); // Corrigido ID
+        const btnCancelar = document.getElementById('btnCancelar');
+        const accordionBtn = document.getElementById('btnToggleAccordion');
+        const accordionContent = document.getElementById('accordionContent');
+
+        // Função para abrir
+        btnAbrir.onclick = () => {
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+        };
+
+        // Função para fechar
+        const fecharModal = () => {
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+        };
+
+        btnFecharX.onclick = fecharModal;
+        btnCancelar.onclick = fecharModal;
+
+        // Fechar ao clicar fora
+        window.onclick = (event) => {
+            if (event.target == modal) fecharModal();
+        };
+
+        // Lógica do Acordeão
+        accordionBtn.onclick = () => {
+            const isOpened = accordionContent.classList.toggle('active');
+            const icon = accordionBtn.querySelector('i');
+            
+            if (icon) {
+                icon.style.transform = isOpened ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+        };
+    </script>
+</body>
+</html>
