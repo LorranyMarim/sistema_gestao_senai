@@ -1436,3 +1436,41 @@ select:disabled:hover {
     background-color: #fff;
     z-index: 10;
 }
+
+------------
+
+#cursoModal .modal-content,
+#visualizarInstructorModal .modal-content {
+    height: 700px !important;
+    max-height: 90vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;       
+    overflow: hidden !important;
+    position: relative;          
+}
+
+#cursoModal form,
+#visualizarInstructorModal form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;                     
+    overflow: hidden;           
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#cursoModal .modal-body,
+#visualizarInstructorModal .modal-body {
+    flex: 1;                     
+    overflow-y: auto !important; 
+    overflow-x: hidden;
+    padding: 20px 25px !important; 
+}
+
+#cursoModal .modal-footer,
+#visualizarInstructorModal .modal-footer {
+    flex-shrink: 0;
+    background-color: #fff;
+    z-index: 10;
+}

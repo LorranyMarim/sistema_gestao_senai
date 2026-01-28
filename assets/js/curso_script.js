@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const API_URL = '../backend/processa_instrutor.php';
+  const API_URL = '../backend/processa_curso.php';
   const API_UCS = '../backend/processa_ucs.php'; 
 
   let currentState = {
@@ -25,13 +25,12 @@
       sizeSel: document.getElementById('gen_pagesize') 
   };
   
-  const modal = document.getElementById('instructorModal');
+  const modal = document.getElementById('cursoModal');
   const form = document.getElementById('cursoForm');
   const modalTitle = document.getElementById('modalTitleCurso');
   const alertBox = document.getElementById('alertCurso');
   const closeModalBtn = document.getElementById('closeModalBtn');
   const cancelBtn = document.getElementById('cancelBtn');
-
   const viewModal = document.getElementById('visualizarCursoModal');
   const closeViewBtn = document.getElementById('closeVisualizarBtn');
   const closeViewBtnFooter = document.getElementById('fecharVisualizarBtn');
@@ -226,7 +225,7 @@ function init() {
   }
 
   function setupModals() {
-    document.getElementById('addInstructorBtn').addEventListener('click', () => openModal());
+    document.getElementById('addCursoBtn').addEventListener('click', () => openModal());
 
     [closeModalBtn, cancelBtn].forEach(el => el.addEventListener('click', () => {
         App.ui.hideModal(modal);
@@ -257,7 +256,7 @@ function init() {
         const id = document.getElementById('cursoId').value;
         const payload = {
             nome: document.getElementById('nomeCurso').value,
-            matricula: document.getElementById('matriculaInstructor').value,
+            matricula: document.getElementById('modalidadeCurso').value,
             categoria: document.getElementById('modalidadecurso').value,
             tipo_contrato: document.getElementById('tipoCurso').value,
             carga_horaria: parseInt(document.getElementById('cargaHorariaInstructor').value),
@@ -302,7 +301,7 @@ function init() {
         modalTitle.textContent = 'Editar Instrutor';
         document.getElementById('cursoId').value = item._id;
         document.getElementById('nomeCurso').value = item.nome;
-        document.getElementById('matriculaInstructor').value = item.matricula;
+        document.getElementById('modalidadeCurso').value = item.matricula;
         document.getElementById('modalidadecurso').value = item.categoria;
         document.getElementById('tipoCurso').value = item.tipo_contrato;
         document.getElementById('cargaHorariaInstructor').value = item.carga_horaria;
@@ -332,7 +331,7 @@ function init() {
       document.getElementById('viewareaCurso').value = areas;
       
       document.getElementById('viewtipoCurso').value = item.tipo_contrato;
-      document.getElementById('viewCargaHorariaInstructor').value = item.carga_horaria ? item.carga_horaria + 'h' : '-';
+      document.getElementById('unidadeCurricularCurso').value = item.carga_horaria ? item.carga_horaria + 'h' : '-';
       
       const turnos = Array.isArray(item.turno) ? item.turno.join(', ') : item.turno;
       document.getElementById('viewObsCurso').value = turnos;

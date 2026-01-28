@@ -26,36 +26,36 @@ require_once("../config/verifica_login.php");
       <nav class="sidebar-nav">
         <ul>
           <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                    <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
-                    <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
-                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
-                            Gestão de UCs</a></li>
-                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
-                    </li>
+          <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
+          <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+              Instrutores</a></li>
+          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+          <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
+              Gestão de UCs</a></li>
+          <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
+          </li>
 
-                    <li id="nav-relatorios" class="has-submenu">
-                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
-                            <span><i class="fas fa-file-alt"></i> Relatórios</span>
-                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-                        </a>
-                        <ul class="submenu" id="submenu-relatorios">
-                            <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
-                        </ul>
-                    </li>
-                    <li id="nav-config" class="has-submenu">
-                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
-                            <span><i class="fas fa-tools"></i> Configuração</span>
-                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-                        </a>
-                        <ul class="submenu" id="submenu-config">
-                            <li><a href="configuracao_usuarios.php"> Usuários</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+          <li id="nav-relatorios" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+              <span><i class="fas fa-file-alt"></i> Relatórios</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-relatorios">
+              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+            </ul>
+          </li>
+          <li id="nav-config" class="has-submenu">
+            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
+              <span><i class="fas fa-tools"></i> Configuração</span>
+              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+            </a>
+            <ul class="submenu" id="submenu-config">
+              <li><a href="configuracao_usuarios.php"> Usuários</a></li>
+            </ul>
+          </li>
+          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
       </nav>
     </aside>
@@ -63,7 +63,7 @@ require_once("../config/verifica_login.php");
     <main class="main-content">
       <header class="main-header">
         <h1>Gestão de Cursos</h1>
-        <button class="btn btn-primary" id="addInstructorBtn"><i class="fas fa-plus-circle"></i> Adicionar Curso</button>
+        <button class="btn btn-primary" id="addCursoBtn"><i class="fas fa-plus-circle"></i> Adicionar Curso</button>
       </header>
 
       <section class="table-section">
@@ -73,216 +73,226 @@ require_once("../config/verifica_login.php");
         </div>
 
         <div class="table-responsive">
-          <table id="instructorTable" class="data-table">
+          <table id="cursoTable" class="data-table">
             <thead>
               <tr>
                 <th>Nome do Curso</th>
                 <th>Modalidade</th>
-                <th>Área</th>
-                <th>Carga Horária Total</th>
+                <th>Área Tecnológica</th>
+                <th>Carga H. Total</th>
                 <th>Status</th>
                 <th>Criado em</th>
                 <th class="actions">Ações</th>
               </tr>
             </thead>
-            <tbody id="instructorTableBody"></tbody>
+            <tbody id="cursoTableBody"></tbody>
           </table>
-           <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-    <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
-    <span id="pageInfo">Página 1 de 1 • 0 registros</span>
-    <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
-</div>
+          <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+            <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
+            <span id="pageInfo">Página 1 de 1 • 0 registros</span>
+            <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
 
-        </div>
+
+          </div>
       </section>
     </main>
   </div>
 
-<div id="instructorModal" class="modal modal-dialog-centered">
+  <div id="cursoModal" class="modal modal-dialog-centered">
     <div class="modal-content">
       <span class="close-button" id="closeModalBtn">&times;</span>
-      
-        <h2 id="modalTitleInstructor">Adicionar Novo Curso</h2>
-        <form id="instructorForm" autocomplete="off">
+
+      <h2 id="modalTitleCurso">Adicionar Novo Curso</h2>
+
+
+
+      <form id="cursoForm" autocomplete="off">
         <div class="modal-body">
-        
-            <input type="hidden" id="instructorId">
 
-            <div id="alertInstructor" class="alert alert-danger"
-              style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
-            </div>
+          <input type="hidden" id="cursoId">
 
-            <div class="form-group">
-              <label for="nomeInstructor">Nome do Curso:</label>
-              <input type="text" id="nomeInstructor" class="form-control" required minlength="2" maxlength="100" placeholder="Nome completo">
-            </div>
+          <div id="alertCurso" class="alert alert-danger"
+            style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
+          </div>
 
-            <div class="form-group">
-              <label for="categoriaInstructor">Modalidade:</label>
-              <select id="categoriaInstructor" class="form-control" required>
-                <option value="">Selecione</option>
-                <option value="Aperfeiçoamento">Aperfeiçoamento</option>
-                <option value="Aprendizagem">Aprendizagem</option>
-                <option value="Qualificação">Qualificação</option>
-                <option value="Técnico">Técnico</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label for="nomeCurso">Nome do Curso:</label>
+            <input type="text" id="nomeCurso" class="form-control" required minlength="2" maxlength="100"
+              placeholder="Desenvolvimento de Sistemas...">
+          </div>
 
-            <div class="form-group">
-              <label for="tipoContratoInstructor">Tipo de Curso:</label>
-              <select id="tipoContratoInstructor" class="form-control" required>
-                <option value="">Selecione</option>
-                <option value="EAD">EAD</option>
-                <option value="Presencial">Prensencial</option>
-                <option value="Semipresencial">Semiprensencial</option>
-                <option value="Trilhas">Trilhas nas Escolas</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label for="modalidadeCurso">Modalidade:</label>
+            <select id="modalidadeCurso" class="form-control" required>
+              <option value="">Selecione</option>
+              <option value="Aperfeiçoamento">Aperfeiçoamento</option>
+              <option value="Aprendizagem">Aprendizagem</option>
+              <option value="Qualificação">Qualificação</option>
+              <option value="Técnico">Técnico</option>
+            </select>
+          </div>
+         
+          <div class="form-group">
+            <label for="tipoCurso">Tipo do Curso:</label>
+            <select id="tipoCurso" class="form-control" required>
+              <option value="">Selecione</option>
+              <option value="EAD">EAD</option>
+              <option value="Presencial">Presencial</option>
+              <option value="Semipresencial">Semipresencial</option>
+              <option value="Trilhas nas Escolas">Trilhas nas Escolas</option>
+            </select>
+          </div>
 
-            <div class="form-group">
-              <label>Área Tecnologica:</label>
-              <div class="ms" id="ms-area-modal">
-                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-                  <div class="ms__value" aria-live="polite">
-                    <span class="ms__placeholder">Selecione...</span>
-                  </div>
-                  <span class="ms__caret" aria-hidden="true">▾</span>
-                </button>
-                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-                  <div class="ms__search">
-                    <input type="text" class="ms__search-input" placeholder="Pesquisar..." />
-                  </div>
-                  <ul class="ms__options">
-                    <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> Eletroeletrônica</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do Trabalho</label></li>
-                    <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da Informação</label></li>                 
-                    
-                  </ul>
-                  <div class="ms__footer">
-                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                    <button type="button" class="btn btn-primary ms__close">OK</button>
-                  </div>
+          <div class="form-group">
+            <label>Área Tecnologica:</label>
+            <div class="ms" id="ms-area-modal">
+              <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                <div class="ms__value" aria-live="polite">
+                  <span class="ms__placeholder">Selecione...</span>
                 </div>
-                <input type="hidden" id="areaInstructor" name="area" value="[]">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="cargaTotalCurso">Carga Horária Total:</label>
-              <input type="text" id="cargaTotalCurso" class="form-control" required placeholder="Ex: 200,30 horas">
-            </div>        
-
-            <div class="form-group">
-              <label>Mapa de Competências (UCs):</label>
-              <div class="ms" id="ms-competencia-modal">
-                <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
-                  <div class="ms__value" aria-live="polite">
-                    <span class="ms__placeholder">Selecione as UCs...</span>
-                  </div>
-                  <span class="ms__caret" aria-hidden="true">▾</span>
-                </button>
-                <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
-                  <div class="ms__search">
-                    <input type="text" class="ms__search-input" placeholder="Pesquisar UCs..." />
-                  </div>
-                  <ul class="ms__options" id="competenciasOptionsList">
-                    </ul>
-                  <div class="ms__footer">
-                    <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
-                    <button type="button" class="btn btn-primary ms__close">OK</button>
-                  </div>
+                <span class="ms__caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                <div class="ms__search">
+                  <input type="text" class="ms__search-input" placeholder="Pesquisar..." />
                 </div>
-                <input type="hidden" id="competenciasInstructor" name="competencias" value="[]">
+                <ul class="ms__options">
+                  <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica">
+                      Eletroeletrônica</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do
+                      Trabalho</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da
+                      Informação</label></li>
+
+                </ul>
+                <div class="ms__footer">
+                  <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                  <button type="button" class="btn btn-primary ms__close">OK</button>
+                </div>
               </div>
+              <input type="hidden" id="areaCurso" name="area" value="[]">
             </div>
+          </div>   
+           
+          <div class="form-group">
+            <label for="cargaTotalCurso">Carga Horária Total:</label>
+            <input type="text" id="cargaTotalCurso" class="form-control" required minlength="2" maxlength="100"
+              placeholder="120,8">
+          </div>
 
-            <div class="form-group">
-              <label for="statusInstructor">Status:</label>
-              <select id="statusInstructor" class="form-control">
-                <option value="Ativo">Ativo</option>
-                <option value="Inativo">Inativo</option>
-              </select>
+          <div class="form-group">
+            <label>Unidades Curriculares:</label>
+            <div class="ms" id="ms-competencia-modal">
+              <button type="button" class="ms__control" aria-haspopup="listbox" aria-expanded="false">
+                <div class="ms__value" aria-live="polite">
+                  <span class="ms__placeholder">Selecione as UCs...</span>
+                </div>
+                <span class="ms__caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="ms__dropdown" role="listbox" aria-multiselectable="true">
+                <div class="ms__search">
+                  <input type="text" class="ms__search-input" placeholder="Pesquisar UCs..." />
+                </div>
+                <ul class="ms__options" id="competenciasOptionsList">
+                </ul>
+                <div class="ms__footer">
+                  <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
+                  <button type="button" class="btn btn-primary ms__close">OK</button>
+                </div>
+              </div>
+              <input type="hidden" id="competenciasCurso" name="competencias" value="[]">
             </div>
+          </div>
 
-            <div class="form-group">
-              <label for="obsCurso">Observações (Opcional): </label>
-              <input type="textarea" id="obsCurso" class="form-control">
-            </div> 
+          <div class="form-group md:col-span-2">
+                  <label for="observacaoCurso">Observações:</label>
+                  <textarea id="observacaoCurso" name="observacao" rows="3" class="w-full"></textarea>
+                </div>
 
-            </div>
-             <div class="modal-footer"
-                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-            <button type="button" class="btn btn-secondary" id="cancelBtn">
-              <i class="fas fa-times-circle"></i> Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-save"></i> Salvar
-            </button>
+          <div class="form-group">
+            <label for="statusCurso">Status:</label>
+            <select id="statusCurso" class="form-control">
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer"
+          style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">
+            <i class="fas fa-times-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salvar
+          </button>
         </div>
 
       </form>
     </div>
   </div>
 
-  <div id="visualizarInstructorModal" class="modal modal-dialog-centered">
+  <div id="visualizarcursoModal" class="modal modal-dialog-centered">
     <div class="modal-content">
-        <span class="close-button" id="closeVisualizarBtn">&times;</span>
-        <h2>Detalhes do Curso</h2>
+      <span class="close-button" id="closeVisualizarBtn">&times;</span>
+      <h2>Detalhes do Curso</h2>
 
-        <form>
-            <div class="modal-body">
-                
-                <div class="form-group">
-                    <label>Nome do Curso:</label>
-                    <input type="text" id="viewNomeInstructor" class="form-control" readonly disabled>
-                </div>
+      <form>
+        <div class="modal-body">
+         
+          <div class="form-group">
+            <label>Nome do Curso:</label>
+            <input type="text" id="viewnomeCurso" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Modalidade:</label>
-                    <input type="text" id="viewMatriculaInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Modalidade:</label>
+            <input type="text" id="viewmodalidadeCurso" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Tipo de Curso:</label>
-                    <input type="text" id="viewCategoriaInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Tipo do Curso:</label>
+            <input type="text" id="viewtipoCurso" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Área Tecnologica:</label>
-                    <input type="text" id="viewAreaInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Área Tecnologica:</label>
+            <input type="text" id="viewareaCurso" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Carga Horária Total:</label>
-                    <input type="text" id="viewTipoContratoInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Carga Horária Total:</label>
+            <input type="text" id="cargaHorariaTotalCurso" class="form-control" readonly disabled>
+          </div>
 
-                <div class="form-group">
-                    <label>Status:</label>
-                    <input type="text" id="viewStatusInstructor" class="form-control" readonly disabled>
-                </div>
+          <div id="unidadeCurricularCursoContainer" class="form-group"
+            style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Unidades Curriculares do Curso:</label>
+            <ul id="unidadeCurricularCursoContainer" style="list-style: disc; padding-left: 20px; color: #333;">
+            </ul>
+          </div>
 
-                <div class="form-group">
-                    <label>Observação (Opcional):</label>
-                    <input type="text" id="viewTurnoInstructor" class="form-control" readonly disabled>
-                </div>
+          <div class="form-group">
+            <label>Observações:</label>
+            <input type="text" id="observacaoCurso" class="form-control" readonly disabled>
+          </div>
+           
+          <div class="form-group">
+            <label>Status:</label>
+            <input type="text" id="viewstatusCurso" class="form-control" readonly disabled>
+          </div>
 
-                <div id="viewCompetenciasContainer" class="form-group" style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
-                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Mapa de Competências:</label>
-                    <ul id="viewCompetenciasList" style="list-style: disc; padding-left: 20px; color: #333;">
-                        </ul>
-                </div>
-
-            </div> <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
-            </div>
-        </form>
+        </div>
+        <div class="modal-footer"
+          style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
+        </div>
+      </form>
     </div>
-</div>
+  </div>
 
   <script src="../assets/js/geral_script.js"></script>
   <script src="../assets/js/curso_script.js" defer></script>

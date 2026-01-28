@@ -63,12 +63,11 @@ require_once("../config/verifica_login.php");
     <main class="main-content">
       <header class="main-header">
         <h1>Gestão de Instrutores</h1>
-        <button class="btn btn-primary" id="addInstructorBtn"><i class="fas fa-plus-circle"></i> Adicionar Novo
-          Instrutor</button>
+        <button class="btn btn-primary" id="addInstructorBtn"><i class="fas fa-plus-circle"></i>Criar Curso</button>
       </header>
 
       <section class="table-section">
-        <h2>Instrutores Cadastrados</h2>
+        <h2>Cursos Cadastrados</h2>
 
         <div id="filter_area" class="mb-3">
         </div>
