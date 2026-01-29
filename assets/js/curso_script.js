@@ -329,21 +329,32 @@
     // --- LÓGICA DE PARAMETRIZAÇÃO (Modal Sobreposto) ---
     
     function handleFormSubmit() {
-        // 1. Coleta dados básicos
-        const ucsInput = document.getElementById('competenciasCurso'); // Input hidden do multiselect
-        let selectedUcsIds = [];
-        try { selectedUcsIds = JSON.parse(ucsInput.value || '[]'); } catch { }
+        // 1. Coleta dados básicos dos inputs hidden
+        const ucsInput = document.getElementById('competenciasCurso'); 
+        const areaInput = document.getElementById('areaCurso');
 
-        // Validação básica
-        const cargaTotal = document.getElementById('cargaTotalCurso').value;
-        if (!/^\d+(\.\d{1,2})?$/.test(cargaTotal)) {
-            showAlert('Carga horária inválida. Use apenas números e ponto (ex: 100.50).');
+        let selectedUcsIds = [];
+        let selectedAreas = [];
+
+        try { selectedUcsIds = JSON.parse(ucsInput.value || '[]'); } catch { }
+        try { selectedAreas = JSON.parse(areaInput.value || '[]'); } catch { }
+
+        // --- VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS ---
+        if (selectedAreas.length === 0) {
+            showAlert('Por favor, selecione ao menos uma Área Tecnológica.');
             return;
         }
 
-        // Se não houver UCs selecionadas, salva direto
         if (selectedUcsIds.length === 0) {
-            submitFinalData({}); 
+            showAlert('Por favor, selecione ao menos uma Unidade Curricular.');
+            return;
+        }
+        // ----------------------------------------
+
+        // Validação básica da carga horária total
+        const cargaTotal = document.getElementById('cargaTotalCurso').value;
+        if (!/^\d+(\.\d{1,2})?$/.test(cargaTotal)) {
+            showAlert('Carga horária total inválida. Use apenas números e ponto (ex: 100.50).');
             return;
         }
 
@@ -354,70 +365,143 @@
     function openParametrizationModal(ucsIds) {
         const paramModal = document.getElementById('paramUcModal');
         const container = document.getElementById('accordionContainer');
-        container.innerHTML = ''; // Limpa anterior
+        container.innerHTML = ''; // Limpa conteúdo anterior
 
-        // Sincroniza ucsParametrizadas com a seleção atual
-        // Remove IDs que foram desmarcados
+        // Sincroniza o objeto de memória
         Object.keys(ucsParametrizadas).forEach(id => {
             if (!ucsIds.includes(id)) delete ucsParametrizadas[id];
         });
-        // Adiciona IDs novos com valores default
+
         ucsIds.forEach(id => {
             if (!ucsParametrizadas[id]) {
                 ucsParametrizadas[id] = {
-                    dias_letivos: 0,
-                    aulas: 0,
-                    carga_horaria: 0
+                    carga_presencial: 0, aulas_presencial: 0, dias_presencial: 0,
+                    carga_ead: 0, aulas_ead: 0, dias_ead: 0
                 };
             }
         });
 
-        // Gera o HTML do Acordeão
-        ucsIds.forEach((id, index) => {
+        // Gera o HTML
+        ucsIds.forEach((id) => {
             const ucNome = ucsGlobalMap[id] || 'UC não identificada';
             const dados = ucsParametrizadas[id];
-            const isOpen = index === 0 ? '' : 'collapsed'; // Primeiro item aberto
-            const showClass = index === 0 ? 'show' : '';
-
+            
+            // Layout: 2 linhas x 3 colunas
             const itemHtml = `
-                <div class="accordion-item border rounded mb-2">
-                    <h2 class="accordion-header" id="heading-${id}">
-                        <button class="accordion-button ${isOpen} w-full text-left p-3 bg-gray-100 hover:bg-gray-200 font-bold flex justify-between items-center" 
-                                type="button" onclick="toggleAccordion('${id}')">
+                <div class="accordion-item border rounded mb-2 shadow-sm">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button w-full text-left p-3 bg-gray-100 hover:bg-gray-200 font-bold flex justify-between items-center" 
+                                type="button" 
+                                onclick="toggleAccordion('${id}', this)">
                             <span>${ucNome}</span>
-                            <i class="fas fa-chevron-down text-sm transition-transform"></i>
+                            <i class="fas fa-chevron-right transition-transform"></i>
                         </button>
                     </h2>
-                    <div id="collapse-${id}" class="accordion-collapse collapse ${showClass} hidden" aria-labelledby="heading-${id}">
-                        <div class="accordion-body p-3 bg-white border-t">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div class="form-group">
-                                    <label class="block text-sm font-medium">Dias Letivos</label>
-                                    <input type="number" class="form-control p-2 border rounded w-full inp-dias" 
-                                           data-id="${id}" value="${dados.dias_letivos}" min="0">
-                                </div>
-                                <div class="form-group">
-                                    <label class="block text-sm font-medium">Aulas Diárias</label>
-                                    <input type="number" class="form-control p-2 border rounded w-full inp-aulas" 
-                                           data-id="${id}" value="${dados.aulas}" min="0">
-                                </div>
-                                <div class="form-group">
-                                    <label class="block text-sm font-medium">Carga Horária (h)</label>
-                                    <input type="number" step="0.01" class="form-control p-2 border rounded w-full inp-carga" 
-                                           data-id="${id}" value="${dados.carga_horaria}" min="0">
-                                </div>
+                    <div id="collapse-${id}" class="accordion-collapse p-3 bg-white border-t hidden">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                            <div class="form-group">
+                                <label class="block text-xs font-medium text-blue-800 mb-1">Carga Horária Presencial (h)</label>
+                                <input type="text" class="form-control p-2 border rounded w-full inp-decimal" 
+                                       data-id="${id}" data-field="carga_presencial" value="${dados.carga_presencial || 0}">
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-xs font-medium text-blue-800 mb-1">Qtd Aulas Presencial</label>
+                                <input type="text" class="form-control p-2 border rounded w-full inp-integer" 
+                                       data-id="${id}" data-field="aulas_presencial" value="${dados.aulas_presencial || 0}">
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-xs font-medium text-blue-800 mb-1">Dias Letivos Presencial</label>
+                                <input type="text" class="form-control p-2 border rounded w-full inp-integer" 
+                                       data-id="${id}" data-field="dias_presencial" value="${dados.dias_presencial || 0}">
                             </div>
                         </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="form-group">
+                                <label class="block text-xs font-medium text-green-800 mb-1">Carga Horária EAD (h)</label>
+                                <input type="text" class="form-control p-2 border rounded w-full inp-decimal" 
+                                       data-id="${id}" data-field="carga_ead" value="${dados.carga_ead || 0}">
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-xs font-medium text-green-800 mb-1">Qtd Aulas EAD</label>
+                                <input type="text" class="form-control p-2 border rounded w-full inp-integer" 
+                                       data-id="${id}" data-field="aulas_ead" value="${dados.aulas_ead || 0}">
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-xs font-medium text-green-800 mb-1">Dias Letivos EAD</label>
+                                <input type="text" class="form-control p-2 border rounded w-full inp-integer" 
+                                       data-id="${id}" data-field="dias_ead" value="${dados.dias_ead || 0}">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', itemHtml);
         });
 
-        // Mostra o modal sobreposto (z-index alto)
+        applyInputMasks(container);
         paramModal.style.display = 'flex';
     }
+    // Função auxiliar para aplicar restrições de entrada (Inteiro vs Decimal)
+    function applyInputMasks(container) {
+        // Apenas números inteiros
+        container.querySelectorAll('.inp-integer').forEach(input => {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        });
 
+        // Números decimais (ponto) com duas casas
+        container.querySelectorAll('.inp-decimal').forEach(input => {
+            input.addEventListener('input', function() {
+                // Remove tudo que não for número ou ponto
+                let val = this.value.replace(/[^0-9.]/g, '');
+                
+                // Garante apenas um ponto
+                const parts = val.split('.');
+                if (parts.length > 2) {
+                    val = parts[0] + '.' + parts.slice(1).join('');
+                }
+                
+                // Limita casas decimais (opcional, mas recomendado)
+                if (parts.length === 2 && parts[1].length > 2) {
+                    val = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                
+                this.value = val;
+            });
+        });
+    }
+
+    window.toggleAccordion = function(id, btnElement) {
+        const contentDiv = document.getElementById(`collapse-${id}`);
+        const icon = btnElement.querySelector('i');
+        
+        // Verifica estado atual
+        const isHidden = contentDiv.classList.contains('hidden');
+
+        // (Opcional) Fecha todos os outros se quiser comportamento exclusivo
+        // Se preferir que vários fiquem abertos, comente as 4 linhas abaixo
+        /* document.querySelectorAll('.accordion-collapse').forEach(div => div.classList.add('hidden'));
+        document.querySelectorAll('.accordion-button i').forEach(i => {
+             i.classList.remove('fa-chevron-down');
+             i.classList.add('fa-chevron-right');
+        }); */
+
+        if (isHidden) {
+            // ABRIR
+            contentDiv.classList.remove('hidden');
+            icon.classList.remove('fa-chevron-right');
+            icon.classList.add('fa-chevron-down');
+        } else {
+            // FECHAR
+            contentDiv.classList.add('hidden');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-right');
+        }
+    };
     // Função global para toggle do acordeão (necessária pois o HTML é injetado)
     window.toggleAccordion = function(id) {
         const el = document.getElementById(`collapse-${id}`);
@@ -429,29 +513,24 @@
     };
 
     function saveParametrization() {
-        // Coleta dados dos inputs do modal de parametrização
         const container = document.getElementById('accordionContainer');
-        const inputsDias = container.querySelectorAll('.inp-dias');
-        const inputsAulas = container.querySelectorAll('.inp-aulas');
-        const inputsCarga = container.querySelectorAll('.inp-carga');
-
-        let valid = true;
-
-        inputsDias.forEach(inp => {
-            const id = inp.dataset.id;
-            ucsParametrizadas[id].dias_letivos = parseInt(inp.value) || 0;
-        });
-        inputsAulas.forEach(inp => {
-            const id = inp.dataset.id;
-            ucsParametrizadas[id].aulas = parseInt(inp.value) || 0;
-        });
-        inputsCarga.forEach(inp => {
-            const id = inp.dataset.id;
-            ucsParametrizadas[id].carga_horaria = parseFloat(inp.value) || 0;
-        });
-
-        // Aqui poderia ter validação se a soma das Cargas bate com a Total, etc.
         
+        // Seleciona todos os inputs dentro do modal
+        const inputs = container.querySelectorAll('input');
+
+        inputs.forEach(inp => {
+            const id = inp.dataset.id;
+            const field = inp.dataset.field; // ex: 'carga_presencial', 'dias_ead'
+            
+            if (ucsParametrizadas[id] && field) {
+                // Converte para número (float para garantir decimais)
+                let val = parseFloat(inp.value);
+                if (isNaN(val)) val = 0;
+                
+                ucsParametrizadas[id][field] = val;
+            }
+        });
+
         // Fecha modal param e envia tudo
         document.getElementById('paramUcModal').style.display = 'none';
         submitFinalData(ucsParametrizadas);
@@ -497,28 +576,33 @@
     function ensureParamModalExists() {
         if (document.getElementById('paramUcModal')) return;
 
+        // Estrutura idêntica ao cursoModal do HTML fornecido
         const html = `
-        <div id="paramUcModal" class="modal" style="background: rgba(0,0,0,0.7); z-index: 1060;">
-            <div class="modal-content" style="max-width: 800px; margin: 5% auto; max-height: 90vh; display:flex; flex-direction:column;">
-                <div class="modal-header border-b pb-3 flex justify-between items-center">
-                    <h3 class="text-xl font-bold">Parametrizar Unidades Curriculares</h3>
-                    <span class="cursor-pointer text-2xl" id="closeParamModal">&times;</span>
-                </div>
+        <div id="paramUcModal" class="modal modal-dialog-centered" style="background: rgba(0,0,0,0.5); z-index: 1060;">
+            <div class="modal-content" style="max-width: 900px; width: 90%; max-height: 90vh; display:flex; flex-direction:column;">
+                <span class="close-button" id="closeParamModal">&times;</span>
+                
+                <h2 id="modalTitleParam">Parametrizar Unidades Curriculares</h2>
+
                 <div class="modal-body overflow-y-auto p-4 flex-1" id="accordionContainer">
                     </div>
-                <div class="modal-footer border-t pt-3 flex justify-end gap-2">
-                     <button type="button" class="btn btn-secondary" id="cancelParamBtn">Voltar</button>
-                     <button type="button" class="btn btn-primary" id="saveParamBtn"><i class="fas fa-check"></i> Confirmar Parametrização</button>
+
+                <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                    <button type="button" class="btn btn-secondary" id="cancelParamBtn">
+                        <i class="fas fa-times-circle"></i> Voltar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveParamBtn">
+                        <i class="fas fa-save"></i> Confirmar Parametrização
+                    </button>
                 </div>
             </div>
         </div>`;
+        
         document.body.insertAdjacentHTML('beforeend', html);
 
-        // Events do modal injetado
+        // Bind dos eventos do modal recém-criado
         document.getElementById('closeParamModal').addEventListener('click', () => {
-            if(confirm('Deseja cancelar a parametrização? Os dados não salvos serão perdidos.')) {
-                document.getElementById('paramUcModal').style.display = 'none';
-            }
+             document.getElementById('paramUcModal').style.display = 'none';
         });
         document.getElementById('cancelParamBtn').addEventListener('click', () => {
             document.getElementById('paramUcModal').style.display = 'none';
