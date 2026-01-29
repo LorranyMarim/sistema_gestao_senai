@@ -3,6 +3,7 @@
 
     const API_URL = '../backend/processa_curso.php';
     const API_BOOTSTRAP = '../backend/processa_curso.php?action=bootstrap';
+    const API_UCS = '../backend/processa_ucs.php';
     
     // Estado da aplicação
     let currentState = {
@@ -41,18 +42,17 @@
     const closeViewBtn = document.getElementById('closeVisualizarBtn');
     const closeViewBtnFooter = document.getElementById('fecharVisualizarBtn');
 
-    // --- INICIALIZAÇÃO ---
     function init() {
-        // Injeta o HTML do Modal de Parametrização se não existir
         ensureParamModalExists();
-        
         setupFilters();
         setupModals();
-        loadBootstrapData(); // Carrega UCs para o cache inicial
+        
+        // Substituimos o loadBootstrapData pela configuração assíncrona igual a de Instrutores
+        setupAsyncUcs(); 
 
-        // Bind Paginação
         App.pagination.bindControls(pagElements, (action) => {
-            if (action === 'prev' && currentState.page > 1) {
+            // ... (Mantenha o código de paginação existente) ...
+             if (action === 'prev' && currentState.page > 1) {
                 currentState.page--;
                 fetchData();
             }
@@ -72,33 +72,33 @@
 
         fetchData();
     }
-
-    // --- CARREGAMENTO DE DADOS ---
-    async function loadBootstrapData() {
-        try {
-            const res = await App.net.fetchJSON(API_BOOTSTRAP);
-            if (res.ucs) {
-                res.ucs.forEach(uc => {
-                    ucsGlobalMap[uc._id] = uc.descricao;
-                });
-                // Configura o multiselect do modal com as UCs carregadas
-                setupMultiselectUcs(res.ucs);
-            }
-        } catch (err) {
-            console.error("Erro ao carregar dados iniciais:", err);
-        }
-    }
-
-    function setupMultiselectUcs(ucsList) {
-        const ms = document.getElementById('ms-ucs-modal');
-        if (ms && ms._msInstance) {
-            // Função de busca local para o multiselect
-            ms._msInstance.setupAsync(async (p, s, term) => {
-                const regex = new RegExp(term, 'i');
-                return ucsList
-                    .filter(uc => !term || regex.test(uc.descricao))
-                    .map(uc => ({ value: uc._id, label: uc.descricao }));
+    function setupAsyncUcs() {
+        const fetchUcs = async (page, pageSize, term) => {
+            const params = new URLSearchParams({
+                page: page,
+                page_size: pageSize,
+                status: 'Ativo', // Traz apenas UCs ativas
+                busca: term || ''
             });
+
+            // Busca direto da API de UCs
+            const res = await App.net.fetchJSON(`${API_UCS}?${params.toString()}`);
+
+            // Atualiza o mapa global para podermos usar os nomes na Parametrização e Visualização
+            (res.items || []).forEach(uc => {
+                ucsGlobalMap[uc._id] = uc.descricao;
+            });
+
+            // Retorna no formato que o multiselect espera
+            return (res.items || []).map(uc => ({
+                value: uc._id,
+                label: uc.descricao
+            }));
+        };
+
+        const msModalEl = document.getElementById('ms-ucs-modal');
+        if (msModalEl && msModalEl._msInstance) {
+            msModalEl._msInstance.setupAsync(fetchUcs);
         }
     }
 
