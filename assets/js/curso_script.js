@@ -475,41 +475,32 @@
         });
     }
 
-    window.toggleAccordion = function(id, btnElement) {
+   window.toggleAccordion = function(id, btnElement) {
         const contentDiv = document.getElementById(`collapse-${id}`);
         const icon = btnElement.querySelector('i');
         
-        // Verifica estado atual
-        const isHidden = contentDiv.classList.contains('hidden');
-
-        // (Opcional) Fecha todos os outros se quiser comportamento exclusivo
-        // Se preferir que vários fiquem abertos, comente as 4 linhas abaixo
-        /* document.querySelectorAll('.accordion-collapse').forEach(div => div.classList.add('hidden'));
-        document.querySelectorAll('.accordion-button i').forEach(i => {
-             i.classList.remove('fa-chevron-down');
-             i.classList.add('fa-chevron-right');
-        }); */
+        // Verifica se está oculto (checa a classe 'hidden' OU se o display está 'none')
+        const isHidden = contentDiv.classList.contains('hidden') || getComputedStyle(contentDiv).display === 'none';
 
         if (isHidden) {
-            // ABRIR
-            contentDiv.classList.remove('hidden');
+            // --- ABRIR ---
+            contentDiv.classList.remove('hidden'); // Remove classe Tailwind
+            contentDiv.classList.add('show');      // Adiciona classe Bootstrap (se houver CSS do Bootstrap)
+            contentDiv.style.display = 'block';    // Força a exibição via estilo inline (garantia final)
+            
+            // Ajusta ícone
             icon.classList.remove('fa-chevron-right');
             icon.classList.add('fa-chevron-down');
         } else {
-            // FECHAR
+            // --- FECHAR ---
             contentDiv.classList.add('hidden');
+            contentDiv.classList.remove('show');
+            contentDiv.style.display = 'none';
+            
+            // Ajusta ícone
             icon.classList.remove('fa-chevron-down');
             icon.classList.add('fa-chevron-right');
         }
-    };
-    // Função global para toggle do acordeão (necessária pois o HTML é injetado)
-    window.toggleAccordion = function(id) {
-        const el = document.getElementById(`collapse-${id}`);
-        // Fecha todos os outros
-        document.querySelectorAll('.accordion-collapse').forEach(div => {
-            if (div.id !== `collapse-${id}`) div.classList.add('hidden');
-        });
-        el.classList.toggle('hidden');
     };
 
     function saveParametrization() {

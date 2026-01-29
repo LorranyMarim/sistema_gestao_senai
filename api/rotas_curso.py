@@ -13,13 +13,19 @@ router = APIRouter()
 
 FORBIDDEN_CHARS = re.compile(r'[<>"\';{}]')
 
+# --- MODELO ATUALIZADO PARA COMPATIBILIDADE COM O FRONTEND ---
 class CursoModel(BaseModel):
+    # Campos conforme enviados pelo curso_script.js
     nome_curso: str = Field(..., min_length=2, max_length=200)
     modalidade_curso: str = Field(..., min_length=2, max_length=100)
     tipo_curso: str = Field(..., min_length=2, max_length=100)
     area_tecnologica: List[str] = Field(default_factory=list)
     carga_total_curso: float = Field(..., ge=0)
+    
+    # O objeto parametrizado de UCs (Dict de Dicts)
+    # Ex: { "id_uc": { "carga_presencial": 10, ... } }
     unidade_curricular: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    
     observacao_curso: Optional[str] = Field(default="")
     status: Literal['Ativo', 'Inativo']
 
@@ -143,9 +149,6 @@ def listar_cursos(
         if isinstance(doc.get("data_criacao"), datetime):
             doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
         
-        if "unidade_curricular" in doc and isinstance(doc["unidade_curricular"], dict):
-             pass
-
         doc["_id"] = str(oid)
         items.append(doc)
 
@@ -160,9 +163,7 @@ def criar_curso(curso: CursoModel, ctx: RequestCtx = Depends(get_ctx)):
     data['status'] = data['status'].capitalize()
     data['data_criacao'] = datetime.now(timezone.utc)
     
-    if 'unidade_curricular' in data and data['unidade_curricular']:
-        pass
-
+    # O Pydantic já validou a estrutura, podemos salvar direto ou fazer ajustes finos aqui se precisar
     data.pop('_id', None)
     
     inserted = db["curso"].insert_one(data)
@@ -215,22 +216,6 @@ def deletar_curso(id: str, ctx: RequestCtx = Depends(get_ctx)):
 @router.get("/api/gestao_cursos/bootstrap")
 def bootstrap_cursos(ctx: RequestCtx = Depends(get_ctx)):
     """
-    Retorna dados auxiliares para o cadastro de cursos,
-    principalmente a lista de Unidades Curriculares ativas para o multiselect.
+    Endpoint auxiliar, caso ainda seja chamado por legados.
     """
-    db = get_mongo_db()
-    inst_oid = ctx.inst_oid
-    
-    cursor_ucs = db["unidade_curricular"].find(
-        {"instituicao_id": inst_oid, "status": "Ativo"},
-        {"_id": 1, "descricao": 1, "tipo_uc": 1}
-    ).sort("descricao", 1)
-    
-    lista_ucs = []
-    for uc in cursor_ucs:
-        uc["_id"] = str(uc["_id"])
-        lista_ucs.append(uc)
-
-    return {
-        "ucs": lista_ucs
-    }
+    return {"msg": "ok"}
