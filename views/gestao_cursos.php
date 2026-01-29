@@ -10,9 +10,7 @@ require_once("../config/verifica_login.php");
   <title>Gestão de Cursos - SENAI</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-
   <link rel="stylesheet" href="../assets/css/style.css">
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
@@ -29,13 +27,10 @@ require_once("../config/verifica_login.php");
           <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
           <li><a href="gestao_cursos.php" class="active"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
           <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-              Instrutores</a></li>
+          <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
           <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-          <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
-              Gestão de UCs</a></li>
-          <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
-          </li>
+          <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+          <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a></li>
 
           <li id="nav-relatorios" class="has-submenu">
             <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
@@ -69,8 +64,7 @@ require_once("../config/verifica_login.php");
       <section class="table-section">
         <h2>Cursos Cadastrados</h2>
 
-        <div id="filter_area" class="mb-3">
-        </div>
+        <div id="filter_area" class="mb-3"></div>
 
         <div class="table-responsive">
           <table id="cursoTable" class="data-table">
@@ -87,13 +81,13 @@ require_once("../config/verifica_login.php");
             </thead>
             <tbody id="cursoTableBody"></tbody>
           </table>
+          
           <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
             <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
             <span id="pageInfo">Página 1 de 1 • 0 registros</span>
             <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
-
-
           </div>
+        </div>
       </section>
     </main>
   </div>
@@ -112,16 +106,10 @@ require_once("../config/verifica_login.php");
             style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
           </div>
 
-          <input type="hidden" id="cursoId">
-
-          <div id="alertCurso" class="alert alert-danger"
-            style="display:none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
-          </div>
-
           <div class="form-group">
             <label for="nomeCurso">Nome do Curso:</label>
-            <input type="text" id="nomeCurso" class="form-control" required minlength="2" maxlength="100"
-              placeholder="Desenvolvimento de Sistemas...">
+            <input type="text" id="nomeCurso" class="form-control" required minlength="2" maxlength="200"
+              placeholder="Ex: Técnico em Desenvolvimento de Sistemas">
           </div>
 
           <div class="form-group">
@@ -129,8 +117,8 @@ require_once("../config/verifica_login.php");
             <select id="modalidadeCurso" class="form-control" required>
               <option value="">Selecione</option>
               <option value="Aperfeiçoamento">Aperfeiçoamento</option>
-              <option value="Aprendizagem">Aprendizagem</option>
-              <option value="Qualificação">Qualificação</option>
+              <option value="Aprendizagem Industrial">Aprendizagem</option>
+              <option value="Qualificação Profissional">Qualificação</option>
               <option value="Técnico">Técnico</option>
             </select>
           </div>
@@ -162,14 +150,11 @@ require_once("../config/verifica_login.php");
                 <ul class="ms__options">
                   <li class="ms__option"><label><input type="checkbox" value="Automação"> Automação</label></li>
                   <li class="ms__option"><label><input type="checkbox" value="Automotiva"> Automotiva</label></li>
-                  <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica">
-                      Eletroeletrônica</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Eletroeletrônica"> Eletroeletrônica</label></li>
                   <li class="ms__option"><label><input type="checkbox" value="Gestão"> Gestão</label></li>
                   <li class="ms__option"><label><input type="checkbox" value="Metalmecânica"> Metalmecânica</label></li>
-                  <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do
-                      Trabalho</label></li>
-                  <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da
-                      Informação</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Segurança do Trabalho"> Segurança do Trabalho</label></li>
+                  <li class="ms__option"><label><input type="checkbox" value="Tecnologia da Informação"> Tecnologia da Informação</label></li>
                 </ul>
                 <div class="ms__footer">
                   <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
@@ -181,9 +166,8 @@ require_once("../config/verifica_login.php");
           </div>   
            
           <div class="form-group">
-            <label for="cargaTotalCurso">Carga Horária Total:</label>
-            <input type="text" id="cargaTotalCurso" class="form-control" required minlength="2" maxlength="100"
-              placeholder="120,8">
+            <label for="cargaTotalCurso">Carga Horária Total (h):</label>
+            <input type="text" id="cargaTotalCurso" class="form-control" required placeholder="Ex: 1200.00" title="Apenas números e ponto.">
           </div>
 
           <div class="form-group">
@@ -199,8 +183,7 @@ require_once("../config/verifica_login.php");
                 <div class="ms__search">
                   <input type="text" class="ms__search-input" placeholder="Pesquisar UCs..." />
                 </div>
-                <ul class="ms__options" id="competenciasOptionsList">
-                </ul>
+                <ul class="ms__options" id="competenciasOptionsList"></ul>
                 <div class="ms__footer">
                   <button type="button" class="btn btn-secondary ms__clear">Limpar</button>
                   <button type="button" class="btn btn-primary ms__close">OK</button>
@@ -211,9 +194,9 @@ require_once("../config/verifica_login.php");
           </div>
 
           <div class="form-group md:col-span-2">
-                  <label for="observacaoCurso">Observações:</label>
-                  <textarea id="observacaoCurso" name="observacao" rows="3" class="w-full"></textarea>
-                </div>
+              <label for="observacaoCurso">Observações:</label>
+              <textarea id="observacaoCurso" name="observacao" rows="3" class="form-control w-full"></textarea>
+          </div>
 
           <div class="form-group">
             <label for="statusCurso">Status:</label>
@@ -223,16 +206,16 @@ require_once("../config/verifica_login.php");
             </select>
           </div>
         </div>
+        
         <div class="modal-footer"
           style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
           <button type="button" class="btn btn-secondary" id="cancelBtn">
             <i class="fas fa-times-circle"></i> Cancelar
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> Salvar
+            <i class="fas fa-save"></i> Salvar & Parametrizar
           </button>
         </div>
-
       </form>
     </div>
   </div>
@@ -272,14 +255,14 @@ require_once("../config/verifica_login.php");
 
           <div id="unidadeCurricularCursoContainer" class="form-group"
             style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Unidades Curriculares do Curso:</label>
-            <ul id="unidadeCurricularCursoContainer" style="list-style: disc; padding-left: 20px; color: #333;">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Grade Curricular (UCs):</label>
+            <ul id="viewUnidadeCurricularList" style="list-style: disc; padding-left: 20px; color: #333;">
             </ul>
           </div>
 
           <div class="form-group">
             <label>Observações:</label>
-            <input type="text" id="observacaoCurso" class="form-control" readonly disabled>
+            <input type="text" id="viewObservacaoCurso" class="form-control" readonly disabled>
           </div>
            
           <div class="form-group">
@@ -299,5 +282,4 @@ require_once("../config/verifica_login.php");
   <script src="../assets/js/geral_script.js"></script>
   <script src="../assets/js/curso_script.js" defer></script>
 </body>
-
 </html>

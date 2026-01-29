@@ -1032,6 +1032,36 @@
         container.appendChild(createGroup('Tipo de Contrato:', sel, 'tipo-contrato'));
       }
 
+      // --- NOVOS CAMPOS ADICIONADOS ---
+
+      if (config.modalidade) {
+        const sel = document.createElement('select');
+        sel.id = 'gen_modalidade';
+        sel.className = 'form-select filter-input';
+        ['Todos', 'Aperfeiçoamento', 'Aprendizagem Industrial', 'Qualificação Profissional', 'Técnico', 'Iniciação Profissional', 'Extensão'].forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v; opt.textContent = v;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', triggerChange);
+        container.appendChild(createGroup('Modalidade:', sel, 'modalidade'));
+      }
+
+      if (config.tipoCurso) {
+        const sel = document.createElement('select');
+        sel.id = 'gen_tipo_curso';
+        sel.className = 'form-select filter-input';
+        ['Todos', 'Presencial', 'EAD', 'Semipresencial', 'Trilhas nas Escolas'].forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v; opt.textContent = v;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', triggerChange);
+        container.appendChild(createGroup('Tipo de Curso:', sel, 'tipo-curso'));
+      }
+
+      // -------------------------------
+
       const createMultiselectHTML = (id, placeholder, options, defaultAll = false) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'ms';
@@ -1169,6 +1199,7 @@
         sel.addEventListener('change', triggerChange);
         container.appendChild(createGroup('Tipo de Usuário:', sel, 'tipo-usuario'));
       }
+      
 
       if (customElement) {
         if (customElement instanceof Element && !customElement.classList.contains('filter-input')) {
@@ -1220,6 +1251,11 @@
         if (document.getElementById('gen_categoria')) document.getElementById('gen_categoria').value = 'Todos';
         if (document.getElementById('gen_tipo_contrato')) document.getElementById('gen_tipo_contrato').value = 'Todos';
 
+        // --- LIMPEZA DOS NOVOS CAMPOS ---
+        if (document.getElementById('gen_modalidade')) document.getElementById('gen_modalidade').value = 'Todos';
+        if (document.getElementById('gen_tipo_curso')) document.getElementById('gen_tipo_curso').value = 'Todos';
+        // --------------------------------
+
         document.querySelectorAll('.ms__clear').forEach(clearBtn => {
              clearBtn.click();
         });
@@ -1234,7 +1270,7 @@
 
       App.ui.initMultiSelects();
     }
-  };
+};
 
   window.App = App;
 
