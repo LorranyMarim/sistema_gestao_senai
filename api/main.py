@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware 
 from rotas_usuario import router as usuario_router
-from backup_rotas_curso import router as curso_router
+from rotas_curso import router as curso_router
 from rotas_instituicao import router as instituicao_router
 from rotas_uc import router as uc_router
 from rotas_empresa import router as empresa_router

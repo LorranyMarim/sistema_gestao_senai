@@ -506,29 +506,29 @@
     function saveParametrization() {
         const container = document.getElementById('accordionContainer');
         
-        // Seleciona todos os inputs dentro do modal
+        // Coleta os valores digitados nos inputs do acordeão
         const inputs = container.querySelectorAll('input');
-
         inputs.forEach(inp => {
             const id = inp.dataset.id;
             const field = inp.dataset.field; // ex: 'carga_presencial', 'dias_ead'
             
             if (ucsParametrizadas[id] && field) {
-                // Converte para número (float para garantir decimais)
                 let val = parseFloat(inp.value);
                 if (isNaN(val)) val = 0;
-                
                 ucsParametrizadas[id][field] = val;
             }
         });
 
-        // Fecha modal param e envia tudo
+        // 1. Fecha visualmente o modal de parametrização
         document.getElementById('paramUcModal').style.display = 'none';
+        
+        // 2. Chama o envio final para o banco
         submitFinalData(ucsParametrizadas);
     }
 
     async function submitFinalData(ucsData) {
         const id = document.getElementById('cursoId').value;
+        
         const payload = {
             nome_curso: document.getElementById('nomeCurso').value,
             modalidade_curso: document.getElementById('modalidadeCurso').value,
@@ -537,7 +537,7 @@
             carga_total_curso: parseFloat(document.getElementById('cargaTotalCurso').value),
             observacao_curso: document.getElementById('observacaoCurso').value,
             status: document.getElementById('statusCurso').value,
-            unidade_curricular: ucsData // O Objeto parametrizado vai aqui
+            unidade_curricular: ucsData 
         };
 
         const method = id ? 'PUT' : 'POST';
@@ -549,20 +549,63 @@
                 method,
                 body: JSON.stringify(payload)
             });
+            
             App.ui.hideModal(modal);
             fetchData();
+            
         } catch (err) {
-            showAlert(err.message || 'Erro ao salvar curso.');
-            // Se der erro, reabre o modal principal se estiver fechado? 
-            // Neste caso o modal principal nem chegou a fechar visualmente se estivermos sobrepondo,
-            // mas se fechamos antes, precisaríamos reabrir.
-            // Pela lógica atual, o modal principal fica aberto "atrás" do modal de parametrização.
+            console.error("Erro API:", err);
+            
+            let msg = "Ocorreu um erro ao processar sua solicitação.";
+            
+            // Dicionário para traduzir campos técnicos para português
+            const fieldMap = {
+                'nome_curso': 'Nome do Curso',
+                'modalidade_curso': 'Modalidade',
+                'tipo_curso': 'Tipo do Curso',
+                'area_tecnologica': 'Área Tecnológica',
+                'carga_total_curso': 'Carga Horária Total',
+                'unidade_curricular': 'Unidades Curriculares'
+            };
+
+            try {
+                // Tenta fazer o parse do erro se ele vier como string JSON
+                const errorObj = JSON.parse(err.message || err);
+                
+                if (errorObj.detail) {
+                    if (Array.isArray(errorObj.detail)) {
+                        // Formata lista de erros do FastAPI
+                        const listaErros = errorObj.detail.map(e => {
+                            // Pega o nome do campo (o último item do array 'loc')
+                            const fieldName = e.loc ? e.loc[e.loc.length - 1] : '?';
+                            const friendlyName = fieldMap[fieldName] || fieldName;
+                            
+                            // Traduz mensagens comuns
+                            let errorMsg = e.msg;
+                            if (errorMsg.includes('Field required')) errorMsg = 'é obrigatório.';
+                            if (errorMsg.includes('Input should be')) errorMsg = 'tem um valor inválido.';
+
+                            return `• <strong>${friendlyName}</strong> ${errorMsg}`;
+                        }).join('<br>');
+                        
+                        msg = `<div style="text-align:left">Verifique os seguintes erros:<br><br>${listaErros}</div>`;
+                    } else {
+                        msg = errorObj.detail; // Mensagem simples
+                    }
+                }
+            } catch (e) {
+                // Se não for JSON, exibe a mensagem original limpa
+                msg = err.message || msg;
+            }
+
+            // Exibe o alerta formatado
+            const alert = document.getElementById('alertCurso');
+            alert.style.display = 'block';
+            alert.innerHTML = msg;
         } finally {
             App.loader.hide();
         }
     }
-
-    // --- MANIPULAÇÃO DE DOM AUXILIAR ---
     
     function ensureParamModalExists() {
         if (document.getElementById('paramUcModal')) return;

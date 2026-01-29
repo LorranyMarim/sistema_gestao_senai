@@ -15,15 +15,17 @@ FORBIDDEN_CHARS = re.compile(r'[<>"\';{}]')
 
 # --- MODELO ATUALIZADO PARA COMPATIBILIDADE COM O FRONTEND ---
 class CursoModel(BaseModel):
-    # Campos conforme enviados pelo curso_script.js
+    # Campos exatos enviados pelo curso_script.js
     nome_curso: str = Field(..., min_length=2, max_length=200)
     modalidade_curso: str = Field(..., min_length=2, max_length=100)
     tipo_curso: str = Field(..., min_length=2, max_length=100)
+    
+    # Frontend envia array JSON ["TI"], backend recebe List[str]
     area_tecnologica: List[str] = Field(default_factory=list)
+    
     carga_total_curso: float = Field(..., ge=0)
     
-    # O objeto parametrizado de UCs (Dict de Dicts)
-    # Ex: { "id_uc": { "carga_presencial": 10, ... } }
+    # Recebe o objeto de parametrização: { "id_uc": { "carga_presencial": 10, ... } }
     unidade_curricular: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     
     observacao_curso: Optional[str] = Field(default="")
@@ -40,6 +42,7 @@ class CursoModel(BaseModel):
 
     @validator('area_tecnologica', pre=True)
     def check_list_chars(cls, v):
+        # Garante que se vier string JSON, converte para lista
         if isinstance(v, str):
             import json
             try:
@@ -47,7 +50,7 @@ class CursoModel(BaseModel):
             except:
                 v = [v]
         if not isinstance(v, list):
-            raise ValueError("Formato inválido para lista.")
+            raise ValueError("Formato inválido para lista de áreas.")
         
         clean_list = []
         for item in v:
@@ -72,15 +75,12 @@ def listar_cursos(
     modalidade: Optional[str] = None,
     tipo: Optional[str] = None,
     area: Optional[List[str]] = Query(None),
-    created_from: Optional[datetime] = None,
-    created_to: Optional[datetime] = None,
     page: int = 1,
     page_size: int = 10,
     ctx: RequestCtx = Depends(get_ctx)
 ):
     db = get_mongo_db()
     filtro: dict = {}
-
     filtro["instituicao_id"] = ctx.inst_oid
 
     if busca:
@@ -91,65 +91,28 @@ def listar_cursos(
         ]
 
     if status:
-        norm = []
-        for s in status:
-            if not s: continue
-            v = s.strip().capitalize()
-            if v in ("Ativo", "Inativo"):
-                norm.append(v)
-        if norm:
-            filtro["status"] = {"$in": norm}
+        norm = [s.strip().capitalize() for s in status if s.strip()]
+        if norm: filtro["status"] = {"$in": norm}
 
-    if modalidade and modalidade != "Todos":
-        filtro["modalidade_curso"] = modalidade
-
-    if tipo and tipo != "Todos":
-        filtro["tipo_curso"] = tipo
-
-    if area:
-        filtro["area_tecnologica"] = {"$in": area}
-
-    if created_from or created_to:
-        if created_from and created_from.tzinfo is None:
-            created_from = created_from.replace(tzinfo=timezone.utc)
-        if created_to and created_to.tzinfo is None:
-            created_to = created_to.replace(tzinfo=timezone.utc)
-        
-        if created_from and created_to and created_from > created_to:
-            created_from, created_to = created_to, created_from
-
-        rng = {}
-        if created_from: rng["$gte"] = created_from.astimezone(timezone.utc)
-        if created_to: rng["$lte"] = created_to.astimezone(timezone.utc)
-        if rng: filtro["data_criacao"] = rng
+    if modalidade and modalidade != "Todos": filtro["modalidade_curso"] = modalidade
+    if tipo and tipo != "Todos": filtro["tipo_curso"] = tipo
+    if area: filtro["area_tecnologica"] = {"$in": area}
 
     page = max(1, int(page))
     page_size = min(max(1, int(page_size)), 1000)
 
     col = db["curso"]
     coll = Collation('pt', strength=1)
-
+    
     total = col.count_documents(filtro, collation=coll)
-    cursor = (
-        col.find(filtro, collation=coll)
-            .sort("data_criacao", -1)
-            .skip((page - 1) * page_size)
-            .limit(page_size)
-    )
+    cursor = col.find(filtro, collation=coll).sort("data_criacao", -1).skip((page - 1) * page_size).limit(page_size)
 
     items = []
     for doc in cursor:
-        oid = doc.get("_id")
-        if isinstance(doc.get("instituicao_id"), ObjectId):
-            doc["instituicao_id"] = str(doc["instituicao_id"])
-
-        if doc.get("data_criacao") is None and isinstance(oid, ObjectId):
-            doc["data_criacao"] = oid.generation_time
-
+        doc["_id"] = str(doc["_id"])
+        if "instituicao_id" in doc: doc["instituicao_id"] = str(doc["instituicao_id"])
         if isinstance(doc.get("data_criacao"), datetime):
-            doc["data_criacao"] = doc["data_criacao"].astimezone(timezone.utc).isoformat()
-        
-        doc["_id"] = str(oid)
+            doc["data_criacao"] = doc["data_criacao"].isoformat()
         items.append(doc)
 
     return {"items": items, "total": total, "page": page, "page_size": page_size}
@@ -163,11 +126,10 @@ def criar_curso(curso: CursoModel, ctx: RequestCtx = Depends(get_ctx)):
     data['status'] = data['status'].capitalize()
     data['data_criacao'] = datetime.now(timezone.utc)
     
-    # O Pydantic já validou a estrutura, podemos salvar direto ou fazer ajustes finos aqui se precisar
+    # Remove _id se existir para deixar o Mongo criar
     data.pop('_id', None)
     
     inserted = db["curso"].insert_one(data)
-    
     invalidate_cache(str(ctx.inst_oid))
     
     return {"_id": str(inserted.inserted_id)}
@@ -181,6 +143,8 @@ def atualizar_curso(id: str, curso: CursoModel, ctx: RequestCtx = Depends(get_ct
     db = get_mongo_db()
     data = curso.dict()
     data['status'] = data['status'].capitalize()
+    
+    # Remove campos imutáveis ou gerados
     data.pop('_id', None)
     data.pop('data_criacao', None)
     
@@ -201,21 +165,11 @@ def deletar_curso(id: str, ctx: RequestCtx = Depends(get_ctx)):
     oid = _try_objectid(id)
     if not oid:
         raise HTTPException(status_code=400, detail="ID inválido")
-
-    db = get_mongo_db()
     
-    res = db["curso"].delete_one(
-        {"_id": oid, "instituicao_id": ctx.inst_oid}
-    )
+    db = get_mongo_db()
+    res = db["curso"].delete_one({"_id": oid, "instituicao_id": ctx.inst_oid})
     
     if res.deleted_count:
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Removido com sucesso"}
-    raise HTTPException(status_code=404, detail="Curso não encontrado ou acesso negado")
-
-@router.get("/api/gestao_cursos/bootstrap")
-def bootstrap_cursos(ctx: RequestCtx = Depends(get_ctx)):
-    """
-    Endpoint auxiliar, caso ainda seja chamado por legados.
-    """
-    return {"msg": "ok"}
+    raise HTTPException(status_code=404, detail="Curso não encontrado")
