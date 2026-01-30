@@ -75,6 +75,8 @@ def listar_cursos(
     modalidade: Optional[str] = None,
     tipo: Optional[str] = None,
     area: Optional[List[str]] = Query(None),
+    created_from: Optional[datetime] = None,
+    created_to: Optional[datetime] = None,
     page: int = 1,
     page_size: int = 10,
     ctx: RequestCtx = Depends(get_ctx)
@@ -83,6 +85,7 @@ def listar_cursos(
     filtro: dict = {}
     filtro["instituicao_id"] = ctx.inst_oid
 
+    # --- Filtros (Mantidos iguais ao original) ---
     if busca:
         filtro["$or"] = [
             {"nome_curso": {"$regex": busca, "$options": "i"}},
@@ -98,22 +101,66 @@ def listar_cursos(
     if tipo and tipo != "Todos": filtro["tipo_curso"] = tipo
     if area: filtro["area_tecnologica"] = {"$in": area}
 
+    if created_from or created_to:
+        # (Lógica de data mantida igual ao original...)
+        if created_from and created_from.tzinfo is None:
+            created_from = created_from.replace(tzinfo=timezone.utc)
+        if created_to and created_to.tzinfo is None:
+            created_to = created_to.replace(tzinfo=timezone.utc)
+        if created_from and created_to and created_from > created_to:
+            created_from, created_to = created_to, created_from
+        rng = {}
+        if created_from: rng["$gte"] = created_from.astimezone(timezone.utc)
+        if created_to: rng["$lte"] = created_to.astimezone(timezone.utc)
+        if rng: filtro["data_criacao"] = rng
+
+    # --- Paginação ---
     page = max(1, int(page))
     page_size = min(max(1, int(page_size)), 1000)
 
     col = db["curso"]
     coll = Collation('pt', strength=1)
-    
+
     total = col.count_documents(filtro, collation=coll)
     cursor = col.find(filtro, collation=coll).sort("data_criacao", -1).skip((page - 1) * page_size).limit(page_size)
 
     items = []
+    
+    # Conjunto para coletar IDs de UCs que precisamos buscar o nome
+    ucs_ids_to_fetch = set()
+
     for doc in cursor:
         doc["_id"] = str(doc["_id"])
         if "instituicao_id" in doc: doc["instituicao_id"] = str(doc["instituicao_id"])
         if isinstance(doc.get("data_criacao"), datetime):
             doc["data_criacao"] = doc["data_criacao"].isoformat()
+        
+        # Coleta os IDs das UCs deste curso
+        if "unidade_curricular" in doc and isinstance(doc["unidade_curricular"], dict):
+            ucs_ids_to_fetch.update(doc["unidade_curricular"].keys())
+            
         items.append(doc)
+
+    # --- POPULAÇÃO DOS NOMES DAS UCS (NOVA LÓGICA) ---
+    if ucs_ids_to_fetch:
+        # Converte strings para ObjectIds válidos
+        ids_validos = [ObjectId(uid) for uid in ucs_ids_to_fetch if ObjectId.is_valid(uid)]
+        
+        # Busca apenas o campo 'descricao' das UCs encontradas
+        ucs_found = db["unidade_curricular"].find(
+            {"_id": {"$in": ids_validos}},
+            {"descricao": 1}
+        )
+        
+        # Cria um mapa: ID -> Nome da UC
+        ucs_map = {str(u["_id"]): u.get("descricao", "Sem descrição") for u in ucs_found}
+
+        # Injeta o nome dentro de cada item da lista
+        for item in items:
+            if "unidade_curricular" in item and isinstance(item["unidade_curricular"], dict):
+                for uc_id, uc_data in item["unidade_curricular"].items():
+                    # Adiciona o campo 'nome_uc' dentro dos dados da UC
+                    uc_data["nome_uc"] = ucs_map.get(uc_id, "UC não identificada")
 
     return {"items": items, "total": total, "page": page, "page_size": page_size}
 

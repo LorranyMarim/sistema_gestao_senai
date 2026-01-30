@@ -649,38 +649,56 @@
         alertBox.textContent = msg;
     }
 
-    // --- VISUALIZAÇÃO ---
+  // --- VISUALIZAÇÃO (Atualizado conforme layout de Instrutores) ---
     function openViewModal(item) {
-        document.getElementById('viewnomeCurso').value = item.nome_curso;
-        document.getElementById('viewmodalidadeCurso').value = item.modalidade_curso;
-        document.getElementById('viewtipoCurso').value = item.tipo_curso;
-        document.getElementById('viewareaCurso').value = (item.area_tecnologica || []).join(', ');
-        document.getElementById('cargaHorariaTotalCurso').value = item.carga_total_curso;
-        document.getElementById('viewstatusCurso').value = item.status;
-        document.getElementById('observacaoCurso').value = item.observacao_curso || '';
-
-        // Lista UCs Detalhadas
-        const container = document.getElementById('unidadeCurricularCursoContainer');
-        const list = container.querySelector('ul'); // Reutilizando a estrutura do HTML se existir
-        // Se o HTML fornecido tiver ID duplicado ou erro, ajustamos:
-        const listReal = document.getElementById('viewUnidadeCurricularList') || list; 
+        // Popula campos simples
+        document.getElementById('viewnomeCurso').value = item.nome_curso || '-';
+        document.getElementById('viewmodalidadeCurso').value = item.modalidade_curso || '-';
+        document.getElementById('viewtipoCurso').value = item.tipo_curso || '-';
         
-        listReal.innerHTML = '';
-        container.style.display = 'none';
+        // Área Tecnológica (Array para String)
+        const areas = Array.isArray(item.area_tecnologica) ? item.area_tecnologica : [];
+        document.getElementById('viewareaCurso').value = areas.join(', ') || '-';
+        
+        // Formatação de Carga Horária e Status
+        document.getElementById('viewcargaHorariaTotalCurso').value = item.carga_total_curso ? parseFloat(item.carga_total_curso).toFixed(2) : '0.00';
+        document.getElementById('viewstatusCurso').value = item.status || '-';
+        document.getElementById('viewObservacaoCurso').value = item.observacao_curso || '-';
+
+        // --- Tabela de Unidades Curriculares ---
+        const container = document.getElementById('unidadeCurricularCursoContainer');
+        const tbody = document.getElementById('viewUcTableBody');
+        tbody.innerHTML = ''; // Limpa tabela anterior
 
         if (item.unidade_curricular && Object.keys(item.unidade_curricular).length > 0) {
             container.style.display = 'block';
+            
+            // Itera sobre o objeto de parametrização { "id_uc": { dados... }, ... }
             for (const [id, dados] of Object.entries(item.unidade_curricular)) {
-                const nome = ucsGlobalMap[id] || 'UC ' + id;
-                const li = document.createElement('li');
-                li.innerHTML = `<strong>${nome}</strong>: ${dados.carga_horaria}h | ${dados.dias_letivos} dias | ${dados.aulas} aulas`;
-                listReal.appendChild(li);
+                // Tenta usar o nome vindo do backend (dados.nome_uc), se não tiver, tenta o mapa global
+                const nomeUc = dados.nome_uc || ucsGlobalMap[id] || 'UC não identificada (ID: ' + id.substring(0,6) + '...)';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-3 py-2 font-medium text-gray-900">${nomeUc}</td>
+                    <td class="px-3 py-2 text-center bg-blue-50">${dados.carga_presencial || 0}h</td>
+                    <td class="px-3 py-2 text-center bg-blue-50">${dados.aulas_presencial || 0}</td>
+                    <td class="px-3 py-2 text-center bg-blue-50">${dados.dias_presencial || 0}</td>
+                    <td class="px-3 py-2 text-center bg-green-50">${dados.carga_ead || 0}h</td>
+                    <td class="px-3 py-2 text-center bg-green-50">${dados.aulas_ead || 0}</td>
+                    <td class="px-3 py-2 text-center bg-green-50">${dados.dias_ead || 0}</td>
+                `;
+                tbody.appendChild(tr);
             }
+        } else {
+            // Se não houver UCs, mostra mensagem na tabela
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="7" class="px-3 py-4 text-center text-gray-500">Nenhuma Unidade Curricular vinculada.</td>`;
+            tbody.appendChild(tr);
         }
 
         App.ui.showModal(viewModal);
     }
-
     function deleteCurso(item) {
         if (confirm(`Deseja realmente excluir o curso "${item.nome_curso}"?`)) {
             App.net.fetchJSON(`${API_URL}?id=${item._id}`, { method: 'DELETE' })

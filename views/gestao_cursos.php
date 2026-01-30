@@ -220,59 +220,74 @@ require_once("../config/verifica_login.php");
     </div>
   </div>
 
-  <div id="visualizarcursoModal" class="modal modal-dialog-centered">
+ <div id="visualizarcursoModal" class="modal modal-dialog-centered">
     <div class="modal-content">
       <span class="close-button" id="closeVisualizarBtn">&times;</span>
-      <h2>Detalhes do Curso</h2>
+      
+      <h2 style="padding: 20px 25px 0 25px; margin: 0;">Detalhes do Curso</h2>
 
-      <form>
-        <div class="modal-body">
-         
+      <form> <div class="modal-body">
+          
           <div class="form-group">
-            <label>Nome do Curso:</label>
-            <input type="text" id="viewnomeCurso" class="form-control" readonly disabled>
+            <label class="font-bold text-gray-700">Nome do Curso:</label>
+            <input type="text" id="viewnomeCurso" class="form-control bg-gray-100" readonly disabled>
           </div>
 
           <div class="form-group">
-            <label>Modalidade:</label>
-            <input type="text" id="viewmodalidadeCurso" class="form-control" readonly disabled>
+            <label class="font-bold text-gray-700">Modalidade:</label>
+            <input type="text" id="viewmodalidadeCurso" class="form-control bg-gray-100" readonly disabled>
           </div>
 
           <div class="form-group">
-            <label>Tipo do Curso:</label>
-            <input type="text" id="viewtipoCurso" class="form-control" readonly disabled>
+            <label class="font-bold text-gray-700">Tipo do Curso:</label>
+            <input type="text" id="viewtipoCurso" class="form-control bg-gray-100" readonly disabled>
           </div>
 
           <div class="form-group">
-            <label>Área Tecnológica:</label>
-            <input type="text" id="viewareaCurso" class="form-control" readonly disabled>
+            <label class="font-bold text-gray-700">Área Tecnológica:</label>
+            <input type="text" id="viewareaCurso" class="form-control bg-gray-100" readonly disabled>
           </div>
 
           <div class="form-group">
-            <label>Carga Horária Total:</label>
-            <input type="text" id="cargaHorariaTotalCurso" class="form-control" readonly disabled>
-          </div>
-
-          <div id="unidadeCurricularCursoContainer" class="form-group"
-            style="display:none; margin-top:15px; padding-top:10px; border-top:1px solid #eee;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Grade Curricular (UCs):</label>
-            <ul id="viewUnidadeCurricularList" style="list-style: disc; padding-left: 20px; color: #333;">
-            </ul>
+            <label class="font-bold text-gray-700">Carga Horária Total (h):</label>
+            <input type="text" id="viewcargaHorariaTotalCurso" class="form-control bg-gray-100" readonly disabled>
           </div>
 
           <div class="form-group">
-            <label>Observações:</label>
-            <input type="text" id="viewObservacaoCurso" class="form-control" readonly disabled>
+            <label class="font-bold text-gray-700">Status:</label>
+            <input type="text" id="viewstatusCurso" class="form-control bg-gray-100" readonly disabled>
           </div>
-           
+
           <div class="form-group">
-            <label>Status:</label>
-            <input type="text" id="viewstatusCurso" class="form-control" readonly disabled>
+            <label class="font-bold text-gray-700">Observações:</label>
+            <textarea id="viewObservacaoCurso" class="form-control bg-gray-100" rows="3" readonly disabled></textarea>
+          </div>
+
+          <div id="unidadeCurricularCursoContainer" class="form-group" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+            <label class="font-bold text-gray-700 mb-2 block">Unidades Curriculares:</label>
+            
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+              <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                  <tr>
+                    <th class="px-3 py-2 border-b">Descrição</th>
+                    <th class="px-3 py-2 border-b text-center text-blue-800">C.H Pres.</th>
+                    <th class="px-3 py-2 border-b text-center text-blue-800">Aulas Pres.</th>
+                    <th class="px-3 py-2 border-b text-center text-blue-800">Dias Pres.</th>
+                    <th class="px-3 py-2 border-b text-center text-green-800">C.H EAD</th>
+                    <th class="px-3 py-2 border-b text-center text-green-800">Aulas EAD</th>
+                    <th class="px-3 py-2 border-b text-center text-green-800">Dias EAD</th>
+                  </tr>
+                </thead>
+                <tbody id="viewUcTableBody" class="bg-white divide-y divide-gray-200">
+                  </tbody>
+              </table>
+            </div>
           </div>
 
         </div>
-        <div class="modal-footer"
-          style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: flex-end;">
+
+        <div class="modal-footer" style="padding: 15px 25px; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end;">
           <button type="button" class="btn btn-secondary" id="fecharVisualizarBtn">Fechar</button>
         </div>
       </form>

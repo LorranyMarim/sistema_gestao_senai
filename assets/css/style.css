@@ -1412,8 +1412,28 @@ select:disabled:hover {
     position: relative;          
 }
 
+#cursoModal .modal-content,
+#visualizarcursoModal .modal-content {
+    height: 700px !important;
+    max-height: 90vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;       
+    overflow: hidden !important;
+    position: relative;          
+}
+
 #instructorModal form,
 #visualizarInstructorModal form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;                     
+    overflow: hidden;           
+    padding: 0 !important;
+    margin: 0 !important;
+}
+#cursoModal form,
+#visualizarcursoModal form {
     display: flex;
     flex-direction: column;
     flex: 1;                     
@@ -1429,7 +1449,13 @@ select:disabled:hover {
     overflow-x: hidden;
     padding: 20px 25px !important; 
 }
-
+#cursoModal .modal-body,
+#visualizarcursoModal .modal-body {
+    flex: 1;                     
+    overflow-y: auto !important; 
+    overflow-x: hidden;
+    padding: 20px 25px !important; 
+}
 #instructorModal .modal-footer,
 #visualizarInstructorModal .modal-footer {
     flex-shrink: 0;
@@ -1437,39 +1463,8 @@ select:disabled:hover {
     z-index: 10;
 }
 
-------------
-
-#cursoModal .modal-content,
-#visualizarInstructorModal .modal-content {
-    height: 700px !important;
-    max-height: 90vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 0 !important;       
-    overflow: hidden !important;
-    position: relative;          
-}
-
-#cursoModal form,
-#visualizarInstructorModal form {
-    display: flex;
-    flex-direction: column;
-    flex: 1;                     
-    overflow: hidden;           
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-#cursoModal .modal-body,
-#visualizarInstructorModal .modal-body {
-    flex: 1;                     
-    overflow-y: auto !important; 
-    overflow-x: hidden;
-    padding: 20px 25px !important; 
-}
-
 #cursoModal .modal-footer,
-#visualizarInstructorModal .modal-footer {
+#visualizarcursoModal .modal-footer {
     flex-shrink: 0;
     background-color: #fff;
     z-index: 10;
