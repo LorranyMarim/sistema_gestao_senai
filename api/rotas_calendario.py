@@ -235,40 +235,43 @@ def criar_dia_letivo(dia: CalendarioLetivoModel, ctx: RequestCtx = Depends(get_c
     
     return {"_id": str(inserted.inserted_id)}
 
-@router.put("/api/calendario_letivo/{id}")
-def atualizar_dia_letivo(id: str, dia: CalendarioLetivoModel, ctx: RequestCtx = Depends(get_ctx)):
-    oid = _try_objectid(id)
-    if not oid: raise HTTPException(400, "ID inválido")
+@router.put("/api/calendario_letivo/{id_dia}")
+def atualizar_dia_letivo(id_dia: str, dados: CalendarioLetivoModel, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
-    cal_oid = ObjectId(dia.calendario_id)
-
-    existing = db["calendario_letivo"].find_one({"_id": oid})
-    if not existing: raise HTTPException(404, "Evento não encontrado")
     
-    pai = db["calendario"].find_one({"_id": cal_oid, "instituicao_id": ctx.inst_oid})
-    if not pai: raise HTTPException(403, "Acesso negado ao calendário pai")
+    try:
+        oid = ObjectId(id_dia)
+        cal_oid = ObjectId(dados.calendario_id)
+    except:
+        raise HTTPException(status_code=400, detail="ID inválido.")
+    
+    # 1. Verifica se o dia existe
+    dia_atual = db["calendario_letivo"].find_one({"_id": oid})
+    if not dia_atual:
+        raise HTTPException(status_code=404, detail="Registro não encontrado.")
+    
+    # 2. Segurança: Verifica se o calendário pai pertence à instituição do usuário
+    cal_pai = db["calendario"].find_one({"_id": cal_oid, "instituicao_id": ctx.inst_oid})
+    if not cal_pai:
+        raise HTTPException(status_code=403, detail="Acesso negado ao calendário.")
 
-    d_inicio, d_fim = normalize_dates(dia.data_inicio, dia.data_fim)
-
-    collision = db["calendario_letivo"].find_one({
-        "calendario_id": cal_oid,
-        "_id": {"$ne": oid},
-        "$or": [
-            {
-                "data_inicio": {"$lte": d_fim},
-                "$expr": {"$gte": [{"$ifNull": ["$data_fim", "$data_inicio"]}, d_inicio]}
-            }
-        ]
+    # 3. Verifica conflito de duplicidade (excluindo o próprio registro)
+    # Procura se existe OUTRO dia no mesmo calendário com a mesma data de início
+    conflito = db["calendario_letivo"].find_one({
+        "calendario_id": dados.calendario_id,
+        "data_inicio": dados.data_inicio,
+        "_id": {"$ne": oid} # $ne = Not Equal (Não igual ao ID atual)
     })
-
-    if collision:
-        raise HTTPException(400, "Conflito de datas ao atualizar!")
-
-    data = dia.model_dump()
-    data['calendario_id'] = cal_oid
     
-    db["calendario_letivo"].update_one({"_id": oid}, {"$set": data})
-    return {"msg": "Atualizado com sucesso"}
+    if conflito:
+        raise HTTPException(status_code=409, detail="Já existe um dia letivo cadastrado nesta data.")
+
+    # 4. Atualiza os dados
+    update_data = dados.model_dump()
+    # Garante que as datas estejam em formato datetime correto para o Mongo
+    db["calendario_letivo"].update_one({"_id": oid}, {"$set": update_data})
+    
+    return {"msg": "Dia letivo atualizado com sucesso!"}
 
 @router.delete("/api/calendario_letivo/{id}")
 def deletar_dia_letivo(id: str, ctx: RequestCtx = Depends(get_ctx)):

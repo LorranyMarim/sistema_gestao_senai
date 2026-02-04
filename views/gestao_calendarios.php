@@ -13,20 +13,21 @@ require_once("../config/verifica_login.php");
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-</head>
 <style>
-    /* Estilo para dias fora do range (apagados) */
-    .fc-day-disabled {
-        background-color: #f3f4f6 !important; /* Cinza claro */
-        opacity: 0.6;
-        cursor: not-allowed;
+    /* Garante que o calendário tenha altura dentro do modal */
+    #calendarEl {
+        min-height: 500px;
     }
-    
-    /* Remove a opacidade dos eventos para que fiquem legíveis mesmo se caírem num dia de borda */
-    .fc-event {
-        opacity: 1 !important;
+    /* Ajuste de z-index para tooltips ou popups do calendário se sobreporem ao modal */
+    .fc {
+        z-index: 1080;
     }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.global.js"></script>
+</head>
+
 
 <body>
     <div class="dashboard-container">
@@ -149,56 +150,59 @@ require_once("../config/verifica_login.php");
         </div>
     </div>
 
-    <div id="diaModal" class="modal modal-dialog-centered">
+    <div id="diaModal" class="modal modal-dialog-centered" style="z-index: 1100;">
         <div class="modal-content">
-            <span class="close-button" id="closeDiaModalBtn">&times;</span>
-            <h2 id="modalTitleDia">Criar Dia/Período Letivo</h2>
+            <span class="close-button" id="cancelDiaBtnX" onclick="App.ui.hideModal(document.getElementById('diaModal'))">&times;</span>
+            <h2 id="modalTitleDia">Gerenciar Dia Letivo</h2>
+            
             <form id="diaForm">
-                <input type="hidden" id="diaId">
+                <input type="hidden" id="diaId" value="">
+
                 <div class="form-group">
-                    <label for="selectCalDia">Calendário:</label>
-                    <select id="selectCalDia" class="form-control" required></select>
+                    <label>Calendário:</label>
+                    <select id="selectCalDia" class="form-control" required disabled>
+                        </select>
                 </div>
+
                 <div class="form-group">
-                    <label for="tipoDia">Tipo:</label>
+                    <label>Tipo de Evento:</label>
                     <select id="tipoDia" class="form-control" required disabled>
-                        <option value="">Selecione o Calendário primeiro...</option>
+                        <option value="">Selecione...</option>
                         <option value="Presencial">Presencial</option>
                         <option value="EAD">EAD</option>
                         <option value="Prática na Unidade">Prática na Unidade</option>
                         <option value="Reposição">Reposição</option>
                     </select>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div class="form-group">
-                        <label for="inicioDia">Data Início:</label>
+                        <label>Data Início:</label>
                         <input type="date" id="inicioDia" class="form-control" required disabled>
                     </div>
-                    <div class="form-group flex items-end pb-2">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="checkRange" disabled>
-                            <span>É um período? (Data final)</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+                    
                     <div class="form-group" id="divFinalDia">
-                        <label for="finalDia">Data Fim:</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <label for="finalDia" style="margin:0;">Data Final:</label>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <input type="checkbox" id="checkRange" disabled style="width:auto; margin:0;">
+                                <label for="checkRange" style="font-size:0.8em; margin:0; cursor:pointer;">Período?</label>
+                            </div>
+                        </div>
                         <input type="date" id="finalDia" class="form-control" disabled>
                     </div>
-                    <div class="form-group flex items-end pb-2">
-                        
-                    </div>
                 </div>
-            
-                <div class="modal-footer"
-                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-                    <button type="button" class="btn btn-secondary" id="cancelDiaBtn">
-                        <i class="fas fa-times-circle"></i> Cancelar
+
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #dee2e6; padding-top: 15px;">
+                    
+                    <button type="button" class="btn text-white bg-red-600 hover:bg-red-700 hidden" id="btnDeleteDia">
+                        <i class="fas fa-trash"></i> Excluir
                     </button>
-                    <button type="submit" class="btn btn-primary" id="salvarDiaBtn">
-                        <i class="fas fa-save"></i> Salvar
-                    </button>
+
+                    <div style="display: flex; gap: 10px; margin-left: auto;">
+                        <button type="button" class="btn btn-secondary" id="cancelDiaBtn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -227,6 +231,7 @@ require_once("../config/verifica_login.php");
         <div class="modal-content">
             <span class="close-button" id="closeViewBtn">&times;</span>
             <h2>Detalhes do Calendário Acadêmico</h2>
+            
             <form id="viewCalForm">
             <div class="form-group">
                 <label>Título:</label>
@@ -243,16 +248,14 @@ require_once("../config/verifica_login.php");
                 </div>
                 <div class="form-group">
                     <label>Status:</label>
-                    <input type="text" id="viewStatus" readonly disabled>
+                    <input type="text" id="viewStatus" readonly disabled class="form-control">
                 </div>
             </div>
             <div class="modal-footer"
                     style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
                     <button type="button" class="btn btn-secondary" id="cancelCalBtn">Fechar
                     </button>
-                    <button type="submit" class="btn btn-primary" id="salvarCalBtn">
-                        <i class="fas fa-save"></i> Salvar
-                    </button>
+                    
                     <button type="button" class="btn btn-warning" style="background-color: #f39c12;" id="openFullCalendarBtn">
                     <i class="fas fa-calendar-month"></i> Visualizar Dias Letivos
                     </button>
@@ -261,21 +264,57 @@ require_once("../config/verifica_login.php");
         </div>
     </div>
 
-    <div id="fullCalendarModal" class="modal modal-dialog-centered" style="z-index: 1070;">
-        <div class="modal-content" style="width: 440px; max-width: 95%;">
+    <div id="fullCalendarModal" class="modal modal-dialog-centered">
+        <div class="modal-content">
+            
             <span class="close-button" id="closeFullCalendarBtn">&times;</span>
-            <div id="calendarEl" style="height: 500px;"></div>
-            <div class="mt-2 text-xs flex gap-2 justify-center flex-wrap">
-                <span class="px-2 py-1 rounded bg-blue-200">Presencial</span>
-                <span class="px-2 py-1 rounded bg-purple-200">EAD</span>
-                <span class="px-2 py-1 rounded bg-green-200">Prática</span>
-                <span class="px-2 py-1 rounded bg-yellow-200">Reposição</span>
-            </div>
+            
+            <h2>Visualização de Dias Letivos</h2>
+            
+            
+                <div id="calendarEl"></div>
+                
+                <div class="mt-3 flex gap-3 justify-center flex-wrap" style="background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #dee2e6;">
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-blue-200 block border border-blue-300"></span> <span class="text-sm text-gray-700">Presencial</span></div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-purple-200 block border border-purple-300"></span> <span class="text-sm text-gray-700">EAD</span></div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-200 block border border-green-300"></span> <span class="text-sm text-gray-700">Prática</span></div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-200 block border border-yellow-300"></span> <span class="text-sm text-gray-700">Reposição</span></div>
+                </div>
+            
+            <div class="modal-footer"
+                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                    <button type="button" class="btn btn-secondary" id="btnCloseFullCal">Fechar
+                    </button>
+                </div>
+            
+
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.global.js"></script>
+    <div id="decisionModal" class="modal modal-dialog-centered">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 40px 30px 50px 30px; margin: 20px auto;">
+        
+        <span class="close-button" onclick="App.ui.hideModal(document.getElementById('decisionModal'))">&times;</span>
+        
+        <h2 style="margin-bottom: 30px;">O que deseja editar?</h2>
+        
+        <div class="flex flex-col">
+            
+            <button type="button" class="btn btn-secondary w-full" id="btnDecisaoDados" 
+                    style="padding: 15px 25px; margin-bottom: 20px; font-size: 1.1em;">
+                <i class="fas fa-edit"></i> Editar Dados do Calendário
+            </button>
+            
+            <button type="button" class="btn btn-secondary w-full" id="btnDecisaoDias" 
+                    style="padding: 15px 25px; font-size: 1.1em;">
+                <i class="fas fa-calendar-alt"></i> Gerenciar Dias Letivos
+            </button>
+            
+        </div>
+    </div>
+</div>
 
+
+   
 <script src="../assets/js/geral_script.js"></script>
 <script src="../assets/js/calendario_script.js"></script>
    </body>
