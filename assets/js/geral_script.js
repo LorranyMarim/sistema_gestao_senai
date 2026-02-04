@@ -64,12 +64,44 @@
   }
 
   async function fetchJSON(url, options = {}) {
-    const res = await fetchWithTimeout(url, options);
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(text || res.statusText || `HTTP ${res.status}`);
+    // 1. Monitoramento de Conectividade: Bloqueia antes de tentar
+    if (!navigator.onLine) {
+        alert("Você está offline. Verifique sua conexão antes de continuar.");
+        throw new Error("Sem conexão com a internet.");
     }
-    return res.json().catch(() => (Array.isArray(options.fallback) ? options.fallback : {}));
+
+    try {
+        // Mantém a chamada original com timeout
+        const res = await fetchWithTimeout(url, options);
+        
+        // 2. Interceptador de Sessão Expirada (401)
+        if (res.status === 401) {
+            console.warn("Sessão expirada ou não autorizada. Redirecionando...");
+            
+            // Detecta se precisa subir um nível (../) ou não, dependendo de onde o script está rodando
+            const isView = window.location.pathname.includes('/views/');
+            const loginPath = isView ? 'index.php?erro=auth' : 'views/index.php?erro=auth';
+            
+            window.location.href = loginPath;
+            
+            // Interrompe o fluxo lançando um erro específico
+            throw new Error("Sessão expirada");
+        }
+
+        // 3. Tratamento de erro padrão (Lógica Original mantida)
+        if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            throw new Error(text || res.statusText || `HTTP ${res.status}`);
+        }
+
+        // 4. Retorno do JSON com Fallback (Lógica Original mantida)
+        return res.json().catch(() => (Array.isArray(options.fallback) ? options.fallback : {}));
+
+    } catch (err) {
+        // Se o erro foi lançado pelo nosso interceptador de 401, apenas o repassa
+        // para interromper a execução de quem chamou a função.
+        throw err;
+    }
   }
 
   function parseIsoAssumindoUtc(v) {

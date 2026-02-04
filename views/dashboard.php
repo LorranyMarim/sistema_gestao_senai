@@ -126,7 +126,7 @@ require_once("../config/verifica_login.php");
                             <li><a href="configuracao_usuarios.php"> Usuários</a></li>
                         </ul>
                     </li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                    <li><a href="../backend/processa_logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
             </nav>
         </aside>

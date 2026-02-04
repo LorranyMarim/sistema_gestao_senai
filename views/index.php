@@ -144,6 +144,11 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 
       form.addEventListener("submit", function (e) {
         clearError();
+        if (!navigator.onLine) {
+            e.preventDefault();
+            showError("Sem conexão com a internet o sistema não poderá funcionar corretamente e o acesso não será permitido.");
+            return;
+        }
 
         if (!instSelect.value) {
           e.preventDefault();

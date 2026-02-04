@@ -63,8 +63,16 @@
 
     let calendarInstance = null;
 
-    // --- Helpers ---
-
+    
+    function getLocalDateString(isoStr) {
+        if (!isoStr) return '';
+        // Se tiver 'T' (ex: 2026-02-03T00:00:00), pega só a primeira parte
+        if (isoStr.includes('T')) {
+            return isoStr.split('T')[0];
+        }
+        // Se já for apenas a data, retorna ela mesma
+        return isoStr;
+    }
     function addDays(dateStr, days) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
@@ -294,10 +302,14 @@
                 STATE.editingCal = cal;
                 $('#calId').value = cal._id;
                 refs.tituloCal.value = cal.titulo;
-                refs.inicioCal.value = cal.inicio_calendario.split('T')[0];
                 
+                // --- ALTERAÇÃO AQUI ---
+                // Usa a string pura do banco para não alterar o dia por causa do fuso horário
+                refs.inicioCal.value = getLocalDateString(cal.inicio_calendario);
+                refs.finalCal.value = getLocalDateString(cal.final_calendario);
+                // ----------------------
+
                 refs.finalCal.disabled = false;
-                refs.finalCal.value = cal.final_calendario.split('T')[0];
                 refs.finalCal.min = refs.inicioCal.value;
                 
                 refs.statusCal.value = cal.status;
@@ -437,8 +449,8 @@
             const id = $('#calId').value;
             const payload = {
                 titulo: refs.tituloCal.value,
-                inicio_calendario: new Date(refs.inicioCal.value).toISOString(),
-                final_calendario: new Date(refs.finalCal.value).toISOString(),
+                inicio_calendario: new Date(refs.inicioCal.value + 'T00:00:00').toISOString(),
+                final_calendario: new Date(refs.finalCal.value + 'T00:00:00').toISOString(),
                 status: refs.statusCal.value
             };
             try {
