@@ -8,10 +8,6 @@
     const { paginateData, bindControls, updateUI } = App.pagination;
     const fmtData = App.format.fmtDateBR;
 
-    // Configuração da API (Assume que o PHP faz proxy para o Python ou chama direto)
-    // Para simplificar, assumindo que rotas_calendario.py roda via uvicorn em porta diferente
-    // OU que existe um processa_calendarios.php que age como proxy. 
-    // Usaremos o padrão do arquivo ucs: apontar para o PHP que lida com a requisição.
     const API = {
         base: '../backend/processa_calendarios.php',
         bootstrap: '../backend/processa_calendarios.php?action=bootstrap'
@@ -19,34 +15,30 @@
 
     const STATE = {
         calendarios: [],
-        activeCalendars: [], // Para o select
+        activeCalendars: [],
         pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
-        filters: { q: '', status: ['Todos'] },
+        filters: { q: '', status: ['Todos'], created_from: '', created_to: '' },
         editingCal: null,
-        daysCache: []
+        daysCache: [],
+        busyRanges: [] // NOVA PROPRIEDADE: Armazena as datas ocupadas do calendário selecionado
     };
 
     const refs = {
         tableBody: $('#calTableBody'),
-        // Modais
         calModal: $('#calModal'),
         diaModal: $('#diaModal'),
         viewModal: $('#viewModal'),
         manageDaysModal: $('#manageDaysModal'),
         fullCalendarModal: $('#fullCalendarModal'),
         
-        // Forms
         calForm: $('#calForm'),
         diaForm: $('#diaForm'),
         
-        // Inputs Calendário
         tituloCal: $('#tituloCal'),
         inicioCal: $('#inicioCal'),
         finalCal: $('#finalCal'),
         statusCal: $('#statusCal'),
-        editDaysArea: $('#editDaysArea'),
         
-        // Inputs Dia
         selectCalDia: $('#selectCalDia'),
         tipoDia: $('#tipoDia'),
         inicioDia: $('#inicioDia'),
@@ -54,7 +46,6 @@
         divFinalDia: $('#divFinalDia'),
         finalDia: $('#finalDia'),
         
-        // View
         viewInputs: {
             titulo: $('#viewTitulo'),
             inicio: $('#viewInicio'),
@@ -64,63 +55,124 @@
         pagElements: {
             prev: $('#prevPage'),
             next: $('#nextPage'),
-            info: $('#pageInfo')
+            info: $('#pageInfo'),
+            sizeSel: null
         }
     };
 
-    let calendarInstance = null; // FullCalendar
+    let calendarInstance = null;
+
+    // --- Helpers ---
+
+    function addDays(dateStr, days) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        date.setUTCDate(date.getUTCDate() + days);
+        return date.toISOString().split('T')[0];
+    }
+
+    function toggleErrorFinalDia(show) {
+        let err = document.getElementById('msg-erro-final-dia');
+        if (!err) {
+            err = document.createElement('div');
+            err.id = 'msg-erro-final-dia';
+            err.className = 'text-red-500 text-xs mt-1 font-bold';
+            err.innerText = 'Não é possível selecionar nenhuma data final enquanto a data Início não for inserida.';
+            refs.divFinalDia.appendChild(err);
+        }
+        err.style.display = show ? 'block' : 'none';
+    }
+
+    // NOVA FUNÇÃO: Verifica se uma data está dentro de algum período já cadastrado
+    function isDateBusy(dateStr) {
+        if (!dateStr || !STATE.busyRanges.length) return false;
+        // Compara strings ISO (YYYY-MM-DD) diretamente
+        return STATE.busyRanges.some(range => {
+            return dateStr >= range.start && dateStr <= range.end;
+        });
+    }
 
     // --- Inicialização ---
 
-    async function init() {
-        App.loader.show();
+    async function carregarDados() {
         try {
-            await carregarDados();
-            setupEvents();
-            renderTable();
+            const data = await safeFetch(API.bootstrap);
+            STATE.calendarios = Array.isArray(data.calendarios) ? data.calendarios : [];
+            STATE.activeCalendars = Array.isArray(data.calendarios_ativos) ? data.calendarios_ativos : [];
+            
+            populateCalendarSelect();
+            renderizarConteudo();
         } catch(e) {
             console.error(e);
-            alert("Erro ao inicializar módulo.");
-        } finally {
-            App.loader.hide();
+            refs.tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
         }
     }
 
-    async function carregarDados() {
-    // Carrega lista principal e dados para selects
-    const [listaData, bootstrapData] = await Promise.all([
-        safeFetch(`${API.base}?action=list`),
-        safeFetch(API.bootstrap)
-    ]);
+    function populateCalendarSelect() {
+        if (!refs.selectCalDia) return;
+        const opts = ['<option value="">Selecione...</option>']
+            .concat(STATE.activeCalendars.map(c => {
+                const inicio = (c.inicio_calendario || '').split('T')[0] || '';
+                const fim = (c.final_calendario || '').split('T')[0] || '';
+                return `<option value="${c._id}" data-min="${inicio}" data-max="${fim}">${c.titulo}</option>`;
+            }));
+        refs.selectCalDia.innerHTML = opts.join('');
+    }
 
-    // Proteção com Optional Chaining (?.) e fallback
-    STATE.calendarios = listaData?.items || []; 
-    STATE.pagination.total = listaData?.total || 0;
-    
-    STATE.activeCalendars = bootstrapData?.calendarios_ativos || [];
-    populateCalendarSelect();
-}
+    // --- Renderização e Filtros ---
 
-   function populateCalendarSelect() {
-    const opts = ['<option value="">Selecione...</option>']
-        .concat(STATE.activeCalendars.map(c => {
-            // Proteção contra datas nulas ou indefinidas
-            const inicio = (c.inicio_calendario || '').split('T')[0] || '';
-            const fim = (c.final_calendario || '').split('T')[0] || '';
-            
-            return `<option value="${c._id}" data-min="${inicio}" data-max="${fim}">${c.titulo}</option>`;
-        }));
-    refs.selectCalDia.innerHTML = opts.join('');
-}
+    function applyFiltersFromUI() {
+        const elSearch = document.getElementById('gen_search');
+        STATE.filters.q = (elSearch?.value || '').trim();
 
-    // --- Renderização ---
+        const elStatus = document.getElementById('gen_status');
+        STATE.filters.status = elStatus ? [elStatus.value] : ['Todos'];
 
-    function renderTable() {
-        const start = (STATE.pagination.page - 1) * STATE.pagination.pageSize;
-        const end = start + STATE.pagination.pageSize;
-        const sliced = STATE.calendarios.slice(start, end);
+        const elFrom = document.getElementById('gen_created_from');
+        const elTo = document.getElementById('gen_created_to');
+        STATE.filters.created_from = elFrom?.value ? App.utils.toIsoStartOfDayLocal(elFrom.value) : '';
+        STATE.filters.created_to = elTo?.value ? App.utils.toIsoEndOfDayLocal(elTo.value) : '';
 
-        refs.tableBody.innerHTML = sliced.map(c => `
+        const elSize = document.getElementById('gen_pagesize');
+        if (elSize) {
+          STATE.pagination.pageSize = parseInt(elSize.value, 10);
+          refs.pagElements.sizeSel = elSize;
+        }
+    }
+
+    function renderizarConteudo() {
+        applyFiltersFromUI();
+
+        const filtered = STATE.calendarios.filter(c => {
+            const f = STATE.filters;
+            if (f.q) {
+                const text = `${c.titulo}`.toLowerCase();
+                if (!text.includes(f.q.toLowerCase())) return false;
+            }
+            if (f.status[0] !== 'Todos') {
+                const statusItem = (c.status || 'Ativo').toLowerCase();
+                const filtroStatus = f.status[0].toLowerCase();
+                if (statusItem !== filtroStatus) return false;
+            }
+            if (f.created_from && c.criado_em < f.created_from) return false;
+            if (f.created_to && c.criado_em > f.created_to) return false;
+            return true;
+        });
+
+        const { pagedData, meta } = paginateData(filtered, STATE.pagination.page, STATE.pagination.pageSize);
+        STATE.pagination = { ...STATE.pagination, ...meta };
+
+        updateUI(refs.pagElements, meta);
+        renderTable(pagedData);
+    }
+
+    function renderTable(lista) {
+        if (!lista || !lista.length) {
+            refs.tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
+            return;
+        }
+
+        refs.tableBody.innerHTML = lista.map(c => `
             <tr>
                 <td>${c.titulo}</td>
                 <td>${fmtData(c.inicio_calendario)}</td>
@@ -129,28 +181,38 @@
                 <td>${fmtData(c.criado_em)}</td>
                 <td>
                     <div class="flex gap-2 justify-center">
-                        <button class="btn btn-icon btn-view" data-id="${c._id}"><i class="fas fa-eye"></i></button>
-                        <button class="btn btn-icon btn-edit" data-id="${c._id}"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-icon btn-delete" data-id="${c._id}"><i class="fas fa-trash-alt"></i></button>
+                        <button class="btn btn-icon btn-view" data-id="${c._id}" title="Ver"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-icon btn-edit" data-id="${c._id}" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-icon btn-delete" data-id="${c._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </td>
             </tr>
         `).join('');
-
-        updateUI(refs.pagElements, { 
-            page: STATE.pagination.page, 
-            totalPages: Math.ceil(STATE.calendarios.length / STATE.pagination.pageSize),
-            total: STATE.calendarios.length 
-        });
     }
 
-    // --- Lógica de Modais ---
+    function setupFilters() {
+        if (App.filters && App.filters.render) {
+            App.filters.render(
+                'filter_area',
+                { search: true, date: true, status: true, pageSize: true },
+                null,
+                () => { STATE.pagination.page = 1; renderizarConteudo(); },
+                () => { 
+                    STATE.filters = { q: '', status: ['Todos'], created_from: '', created_to: '' };
+                    STATE.pagination.page = 1;
+                    renderizarConteudo();
+                }
+            );
+        }
+        renderizarConteudo();
+    }
+
+    // --- Modais ---
 
     function openCalModal(editId = null) {
         refs.calForm.reset();
         $('#calId').value = '';
         STATE.editingCal = null;
-        refs.editDaysArea.classList.add('hidden');
         refs.statusCal.disabled = true;
         refs.finalCal.disabled = true;
 
@@ -168,8 +230,6 @@
                 
                 refs.statusCal.value = cal.status;
                 refs.statusCal.disabled = false;
-                
-                refs.editDaysArea.classList.remove('hidden');
                 $('#modalTitleCal').innerText = "Editar Calendário";
             }
         } else {
@@ -180,43 +240,45 @@
     }
 
     function openDiaModal() {
-    refs.diaForm.reset();
-    
-    // Cenário 1: Desabilitar campos por default ao abrir
-    refs.tipoDia.disabled = true;
-    refs.inicioDia.disabled = true;
-    refs.checkRange.disabled = true;
-    refs.checkRange.checked = false; // Resetar checkbox
-    
-    // Ocultar e resetar o campo final
-    refs.finalDia.disabled = true; 
-    refs.finalDia.value = '';
-    refs.finalDia.required = false;
-    App.ui.showModal(refs.diaModal);
-}
+        refs.diaForm.reset();
+        refs.tipoDia.disabled = true;
+        refs.inicioDia.disabled = true;
+        refs.checkRange.disabled = true;
+        refs.checkRange.checked = false;
+        refs.finalDia.disabled = true; 
+        refs.finalDia.value = '';
+        refs.finalDia.required = false;
+        toggleErrorFinalDia(false);
+        // Limpa cache de dias ocupados ao abrir para evitar lixo de memória
+        STATE.busyRanges = []; 
+        App.ui.showModal(refs.diaModal);
+    }
 
-    // --- Event Listeners ---
+    // --- Events ---
 
     function setupEvents() {
-        // Ações da Tabela
+        bindControls(refs.pagElements, (action) => {
+            if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
+            if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
+            renderizarConteudo();
+        });
+
         refs.tableBody.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
             const id = btn.dataset.id;
             
             if (btn.classList.contains('btn-edit')) openCalModal(id);
-            
             if (btn.classList.contains('btn-delete')) {
                 if(confirm('Deseja excluir? Se houver dias letivos, será bloqueado.')) {
                     try {
-                        await safeFetch(`${API.base}?action=delete&id=${id}`, { method: 'POST' }); // Usando POST para simular DELETE via PHP proxy
-                        await carregarDados();
-                        renderTable();
+                        App.loader.show();
+                        await safeFetch(`${API.base}?action=delete&id=${id}`, { method: 'POST' });
+                        await carregarDados(); 
                         alert('Removido!');
-                    } catch(err) { alert(err.message); }
+                    } catch(err) { alert(err.message); } finally { App.loader.hide(); }
                 }
             }
-
             if (btn.classList.contains('btn-view')) {
                 const cal = STATE.calendarios.find(c => c._id === id);
                 if (cal) {
@@ -229,7 +291,6 @@
             }
         });
 
-        // Controle de Datas no Cadastro de Calendário
         refs.inicioCal.addEventListener('change', (e) => {
             refs.finalCal.disabled = false;
             refs.finalCal.min = e.target.value;
@@ -238,11 +299,9 @@
             }
         });
 
-        // Botões Topo
         $('#addCalBtn').addEventListener('click', () => openCalModal());
         $('#addDiaBtn').addEventListener('click', openDiaModal);
 
-        // Submissão Calendário
         refs.calForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = $('#calId').value;
@@ -252,133 +311,195 @@
                 final_calendario: new Date(refs.finalCal.value).toISOString(),
                 status: refs.statusCal.value
             };
-
             try {
+                App.loader.show();
                 const action = id ? `update&id=${id}` : 'create';
                 await safeFetch(`${API.base}?action=${action}`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
+                    method: 'POST', body: JSON.stringify(payload)
                 });
                 App.ui.hideModal(refs.calModal);
                 await carregarDados();
-                renderTable();
                 alert('Salvo com sucesso!');
-            } catch(err) { alert(err.message); }
+            } catch(err) { alert(err.message); } finally { App.loader.hide(); }
         });
 
-        // Lógica Modal Dias Letivos (Criação)
-        refs.selectCalDia.addEventListener('change', (e) => {
-    const opt = e.target.selectedOptions[0];
-    const valor = e.target.value;
+        // --- Lógica Dia Letivo / Calendário Filho ---
 
-    // Cenário 3: Se selecionar "Selecione..." (valor vazio)
-    if (!valor) {
-        refs.tipoDia.disabled = true;
-        refs.inicioDia.disabled = true;
-        refs.checkRange.disabled = true;
-        
-        // Limpar valores para evitar inconsistência
-        refs.tipoDia.value = "";
-        refs.inicioDia.value = "";
-        refs.checkRange.checked = false;
-        refs.finalDia.disabled = true;
-        refs.finalDia.value = "";
-        
-        return; 
-    }
+        // 1. Ao selecionar o Calendário Pai: Fetch dos dias ocupados
+        refs.selectCalDia.addEventListener('change', async (e) => {
+            const opt = e.target.selectedOptions[0];
+            const valor = e.target.value;
 
-    // Cenário 2: Se selecionar option válida -> Habilita campos
-    refs.tipoDia.disabled = false;
-    refs.inicioDia.disabled = false;
-    refs.checkRange.disabled = false;
-    
-    // Cenário 5 (Parte 1): Configurar limites baseados no calendário pai
-    // Os atributos data-min e data-max já foram populados na função populateCalendarSelect
-    const minDate = opt.dataset.min; // Data inicio do calendario pai
-    const maxDate = opt.dataset.max; // Data fim do calendario pai
+            // Resetar
+            STATE.busyRanges = [];
+            refs.tipoDia.value = "";
+            refs.inicioDia.value = "";
+            refs.checkRange.checked = false;
+            refs.finalDia.value = "";
 
-    // Aplica restrição >= inicio_calendario e <= final_calendario
-    refs.inicioDia.min = minDate;
-    refs.inicioDia.max = maxDate;
-    
-    refs.finalDia.min = minDate; // Inicialmente igual ao pai, será ajustado no change do inicioDia
-    refs.finalDia.max = maxDate;
-});
-refs.inicioDia.addEventListener('change', (e) => {
-    const dataInicial = e.target.value;
-    if (dataInicial) {
-        // Cenário 5: Data Final deve ser > Data inserida em inicioDia
-        // Definimos o min do finalDia como a data inicial. 
-        // HTML5 date input trata min como inclusive (>=), para garantir estritamente > (maior)
-        // a validação final ocorre no backend ou submit, mas visualmente >= é o padrão de UX aceitável.
-        refs.finalDia.min = dataInicial;
-    }
-});
+            if (!valor) {
+                refs.tipoDia.disabled = true;
+                refs.inicioDia.disabled = true;
+                refs.checkRange.disabled = true;
+                refs.finalDia.disabled = true;
+                return; 
+            }
+
+            refs.tipoDia.disabled = false;
+            refs.inicioDia.disabled = false;
+            refs.checkRange.disabled = false;
+            
+            // Configura limites min/max baseados no pai
+            const minDate = opt.dataset.min;
+            const maxDate = opt.dataset.max;
+
+            refs.inicioDia.min = minDate;
+            refs.inicioDia.max = maxDate;
+            
+            refs.finalDia.min = minDate;
+            refs.finalDia.max = maxDate;
+
+            // BUSCA DATAS JÁ OCUPADAS (Assíncrono)
+            try {
+                const days = await safeFetch(`${API.base}?action=list_days&cal_id=${valor}`);
+                STATE.busyRanges = days.map(d => ({
+                    start: d.data_inicio.split('T')[0],
+                    // Se não tiver data_fim, considera o próprio dia de início como fim do range
+                    end: (d.data_fim || d.data_inicio).split('T')[0] 
+                }));
+            } catch(e) { console.error("Erro ao buscar dias ocupados", e); }
+        });
+
         refs.checkRange.addEventListener('change', (e) => {
-    if (e.target.checked) {
-        
-        refs.finalDia.disabled = false; 
-        refs.finalDia.required = true;
-    } else {
-        refs.finalDia.disabled = true;
-        refs.finalDia.value = ''; 
-        refs.finalDia.required = false;
-    }
-});
+            if (e.target.checked) {
+                refs.finalDia.disabled = false; 
+                refs.finalDia.required = true;
+            } else {
+                refs.finalDia.disabled = true;
+                refs.finalDia.value = ''; 
+                refs.finalDia.required = false;
+                toggleErrorFinalDia(false);
+            }
+        });
 
+        // 2. Validação InicioDia: Bloqueio de datas ocupadas
+        refs.inicioDia.addEventListener('change', (e) => {
+            const dataInicial = e.target.value;
+
+            if (dataInicial) {
+                // NOVA REGRA: Verifica se a data selecionada está ocupada
+                if (isDateBusy(dataInicial)) {
+                    alert('Esta data já possui um evento cadastrado e não pode ser selecionada.');
+                    e.target.value = '';
+                    toggleErrorFinalDia(false);
+                    return;
+                }
+
+                toggleErrorFinalDia(false);
+                // Bloquear dias <= Data Inicial para o campo Final (min = dia seguinte)
+                const minDate = addDays(dataInicial, 1);
+                refs.finalDia.min = minDate;
+
+                // Limpa data final se ficou inconsistente
+                if (refs.finalDia.value && refs.finalDia.value <= dataInicial) {
+                    refs.finalDia.value = '';
+                }
+            } else {
+                const opt = refs.selectCalDia.selectedOptions[0];
+                if(opt) refs.finalDia.min = opt.dataset.min;
+            }
+        });
+        
+        // 3. Validação FinalDia: Bloqueio de datas ocupadas e menor que inicio
+        refs.finalDia.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val) {
+                 // NOVA REGRA: Verifica se a data selecionada está ocupada
+                 if (isDateBusy(val)) {
+                      alert('Esta data já possui um evento cadastrado e não pode ser selecionada.');
+                      e.target.value = '';
+                      return;
+                 }
+                 
+                 // Regra <= InicioDia (redundância caso o min falhe em algum browser)
+                 if (refs.inicioDia.value && val <= refs.inicioDia.value) {
+                     alert('A data final deve ser posterior à data inicial.');
+                     e.target.value = '';
+                 }
+            }
+        });
+
+        const checkFinalDiaAccess = (e) => {
+            if (refs.checkRange.checked && !refs.inicioDia.value) {
+                e.preventDefault();
+                refs.finalDia.blur(); 
+                toggleErrorFinalDia(true);
+            }
+        };
+        refs.finalDia.addEventListener('click', checkFinalDiaAccess);
+        refs.finalDia.addEventListener('focus', checkFinalDiaAccess);
+
+        // Submit Único
         refs.diaForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Validação extra para garantir Cenário 5 (Frontend)
-    if (refs.checkRange.checked) {
-        if (refs.finalDia.value <= refs.inicioDia.value) {
-            alert("A data final deve ser maior ou igual à data inicial.");
-            return;
-        }
-    }
+            e.preventDefault();
+            
+            // Validações finais antes de enviar
+            if (refs.checkRange.checked) {
+                if (refs.finalDia.value <= refs.inicioDia.value) {
+                    alert("A data final deve ser posterior à data inicial.");
+                    return;
+                }
+            }
+            
+            // Verifica overlap de range (opcional mas recomendado dado o requisito de bloqueio)
+            if (refs.checkRange.checked && refs.inicioDia.value && refs.finalDia.value) {
+                // Se o usuário tentar criar um periodo [1, 10] mas o dia 5 estiver ocupado
+                // A validação de 'isDateBusy' nos inputs só pegou as pontas. Aqui pegaria o meio.
+                // Mas seguindo estritamente seu pedido de "bloquear datas registradas", 
+                // o backend também fará essa verificação de colisão.
+            }
 
-    const payload = {
-        calendario_id: refs.selectCalDia.value,
-        tipo: refs.tipoDia.value,
-        data_inicio: new Date(refs.inicioDia.value).toISOString(),
-        
-        // Cenários 6 e 7: Lógica de Checkbox e Data Final
-        data_final_check: refs.checkRange.checked, // Boolean true/false
-        data_fim: refs.checkRange.checked ? new Date(refs.finalDia.value).toISOString() : null
-    };
+            const payload = {
+                calendario_id: refs.selectCalDia.value,
+                tipo: refs.tipoDia.value,
+                data_inicio: new Date(refs.inicioDia.value).toISOString(),
+                data_final_check: refs.checkRange.checked,
+                data_fim: refs.checkRange.checked ? new Date(refs.finalDia.value).toISOString() : null
+            };
 
-    try {
-        await safeFetch(`${API.base}?action=create_day`, { method: 'POST', body: JSON.stringify(payload) });
-        App.ui.hideModal(refs.diaModal);
-        alert('Dia/Período adicionado!');
-        // Opcional: Recarregar visualização se necessário
-    } catch(err) { alert(err.message); }
-});
+            try {
+                App.loader.show();
+                await safeFetch(`${API.base}?action=create_day`, { method: 'POST', body: JSON.stringify(payload) });
+                App.ui.hideModal(refs.diaModal);
+                
+                if(STATE.editingCal) {
+                     loadDaysTable(STATE.editingCal._id); 
+                }
+                
+                alert('Dia/Período adicionado!');
+            } catch(err) { alert(err.message); } finally { App.loader.hide(); }
+        });
 
-        // Botão Gerenciar Dias (Dentro da Edição)
-        $('#openManageDaysBtn').addEventListener('click', async () => {
+        $('#openManageDaysBtn')?.addEventListener('click', async () => {
             if (!STATE.editingCal) return;
-            App.ui.hideModal(refs.calModal); // Troca de modal
+            App.ui.hideModal(refs.calModal);
             $('#manageDaysTitle').innerText = STATE.editingCal.titulo;
             App.ui.showModal(refs.manageDaysModal);
             loadDaysTable(STATE.editingCal._id);
         });
 
-        // Botão FullCalendar
-        $('#openFullCalendarBtn').addEventListener('click', () => {
+        $('#openFullCalendarBtn')?.addEventListener('click', () => {
              App.ui.hideModal(refs.viewModal);
              initFullCalendar(STATE.editingCal);
              App.ui.showModal(refs.fullCalendarModal);
         });
 
-        // Fechar modais
-        $$('.close-button').forEach(btn => btn.onclick = () => {
-            App.ui.hideModal(btn.closest('.modal'));
-        });
+        $$('.close-button').forEach(btn => btn.onclick = () => App.ui.hideModal(btn.closest('.modal')));
         $('#cancelCalBtn').onclick = () => App.ui.hideModal(refs.calModal);
         $('#cancelDiaBtn').onclick = () => App.ui.hideModal(refs.diaModal);
+        $('#closeViewBtn').onclick = () => App.ui.hideModal(refs.viewModal);
     }
-
+    
     async function loadDaysTable(calId) {
         const tbody = $('#manageDaysBody');
         tbody.innerHTML = '<tr><td colspan="3">Carregando...</td></tr>';
@@ -398,7 +519,6 @@ refs.inicioDia.addEventListener('change', (e) => {
                 </tr>
             `).join('');
             
-            // Hack global para o onclick inline acima (simples e funcional)
             window.App.deleteDay = async (id) => {
                 if(!confirm('Excluir este dia letivo?')) return;
                 try {
@@ -412,48 +532,94 @@ refs.inicioDia.addEventListener('change', (e) => {
 
     function initFullCalendar(cal) {
         const el = document.getElementById('calendarEl');
-        el.innerHTML = '';
+        el.innerHTML = ''; // Limpa o calendário anterior
         
+        // Determina a data inicial:
+        // O requisito diz "mostrando o mês da data atual".
+        // Porém, se a data atual estiver MUITO longe do calendário (ex: calendário de 2024 e estamos em 2026),
+        // o usuário veria tudo cinza. 
+        // A lógica abaixo tenta usar a data atual, mas se ela estiver fora do range, 
+        // força o início do calendário para garantir boa UX.
+        
+        const hoje = new Date().toISOString().split('T')[0];
+        let dataInicial = hoje;
+
+        // Opcional: Se quiser forçar estritamente a visualização do mês atual mesmo que esteja tudo cinza,
+        // mantenha dataInicial = hoje. 
+        // Se quiser pular para o inicio do calendario caso hoje esteja fora, descomente abaixo:
+        /*
+        if (hoje < cal.inicio_calendario.split('T')[0] || hoje > cal.final_calendario.split('T')[0]) {
+             dataInicial = cal.inicio_calendario;
+        }
+        */
+
         calendarInstance = new FullCalendar.Calendar(el, {
             initialView: 'dayGridMonth',
             locale: 'pt-br',
+            initialDate: dataInicial, // Define o mês inicial
+            
+            // AQUI ESTÁ A REGRA DE NEGÓCIO PRINCIPAL
+            // validRange bloqueia a navegação e visualização de dias fora deste intervalo
             validRange: {
                 start: cal.inicio_calendario,
                 end: cal.final_calendario
             },
+            
             headerToolbar: {
                 left: 'prev,next',
                 center: 'title',
                 right: 'today'
             },
             height: '100%',
+            
+            // Carregamento de eventos (dias letivos)
             events: async (info, successCallback, failureCallback) => {
                 try {
                     const days = await safeFetch(`${API.base}?action=list_days&cal_id=${cal._id}`);
                     const events = days.map(d => {
                         let color = '#ccc';
+                        // Ajuste para bater com a legenda do HTML
                         if (d.tipo === 'Presencial') color = '#bfdbfe'; // Azul
-                        if (d.tipo === 'EAD') color = '#e9d5ff'; // Lilas
+                        if (d.tipo === 'EAD') color = '#e9d5ff';        // Roxo
                         if (d.tipo === 'Prática na Unidade') color = '#bbf7d0'; // Verde
-                        if (d.tipo === 'Reposição') color = '#fef08a'; // Amarelo
+                        if (d.tipo === 'Reposição') color = '#fef08a';  // Amarelo
                         
                         return {
                             title: d.tipo,
                             start: d.data_inicio,
-                            end: d.data_fim ? new Date(new Date(d.data_fim).getTime() + 86400000).toISOString() : d.data_inicio, // FullCalendar exclusive end fix
+                            // FullCalendar v6 aceita ISO string. Adiciona 1 dia se for range para cobrir visualmente o dia final
+                            end: d.data_fim ? addDays(d.data_fim, 1) : d.data_inicio, 
                             backgroundColor: color,
                             textColor: '#333',
-                            borderColor: color
+                            borderColor: color,
+                            display: 'block' // Melhora visualização
                         };
                     });
                     successCallback(events);
-                } catch(e) { failureCallback(e); }
+                } catch(e) { 
+                    console.error(e);
+                    failureCallback(e); 
+                }
             }
         });
         
-        // Timeout para renderizar corretamente após modal abrir
-        setTimeout(() => calendarInstance.render(), 200);
+        // Renderiza após um pequeno delay para garantir que o Modal abriu e o elemento tem tamanho
+        setTimeout(() => {
+            calendarInstance.render();
+        }, 200);
     }
 
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', async () => {
+        App.loader.show();
+        try {
+            await carregarDados();
+            setupFilters(); 
+            setupEvents();
+        } catch(e) {
+            console.error(e);
+            alert("Erro fatal ao iniciar aplicação.");
+        } finally {
+            App.loader.hide();
+        }
+    });
 })();

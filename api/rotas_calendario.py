@@ -3,7 +3,7 @@ from db import get_mongo_db
 from bson.objectid import ObjectId
 from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Literal, Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import re
 from pymongo.collation import Collation
 from auth_dep import get_ctx, RequestCtx
@@ -286,6 +286,48 @@ def deletar_dia_letivo(id: str, ctx: RequestCtx = Depends(get_ctx)):
 
 @router.get("/api/gestao_calendarios/bootstrap")
 def bootstrap_calendarios(ctx: RequestCtx = Depends(get_ctx)):
+    db = get_mongo_db()
+    
+    # 1. Busca TODOS os calendários para a tabela (replicando padrão ucs)
+    cursor = db["calendario"].find({"instituicao_id": ctx.inst_oid}).sort("criado_em", -1)
+    
+    todos_calendarios = []
+    for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        if isinstance(doc.get("instituicao_id"), ObjectId):
+             doc["instituicao_id"] = str(doc["instituicao_id"])
+             
+        if isinstance(doc.get("inicio_calendario"), datetime):
+            doc["inicio_calendario"] = doc["inicio_calendario"].isoformat()
+        if isinstance(doc.get("final_calendario"), datetime):
+            doc["final_calendario"] = doc["final_calendario"].isoformat()
+        if isinstance(doc.get("criado_em"), datetime):
+            doc["criado_em"] = doc["criado_em"].isoformat()
+        elif isinstance(doc.get("criado_em"), ObjectId): # Fallback se não tiver data
+             doc["criado_em"] = doc["criado_em"].generation_time.isoformat()
+             
+        todos_calendarios.append(doc)
+
+    # 2. Busca apenas ATIVOS para o select do modal (replicando padrão ucs/instituicao)
+    cals_ativos = []
+    # Filtramos na memória ou fazemos nova query. Como é bootstrap, nova query é leve.
+    cursor_ativos = db["calendario"].find(
+        {"instituicao_id": ctx.inst_oid, "status": "Ativo"}, 
+        {"titulo": 1, "inicio_calendario": 1, "final_calendario": 1}
+    ).sort("titulo", 1)
+
+    for c in cursor_ativos:
+        c["_id"] = str(c["_id"])
+        if isinstance(c.get("inicio_calendario"), datetime):
+            c["inicio_calendario"] = c["inicio_calendario"].isoformat()
+        if isinstance(c.get("final_calendario"), datetime):
+            c["final_calendario"] = c["final_calendario"].isoformat()
+        cals_ativos.append(c)
+
+    return {
+        "calendarios": todos_calendarios,
+        "calendarios_ativos": cals_ativos
+    }
     db = get_mongo_db()
     cals = list(db["calendario"].find(
         {"instituicao_id": ctx.inst_oid, "status": "Ativo"}, 

@@ -14,6 +14,19 @@ require_once("../config/verifica_login.php");
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 </head>
+<style>
+    /* Estilo para dias fora do range (apagados) */
+    .fc-day-disabled {
+        background-color: #f3f4f6 !important; /* Cinza claro */
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    /* Remove a opacidade dos eventos para que fiquem legíveis mesmo se caírem num dia de borda */
+    .fc-event {
+        opacity: 1 !important;
+    }
+</style>
 
 <body>
     <div class="dashboard-container">
@@ -260,10 +273,10 @@ require_once("../config/verifica_login.php");
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales/pt-br.global.js"></script>
 
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js'></script>
-    <script src="../assets/js/geral_script.js"></script>
-    <script src="../assets/js/calendario_script.js" defer></script>
-</body>
+<script src="../assets/js/geral_script.js"></script>
+<script src="../assets/js/calendario_script.js"></script>
+   </body>
 </html>
