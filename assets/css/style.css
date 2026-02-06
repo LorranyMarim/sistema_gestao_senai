@@ -1469,3 +1469,202 @@ select:disabled:hover {
     background-color: #fff;
     z-index: 10;
 }
+
+ #turmaModal .modal-content {
+            height: 800px !important;
+            /* Altura fixa maior para acomodar stepper + form */
+            max-height: 90vh !important;
+            /* Respeita viewport */
+            display: flex !important;
+            flex-direction: column !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            /* Remove scroll do container externo */
+            position: relative;
+        }
+        #turmaModal .modal-content, h2, h5{
+            font-size: 16px;
+        }
+
+        /* Header e Stepper fixos no topo */
+        #turmaModal .modal-header,
+        #turmaModal .stepper-wrapper {
+            flex-shrink: 0;
+            /* Não encolhem */
+            background: #fff;
+            /* Garante fundo branco */
+            z-index: 20;
+            /* Ficam acima do conteúdo rolável */
+        }
+
+        /* O formulário ocupa o espaço restante */
+        #turmaModal form {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            /* Ocupa todo espaço vertical restante */
+            overflow: hidden;
+            /* Impede scroll no form container */
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* O corpo do modal é quem rola */
+        #turmaModal .modal-body {
+            flex: 1;
+            /* Cresce para ocupar espaço */
+            overflow-y: auto !important;
+            /* Scroll vertical ativado */
+            overflow-x: hidden;
+            padding: 20px 25px !important;
+        }
+        
+
+        /* Footer fixo no final do form */
+        #turmaModal .modal-footer {
+            flex-shrink: 0;
+            /* Não encolhe */
+            background-color: #fff;
+            z-index: 10;
+            border-top: 1px solid #dee2e6;
+            /* Garante a borda visual */
+        }
+
+        /* Personalização da barra de rolagem (WebKit) para combinar com style.css */
+        #turmaModal .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #turmaModal .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #turmaModal .modal-body::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        #turmaModal .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        /* Estilos específicos do stepper e steps (mantidos do original) */
+        .stepper-wrapper {
+            display: flex;
+            justify-content: space-around;
+            margin: 0;
+            /* Ajustado margem */
+            padding: 20px 40px;
+            /* Ajustado padding */
+            border-bottom: 1px solid #eee;
+            /* Separação visual */
+        }
+
+        .step-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-item:not(:first-child)::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 50%;
+            width: 100%;
+            height: 3px;
+            background-color: var(--cor-borda, #dee2e6);
+            z-index: 1;
+        }
+
+        .step-item.active:not(:first-child)::before {
+            background-color: var(--cor-primaria, #0d6efd);
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: 3px solid var(--cor-borda, #dee2e6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: var(--cor-borda, #6c757d);
+            z-index: 2;
+        }
+
+        .step-item.active .step-circle {
+            background-color: var(--cor-primaria, #0d6efd);
+            color: white;
+            border-color: var(--cor-primaria, #0d6efd);
+        }
+
+        .form-step {
+            display: none;
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .form-step.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* UX: Disciplinas como Cards */
+        .ucs-row {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--cor-sidebar, #0d6efd);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .ucs-title {
+            color: var(--cor-sidebar, #0d6efd);
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .substituto-box {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border: 1px dashed #ffeeba;
+        }
+
+        .step-actions {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .summary-group {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .summary-label {
+            font-weight: bold;
+            color: #6c757d;
+            font-size: 0.85em;
+            display: block;
+        }
+
+        .summary-value {
+            font-size: 1em;
+            color: #212529;
+        }
