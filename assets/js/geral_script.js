@@ -959,13 +959,15 @@
     }
   };
 
-  App.filters = {
-    render: function (targetId, config, customElement, onChange, onClear) {
+ App.filters = {
+    render: function (targetId, config = {}, customElement = null, onChange = () => {}, onClear = () => {}) {
       const container = document.getElementById(targetId);
       if (!container) return;
+      
       container.innerHTML = '';
       container.className = 'filter-container';
 
+      // Helper para criar a estrutura HTML padrão (Label + Input)
       const createGroup = (lbl, input, idSuffix) => {
         const div = document.createElement('div');
         div.className = 'filter-group';
@@ -976,6 +978,7 @@
         label.id = `filter-label-${idSuffix}`;
         if(input.id) label.setAttribute('for', input.id);
 
+        // Adiciona classes padrão se não existirem
         if (!input.classList.contains('filter-input') && !input.classList.contains('ms')) {
           input.classList.add('filter-input');
           if (!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
@@ -988,8 +991,10 @@
         return div;
       };
 
+      // Helper para disparar o callback onChange
       const triggerChange = () => { if (typeof onChange === 'function') onChange(); };
 
+      // --- 1. BUSCA TEXTUAL ---
       if (config.search) {
         const inp = document.createElement('input');
         inp.type = 'text';
@@ -999,6 +1004,7 @@
         container.appendChild(createGroup('Buscar:', inp, 'search'));
       }
 
+      // --- 2. DATA DE CRIAÇÃO ---
       if (config.date) {
         const today = new Date().toISOString().split('T')[0];
 
@@ -1025,6 +1031,7 @@
         container.appendChild(createGroup('Criado até:', to, 'date-to'));
       }
 
+      // --- 3. CARGA HORÁRIA ---
       if (config.cargaHoraria) {
         const sel = document.createElement('select');
         sel.id = 'gen_carga_horaria';
@@ -1038,6 +1045,7 @@
         container.appendChild(createGroup('Carga Horária:', sel, 'carga-horaria'));
       }
 
+      // --- 4. CATEGORIA ---
       if (config.categoria) {
         const sel = document.createElement('select');
         sel.id = 'gen_categoria';
@@ -1051,6 +1059,7 @@
         container.appendChild(createGroup('Categoria:', sel, 'categoria'));
       }
 
+      // --- 5. TIPO DE CONTRATO ---
       if (config.tipoContrato) {
         const sel = document.createElement('select');
         sel.id = 'gen_tipo_contrato';
@@ -1064,8 +1073,7 @@
         container.appendChild(createGroup('Tipo de Contrato:', sel, 'tipo-contrato'));
       }
 
-      // --- NOVOS CAMPOS ADICIONADOS ---
-
+      // --- 6. MODALIDADE ---
       if (config.modalidade) {
         const sel = document.createElement('select');
         sel.id = 'gen_modalidade';
@@ -1079,6 +1087,7 @@
         container.appendChild(createGroup('Modalidade:', sel, 'modalidade'));
       }
 
+      // --- 7. TIPO DE CURSO ---
       if (config.tipoCurso) {
         const sel = document.createElement('select');
         sel.id = 'gen_tipo_curso';
@@ -1092,8 +1101,7 @@
         container.appendChild(createGroup('Tipo de Curso:', sel, 'tipo-curso'));
       }
 
-      // -------------------------------
-
+      //Helper para MultiSelect
       const createMultiselectHTML = (id, placeholder, options, defaultAll = false) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'ms';
@@ -1159,6 +1167,7 @@
         return wrapper;
       };
 
+      // --- 8. ÁREA (Multiselect) ---
       if (config.area) {
          const ms = createMultiselectHTML(
              'gen_area', 
@@ -1168,6 +1177,7 @@
          container.appendChild(createGroup('Área:', ms, 'area'));
       }
 
+      // --- 9. TURNO (Multiselect) ---
       if (config.turno) {
          const ms = createMultiselectHTML(
              'gen_turno', 
@@ -1178,6 +1188,7 @@
          container.appendChild(createGroup('Turno:', ms, 'turno'));
       }
 
+      // --- 10. COMPETÊNCIA (Multiselect) ---
       if (config.competencia) {
          const ms = createMultiselectHTML(
              'gen_competencia', 
@@ -1187,6 +1198,7 @@
          container.appendChild(createGroup('Por Competência:', ms, 'competencia'));
       }
 
+      // --- 11. STATUS ---
       if (config.status) {
         const sel = document.createElement('select');
         sel.id = 'gen_status';
@@ -1201,6 +1213,23 @@
         sel.addEventListener('change', triggerChange);
         container.appendChild(createGroup('Status:', sel, 'status'));
       }
+
+      // --- 12. SITUAÇÃO (Novo para Turmas) ---
+      if (config.situacao) {
+        const sel = document.createElement('select');
+        sel.id = 'gen_situacao';
+        sel.classList.add('form-select');
+        ['Todos', 'Não iniciada', 'Em andamento', 'Concluída', 'Cancelada'].forEach(optTxt => {
+            const opt = document.createElement('option');
+            opt.value = optTxt;
+            opt.textContent = optTxt;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', triggerChange);
+        container.appendChild(createGroup('Situação:', sel, 'situacao'));
+      }
+
+      // --- 13. TIPO DE UC ---
       if (config.tipoUc) {
         const sel = document.createElement('select');
         sel.id = 'gen_tipo_uc';
@@ -1218,6 +1247,8 @@
         sel.addEventListener('change', triggerChange);
         container.appendChild(createGroup('Tipo de UC:', sel, 'tipo-uc'));
       }
+
+      // --- 14. TIPO DE USUÁRIO ---
       if (config.tipoUsuario) {
         const sel = document.createElement('select');
         sel.id = 'gen_tipo_usuario';
@@ -1232,7 +1263,7 @@
         container.appendChild(createGroup('Tipo de Usuário:', sel, 'tipo-usuario'));
       }
       
-
+      // --- 15. ELEMENTO CUSTOMIZADO (Legado/Extra) ---
       if (customElement) {
         if (customElement instanceof Element && !customElement.classList.contains('filter-input')) {
           customElement.classList.add('filter-input');
@@ -1243,6 +1274,7 @@
         container.appendChild(div);
       }
 
+      // --- 16. ITENS POR PÁGINA (PAGESIZE) ---
       if (config.pageSize) {
         const sel = document.createElement('select');
         sel.id = 'gen_pagesize';
@@ -1259,6 +1291,7 @@
         container.appendChild(createGroup('Itens/página:', sel, 'pagesize'));
       }
 
+      // --- BOTÃO LIMPAR ---
       const btnDiv = document.createElement('div');
       btnDiv.className = 'filter-group';
       btnDiv.id = 'filter-group-actions';
@@ -1274,24 +1307,25 @@
         if (document.getElementById('gen_search')) document.getElementById('gen_search').value = '';
         if (document.getElementById('gen_created_from')) document.getElementById('gen_created_from').value = '';
         if (document.getElementById('gen_created_to')) document.getElementById('gen_created_to').value = '';
+        
+        // Reseta Selects
         if (document.getElementById('gen_status')) document.getElementById('gen_status').value = 'Todos';
+        if (document.getElementById('gen_situacao')) document.getElementById('gen_situacao').value = 'Todos'; // Reset Situação
         if (document.getElementById('gen_tipo_usuario')) document.getElementById('gen_tipo_usuario').value = 'Todos';
         if (document.getElementById('gen_tipo_uc')) document.getElementById('gen_tipo_uc').value = 'Todos';
         if (document.getElementById('gen_pagesize')) document.getElementById('gen_pagesize').value = 10;
-
         if (document.getElementById('gen_carga_horaria')) document.getElementById('gen_carga_horaria').value = 'Todos';
         if (document.getElementById('gen_categoria')) document.getElementById('gen_categoria').value = 'Todos';
         if (document.getElementById('gen_tipo_contrato')) document.getElementById('gen_tipo_contrato').value = 'Todos';
-
-        // --- LIMPEZA DOS NOVOS CAMPOS ---
         if (document.getElementById('gen_modalidade')) document.getElementById('gen_modalidade').value = 'Todos';
         if (document.getElementById('gen_tipo_curso')) document.getElementById('gen_tipo_curso').value = 'Todos';
-        // --------------------------------
 
+        // Reseta Multiselects
         document.querySelectorAll('.ms__clear').forEach(clearBtn => {
              clearBtn.click();
         });
 
+        // Reseta Custom
         if (customElement && (customElement.tagName === 'SELECT' || customElement.tagName === 'INPUT')) customElement.value = '';
 
         if (typeof onClear === 'function') onClear();
