@@ -106,11 +106,11 @@ require_once("../config/verifica_login.php");
 
             <form id="ucForm" autocomplete="off">
                 <input type="hidden" id="ucId">
-               <div class="form-group" style="display:none;">
-    <label for="instituicaoUc">Instituição:</label>
-    <select id="instituicaoUc" class="form-control" required>
-        </select>
-</div>
+                <div class="form-group" style="display:none;">
+                    <label for="instituicaoUc">Instituição:</label>
+                    <select id="instituicaoUc" class="form-control" required>
+                    </select>
+                </div>
 
                 <div id="alertUc" style="display:none"></div>
 
@@ -121,23 +121,23 @@ require_once("../config/verifica_login.php");
                 </div>
 
                 <div class="form-group">
-    <label for="tipoUc">Tipo de UC:</label>
-    <select id="tipoUc" class="form-control" required>
-        <option value="">Selecione</option>
-        <option value="EAD">EAD</option>
-        <option value="Teórica">Teórica</option>
-        <option value="Prática">Prática</option>
-        <option value="Teórica 70% - Prática 30%">Teórica 70% - Prática 30%</option>
-    </select>
-</div>
+                    <label for="tipoUc">Tipo de UC:</label>
+                    <select id="tipoUc" class="form-control" required>
+                        <option value="">Selecione</option>
+                        <option value="EAD">EAD</option>
+                        <option value="Teórica">Teórica</option>
+                        <option value="Prática">Prática</option>
+                        <option value="Teórica 70% - Prática 30%">Teórica 70% - Prática 30%</option>
+                    </select>
+                </div>
 
-<div class="form-group">
-    <label for="statusUc">Status:</label>
-    <select id="statusUc" class="form-control">
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-    </select>
-</div>
+                <div class="form-group">
+                    <label for="statusUc">Status:</label>
+                    <select id="statusUc" class="form-control">
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inativo">Inativo</option>
+                    </select>
+                </div>
 
                 <div class="modal-footer"
                     style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">

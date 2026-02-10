@@ -82,11 +82,8 @@ require_once("../config/verifica_login.php");
 
     <div id="turmaModal" class="modal modal-dialog-centered">
         <div class="modal-content">
-            
-            <div class="modal-header" style="padding: 15px 25px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background: #fff; z-index: 20;">
-                <h2 id="modalTitleTurma" style="margin: 0; font-size: 1.5rem;">Adicionar Nova Turma</h2>
-                <span class="close-button" id="closeModalBtn" style="cursor: pointer; font-size: 1.5rem;">&times;</span>
-            </div>
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <h2 id="modalTitleTurma">Adicionar Nova Unidade Curricular</h2>
 
             <div class="stepper-wrapper">
                 <div class="step-item active" data-step="1">
@@ -161,7 +158,6 @@ require_once("../config/verifica_login.php");
                                     <option value="Manhã">Manhã</option>
                                     <option value="Tarde">Tarde</option>
                                     <option value="Noite">Noite</option>
-                                    <option value="Integral">Integral</option>
                                 </select>
                             </div>
 
