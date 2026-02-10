@@ -27,11 +27,14 @@ require_once("../config/verifica_login.php");
                     <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-                    <li><a href="gestao_turmas.php" class="active"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                    <li><a href="gestao_turmas.php" class="active"><i class="fas fa-users"></i> Gestão de Turmas</a>
+                    </li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a></li>
+                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
+                    </li>
                     <li id="nav-relatorios" class="has-submenu">
                         <a href="#" class="submenu-toggle">
                             <span><i class="fas fa-file-alt"></i> Relatórios</span>
@@ -65,13 +68,14 @@ require_once("../config/verifica_login.php");
 
             <section class="cards-section-class">
                 <h2>Turmas Cadastradas</h2>
-                
+
                 <div id="filter_area" class="mb-3"></div>
 
                 <div id="turmasCardsContainer" class="cards-responsive-class">
-                    </div>
+                </div>
 
-                <div class="pagination-bar" style="display:flex; justify-content: space-between; align-items:center; gap:10px; margin-top:20px; width: 100%;">
+                <div class="pagination-bar"
+                    style="display:flex; justify-content: space-between; align-items:center; gap:10px; margin-top:20px; width: 100%;">
                     <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
                     <span id="pageInfo">Página 1 de 1 • 0 registros</span>
                     <button class="btn btn-secondary" id="nextPage" type="button">Próximo</button>
@@ -100,7 +104,8 @@ require_once("../config/verifica_login.php");
                 </div>
             </div>
 
-            <form id="turmaForm" autocomplete="off" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+            <form id="turmaForm" autocomplete="off"
+                style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
                 <input type="hidden" id="turmaId">
                 <input type="hidden" id="instituicaoId">
 
@@ -112,7 +117,8 @@ require_once("../config/verifica_login.php");
                         <div class="row">
                             <div class="form-group col-md-4">
                                 <label for="codTurma">Código da Turma <span class="text-danger">*</span></label>
-                                <input type="text" id="codTurma" class="form-control" required minlength="3" maxlength="50" placeholder="Ex: HT-DES-01">
+                                <input type="text" id="codTurma" class="form-control" required minlength="3"
+                                    maxlength="50" placeholder="Ex: HT-DES-01">
                             </div>
 
                             <div class="form-group col-md-8">
@@ -123,7 +129,8 @@ require_once("../config/verifica_login.php");
                             </div>
 
                             <div class="form-group col-md-12 mt-2">
-                                <label for="calendarioAcademico">Calendário Acadêmico <span class="text-danger">*</span></label>
+                                <label for="calendarioAcademico">Calendário Acadêmico <span
+                                        class="text-danger">*</span></label>
                                 <select id="calendarioAcademico" class="form-control" required>
                                     <option value="">Selecione...</option>
                                 </select>
@@ -131,7 +138,8 @@ require_once("../config/verifica_login.php");
 
                             <div class="form-group col-md-3 mt-2">
                                 <label class="small text-muted">Modalidade</label>
-                                <input type="text" id="carregaModalidade" readonly disabled class="form-control bg-light">
+                                <input type="text" id="carregaModalidade" readonly disabled
+                                    class="form-control bg-light">
                             </div>
                             <div class="form-group col-md-3 mt-2">
                                 <label class="small text-muted">Área Tec.</label>
@@ -139,11 +147,13 @@ require_once("../config/verifica_login.php");
                             </div>
                             <div class="form-group col-md-3 mt-2">
                                 <label class="small text-muted">Tipo</label>
-                                <input type="text" id="carregaTipoCurso" readonly disabled class="form-control bg-light">
+                                <input type="text" id="carregaTipoCurso" readonly disabled
+                                    class="form-control bg-light">
                             </div>
                             <div class="form-group col-md-3 mt-2">
                                 <label class="small text-muted">Carga Horária</label>
-                                <input type="text" id="carregaCargaHora" readonly disabled class="form-control bg-light">
+                                <input type="text" id="carregaCargaHora" readonly disabled
+                                    class="form-control bg-light">
                             </div>
                         </div>
                     </div>
@@ -162,7 +172,8 @@ require_once("../config/verifica_login.php");
                             </div>
 
                             <div class="form-group col-md-8">
-                                <label for="empresaVinculada">Empresa Parceira <span class="text-danger">*</span></label>
+                                <label for="empresaVinculada">Empresa Parceira <span
+                                        class="text-danger">*</span></label>
                                 <select id="empresaVinculada" class="form-control" required>
                                     <option value="">Selecione...</option>
                                 </select>
@@ -211,25 +222,39 @@ require_once("../config/verifica_login.php");
 
                     <div class="form-step" id="step-3">
                         <h5 class="mb-3 border-bottom pb-2"><b>Grade de UCs e Docência</b></h5>
-                        
-                        <div class="alert alert-warning mt-4">
-                            <h5 class="alert-heading" style="font-size: 1rem;"><i class="fas fa-exclamation-triangle"></i> Atenção</h5>
-                            <p class="mb-0 small">
-                                As datas de cada UC devem estar contidas dentro do período da turma (<span id="spanPeriodoTurma" class="fw-bold">...</span>).
+
+                        <div id="alertUcs" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mt-4"
+                            role="alert">
+                            <h5 class="font-bold flex items-center gap-2" style="font-size: 1rem;">
+                                <i class="fas fa-exclamation-triangle"></i> Atenção aos Dias Letivos
+                            </h5>
+                            <p class="text-sm mt-1">
+                                Confira o total de dias letivos que cada unidade curricular possui (informado abaixo do
+                                título da UC).
+                            </p>
+                            <hr class="border-yellow-200 my-2">
+                            <p class="text-sm mb-0">
+                                Com base nesta quantidade,
+                                <a href="gestao_calendarios.php" target="_blank"
+                                    class="font-bold underline hover:text-yellow-900">
+                                    abra a gestão de calendários
+                                </a>, visualize o calendário escolhido para esta turma e verifique os dias letivos para
+                                garantir que não haja erros de cronograma.
                             </p>
                         </div>
 
                         <div id="listaUcsContainer">
-                            <p class="text-center text-muted py-4">Selecione um curso no Passo 1 para carregar a grade.</p>
+                            <p class="text-center text-muted py-4">Selecione um curso no Passo 1 para carregar a grade.
+                            </p>
                         </div>
                     </div>
 
                     <div class="form-step" id="step-4">
                         <h4 class="mb-3 text-success"><i class="fas fa-check-circle"></i> Confirmação</h4>
                         <p class="text-muted">Verifique os dados abaixo antes de salvar.</p>
-                        
+
                         <div id="resumoContainer" class="row">
-                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -255,4 +280,5 @@ require_once("../config/verifica_login.php");
     <script src="../assets/js/geral_script.js"></script>
     <script src="../assets/js/turmas_script.js" defer></script>
 </body>
+
 </html>

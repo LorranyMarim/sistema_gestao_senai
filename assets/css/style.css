@@ -2004,3 +2004,11 @@ h5 {
     font-size: 1em;
     color: #212529;
 }
+
+#alertUcs{
+    padding-bottom: 8px;
+}
+/*bg-yellow-50 .border .border-yellow-200 {
+    padding-bottom: 8px;
+}*/
+
