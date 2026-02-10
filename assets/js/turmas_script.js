@@ -536,34 +536,33 @@
     // --- LÓGICA DE NEGÓCIO: STEP 3 (GRADE UCS) ---
 
     function renderGradeUcs(curso, ucsExistentes = []) {
-        refs.listaUcsContainer.innerHTML = '';
+    refs.listaUcsContainer.innerHTML = '';
 
-        // O objeto curso.unidade_curricular é um Dict { "id_uc": { ...dados... }, ... }
-        // Precisamos iterar sobre ele.
-        if (!curso.unidade_curricular || Object.keys(curso.unidade_curricular).length === 0) {
-            refs.listaUcsContainer.innerHTML = '<div class="alert alert-warning">Este curso não possui UCs cadastradas na parametrização.</div>';
-            return;
-        }
+    // O objeto curso.unidade_curricular é um Dict { "id_uc": { ...dados... }, ... }
+    if (!curso.unidade_curricular || Object.keys(curso.unidade_curricular).length === 0) {
+        refs.listaUcsContainer.innerHTML = '<div class="alert alert-warning">Este curso não possui UCs cadastradas na parametrização.</div>';
+        return;
+    }
 
-        // Cria as opções de instrutores para usar nos selects
-        const optionsInstrutores = ['<option value="">Selecione...</option>']
-            .concat(STATE.aux.instrutores.map(i => `<option value="${i._id}">${i.nome_completo}</option>`))
-            .join('');
+    // Cria as opções de instrutores para usar nos selects
+    const optionsInstrutores = ['<option value="">Selecione...</option>']
+        .concat(STATE.aux.instrutores.map(i => `<option value="${i._id}">${i.nome_completo}</option>`))
+        .join('');
 
-        // Itera sobre as UCs do curso
-        Object.entries(curso.unidade_curricular).forEach(([ucId, dadosUc], index) => {
-            // Tenta achar dados preexistentes (modo edição)
-            const saved = ucsExistentes.find(u => u.uc_id === ucId);
+    // Itera sobre as UCs do curso
+    Object.entries(curso.unidade_curricular).forEach(([ucId, dadosUc], index) => {
+        // Tenta achar dados preexistentes (modo edição)
+        const saved = ucsExistentes.find(u => u.uc_id === ucId);
 
-            const div = document.createElement('div');
-            div.className = 'ucs-row';
-            div.dataset.ucId = ucId; // Guarda ID original da UC
+        const div = document.createElement('div');
+        div.className = 'ucs-row';
+        div.dataset.ucId = ucId; // Guarda ID original da UC
 
-            // Calcula carga horária total da UC
-            const ch = (parseFloat(dadosUc.carga_presencial) || 0) + (parseFloat(dadosUc.carga_ead) || 0);
+        // Calcula carga horária total da UC
+        const ch = (parseFloat(dadosUc.carga_presencial) || 0) + (parseFloat(dadosUc.carga_ead) || 0);
 
-            // HTML da Linha
-           div.innerHTML = `
+        // HTML da Linha da UC
+        div.innerHTML = `
             <div class="ucs-title text-blue-600 font-bold mb-2 text-lg">${dadosUc.nome_uc || 'UC Sem Nome'}</div>
             <div class="text-xs text-gray-500 mb-3">
                 CH Estimada: <span class="font-bold text-gray-700">${ch}h</span> 
@@ -613,43 +612,37 @@
                  </div>
             </div>
         `;
-
-            // Seleciona instrutor salvo
-            if (saved) {
-                div.querySelector('.inp-uc-instrutor').value = saved.instrutor_id || '';
-                if (saved.possui_substituto) {
-                    div.querySelector('.substituto-box').classList.remove('hidden');
-                    div.querySelector('.inp-sub-inst').value = saved.substituto_id || '';
-                }
+        
+        // Seleciona instrutor salvo
+        if(saved) {
+            div.querySelector('.inp-uc-instrutor').value = saved.instrutor_id || '';
+            if(saved.possui_substituto) {
+                div.querySelector('.inp-sub-inst').value = saved.substituto_id || '';
             }
+        }
 
-            // Evento Checkbox Substituto
-            const chk = div.querySelector('.check-subs');
-            const box = div.querySelector('.substituto-box');
-            const toggleSubstituto = () => {
-                if (chk.checked) {
-                    box.classList.remove('hidden', 'd-none'); // Remove classes de ocultação
-                } else {
-                    box.classList.add('hidden'); // Adiciona classe do Tailwind (padrão do projeto)
+        // LÓGICA DO CHECKBOX
+        const chk = div.querySelector('.check-subs');
+        const box = div.querySelector('.substituto-box');
 
-                    // Opcional: Limpar campos ao esconder para evitar envio de dados sujos
-                    box.querySelectorAll('input, select').forEach(input => input.value = '');
-                }
-            };
-
-            // Adiciona o listener
-            chk.addEventListener('change', toggleSubstituto);
-
-            // Garante o estado inicial correto (caso seja edição e já venha marcado)
-            if (saved && saved.possui_substituto) {
-                // Força a execução da lógica visual
-                toggleSubstituto();
+        const toggleSubs = () => {
+            if(chk.checked) {
+                box.style.display = 'block'; 
+            } else {
+                box.style.display = 'none';
+                // Limpa campos ao esconder
+                box.querySelectorAll('input, select').forEach(el => el.value = '');
             }
+        };
 
-            refs.listaUcsContainer.appendChild(div);
-        });
-    }
+        chk.addEventListener('change', toggleSubs);
+        
+        // Executa na inicialização
+        toggleSubs();
 
+        refs.listaUcsContainer.appendChild(div);
+    });
+  }
     // --- STEP 4: RESUMO ---
     function renderResumo() {
         const getText = (el) => el.options[el.selectedIndex]?.text || '-';

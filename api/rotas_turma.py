@@ -306,6 +306,87 @@ def deletar_turma(id: str, ctx: RequestCtx = Depends(get_ctx)):
 def bootstrap_gestao_turmas(ctx: RequestCtx = Depends(get_ctx)):
     """
     Carrega todos os dados auxiliares necessários para popular os selects do Modal de Turmas.
+    Agora popula também os nomes das UCs dentro dos cursos.
+    """
+    db = get_mongo_db()
+    inst_oid = ctx.inst_oid
+    
+    # 1. Cursos Ativos
+    cursos = list(db["curso"].find(
+        {"instituicao_id": inst_oid, "status": "Ativo"},
+        {"nome_curso": 1, "modalidade_curso": 1, "tipo_curso": 1, "area_tecnologica": 1, "carga_total_curso": 1, "unidade_curricular": 1}
+    ).sort("nome_curso", 1))
+    
+    # --- LÓGICA DE POPULAÇÃO DE NOMES DE UCS (Igual ao rotas_curso.py) ---
+    ucs_ids_to_fetch = set()
+
+    # Coleta todos os IDs de UCs presentes nos cursos listados
+    for c in cursos:
+        c["_id"] = str(c["_id"]) # Serializa ID do curso
+        if "unidade_curricular" in c and isinstance(c["unidade_curricular"], dict):
+            ucs_ids_to_fetch.update(c["unidade_curricular"].keys())
+    
+    # Busca os nomes no banco se houver IDs para buscar
+    ucs_map = {}
+    if ucs_ids_to_fetch:
+        ids_validos = [ObjectId(uid) for uid in ucs_ids_to_fetch if ObjectId.is_valid(uid)]
+        
+        ucs_found = db["unidade_curricular"].find(
+            {"_id": {"$in": ids_validos}},
+            {"descricao": 1} # Traz apenas o nome/descrição
+        )
+        
+        # Cria mapa: ID -> Nome
+        for u in ucs_found:
+            ucs_map[str(u["_id"])] = u.get("descricao", "Sem descrição")
+
+    # Injeta o nome 'nome_uc' dentro da estrutura do curso
+    for c in cursos:
+        if "unidade_curricular" in c and isinstance(c["unidade_curricular"], dict):
+            for uc_id, uc_data in c["unidade_curricular"].items():
+                uc_data["nome_uc"] = ucs_map.get(uc_id, "UC Não Encontrada")
+    # ---------------------------------------------------------------------
+
+    # 2. Calendários Ativos
+    calendarios = list(db["calendario"].find(
+        {"instituicao_id": inst_oid, "status": "Ativo"},
+        {"titulo": 1, "inicio_calendario": 1, "final_calendario": 1}
+    ).sort("titulo", -1))
+    
+    for cal in calendarios:
+        cal["_id"] = str(cal["_id"])
+        if isinstance(cal.get("inicio_calendario"), datetime):
+            cal["inicio_calendario"] = cal["inicio_calendario"].isoformat()
+        if isinstance(cal.get("final_calendario"), datetime):
+            cal["final_calendario"] = cal["final_calendario"].isoformat()
+
+    # 3. Empresas Parceiras
+    empresas = list(db["empresa"].find(
+        {"instituicao_id": inst_oid, "status": "Ativo"},
+        {"nome_fantasia": 1, "razao_social": 1}
+    ).sort("nome_fantasia", 1))
+    
+    for emp in empresas:
+        emp["_id"] = str(emp["_id"])
+        
+    # 4. Instrutores Ativos
+    instrutores = list(db["instrutor"].find(
+        {"instituicao_id": inst_oid, "status": "Ativo"},
+        {"nome": 1, "sobrenome": 1} 
+    ).sort("nome", 1))
+    
+    for instr in instrutores:
+        instr["_id"] = str(instr["_id"])
+        instr["nome_completo"] = f"{instr.get('nome', '')} {instr.get('sobrenome', '')}".strip()
+
+    return {
+        "cursos": cursos,
+        "calendarios": calendarios,
+        "empresas": empresas,
+        "instrutores": instrutores
+    }
+    """
+    Carrega todos os dados auxiliares necessários para popular os selects do Modal de Turmas.
     Evita múltiplas chamadas de rede ao abrir o formulário.
     """
     db = get_mongo_db()

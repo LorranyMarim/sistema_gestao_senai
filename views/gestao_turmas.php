@@ -223,7 +223,8 @@ require_once("../config/verifica_login.php");
                     <div class="form-step" id="step-3">
                         <h5 class="mb-3 border-bottom pb-2"><b>Grade de UCs e Docência</b></h5>
 
-                        <div id="alertUcs" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mt-4"
+                        <div id="alertUcs"
+                            class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mt-4"
                             role="alert">
                             <h5 class="font-bold flex items-center gap-2" style="font-size: 1rem;">
                                 <i class="fas fa-exclamation-triangle"></i> Atenção aos Dias Letivos
@@ -243,7 +244,7 @@ require_once("../config/verifica_login.php");
                             </p>
                         </div>
 
-                        <div id="listaUcsContainer">
+                        <div id="listaUcsContainer" class="mt-4">
                             <p class="text-center text-muted py-4">Selecione um curso no Passo 1 para carregar a grade.
                             </p>
                         </div>
