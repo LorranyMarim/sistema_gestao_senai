@@ -844,7 +844,7 @@
   App.dom = { $, $$, runNowOrOnReady };
   App.utils = {
     debounce, norm, toId,
-    toIsoStartOfDayLocal, toIsoEndOfDayLocal,
+    fmtBR, fmtDateBR, fmtDateTimeBR,
     dateMax, dateMin, dateClamp,
     sanitizeSpaces
   };

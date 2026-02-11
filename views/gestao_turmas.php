@@ -265,10 +265,10 @@ require_once("../config/verifica_login.php");
                             <i class="fas fa-arrow-left"></i> Anterior
                         </button>
                         <div>
-                            <button type="button" class="btn btn-primary" id="btnNext">
+                            <button type="button" class="btn btn-secondary" id="btnNext">
                                 Próximo <i class="fas fa-arrow-right"></i>
                             </button>
-                            <button type="submit" class="btn btn-success" id="btnSubmit" style="display: none;">
+                            <button type="submit" class="btn btn-primary" id="btnSubmit" style="display: none;">
                                 <i class="fas fa-save"></i> Finalizar Cadastro
                             </button>
                         </div>

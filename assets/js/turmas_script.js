@@ -2,11 +2,16 @@
     'use strict';
 
     if (!window.App) throw new Error('Carregue geral_script.js antes de turmas_script.js.');
-
     const { $, $$ } = App.dom;
     const { safeFetch } = App.net;
     const { paginateData, bindControls, updateUI } = App.pagination;
-    const { fmtDateBR, toIsoDate, toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.format;
+
+    // 1. Mantenha fmtDateBR vindo de App.format
+    const { fmtDateBR } = App.format;
+
+    // 2. ADICIONE/MANTENHA esta linha importando de App.utils
+    const { toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.utils;
+
 
     const LS_KEY = 'turmas_gestao_state_v1';
 
@@ -536,33 +541,33 @@
     // --- LÓGICA DE NEGÓCIO: STEP 3 (GRADE UCS) ---
 
     function renderGradeUcs(curso, ucsExistentes = []) {
-    refs.listaUcsContainer.innerHTML = '';
+        refs.listaUcsContainer.innerHTML = '';
 
-    // O objeto curso.unidade_curricular é um Dict { "id_uc": { ...dados... }, ... }
-    if (!curso.unidade_curricular || Object.keys(curso.unidade_curricular).length === 0) {
-        refs.listaUcsContainer.innerHTML = '<div class="alert alert-warning">Este curso não possui UCs cadastradas na parametrização.</div>';
-        return;
-    }
+        // O objeto curso.unidade_curricular é um Dict { "id_uc": { ...dados... }, ... }
+        if (!curso.unidade_curricular || Object.keys(curso.unidade_curricular).length === 0) {
+            refs.listaUcsContainer.innerHTML = '<div class="alert alert-warning">Este curso não possui UCs cadastradas na parametrização.</div>';
+            return;
+        }
 
-    // Cria as opções de instrutores para usar nos selects
-    const optionsInstrutores = ['<option value="">Selecione...</option>']
-        .concat(STATE.aux.instrutores.map(i => `<option value="${i._id}">${i.nome_completo}</option>`))
-        .join('');
+        // Cria as opções de instrutores para usar nos selects
+        const optionsInstrutores = ['<option value="">Selecione...</option>']
+            .concat(STATE.aux.instrutores.map(i => `<option value="${i._id}">${i.nome_completo}</option>`))
+            .join('');
 
-    // Itera sobre as UCs do curso
-    Object.entries(curso.unidade_curricular).forEach(([ucId, dadosUc], index) => {
-        // Tenta achar dados preexistentes (modo edição)
-        const saved = ucsExistentes.find(u => u.uc_id === ucId);
+        // Itera sobre as UCs do curso
+        Object.entries(curso.unidade_curricular).forEach(([ucId, dadosUc], index) => {
+            // Tenta achar dados preexistentes (modo edição)
+            const saved = ucsExistentes.find(u => u.uc_id === ucId);
 
-        const div = document.createElement('div');
-        div.className = 'ucs-row';
-        div.dataset.ucId = ucId; // Guarda ID original da UC
+            const div = document.createElement('div');
+            div.className = 'ucs-row';
+            div.dataset.ucId = ucId; // Guarda ID original da UC
 
-        // Calcula carga horária total da UC
-        const ch = (parseFloat(dadosUc.carga_presencial) || 0) + (parseFloat(dadosUc.carga_ead) || 0);
+            // Calcula carga horária total da UC
+            const ch = (parseFloat(dadosUc.carga_presencial) || 0) + (parseFloat(dadosUc.carga_ead) || 0);
 
-        // HTML da Linha da UC
-        div.innerHTML = `
+            // HTML da Linha da UC
+            div.innerHTML = `
             <div class="ucs-title text-blue-600 font-bold mb-2 text-lg">${dadosUc.nome_uc || 'UC Sem Nome'}</div>
             <div class="text-xs text-gray-500 mb-3">
                 CH Estimada: <span class="font-bold text-gray-700">${ch}h</span> 
@@ -612,37 +617,37 @@
                  </div>
             </div>
         `;
-        
-        // Seleciona instrutor salvo
-        if(saved) {
-            div.querySelector('.inp-uc-instrutor').value = saved.instrutor_id || '';
-            if(saved.possui_substituto) {
-                div.querySelector('.inp-sub-inst').value = saved.substituto_id || '';
+
+            // Seleciona instrutor salvo
+            if (saved) {
+                div.querySelector('.inp-uc-instrutor').value = saved.instrutor_id || '';
+                if (saved.possui_substituto) {
+                    div.querySelector('.inp-sub-inst').value = saved.substituto_id || '';
+                }
             }
-        }
 
-        // LÓGICA DO CHECKBOX
-        const chk = div.querySelector('.check-subs');
-        const box = div.querySelector('.substituto-box');
+            // LÓGICA DO CHECKBOX
+            const chk = div.querySelector('.check-subs');
+            const box = div.querySelector('.substituto-box');
 
-        const toggleSubs = () => {
-            if(chk.checked) {
-                box.style.display = 'block'; 
-            } else {
-                box.style.display = 'none';
-                // Limpa campos ao esconder
-                box.querySelectorAll('input, select').forEach(el => el.value = '');
-            }
-        };
+            const toggleSubs = () => {
+                if (chk.checked) {
+                    box.style.display = 'block';
+                } else {
+                    box.style.display = 'none';
+                    // Limpa campos ao esconder
+                    box.querySelectorAll('input, select').forEach(el => el.value = '');
+                }
+            };
 
-        chk.addEventListener('change', toggleSubs);
-        
-        // Executa na inicialização
-        toggleSubs();
+            chk.addEventListener('change', toggleSubs);
 
-        refs.listaUcsContainer.appendChild(div);
-    });
-  }
+            // Executa na inicialização
+            toggleSubs();
+
+            refs.listaUcsContainer.appendChild(div);
+        });
+    }
     // --- STEP 4: RESUMO ---
     function renderResumo() {
         const getText = (el) => el.options[el.selectedIndex]?.text || '-';
