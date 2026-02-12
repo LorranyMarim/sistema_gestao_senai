@@ -42,11 +42,11 @@ require_once("../config/verifica_login.php");
 
                     <li id="nav-relatorios" class="has-submenu">
                         <a href="#" class="submenu-toggle">
-                            <span><i class="fas fa-file-alt"></i> Relatórios</span>
+                            <span><i class="fas fa-file-alt"></i> Relatórios e Consultas</span>
                             <i class="fas fa-chevron-right caret"></i>
                         </a>
                         <ul class="submenu" id="submenu-relatorios">
-                            <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
+                            <li><a href="ocupacao_instrutores.php">Ocupação de Intrutores</a></li>
                         </ul>
                     </li>
                     

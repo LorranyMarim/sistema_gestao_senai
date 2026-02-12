@@ -24,40 +24,40 @@ require_once("../config/verifica_login.php");
         <h3>Menu Principal</h3>
       </div>
       <nav class="sidebar-nav">
-        <ul>
-          <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-          <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
-          <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
-          <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-          <li><a href="gestao_instrutores.php" class="active"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-              Instrutores</a></li>
-          <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-          <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
-              Gestão de UCs</a></li>
-          <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
-          </li>
+                <ul>
+                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
+                    <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
+                    <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher" class="active"></i> Gestão de
+                            Instrutores</a></li>
+                    <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
+                    <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
+                            Gestão de UCs</a></li>
+                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
+                    </li>
 
-          <li id="nav-relatorios" class="has-submenu">
-            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
-              <span><i class="fas fa-file-alt"></i> Relatórios</span>
-              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-            </a>
-            <ul class="submenu" id="submenu-relatorios">
-              <li><a href="relatorio_disponibilidade_instrutor.php">Disponibilidade de Instrutor</a></li>
-            </ul>
-          </li>
-          <li id="nav-config" class="has-submenu">
-            <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
-              <span><i class="fas fa-tools"></i> Configuração</span>
-              <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
-            </a>
-            <ul class="submenu" id="submenu-config">
-              <li><a href="configuracao_usuarios.php"> Usuários</a></li>
-            </ul>
-          </li>
-          <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-        </ul>
-      </nav>
+                    <li id="nav-relatorios" class="has-submenu">
+                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+                            <span><i class="fas fa-file-alt"></i> Relatórios e Consultas</span>
+                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                        </a>
+                        <ul class="submenu" id="submenu-relatorios">
+                            <li><a href="ocupacao_instrutores.php"> Ocupação de Intrutores</a></li>
+                        </ul>
+                    </li>
+                    <li id="nav-config" class="has-submenu">
+                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
+                            <span><i class="fas fa-tools"></i> Configuração</span>
+                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                        </a>
+                        <ul class="submenu" id="submenu-config">
+                            <li><a href="configuracao_usuarios.php"> Usuários</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
     </aside>
 
     <main class="main-content">

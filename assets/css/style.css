@@ -2011,4 +2011,298 @@ h5 {
 /*bg-yellow-50 .border .border-yellow-200 {
     padding-bottom: 8px;
 }*/
+#step-4 h4{
+    font-size: 20px;
+    color: #155724;
+}
 
+
+
+/* Variáveis derivadas do style.css para consistência */
+        :root {
+            --timeline-cell-width: 140px;
+            --timeline-header-height: 50px;
+            --timeline-row-height: 80px;
+        }
+
+        /* Container da Timeline */
+        .timeline-wrapper {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Controles de Navegação (Topo) */
+        .timeline-toolbar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--cor-borda);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8f9fa;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .timeline-nav-btn {
+            background: white;
+            border: 1px solid var(--cor-borda);
+            color: var(--cor-texto-principal);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timeline-nav-btn:hover {
+            background: var(--cor-fundo);
+            border-color: var(--cor-sidebar);
+        }
+
+        /* Abas de Turno */
+        .shift-tabs {
+            display: flex;
+            gap: 5px;
+            background: #e9ecef;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .shift-tab {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 5px;
+            color: #6c757d;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .shift-tab.active {
+            background: white;
+            color: var(--cor-sidebar);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Grid Principal */
+        .timeline-grid-container {
+            display: flex;
+            position: relative;
+            overflow-x: auto; /* Permite rolagem horizontal nos dias */
+            border-bottom: 1px solid var(--cor-borda);
+        }
+
+        /* Coluna Fixa de Instrutores (Left Sticky) */
+        .instructor-column {
+            min-width: 250px;
+            width: 250px;
+            flex-shrink: 0;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: white;
+            border-right: 2px solid #e0e0e0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        .instructor-header {
+            height: var(--timeline-header-height);
+            background: var(--cor-sidebar);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding-left: 20px;
+            font-weight: bold;
+        }
+
+        .instructor-card {
+            height: var(--timeline-row-height);
+            border-bottom: 1px solid var(--cor-borda);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            transition: background 0.2s;
+        }
+        
+        .instructor-card:hover {
+            background-color: #f0f7ff;
+        }
+
+        .instructor-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e6ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cor-sidebar);
+            font-weight: bold;
+        }
+
+        .instructor-info h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .instructor-info span {
+            font-size: 0.8rem;
+            color: var(--cor-cinza-texto);
+        }
+
+        /* Área de Datas e Eventos */
+        .days-column {
+            display: flex;
+            flex-grow: 1;
+        }
+
+        .day-header-row {
+            display: flex;
+            height: var(--timeline-header-height);
+            background: #f8f9fa;
+        }
+
+        .day-header {
+            min-width: var(--timeline-cell-width);
+            width: var(--timeline-cell-width);
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .day-header.today {
+            background-color: #e2f0ff; /* Azul claro para o dia atual */
+            color: var(--cor-primaria);
+            border-bottom: 3px solid var(--cor-primaria);
+        }
+
+        .schedule-row {
+            display: flex;
+            height: var(--timeline-row-height);
+            border-bottom: 1px solid var(--cor-borda);
+        }
+
+        .schedule-cell {
+            min-width: var(--timeline-cell-width);
+            width: var(--timeline-cell-width);
+            border-right: 1px solid #f0f0f0;
+            padding: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Barras de Eventos */
+        .event-bar {
+            width: 100%;
+            height: 70%;
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 0.8rem;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .event-bar:hover {
+            transform: scale(1.02);
+            z-index: 5;
+        }
+
+        /* Estados */
+        .event-occupied {
+            background-color: var(--cor-primaria); /* Azul base */
+            border-left: 4px solid var(--cor-sidebar);
+        }
+
+        .event-start {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            margin-right: -10px; /* Hack visual para conectar dias */
+            z-index: 2;
+            padding-right: 15px;
+        }
+
+        .event-end {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            margin-left: -10px;
+            z-index: 1;
+            padding-left: 15px;
+        }
+
+        .event-middle {
+            border-radius: 0;
+            margin-left: -10px;
+            margin-right: -10px;
+            z-index: 1;
+        }
+
+        .event-free {
+            width: 100%;
+            height: 2px;
+            background-color: #e0e0e0;
+            position: relative;
+        }
+        
+        .event-free::after {
+            content: 'Livre';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #bbb;
+            background: white;
+            padding: 0 5px;
+        }
+
+        /* Tooltip simples */
+        .event-bar .tooltip-text {
+            font-weight: bold;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .event-bar .tooltip-sub {
+            font-size: 0.7rem;
+            opacity: 0.9;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .timeline-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .shift-tabs {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .instructor-column {
+                min-width: 180px;
+                width: 180px;
+            }
+        }

@@ -537,7 +537,7 @@
     const current = location.pathname.split('/').pop() || '';
     const isRelatoriosSection = [
       'gestao_relatorios.php',
-      'relatorio_disponibilidade_instrutor.php'
+      'ocupacao_instrutores.php'
     ].includes(current);
 
     if (isRelatoriosSection) {
@@ -545,8 +545,8 @@
       toggle.setAttribute('aria-expanded', 'true');
       submenu.setAttribute('aria-hidden', 'false');
 
-      if (current === 'relatorio_disponibilidade_instrutor.php') {
-        const link = relatoriosLi.querySelector('.submenu a[href$="relatorio_disponibilidade_instrutor.php"]');
+      if (current === 'ocupacao_instrutores.php') {
+        const link = relatoriosLi.querySelector('.submenu a[href$="ocupacao_instrutores.php"]');
         link && link.classList.add('active');
       }
     }
