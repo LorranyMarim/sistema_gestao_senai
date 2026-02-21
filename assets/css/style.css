@@ -2023,6 +2023,7 @@ h5 {
             --timeline-cell-width: 140px;
             --timeline-header-height: 50px;
             --timeline-row-height: 80px;
+            --instructor-col-width: 350px;
         }
 
         /* Container da Timeline */
@@ -2063,7 +2064,7 @@ h5 {
         }
 
         /* Abas de Turno */
-        .shift-tabs {
+       .shift-tabs {
             display: flex;
             gap: 5px;
             background: #e9ecef;
@@ -2092,14 +2093,14 @@ h5 {
         .timeline-grid-container {
             display: flex;
             position: relative;
-            overflow-x: auto; /* Permite rolagem horizontal nos dias */
+            overflow-x: auto;
             border-bottom: 1px solid var(--cor-borda);
         }
 
         /* Coluna Fixa de Instrutores (Left Sticky) */
         .instructor-column {
-            min-width: 250px;
-            width: 250px;
+            min-width: var(--instructor-col-width);
+            width: var(--instructor-col-width);
             flex-shrink: 0;
             position: sticky;
             left: 0;
@@ -2122,21 +2123,22 @@ h5 {
         .instructor-card {
             height: var(--timeline-row-height);
             border-bottom: 1px solid var(--cor-borda);
-            padding: 10px 15px;
+            padding: 10px 20px; /* Padding ajustado */
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px; /* Distância fixa entre avatar e texto */
             background: white;
             transition: background 0.2s;
         }
         
-        .instructor-card:hover {
+       .instructor-card:hover {
             background-color: #f0f7ff;
         }
 
         .instructor-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;  /* Largura Fixa */
+            height: 45px; /* Altura Fixa */
+            flex-shrink: 0; /* IMPEDE DEFORMAÇÃO */
             border-radius: 50%;
             background: #e2e6ea;
             display: flex;
@@ -2144,21 +2146,29 @@ h5 {
             justify-content: center;
             color: var(--cor-sidebar);
             font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .instructor-info {
+            overflow: hidden; /* Garante que texto longo não quebre o layout */
         }
 
         .instructor-info h4 {
             margin: 0;
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .instructor-info span {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--cor-cinza-texto);
+            display: block;
         }
 
         /* Área de Datas e Eventos */
-        .days-column {
+       .days-column {
             display: flex;
             flex-grow: 1;
         }
@@ -2168,8 +2178,7 @@ h5 {
             height: var(--timeline-header-height);
             background: #f8f9fa;
         }
-
-        .day-header {
+       .day-header {
             min-width: var(--timeline-cell-width);
             width: var(--timeline-cell-width);
             border-right: 1px solid #e0e0e0;
@@ -2183,13 +2192,18 @@ h5 {
             font-weight: 600;
         }
 
-        .day-header.today {
-            background-color: #e2f0ff; /* Azul claro para o dia atual */
+       .day-header.today {
+            background-color: #e2f0ff;
             color: var(--cor-primaria);
             border-bottom: 3px solid var(--cor-primaria);
         }
+        .day-header.disabled-day {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            pointer-events: none;
+        }
 
-        .schedule-row {
+       .schedule-row {
             display: flex;
             height: var(--timeline-row-height);
             border-bottom: 1px solid var(--cor-borda);
@@ -2205,9 +2219,14 @@ h5 {
             align-items: center;
             justify-content: center;
         }
+        .schedule-cell.disabled-cell {
+            background-color: #f3f4f6;
+            background-image: repeating-linear-gradient(45deg, #e5e7eb 0, #e5e7eb 1px, transparent 0, transparent 50%);
+            background-size: 10px 10px;
+        }
 
         /* Barras de Eventos */
-        .event-bar {
+       .event-bar {
             width: 100%;
             height: 70%;
             border-radius: 6px;
@@ -2224,14 +2243,14 @@ h5 {
             transition: transform 0.2s;
         }
 
-        .event-bar:hover {
+       .event-bar:hover {
             transform: scale(1.02);
             z-index: 5;
         }
 
         /* Estados */
         .event-occupied {
-            background-color: var(--cor-primaria); /* Azul base */
+            background-color: var(--cor-primaria);
             border-left: 4px solid var(--cor-sidebar);
         }
 
@@ -2258,7 +2277,7 @@ h5 {
             z-index: 1;
         }
 
-        .event-free {
+       .event-free {
             width: 100%;
             height: 2px;
             background-color: #e0e0e0;
@@ -2277,7 +2296,6 @@ h5 {
             padding: 0 5px;
         }
 
-        /* Tooltip simples */
         .event-bar .tooltip-text {
             font-weight: bold;
             display: block;
@@ -2292,7 +2310,7 @@ h5 {
         }
 
         /* Mobile Adjustments */
-        @media (max-width: 768px) {
+      @media (max-width: 768px) {
             .timeline-toolbar {
                 flex-direction: column;
                 align-items: flex-start;
@@ -2302,7 +2320,7 @@ h5 {
                 justify-content: space-between;
             }
             .instructor-column {
-                min-width: 180px;
-                width: 180px;
+                min-width: 200px;
+                width: 200px;
             }
         }

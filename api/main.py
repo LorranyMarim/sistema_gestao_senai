@@ -12,6 +12,7 @@ from rotas_turma import router as turma_router
 from rotas_dashboard import router as dashboard_router
 from rotas_calendario import router as calendario_router
 from bootstrap import router as bootstrap_router
+from rotas_ocupacao import router as ocupacao_router
 
 app = FastAPI(
     title="API SENAI Betim",
@@ -40,8 +41,8 @@ app.include_router(instrutor_router)
 app.include_router(turma_router)     
 app.include_router(dashboard_router)
 app.include_router(calendario_router)
-
 app.include_router(bootstrap_router) 
+app.include_router(ocupacao_router)
 
 @app.get("/")
 def status():

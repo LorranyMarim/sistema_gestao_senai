@@ -10,11 +10,21 @@ require_once("../config/verifica_login.php");
     <title>Ocupação de Intrutores - SENAI</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="../assets/css/style.css">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+    
+    <style>
+        .day-header.disabled-day {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        .schedule-cell.disabled-cell {
+            background-color: #f3f4f6;
+            background-image: repeating-linear-gradient(45deg, #e5e7eb 0, #e5e7eb 1px, transparent 0, transparent 50%);
+            background-size: 10px 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -30,16 +40,12 @@ require_once("../config/verifica_login.php");
                     <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
-                    <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
-                            Gestão de UCs</a></li>
-                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a>
-                    </li>
+                    <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
+                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i>Gestão de Calendários</a></li>
                     <li id="nav-relatorios" class="has-submenu active open">
-                        <a href="#" class="submenu-toggle" aria-expanded="true" aria-controls="submenu-relatorios"
-                            class="active">
+                        <a href="#" class="submenu-toggle" aria-expanded="true" aria-controls="submenu-relatorios" class="active">
                             <span><i class="fas fa-tools"></i> Relatórios e Consultas</span>
                             <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
                         </a>
@@ -47,7 +53,6 @@ require_once("../config/verifica_login.php");
                             <li><a href="ocupacao_instrutores.php" class="active"> Ocupação de Instrutor</a></li>
                         </ul>
                     </li>
-
                     <li id="nav-config" class="has-submenu">
                         <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
                             <span><i class="fas fa-tools"></i> Configuração</span>
@@ -80,204 +85,56 @@ require_once("../config/verifica_login.php");
               <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                 <i class="fas fa-search"></i>
               </span>
-              <input type="text" class="filter-input pl-10" placeholder="Buscar Instrutor...">
+              <input type="text" id="searchInstructor" class="filter-input pl-10" placeholder="Buscar Instrutor...">
             </div>
 
             <div class="relative w-full max-w-xs">
-              <input type="date" class="filter-input" value="2026-02-12">
+              <input type="date" id="startDateInput" class="filter-input">
             </div>
           </div>
 
-          <div class="shift-tabs">
-            <button class="shift-tab active" onclick="alert('Filtrando Turno: Manhã')">
+          <div class="shift-tabs" id="shiftTabsContainer">
+            <button class="shift-tab active" data-shift="Manhã">
               <i class="fas fa-sun text-yellow-500 mr-2"></i>Manhã
             </button>
-            <button class="shift-tab" onclick="alert('Filtrando Turno: Tarde')">
+            <button class="shift-tab" data-shift="Tarde">
               <i class="fas fa-cloud-sun text-orange-500 mr-2"></i>Tarde
             </button>
-            <button class="shift-tab" onclick="alert('Filtrando Turno: Noite')">
+            <button class="shift-tab" data-shift="Noite">
               <i class="fas fa-moon text-blue-800 mr-2"></i>Noite
             </button>
           </div>
 
           <div class="flex items-center gap-2">
-            <button class="timeline-nav-btn btn-secondary"><i class="fas fa-chevron-left"></i></button>
-            <button class="timeline-nav-btn font-bold btn-secondary">Hoje</button>
-            <button class="timeline-nav-btn btn-secondary"><i class="fas fa-chevron-right"></i></button>
+            <button id="btnPrevDay" class="timeline-nav-btn btn-secondary"><i class="fas fa-chevron-left"></i></button>
+            <button id="btnToday" class="timeline-nav-btn font-bold btn-secondary">Hoje</button>
+            <button id="btnNextDay" class="timeline-nav-btn btn-secondary"><i class="fas fa-chevron-right"></i></button>
           </div>
         </div>
 
         <div id="timeline" class="timeline-wrapper" style="box-shadow: none; overflow-x: auto;">
-          <div class="timeline-grid-container">
-
-            <div class="instructor-column">
-              <div class="instructor-header">
-                Instrutores
+          <div class="timeline-grid-container" id="timelineGrid">
+            
+            <div class="instructor-column" id="instructorColumn">
+              <div class="instructor-header">Instrutores</div>
               </div>
 
-              <div class="instructor-card">
-                <div class="instructor-avatar">CS</div>
-                <div class="instructor-info">
-                  <h4>Carlos Silva</h4>
-                  <span>Dev. Backend</span>
+            <div class="days-column flex-col" style="flex: 1;">
+              
+              <div class="day-header-row" id="dayHeaderRow">
                 </div>
-              </div>
 
-              <div class="instructor-card">
-                <div class="instructor-avatar" style="background: #ffe0e0; color: #dc3545;">AM</div>
-                <div class="instructor-info">
-                  <h4>Ana Maria</h4>
-                  <span>UX/UI Design</span>
+              <div id="scheduleGrid">
                 </div>
-              </div>
-
-              <div class="instructor-card">
-                <div class="instructor-avatar" style="background: #fff3cd; color: #856404;">RJ</div>
-                <div class="instructor-info">
-                  <h4>Roberto Justus</h4>
-                  <span>Gestão Ágil</span>
-                </div>
-              </div>
-
-              <div class="instructor-card">
-                <div class="instructor-avatar" style="background: #d4edda; color: #155724;">PL</div>
-                <div class="instructor-info">
-                  <h4>Pedro Lima</h4>
-                  <span>Banco de Dados</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="days-column flex-col">
-
-              <div class="day-header-row">
-                <div class="day-header today">
-                  <span>Hoje</span>
-                  <small>12/Fev</small>
-                </div>
-                <div class="day-header">
-                  <span>Sexta</span>
-                  <small>13/Fev</small>
-                </div>
-                <div class="day-header" style="background: #ffecec;">
-                  <span class="text-red-500">Sábado</span>
-                  <small>14/Fev</small>
-                </div>
-                <div class="day-header" style="background: #ffecec;">
-                  <span class="text-red-500">Domingo</span>
-                  <small>15/Fev</small>
-                </div>
-                <div class="day-header">
-                  <span>Segunda</span>
-                  <small>16/Fev</small>
-                </div>
-                <div class="day-header">
-                  <span>Terça</span>
-                  <small>17/Fev</small>
-                </div>
-                <div class="day-header">
-                  <span>Quarta</span>
-                  <small>18/Fev</small>
-                </div>
-              </div>
-
-              <div class="schedule-row">
-                <div class="schedule-cell">
-                  <div class="event-bar event-occupied event-start" title="Turma: DS-2024-1 | UC: API Rest">
-                    <span class="tooltip-text">DS-2024-1</span>
-                    <span class="tooltip-sub">API Rest</span>
-                  </div>
-                </div>
-                <div class="schedule-cell">
-                  <div class="event-bar event-occupied event-middle" title="Turma: DS-2024-1 | UC: API Rest">
-                    <span class="tooltip-text">Continuação...</span>
-                  </div>
-                </div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell">
-                  <div class="event-bar event-occupied event-end" title="Turma: DS-2024-1 | UC: API Rest">
-                    <span class="tooltip-text">Finalização</span>
-                  </div>
-                </div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-              </div>
-
-              <div class="schedule-row">
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell">
-                  <div class="event-bar event-occupied" style="background-color: var(--cor-aviso); border-color: #d39e00; color: #333;">
-                    <span class="tooltip-text">UX-Intro</span>
-                    <span class="tooltip-sub">Prototipagem</span>
-                  </div>
-                </div>
-                <div class="schedule-cell">
-                  <div class="event-bar event-occupied" style="background-color: var(--cor-aviso); border-color: #d39e00; color: #333;">
-                    <span class="tooltip-text">UX-Intro</span>
-                    <span class="tooltip-sub">Figma</span>
-                  </div>
-                </div>
-                <div class="schedule-cell">
-                  <div class="event-bar event-occupied" style="background-color: var(--cor-aviso); border-color: #d39e00; color: #333;">
-                    <span class="tooltip-text">UX-Intro</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="schedule-row">
-                <div class="schedule-cell">
-                  <div class="event-bar event-occupied">
-                    <span class="tooltip-text">AGIL-01</span>
-                    <span class="tooltip-sub">Scrum</span>
-                  </div>
-                </div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-              </div>
-
-              <div class="schedule-row">
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell" style="background: #fafafa;"></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-                <div class="schedule-cell"><div class="event-free"></div></div>
-              </div>
 
             </div>
           </div>
-
-          <div class="p-4 bg-gray-50 border-t text-sm flex gap-4 text-gray-600">
-            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-blue-600 rounded-sm"></span> Aula Confirmada</div>
-            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-yellow-400 rounded-sm"></span> Aula Pendente/Substituição</div>
-            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-gray-300 h-[2px]"></span> Disponível</div>
-          </div>
-
         </div>
       </section>
     </main>
   </div>
 
   <script src="../assets/js/geral_script.js"></script>
-  
-  <script>
-    // Exemplo simples de funcionalidade das abas
-    const tabs = document.querySelectorAll('.shift-tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-      });
-    });
-  </script>
+  <script src="../assets/js/ocupacao_script.js"></script>
 </body>
 </html>
