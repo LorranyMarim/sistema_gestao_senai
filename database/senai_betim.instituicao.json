@@ -1,0 +1,18 @@
+[{
+  "_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "razao_social": "Senai Betim Maria Madalena Nogueira",
+  "cnpj": "03773700000107",
+  "endereco": {
+    "logradouro": "Av. Amazonas",
+    "numero": "55",
+    "bairro": "Centro",
+    "cidade": "Betim",
+    "uf": "MG",
+    "cep": "32600075"
+  },
+  "telefone": "03134723133",
+  "email": "cetem@fiemg.com.br",
+  "nome": "Serviço Nacional de Aprendizagem Industrial - Departamento Regional de Minas Gerais"
+}]

@@ -3,6 +3,7 @@
 
   if (!window.App) throw new Error('Carregue geral_script.js antes de usuarios_script.js.');
 
+  let currentUserRole = 'Administrador';
   const { $, $$ } = App.dom;
   const { debounce, toIsoStartOfDayLocal, toIsoEndOfDayLocal } = App.utils;
   const { safeFetch } = App.net;
@@ -93,6 +94,17 @@
     try {
       const data = await safeFetch(API.list);
       STATE.usuarios = Array.isArray(data) ? data : [];
+      if (STATE.usuarios.length > 0) {
+        const hasAdmin = STATE.usuarios.some(u => u.tipo_acesso === 'Administrador');
+        currentUserRole = (STATE.usuarios.length === 1 && !hasAdmin) 
+          ? STATE.usuarios[0].tipo_acesso 
+          : 'Administrador';
+      }
+      if (currentUserRole !== 'Administrador') {
+        if (refs.addUserBtn) refs.addUserBtn.style.display = 'none';
+      }
+      
+
     } catch (err) {
       console.error(err);
       refs.tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-600">Erro ao carregar usuários.</td></tr>`;
@@ -152,9 +164,13 @@
     const fmtData = App.format.fmtDateBR; 
 
     refs.tableBody.innerHTML = lista.map(u => {
-     
       const statusClass = (u.status === 'Inativo') ? 'text-red-500 font-bold' : 'text-green-600';
       
+      // Remove botões de exclusão (inativação) para perfis que não são Administradores
+      const deleteBtnHtml = currentUserRole === 'Administrador' 
+        ? `<button class="btn btn-icon btn-delete" data-id="${u._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>`
+        : '';
+
       return `
       <tr>
         <td class="hidden-col">${u._id || ''}</td>
@@ -168,7 +184,7 @@
           <div class="action-buttons flex gap-2 justify-center">
             <button class="btn btn-icon btn-view" data-id="${u._id}" title="Ver"><i class="fas fa-eye"></i></button>
             <button class="btn btn-icon btn-edit" data-id="${u._id}" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-icon btn-delete" data-id="${u._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            ${deleteBtnHtml}
           </div>
         </td>
       </tr>
@@ -225,7 +241,13 @@
     refs.inpEmail.readOnly = false;              
     refs.inpSenha.required = false;
     refs.inpConfirmaSenha.required = false;
-
+    if (currentUserRole !== 'Administrador') {
+        refs.selTipo.disabled = true;
+        refs.selStatus.disabled = true;
+    } else {
+        refs.selTipo.disabled = false;
+        refs.selStatus.disabled = false;
+    }
     App.ui.showModal(refs.userModal);
     STATE.formOriginalState = getFormState();
   }
@@ -235,6 +257,11 @@
 
     if (refs.inpNome.value.trim().length < 3) {
       alert('O nome deve ter pelo menos 3 caracteres.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(refs.inpEmail.value)) {
+      alert('Por favor, insira um e-mail válido (ex: seu.nome@dominio.com).');
       return;
     }
     if (!isValidEmail(refs.inpEmail.value)) {

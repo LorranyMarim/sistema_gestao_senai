@@ -1,0 +1,3514 @@
+[{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9b9b"
+  },
+  "descricao": "MANUTENÇÃO DE SISTEMAS DE FREIOS, SUSPENSÃO E DIREÇÃO DE VEÍCULOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9b9c"
+  },
+  "descricao": "PROGRAMAÇÃO DE APLICATIVOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9b9d"
+  },
+  "descricao": "TESTE DE FRONT-END",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9b9e"
+  },
+  "descricao": "COORDENAÇÃO DE PROGRAMAS E PROCEDIMENTOS DE SAÚDE E SEGURANÇA DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9b9f"
+  },
+  "descricao": "ROTINAS DE SEGURANÇA E SAÚDE DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba0"
+  },
+  "descricao": "MODELAGEM DE PROJETOS DE INOVAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba1"
+  },
+  "descricao": "ELETRÔNICA APLICADA E SISTEMAS AUTOMATIZADOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba3"
+  },
+  "descricao": "ELETRICIDADE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba4"
+  },
+  "descricao": "SISTEMAS LÓGICOS PROGRAMÁVEIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba5"
+  },
+  "descricao": "TÉCNICAS DE CONTROLE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica com Prática"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba6"
+  },
+  "descricao": "BANCO DE DADOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba7"
+  },
+  "descricao": "QSMS QUALIDADE, SAÚDE, SEGURANÇA E MEIO AMBIENTE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9ba9"
+  },
+  "descricao": "INFORMÁTICA APLICADA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9baa"
+  },
+  "descricao": "FUNDAMENTOS DA MECÂNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bab"
+  },
+  "descricao": "INSTRUMENTAÇÃO ANALÍTICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bac"
+  },
+  "descricao": "FUNDAMENTOS DA INSTRUMENTAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bad"
+  },
+  "descricao": "FUNDAMENTOS DA TECNOLOGIA MECÂNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bae"
+  },
+  "descricao": "SAÚDE, SEGURANÇA E MEIO AMBIENTE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9baf"
+  },
+  "descricao": "FUNDAMENTOS DA ELETROTÉCNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb0"
+  },
+  "descricao": "IMPLEMENTAÇÃO DE NEGÓCIOS INOVADORES",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb1"
+  },
+  "descricao": "COMUNICAÇÃO E REDAÇÃO TÉCNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb3"
+  },
+  "descricao": "LÓGICA DE PROGRAMAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb4"
+  },
+  "descricao": "FUNDAMENTOS DE ELETROELETRÔNICA APLICADA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb5"
+  },
+  "descricao": "GESTÃO DE PESSOAS APLICADA À SEGURANÇA E SAÚDE DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb6"
+  },
+  "descricao": "CÁLCULO APLICADO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb7"
+  },
+  "descricao": "PROJETO DE INOVAÇÃO: PROCESSO CRIATIVO – INDÚSTRIA 4.0, LEAN E IDEAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb8"
+  },
+  "descricao": "DESENVOLVIMENTO DE SISTEMAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bb9"
+  },
+  "descricao": "DESENVOLVIMENTO DE SISTEMAS WEB",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bba"
+  },
+  "descricao": "MANUTENÇÃO DE SISTEMAS DE TRANSMISSÃO DE VEÍCULOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bbb"
+  },
+  "descricao": "INTRODUÇÃO AOS PROCESSOS LOGÍSTICOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bbc"
+  },
+  "descricao": "ASSESSORIA E CONSULTORIA EM SAÚDE, SEGURANÇA E MEIO AMBIENTE DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bbd"
+  },
+  "descricao": "GESTÃO DE AUDITORIAS EM DE SEGURANÇA E SAÚDE DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bbf"
+  },
+  "descricao": "MEDIÇÃO DE VARIÁVEIS FÍSICAS INDUSTRIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bc0"
+  },
+  "descricao": "PLANEJAMENTO E EXECUÇÃO DE AÇÕES EDUCATIVAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bc1"
+  },
+  "descricao": "FUNDAMENTOS FÍSICO-QUÍMICOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bcb"
+  },
+  "descricao": "COMUNICAÇÃO E INFORMÁTICA APLICADA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd1"
+  },
+  "descricao": "ACIONAMENTOS ELETROELETRÔNICOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd2"
+  },
+  "descricao": "MÉTODOS QUANTITATIVOS APLICADOS À LOGÍSTICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd3"
+  },
+  "descricao": "INSTALAÇÕES ELÉTRICAS PREDIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd4"
+  },
+  "descricao": "INSTALAÇÕES ELÉTRICAS INDUSTRIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd6"
+  },
+  "descricao": "MANUTENÇÃO DE SISTEMAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd7"
+  },
+  "descricao": "HIGIENE OCUPACIONAL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd8"
+  },
+  "descricao": "TECNOLOGIA DE MATERIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bd9"
+  },
+  "descricao": "TECNOLOGIA DOS MATERIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bda"
+  },
+  "descricao": "FUNDAMENTOS DA TECNOLOGIA AUTOMOTIVA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bdb"
+  },
+  "descricao": "FUNDAMENTOS DE SEGURANÇA E SAÚDE DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bdc"
+  },
+  "descricao": "MONITORAMENTO DOS PROGRAMAS E DOCUMENTOS DE SEGURANÇA E SAÚDE DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bde"
+  },
+  "descricao": "GESTÃO DA PRODUÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bdf"
+  },
+  "descricao": "FUNDAMENTOS DE TECNOLOGIA DA INFORMAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be1"
+  },
+  "descricao": "FUNDAMENTOS DA TECNOLOGIA DE CORTE E SOLDAGEM",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be2"
+  },
+  "descricao": "PROCESSOS DE ARMAZENAGEM",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be3"
+  },
+  "descricao": "MECÂNICA APLICADA A SISTEMAS AUTOMATIZADOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be4"
+  },
+  "descricao": "PROCESSOS BÁSICOS DE MANUTENÇÃO AUTOMOTIVA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be5"
+  },
+  "descricao": "PROCESSOS BÁSICOS DE FABRICAÇÃO MECÂNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be6"
+  },
+  "descricao": "SISTEMAS AUTOMATIZADOS DE MANUFATURA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be7"
+  },
+  "descricao": "CIÊNCIAS APLICADAS À SEGURANÇA E SAÚDE DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be8"
+  },
+  "descricao": "PROTOTIPAGEM DE NEGÓCIOS INOVADORES",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9be9"
+  },
+  "descricao": "TESTE DE SISTEMAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bea"
+  },
+  "descricao": "TESTE DE BACK-END",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9beb"
+  },
+  "descricao": "PROJETO DE INOVAÇÃO: MODELAGEM DE PROJETOS – DESIGN THINKING E CANVAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bec"
+  },
+  "descricao": "CRIATIVIDADE E IDEAÇÃO EM PROJETOS DE INOVAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bee"
+  },
+  "descricao": "PROJETOS ELÉTRICOS PREDIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bef"
+  },
+  "descricao": "PROJETOS ELÉTRICOS INDUSTRIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf0"
+  },
+  "descricao": "DIAGRAMAS HIDRÁULICOS E PNEUMÁTICOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf1"
+  },
+  "descricao": "GESTÃO DE SUPRIMENTOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf2"
+  },
+  "descricao": "GESTÃO DE TRANSPORTE E DISTRIBUIÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf3"
+  },
+  "descricao": "IMPLANTAÇÃO DE SISTEMAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf5"
+  },
+  "descricao": "IMPLANTAÇÃO DE SISTEMA WEB",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf6"
+  },
+  "descricao": "LEITURA E INTERPRETAÇÃO DE PROJETOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf7"
+  },
+  "descricao": "PROJETO DE INOVAÇÃO: MINDSET EMPREENDEDOR E PROTOTIPAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf8"
+  },
+  "descricao": "PROJETO DE INOVAÇÃO: TRABALHO DE CONCLUSÃO DO CURSO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bf9"
+  },
+  "descricao": "PREPARAÇÃO PARA OS PROCESSOS DE SOLDAGEM",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bfa"
+  },
+  "descricao": "PREPARAÇÃO PARA OS PROCESSOS DE CORTE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bfb"
+  },
+  "descricao": "SAÚDE E SEGURANÇA NO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bfd"
+  },
+  "descricao": "SISTEMAS DE INTERTRAVAMENTO INDUSTRIAL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bfe"
+  },
+  "descricao": "SEGURANÇA EM ELETRICIDADE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9bff"
+  },
+  "descricao": "TAPEÇARIA E VIDRAÇARIA AUTOMOTIVA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c01"
+  },
+  "descricao": "LOGÍSTICA SUSTENTÁVEL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c02"
+  },
+  "descricao": "PROGRAMAÇÃO CLIENT-SIDE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c03"
+  },
+  "descricao": "DIAGNÓSTICOS AVANÇADOS EM GERENCIAMENTO ELETRÔNICO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c04"
+  },
+  "descricao": "LOGÍSTICA INTEGRADA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c06"
+  },
+  "descricao": "TECNOLOGIA DA RECUPERAÇÃO DE COMPONENTES MECÂNICOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c07"
+  },
+  "descricao": "GESTÃO DA MANUTENÇÃO INDUSTRIAL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c08"
+  },
+  "descricao": "CIRCUITOS MICROCONTROLADOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c0b"
+  },
+  "descricao": "PROJETO DE INTERFACE WEB",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c0c"
+  },
+  "descricao": "COMUNICAÇÃO ORAL E ESCRITA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c0d"
+  },
+  "descricao": "LEITURA E INTERPRETAÇÃO DE DESENHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c0e"
+  },
+  "descricao": "INTRODUÇÃO À GESTÃO ORGANIZACIONAL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c0f"
+  },
+  "descricao": "INSTALAÇÕES DE SISTEMAS ELÉTRICOS DE POTÊNCIA (SEP)",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c10"
+  },
+  "descricao": "EFICIÊNCIA ENERGÉTICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c11"
+  },
+  "descricao": "INTERNET DAS COISAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c12"
+  },
+  "descricao": "SUPORTE TÉCNICO EM ELABORAÇÃO E IMPLEMENTAÇÃO DE PROJETOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c13"
+  },
+  "descricao": "SUPORTE TÉCNICO EM AÇÕES DE SAÚDE, SEGURANÇA E MEIO AMBIENTE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c14"
+  },
+  "descricao": "MANUTENÇÃO ELÉTRICA PREDIAL E INDUSTRIAL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c15"
+  },
+  "descricao": "MANUTENÇÕES E OPERAÇÕES DE SISTEMAS ELÉTRICOS DE POTÊNCIA (SEP)",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c16"
+  },
+  "descricao": "CLP - CONTROLADOR LOGICO PROGRAMAVEL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c17"
+  },
+  "descricao": "ELETROHIDROPNEUMÁTICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c18"
+  },
+  "descricao": "MANUTENÇÃO MECÂNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c1c"
+  },
+  "descricao": "MANUTENÇÃO DE SISTEMAS AUTOMATIZADOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c24"
+  },
+  "descricao": "FABRICAÇÃO MECÂNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c25"
+  },
+  "descricao": "FABRICAÇÃO MECÂNICA APLICADA A MANUTENÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c26"
+  },
+  "descricao": "PLANEJAMENTO E CONTROLE DA MANUTENÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c27"
+  },
+  "descricao": "MANUTENÇÃO DE MÁQUINAS E EQUIPAMENTOS INDUSTRIAIS I",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c28"
+  },
+  "descricao": "MANUTENÇÃO DE MÁQUINAS E EQUIPAMENTOS INDUSTRIAIS II",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c29"
+  },
+  "descricao": "PROJETO DE INOVAÇÃO EM MANUTENÇÃO INDUSTRIAL",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c2a"
+  },
+  "descricao": "PROCESSOS DE SOLDAGEM",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c2b"
+  },
+  "descricao": "PROCESSOS DE USINAGEM",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c2c"
+  },
+  "descricao": "MANUFATURA DE USINAGEM COMPUTADORIZADA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c2d"
+  },
+  "descricao": "AUTOMAÇÃO DOS PROCESSOS DE FABRICAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c2e"
+  },
+  "descricao": "GESTÃO DE PESSOAS E ORGANIZAÇÃO DO TRABALHO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c2f"
+  },
+  "descricao": "GESTÃO DE PROJETOS E CONTROLE DA PRODUÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c30"
+  },
+  "descricao": "CIRCUITOS ELETROPNEUMÁTICOS E ELETROHIDRÁULICOS APLICADOS À MANUFATURA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c31"
+  },
+  "descricao": "MODELAGEM VIRTUAL DE ELEMENTOS MECÂNICOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c32"
+  },
+  "descricao": "PROCESSOS DE MANUFATURA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c33"
+  },
+  "descricao": "AUDITORIA DO SISTEMA DE GESTÃO DA QUALIDADE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c34"
+  },
+  "descricao": "MAPEAMENTO E CONTROLE DE PROCESSOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c35"
+  },
+  "descricao": "OPERACIONALIZAÇÃO DO SISTEMA DE GESTÃO DA QUALIDADE",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c38"
+  },
+  "descricao": "MONITORAMENTO DE PRODUTOS E PROCESSOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c3b"
+  },
+  "descricao": "FUNDAMENTOS DA COMUNICAÇÃO E INFORMAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c3d"
+  },
+  "descricao": "MANUTENÇÃO MECÂNICA APLICADA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c41"
+  },
+  "descricao": "CONTROLE DE QUALIDADE DOS PROCESSOS DE CORTE E SOLDA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6949e2e55d5e115df6fd9c42"
+  },
+  "descricao": "CONTROLE DE PROCESSOS E MATERIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "69664ca9c4b6de1f502051de"
+  },
+  "descricao": "FUNDAMENTOS DE ELETRICIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:46:17.236Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664cc0c4b6de1f502051e1"
+  },
+  "descricao": "FUNDAMENTOS DE SISTEMAS ELÉTRICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:46:40.590Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664cc8c4b6de1f502051e4"
+  },
+  "descricao": "DESENHO TÉCNICO APLICADO A PROJETOS ELÉTRICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:46:48.448Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664cd0c4b6de1f502051e7"
+  },
+  "descricao": "INSTALAÇÃO E MANUTENÇÃO ELÉTRICA PREDIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:46:56.760Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664cd8c4b6de1f502051ea"
+  },
+  "descricao": "INTEGRAÇÃO DE SISTEMAS ELÉTRICOS AUTOMATIZADOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:47:04.863Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664ce2c4b6de1f502051ed"
+  },
+  "descricao": "INSTALAÇÃO E ACIONAMENTO ELÉTRICOS INDUSTRIAIS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:47:14.491Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664cebc4b6de1f502051f0"
+  },
+  "descricao": "MANUTENÇÃO ELÉTRICA INDUSTRIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:47:23.551Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664cf4c4b6de1f502051f3"
+  },
+  "descricao": "INTEGRAÇÃO DE SISTEMAS DE ENERGIAS RENOVÁVEIS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:47:32.038Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664cfcc4b6de1f502051f6"
+  },
+  "descricao": "PROJETOS DE INSTALAÇÕES ELÉTRICAS DE POTÈNCIA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:47:40.547Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69664d05c4b6de1f502051f9"
+  },
+  "descricao": "GESTÃO OPERACIONAL INTEGRADA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T13:47:49.468Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69665178c4b6de1f502051ff"
+  },
+  "descricao": "ELEMENTOS FINAIS DE CONTROLE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T14:06:48.542Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "696651f4c4b6de1f50205202"
+  },
+  "descricao": "TECNOLOGIAS DA INFORMAÇÃO E COMUNICAÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T14:08:52.920Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6966522fc4b6de1f50205205"
+  },
+  "descricao": "PROJETOS DE SISTEMAS DE CONTROLE INDUSTRIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T14:09:51.728Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6966b6e4e806128d89c594f0"
+  },
+  "descricao": "COMUNICAÇÃO E INFORMAÇÃO APLICADAS A SEGURANÇA E SAÚDE DO TRABALHO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-13T21:19:32.113Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967ca2ae806128d89c594f9"
+  },
+  "descricao": "TECNOLOGIAS DA INFORMAÇÃO E COMUNICAÇÃO APLICADA A INDUSTRIA 4.0",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T16:54:02.096Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d257e806128d89c59502"
+  },
+  "descricao": "ACIONAMENTO DE DISPOSITIVOS ELÉTRICOS AUTOMATIZADOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:28:55.753Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d268e806128d89c59505"
+  },
+  "descricao": "GESTÃO DA MANUTENÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:29:12.420Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d27ee806128d89c59508"
+  },
+  "descricao": "PROJETOS DE SEP",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:29:34.048Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2bde806128d89c5950b"
+  },
+  "descricao": "RELAÇÕES SOCIOPROFISSIONAIS, CIDADANIA E ÉTICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:30:37.365Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2c4e806128d89c5950e"
+  },
+  "descricao": "PLANEJAMENTO E ORGANIZAÇÃO DO TRABALHO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:30:44.942Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2cde806128d89c59511"
+  },
+  "descricao": "RACIOCÍNIO LÓGICO E ANÁLISE DE DADOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:30:53.999Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2d5e806128d89c59514"
+  },
+  "descricao": "TRANSFORMAÇÃO DIGITAL NO SETOR INDUSTRIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:31:01.886Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2dce806128d89c59517"
+  },
+  "descricao": "QUALIDADE, SAÚDE, MEIO AMBIENTE E SEGURANÇA DO TRABALHO APLICADOS À ELETROELETRÔNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:31:08.873Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2eee806128d89c5951d"
+  },
+  "descricao": "MONTAGEM DE INFRAESTRUTURA ELÉTRICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:31:26.754Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2f5e806128d89c59520"
+  },
+  "descricao": "INSTALAÇÃO DE SISTEMAS ELÉTRICOS PREDIAIS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:31:33.449Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d2fce806128d89c59523"
+  },
+  "descricao": "INSTALAÇÃO DE SISTEMAS ELÉTRICOS INDUSTRIAIS I",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:31:40.710Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d303e806128d89c59526"
+  },
+  "descricao": "INSTALAÇÃO DE SISTEMAS ELÉTRICOS INDUSTRIAIS II",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:31:47.717Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d30de806128d89c59529"
+  },
+  "descricao": "MANUTENÇÃO ELETROELETRÔNICA INDUSTRIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:31:57.442Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d314e806128d89c5952c"
+  },
+  "descricao": "FUNDAMENTOS DE AUTOMAÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:32:04.823Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d31be806128d89c5952f"
+  },
+  "descricao": "FUNDAMENTOS DA ELETROHIDROPNEUMÁTICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:32:11.902Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967d326e806128d89c59532"
+  },
+  "descricao": "NOVAS TECNOLOGIAS APLICADAS À ELETROELETRÔNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T17:32:22.872Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967daf7e806128d89c5953b"
+  },
+  "descricao": "PRÁTICAS INOVADORAS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:05:43.337Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967daffe806128d89c5953e"
+  },
+  "descricao": "ELETRÔNICA BÁSICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:05:51.173Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db06e806128d89c59541"
+  },
+  "descricao": "MECÂNICA BÁSICA AUTOMOTIVA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:05:58.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db0de806128d89c59544"
+  },
+  "descricao": "SISTEMAS DE CARGA E PARTIDA",
+  "tipo_uc": "Prática",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:05.515Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db15e806128d89c59547"
+  },
+  "descricao": "SISTEMAS ELÉTRICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:13.687Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db1de806128d89c5954a"
+  },
+  "descricao": "ACESSÓRIOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:21.726Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db24e806128d89c5954d"
+  },
+  "descricao": "SISTEMAS DE IGNIÇÃO E INJEÇÃO ELETRÔNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:28.944Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db2de806128d89c59550"
+  },
+  "descricao": "METROLOGIA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:37.429Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db34e806128d89c59553"
+  },
+  "descricao": "SISTEMAS DE FREIOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:44.664Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db3be806128d89c59556"
+  },
+  "descricao": "SISTEMAS DE SUSPENSÃO E DIREÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:51.849Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db42e806128d89c59559"
+  },
+  "descricao": "SISTEMA DE TRANSMISSÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:06:58.695Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db49e806128d89c5955c"
+  },
+  "descricao": "MOTOR DE COMBUSTÃO INTERNA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:05.589Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db50e806128d89c5955f"
+  },
+  "descricao": "SISTEMAS DE FUNILARIA AUTOMOTIVA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:12.739Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db57e806128d89c59562"
+  },
+  "descricao": "SISTEMAS DE PINTURA AUTOMOTIVA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:19.634Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db5de806128d89c59565"
+  },
+  "descricao": "MANUTENÇÃO DE MOTORES DE VEÍCULOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:25.785Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db64e806128d89c59568"
+  },
+  "descricao": "MANUTENÇÃO DE SISTEMAS ELETROELETRÔNICOS VEICULARES",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:32.914Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db6be806128d89c5956b"
+  },
+  "descricao": "VISTORIA DE SINISTROS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:39.763Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db76e806128d89c5956e"
+  },
+  "descricao": "INSPEÇÃO VEICULAR",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:50.557Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967db7de806128d89c59571"
+  },
+  "descricao": "GESTÃO DE SERVIÇOS DE MANUTENÇÃO VEICULAR",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T18:07:57.653Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7b6e806128d89c5957a"
+  },
+  "descricao": "ATENDIMENTO AO PÚBLICO E RELAÇÕES HUMANAS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:06.599Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7bde806128d89c5957d"
+  },
+  "descricao": "DOCUMENTAÇÃO E ARQUIVOLOGIA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:13.542Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7c4e806128d89c59580"
+  },
+  "descricao": "NOÇÕES DE GESTÃO DE PESSOAS E ROTINAS DE PESSOAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:20.163Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7cbe806128d89c59583"
+  },
+  "descricao": "INFORMÁTICA BÁSICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:27.257Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7d0e806128d89c59586"
+  },
+  "descricao": "GESTÃO DA QUALIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:32.391Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7d6e806128d89c59589"
+  },
+  "descricao": "FUNDAMENTOS DE OPERAÇÕES LOGÍSTICAS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:38.334Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7dbe806128d89c5958c"
+  },
+  "descricao": "ROTINAS DE PROCESSOS FINANCEIROS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:43.703Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7e1e806128d89c5958f"
+  },
+  "descricao": "FUNDAMENTOS MERCADOLÓGICOS E ORGANIZAÇÃO DE EVENTOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:49.612Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7e6e806128d89c59592"
+  },
+  "descricao": "INOVAÇÃO E EMPREENDEDORISMO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:54.952Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7ebe806128d89c59595"
+  },
+  "descricao": "PRÁTICA DE PLANEJAMENTO PROFISSIONAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:00:59.898Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7f1e806128d89c59598"
+  },
+  "descricao": "TÉCNICAS E FUNDAMENTOS DA QUALIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:01:05.179Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7f7e806128d89c5959b"
+  },
+  "descricao": "LEITURA E INTERPRETAÇÃO DE DESENHO TÉCNICO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:01:11.136Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e7fde806128d89c5959e"
+  },
+  "descricao": "PROCESSOS DE FABRICAÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:01:17.129Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e802e806128d89c595a1"
+  },
+  "descricao": "CONTROLE ESTATÍSTICO DO PROCESSO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:01:22.888Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e808e806128d89c595a4"
+  },
+  "descricao": "SISTEMA DE GESTÃO INTEGRADO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:01:28.221Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e925e806128d89c595a7"
+  },
+  "descricao": "NOÇÕES DE MEIO AMBIENTE E SGA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:13.387Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e92ae806128d89c595aa"
+  },
+  "descricao": "TRABALHO DE PESQUISA TÉCNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:18.412Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e92fe806128d89c595ad"
+  },
+  "descricao": "FUNDAMENTOS DE LOGÍSTICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:23.501Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e934e806128d89c595b0"
+  },
+  "descricao": "FUNDAMENTOS DA LEITURA DE DESENHOS TÉCNICOS E METROLOGIA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:28.423Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e93ae806128d89c595b3"
+  },
+  "descricao": "FUNDAMENTOS DOS PROCESSOS ADMINISTRATIVOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:34.174Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e93fe806128d89c595b6"
+  },
+  "descricao": "FUNDAMENTOS DA QUALIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:39.284Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e945e806128d89c595b9"
+  },
+  "descricao": "FUNDAMENTOS DOS PROCESSOS FINANCEIROS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:45.540Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e94be806128d89c595bc"
+  },
+  "descricao": "FUNDAMENTOS DOS PROCESSOS DE GESTÃO DE PESSOAS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:51.106Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e950e806128d89c595bf"
+  },
+  "descricao": "PROJETO DE INTEGRAÇÃO DE PROCESSOS LOGÍSTICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:06:56.492Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6967e956e806128d89c595c2"
+  },
+  "descricao": "INTRODUÇÃO A PROCESSOS DE MELHORIA E INOVAÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-14T19:07:02.185Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81f4"
+  },
+  "descricao": "FUNDAMENTOS DA TECNOLOGIA MECÂNICA I",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81f5"
+  },
+  "descricao": "FUNDAMENTOS DOS PROCESSOS DE FABRICAÇÃO MECÂNICA I",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81f6"
+  },
+  "descricao": "PROCESSOS DE USINAGEM CONVENCIONAL I",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81f7"
+  },
+  "descricao": "FUNDAMENTOS DA TECNOLOGIA MECÂNICA II",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81f8"
+  },
+  "descricao": "FUNDAMENTOS DOS PROCESSOS DE FABRICAÇÃO MECÂNICA II",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81f9"
+  },
+  "descricao": "PROCESSOS DE USINAGEM CONVENCIONAL II",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81fa"
+  },
+  "descricao": "FUNDAMENTOS DA TECNOLOGIA MECÂNICA III",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81fb"
+  },
+  "descricao": "FUNDAMENTOS DOS PROCESSOS DE FABRICAÇÃO MECÂNICA III",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81fc"
+  },
+  "descricao": "PROCESSOS DE USINAGEM CONVENCIONAL III",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81fd"
+  },
+  "descricao": "FUNDAMENTOS DA AUTOMAÇÃO MECÂNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81fe"
+  },
+  "descricao": "FUNDAMENTOS DA MECÂNICA APLICADOS À MANUTENÇÃO I",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b81ff"
+  },
+  "descricao": "FUNDAMENTOS DA MECÂNICA APLICADOS À MANUTENÇÃO II",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8200"
+  },
+  "descricao": "FUNDAMENTOS DE GESTÃO APLICADOS À MANUTENÇÃO MECÂNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8201"
+  },
+  "descricao": "MANUTENÇÃO CORRETIVA DE MÁQUINAS E EQUIPAMENTOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8202"
+  },
+  "descricao": "MANUTENÇÃO PLANEJADA DE MÁQUINAS E EQUIPAMENTOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8203"
+  },
+  "descricao": "FUNDAMENTOS MECÂNICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8204"
+  },
+  "descricao": "FUNDAMENTOS ELÉTRICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8205"
+  },
+  "descricao": "MONTAGEM E MANUTENÇÃO DE SISTEMAS MECÂNICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8206"
+  },
+  "descricao": "MONTAGEM E MANUTENÇÃO DE SISTEMAS ELÉTRICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8207"
+  },
+  "descricao": "MONTAGEM E MANUTENÇÃO DE SISTEMAS DE CONTROLE E ACIONAMENTOS ELETROMECÂNICOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8208"
+  },
+  "descricao": "FUNDAMENTOS DE ELETRICIDADE INDUSTRIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8209"
+  },
+  "descricao": "MÁQUINAS ELÉTRICAS E INSTALAÇÕES ELÉTRICAS INDUSTRIAIS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b820a"
+  },
+  "descricao": "DESENHO ASSISTIDO POR COMPUTADOR – CAD",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b820b"
+  },
+  "descricao": "TECNOLOGIA DA SOLDAGEM",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b820c"
+  },
+  "descricao": "FÍSICA APLICADA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b820d"
+  },
+  "descricao": "PRODUÇÃO MECÂNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b820e"
+  },
+  "descricao": "PLANEJAMENTO E OTIMIZAÇÃO DA PRODUÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b820f"
+  },
+  "descricao": "PROJETOS DE MÁQUINAS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8210"
+  },
+  "descricao": "SISTEMAS DE AUTOMAÇÃO INDUSTRIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8211"
+  },
+  "descricao": "DESENVOLVIMENTO DE AUTOMAÇÃO MECÂNICA",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6968e87403aa5254135b8212"
+  },
+  "descricao": "METODOLOGIAS DE PROJETOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6969477ae806128d89c595cc"
+  },
+  "descricao": "DESENHO ASSISTIDO POR COMPUTADOR - CAD 2D",
+  "tipo_uc": "Prática",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T20:00:58.544Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69694790e806128d89c595cf"
+  },
+  "descricao": "COORDENAÇÃO DE EQUIPES E MÉTRICAS DE PRODUTIVIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T20:01:20.165Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6969479de806128d89c595d2"
+  },
+  "descricao": "OTIMIZAÇÃO DE PROCESSOS PRODUTIVOS DEDICADOS A MANUTENÇÃO INDUSTRIAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T20:01:33.015Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "696947b0e806128d89c595d5"
+  },
+  "descricao": "MODELAGEM DE SISTEMAS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T20:01:52.553Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6997b055495c0738f4b245e4"
+  },
+  "descricao": "INSTALAÇÕES E ACIONAMENTOS ELÉTRICOS INDUSTRIAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6997b0c0495c0738f4b245e8"
+  },
+  "descricao": "MANUTENÇÃO E OPERAÇÃO DE SISTEMAS ELÉTRICOS DE POTÊNCIA - SEP",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-01-15T13:15:32.513Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6998679d495c0738f4b245ea"
+  },
+  "descricao": "TECNOLOGIAS DA INFORMAÇÃO E COMUNICAÇÃO APLICADAS À INDÚSTRIA 4.0",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "699867dc495c0738f4b245eb"
+  },
+  "descricao": "ORGANIZAÇÃO E CONTROLE DE DOCUMENTOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "699867f6495c0738f4b245ec"
+  },
+  "descricao": "ROTINAS ADMINISTRATIVAS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "69986815495c0738f4b245ed"
+  },
+  "descricao": "FUNDAMENTOS DE TECNOLOGIA MECÂNICA",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "69986829495c0738f4b245ee"
+  },
+  "descricao": "PREPARAÇÃO DE MÁQUINAS-FERRAMENTA CONVENCIONAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "6998683b495c0738f4b245ef"
+  },
+  "descricao": "OPERAÇÃO DE MÁQUINAS-FERRAMENTA CONVENCIONAIS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "69986872495c0738f4b245f2"
+  },
+  "descricao": "CRIATIVIDADE E IDEAÇÃO",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "69986883495c0738f4b245f3"
+  },
+  "descricao": "INTRODUÇÃO A INDÚSTRIA 4.0",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "69986896495c0738f4b245f4"
+  },
+  "descricao": "INTRODUÇÃO AO DESENVOLVIMENTO DE PROJETOS",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2025-12-23T00:31:33.151Z"
+  },
+  "tipo_uc": "Teórica"
+},
+{
+  "_id": {
+    "$oid": "69986b39495c0738f4b245f9"
+  },
+  "descricao": "INTRODUÇÃO A TECNOLOGIA DA INFORMAÇÃO E COMUNICAÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69986b39495c0738f4b245fa"
+  },
+  "descricao": "SUSTENTABILIDADE NOS PROCESSOS INDUSTRIAIS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69986b39495c0738f4b245fb"
+  },
+  "descricao": "INTRODUÇÃO A QUALIDADE E PRODUTIVIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69986b39495c0738f4b245fc"
+  },
+  "descricao": "INTRODUÇÃO A GESTÃO ORGANIZACIONAL",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69986b39495c0738f4b245fd"
+  },
+  "descricao": "OPERACIONALIZAÇÃO DO SISTEMA DE GESTÃO DA QUALIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69986b39495c0738f4b245fe"
+  },
+  "descricao": "AUDITORIA DO SISTEMA DE GESTÃO DE QUALIDADE",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69986cae495c0738f4b24600"
+  },
+  "descricao": "PROTOTIPAGEM DE PROJETOS",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69986cae495c0738f4b24601"
+  },
+  "descricao": "PROJETO DE INOVAÇÃO",
+  "tipo_uc": "Teórica",
+  "instituicao_id": {
+    "$oid": "6872ebc05f2c070a0234219f"
+  },
+  "status": "Ativo",
+  "data_criacao": {
+    "$date": "2026-02-20T14:07:20.000Z"
+  }
+}]

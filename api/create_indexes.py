@@ -1,8 +1,37 @@
 from db import get_mongo_db
 from pymongo import ASCENDING, DESCENDING
+from db import get_mongo_db
+from pymongo import ASCENDING, DESCENDING
+from datetime import datetime, timezone
+
+def seed_primeiro_acesso(db):
+    """
+    RN05: Garante a criação da Instituição Principal e do usuário Administrador
+    caso o banco esteja sendo inicializado (vazio).
+    """
+    from auth import get_password_hash # Import necessário para gerar o hash
+    
+    if db.instituicao.count_documents({}) == 0 and db.usuario.count_documents({}) == 0:
+        print("--- Realizando Setup de Primeiro Acesso (RN05) ---")
+        inst_id = db.instituicao.insert_one({"razao_social": "Instituição Principal (Matriz)"}).inserted_id
+        
+        admin_user = {
+            "nome": "Administrador do Sistema",
+            "user_name": "admin@fiemg.com.br", # Padrão para RN06
+            "user_name_lc": "admin@fiemg.com.br",
+            "senha": get_password_hash("admin123"),
+            "tipo_acesso": "Administrador",
+            "status": "Ativo",
+            "instituicao_id": inst_id,
+            "instituicoes_ids": [str(inst_id)],
+            "data_criacao": datetime.now(timezone.utc)
+        }
+        db.usuario.insert_one(admin_user)
+        print("✅ Setup concluído: Instituição Matriz e Usuário Administrador criados.")
 
 def criar_indices():
     db = get_mongo_db()
+    seed_primeiro_acesso(db)
     print("--- Iniciando Otimização de Índices ---")
 
     print("Indexando Turma...")

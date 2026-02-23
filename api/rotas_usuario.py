@@ -10,6 +10,7 @@ from bson.errors import InvalidId
 from auth_dep import get_ctx, RequestCtx
 from cache_utils import invalidate_cache
 from redis_client import get_redis
+import re
 
 router = APIRouter()
 
@@ -18,9 +19,16 @@ MAX_ATTEMPTS = 5
 
 class UsuarioBase(BaseModel):
     nome: str = Field(..., min_length=3, description="Nome Completo")
-    user_name: EmailStr = Field(..., description="Email FIEMG (Login)")
+    user_name: EmailStr = Field(..., pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", description="Email FIEMG (Login)")
     tipo_acesso: Literal['Coordenador', 'Pedagogo', 'Administrador', 'Instrutor']
     status: Literal['Ativo', 'Inativo'] = 'Ativo'
+
+def get_caller_user(db, ctx: RequestCtx):
+    """Obtém os dados do usuário logado para validar permissões (RBAC)"""
+    caller = db["usuario"].find_one({"user_name_lc": ctx.user_id.lower()})
+    if not caller:
+        raise HTTPException(status_code=401, detail="Usuário autenticado não encontrado.")
+    return caller
 
 class UsuarioCreate(UsuarioBase):
     senha: str = Field(..., min_length=6)
@@ -158,12 +166,19 @@ def login(dados: UsuarioLogin, response: Response, request: Request):
 @router.get("/api/usuarios")
 def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
+    caller = get_caller_user(db, ctx)
+    
     filtro = {
         "$or": [
             {"instituicao_id": ctx.inst_oid}, 
             {"instituicoes_ids": str(ctx.inst_oid)}
         ]
     }
+    
+    # RBAC: Se não for Administrador, visualiza apenas o próprio registro
+    if caller.get("tipo_acesso") != "Administrador":
+        filtro["_id"] = caller["_id"]
+
     cursor = db["usuario"].find(filtro, {"senha": 0}).sort("nome", 1)
     usuarios = []
     for u in cursor:
@@ -179,6 +194,12 @@ def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
 @router.post("/api/usuarios", status_code=201)
 def criar_usuario(usuario: UsuarioCreate, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
+    caller = get_caller_user(db, ctx)
+    
+    # RBAC: Apenas Administrador pode criar usuários
+    if caller.get("tipo_acesso") != "Administrador":
+        raise HTTPException(status_code=403, detail="Apenas administradores podem criar novos usuários.")
+
     if db["usuario"].find_one({"user_name_lc": usuario.user_name.lower()}):
         raise HTTPException(status_code=400, detail="E-mail já está sendo utilizado.")
 
@@ -198,6 +219,17 @@ def criar_usuario(usuario: UsuarioCreate, ctx: RequestCtx = Depends(get_ctx)):
 def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depends(get_ctx)):
     oid = _oid_or_400(user_id)
     db = get_mongo_db()
+    caller = get_caller_user(db, ctx)
+    
+    # RBAC: Controle de edição de perfil
+    if caller.get("tipo_acesso") != "Administrador":
+        if str(caller["_id"]) != user_id:
+            raise HTTPException(status_code=403, detail="Você só tem permissão para editar seu próprio perfil.")
+        if dados.tipo_acesso and dados.tipo_acesso != caller.get("tipo_acesso"):
+            raise HTTPException(status_code=403, detail="Você não tem permissão para alterar seu nível de acesso.")
+        if dados.status and dados.status != caller.get("status"):
+            raise HTTPException(status_code=403, detail="Você não tem permissão para alterar o status do seu usuário.")
+
     filtro_seguranca = {
         "_id": oid,
         "$or": [
@@ -209,7 +241,7 @@ def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depe
     if not db["usuario"].find_one(filtro_seguranca):
         raise HTTPException(status_code=404, detail="Usuário não encontrado ou acesso negado.")
 
-    campos_update = {k: v for k, v in dados.dict().items() if v is not None}
+    campos_update = {k: v for k, v in dados.dict(exclude_unset=True).items() if v is not None}
     
     if "user_name" in campos_update:
         novo_email = campos_update["user_name"]
@@ -231,6 +263,12 @@ def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depe
 def alterar_senha(user_id: str, dados: UsuarioSenhaUpdate, ctx: RequestCtx = Depends(get_ctx)):
     oid = _oid_or_400(user_id)
     db = get_mongo_db()
+    caller = get_caller_user(db, ctx)
+    
+    # RBAC: Apenas Admin ou o próprio usuário podem alterar a senha
+    if caller.get("tipo_acesso") != "Administrador" and str(caller["_id"]) != user_id:
+        raise HTTPException(status_code=403, detail="Você só tem permissão para alterar sua própria senha.")
+
     filtro_seguranca = {
         "_id": oid,
         "$or": [
