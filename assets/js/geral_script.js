@@ -1253,7 +1253,7 @@
         const sel = document.createElement('select');
         sel.id = 'gen_tipo_usuario';
         sel.classList.add('form-select');
-        ['Todos', 'Coordenador', 'Pedagogo', 'Instrutor', 'Administrador'].forEach(optTxt => {
+        ['Todos', 'Administrador', 'Instrutor', 'Pedagogo'].forEach(optTxt => {
           const opt = document.createElement('option');
           opt.value = optTxt;
           opt.textContent = optTxt;

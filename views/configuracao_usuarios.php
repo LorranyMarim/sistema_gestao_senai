@@ -129,10 +129,9 @@ require_once("../config/verifica_login.php");
                     <label for="tipoUser">Tipo de Usuário:</label>
                     <select id="tipoUser" class="form-control" required>
                         <option value="">Selecione</option>
-                        <option value="Coordenador">Coordenador</option>
-                        <option value="Pedagogo">Pedagogo</option>
-                        <option value="Instrutor">Instrutor</option>
                         <option value="Administrador">Administrador</option>
+                        <option value="Instrutor">Instrutor</option>
+                        <option value="Pedagogo">Pedagogo</option>
                     </select>
                 </div>
 

@@ -20,7 +20,7 @@ MAX_ATTEMPTS = 5
 class UsuarioBase(BaseModel):
     nome: str = Field(..., min_length=3, description="Nome Completo")
     user_name: EmailStr = Field(..., pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", description="Email FIEMG (Login)")
-    tipo_acesso: Literal['Coordenador', 'Pedagogo', 'Administrador', 'Instrutor']
+    tipo_acesso: Literal['Administrador', 'Instrutor', 'Pedagogo',]
     status: Literal['Ativo', 'Inativo'] = 'Ativo'
 
 def get_caller_user(db, ctx: RequestCtx):
@@ -36,7 +36,7 @@ class UsuarioCreate(UsuarioBase):
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = Field(None, min_length=3)
     user_name: Optional[EmailStr] = None
-    tipo_acesso: Optional[Literal['Coordenador', 'Pedagogo', 'Administrador', 'Instrutor']] = None
+    tipo_acesso: Optional[Literal['Administrador', 'Instrutor', 'Pedagogo',]] = None
     status: Optional[Literal['Ativo', 'Inativo']] = None
 
 class UsuarioSenhaUpdate(BaseModel):
