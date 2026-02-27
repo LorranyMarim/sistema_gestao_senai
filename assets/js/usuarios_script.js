@@ -404,10 +404,14 @@
 
     refs.addUserBtn?.addEventListener('click', openModalCadastro);
 
-    refs.closeModalBtn?.addEventListener('click', tryCloseModal);
     refs.cancelBtn?.addEventListener('click', tryCloseModal);
 
     refs.userForm?.addEventListener('submit', handleSaveUser);
+
+    // Novo código adicionado: Força o texto do nome a ficar em caixa alta
+    refs.inpNome?.addEventListener('input', function(e) {
+      e.target.value = e.target.value.toUpperCase();
+    });
 
     refs.btnOpenChangePassword?.addEventListener('click', openChangePasswordModal);
     refs.cancelChangePasswordBtn?.addEventListener('click', closeChangePasswordModal);

@@ -16,7 +16,7 @@ require_once("../config/verifica_login.php");
     <style>
         .hidden-col { display: none; }
         #changePasswordModal {
-            background-color: rgba(0, 0, 0, 0.7); /
+            background-color: rgba(0, 0, 0, 0.7); 
             z-index: 1060; 
         }
     </style>
@@ -132,6 +132,7 @@ require_once("../config/verifica_login.php");
                         <option value="Administrador">Administrador</option>
                         <option value="Instrutor">Instrutor</option>
                         <option value="Pedagogo">Pedagogo</option>
+
                     </select>
                 </div>
 

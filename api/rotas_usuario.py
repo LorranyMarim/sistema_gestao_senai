@@ -210,6 +210,10 @@ def criar_usuario(usuario: UsuarioCreate, ctx: RequestCtx = Depends(get_ctx)):
     novo_usuario["instituicoes_ids"] = [str(ctx.inst_oid)]
     novo_usuario["data_criacao"] = datetime.now(timezone.utc)
     
+    # NOVOS CAMPOS ADICIONADOS
+    novo_usuario["alterado_por"] = str(caller["_id"])
+    novo_usuario["alterado_em"] = datetime.now(timezone.utc)
+    
     result = db["usuario"].insert_one(novo_usuario)
     invalidate_cache(str(ctx.inst_oid))
     
@@ -253,6 +257,10 @@ def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depe
              raise HTTPException(status_code=400, detail="E-mail já está sendo utilizado.")
         campos_update["user_name_lc"] = novo_email.lower()
 
+    # NOVO CÓDIGO ADICIONADO: Injeta quem alterou e quando
+    campos_update["alterado_por"] = str(caller["_id"])
+    campos_update["alterado_em"] = datetime.now(timezone.utc)
+
     if campos_update:
         db["usuario"].update_one({"_id": oid}, {"$set": campos_update})
         invalidate_cache(str(ctx.inst_oid))
@@ -281,6 +289,13 @@ def alterar_senha(user_id: str, dados: UsuarioSenhaUpdate, ctx: RequestCtx = Dep
         raise HTTPException(status_code=404, detail="Usuário não encontrado ou acesso negado.")
 
     nova_senha_hash = get_password_hash(dados.nova_senha)
-    db["usuario"].update_one({"_id": oid}, {"$set": {"senha": nova_senha_hash}})
+    db["usuario"].update_one(
+        {"_id": oid}, 
+        {"$set": {
+            "senha": nova_senha_hash,
+            "alterado_por": str(caller["_id"]),
+            "alterado_em": datetime.now(timezone.utc)
+        }}
+    )
     
     return {"msg": "Senha alterada com sucesso"}
