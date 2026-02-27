@@ -79,6 +79,10 @@
       email: $('#viewEmailUser'),
       tipo: $('#viewTipoUser'),
       status: $('#viewStatusUser'),
+      auditInfo: $('#auditInfoUser'),
+      dataCriacao: $('#viewDataCriacao'),
+      dataAtualizacao: $('#viewDataAtualizacao'),
+      alteradoPor: $('#viewAlteradoPor')
     }
   };
 
@@ -179,7 +183,7 @@
         <td>${u.user_name || ''}</td>
         <td>${u.tipo_acesso || ''}</td>
         <td><span class="${statusClass}">${u.status || 'Ativo'}</span></td>
-        <td>${fmtData(u.data_criacao)}</td>
+        <td>${fmtData(u.alterado_em || u.data_criacao)}</td>
         <td>
           <div class="action-buttons flex gap-2 justify-center">
             <button class="btn btn-icon btn-view" data-id="${u._id}" title="Ver"><i class="fas fa-eye"></i></button>
@@ -385,9 +389,35 @@
           refs.viewFields.nome.value = u.nome;
           refs.viewFields.email.value = u.user_name;
           refs.viewFields.tipo.value = u.tipo_acesso;
-        
           refs.viewFields.status.value = u.status;
           
+          if (refs.viewFields.auditInfo) {
+            refs.viewFields.auditInfo.style.display = 'block';
+            
+            // Função local para formatar Data e Hora (Ex: 20/09/2025 às 14:32)
+            const formatarDataHora = (isoStr) => {
+              if (!isoStr) return '--/--/---- às --:--';
+              const d = new Date(isoStr);
+              const dia = String(d.getDate()).padStart(2, '0');
+              const mes = String(d.getMonth() + 1).padStart(2, '0');
+              const ano = d.getFullYear();
+              const horas = String(d.getHours()).padStart(2, '0');
+              const minutos = String(d.getMinutes()).padStart(2, '0');
+              return `${dia}/${mes}/${ano} às ${horas}:${minutos}`;
+            };
+
+            // Busca o nome do usuário que alterou diretamente dos dados já carregados no Client
+            let nomeUsuario = 'Desconhecido';
+            if (u.alterado_por) {
+               const usuarioAlterador = STATE.usuarios.find(x => x._id === u.alterado_por);
+               if (usuarioAlterador) nomeUsuario = usuarioAlterador.nome;
+            }
+            
+            refs.viewFields.dataCriacao.textContent = formatarDataHora(u.data_criacao);
+            refs.viewFields.dataAtualizacao.textContent = formatarDataHora(u.alterado_em || u.data_criacao);
+            refs.viewFields.alteradoPor.textContent = nomeUsuario;
+          }
+
           App.ui.showModal(refs.visualizarModal);
         }
       }

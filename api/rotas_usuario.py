@@ -188,6 +188,9 @@ def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
         if u.get("data_criacao"):
             if isinstance(u["data_criacao"], datetime):
                 u["data_criacao"] = u["data_criacao"].isoformat()
+        if u.get("alterado_em"):
+            if isinstance(u["alterado_em"], datetime):
+                u["alterado_em"] = u["alterado_em"].isoformat()
         usuarios.append(u)
     return usuarios
 
@@ -208,11 +211,11 @@ def criar_usuario(usuario: UsuarioCreate, ctx: RequestCtx = Depends(get_ctx)):
     novo_usuario["senha"] = get_password_hash(usuario.senha)
     novo_usuario["instituicao_id"] = ctx.inst_oid
     novo_usuario["instituicoes_ids"] = [str(ctx.inst_oid)]
-    novo_usuario["data_criacao"] = datetime.now(timezone.utc)
     
-    # NOVOS CAMPOS ADICIONADOS
+    agora = datetime.now(timezone.utc)
+    novo_usuario["data_criacao"] = agora
+    novo_usuario["alterado_em"] = agora
     novo_usuario["alterado_por"] = str(caller["_id"])
-    novo_usuario["alterado_em"] = datetime.now(timezone.utc)
     
     result = db["usuario"].insert_one(novo_usuario)
     invalidate_cache(str(ctx.inst_oid))
@@ -257,9 +260,8 @@ def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depe
              raise HTTPException(status_code=400, detail="E-mail já está sendo utilizado.")
         campos_update["user_name_lc"] = novo_email.lower()
 
-    # NOVO CÓDIGO ADICIONADO: Injeta quem alterou e quando
-    campos_update["alterado_por"] = str(caller["_id"])
     campos_update["alterado_em"] = datetime.now(timezone.utc)
+    campos_update["alterado_por"] = str(caller["_id"])
 
     if campos_update:
         db["usuario"].update_one({"_id": oid}, {"$set": campos_update})
@@ -293,8 +295,8 @@ def alterar_senha(user_id: str, dados: UsuarioSenhaUpdate, ctx: RequestCtx = Dep
         {"_id": oid}, 
         {"$set": {
             "senha": nova_senha_hash,
-            "alterado_por": str(caller["_id"]),
-            "alterado_em": datetime.now(timezone.utc)
+            "alterado_em": datetime.now(timezone.utc),
+            "alterado_por": str(caller["_id"])
         }}
     )
     

@@ -85,7 +85,7 @@ require_once("../config/verifica_login.php");
                                 <th>E-mail (Login)</th>
                                 <th>Tipo de Usuário</th>
                                 <th>Status</th>
-                                <th>Criado Em</th>
+                                <th>Atualizado Em</th>
                                 <th class="actions">Ações</th>
                             </tr>
                         </thead>
@@ -106,7 +106,7 @@ require_once("../config/verifica_login.php");
         <div class="modal-content">
             <span class="close-button" id="closeModalBtn">&times;</span>
             <h2 id="modalTitleUser">Cadastrar Novo Usuário</h2>
-
+            
             <form id="userForm" autocomplete="off">
                 <input type="hidden" id="userId">
                 
@@ -200,7 +200,7 @@ require_once("../config/verifica_login.php");
         <div class="modal-content">
             <span class="close-button" id="closeVisualizarUserBtn">&times;</span>
             <h2>Detalhes do Usuário</h2>
-
+            
             <form>
                 <div class="form-group">
                     <label>Nome Completo:</label>
@@ -217,6 +217,10 @@ require_once("../config/verifica_login.php");
                 <div class="form-group">
                     <label>Status:</label>
                     <input type="text" id="viewStatusUser" readonly disabled class="form-control">
+                </div>
+                <div id="auditInfoUser" style="color: #888; font-style: italic; font-size: 0.9rem; margin-top: 15px; display: none;">
+                    Criado em: <span id="viewDataCriacao"></span><br>
+                    Última atualização: <span id="viewDataAtualizacao"></span> por <span id="viewAlteradoPor"></span>
                 </div>
                 <div class="modal-footer" style="margin-top: 10px; text-align: right;">
                     <button type="button" class="btn btn-secondary" id="fecharVisualizarUserBtn">Fechar</button>
