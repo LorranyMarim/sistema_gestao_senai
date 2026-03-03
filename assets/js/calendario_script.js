@@ -20,7 +20,8 @@
         filters: { q: '', status: ['Todos'], created_from: '', created_to: '' },
         editingCal: null,
         daysCache: [],
-        busyRanges: [] // NOVA PROPRIEDADE: Armazena as datas ocupadas do calendário selecionado
+        busyRanges: [], // NOVA PROPRIEDADE: Armazena as datas ocupadas do calendário selecionado
+        currentStepCal: 0 // NOVA PROPRIEDADE: Controle do Wizard
     };
 
     const refs = {
@@ -58,8 +59,17 @@
             next: $('#nextPage'),
             info: $('#pageInfo'),
             sizeSel: null
-        }
+        },
+        
+        // Controles do Wizard
+        stepsCal: $$('#calForm .form-step'),
+        stepIndicatorsCal: $$('#calModal .step-item'),
+        btnCancelCal: $('#btnCancelCal'),
+        btnPrevCal: $('#btnPrevCal'),
+        btnNextCal: $('#btnNextCal'),
+        btnSubmitCal: $('#btnSubmit')
     };
+
 
     let calendarInstance = null;
 
@@ -290,11 +300,12 @@
     }
 
     function openCalModal(editId = null) {
+        STATE.currentStepCal = 0;
+        updateWizardCalUI();
+        
         refs.calForm.reset();
         $('#calId').value = '';
         STATE.editingCal = null;
-        refs.statusCal.disabled = true;
-        refs.finalCal.disabled = true;
 
         if (editId) {
             const cal = STATE.calendarios.find(c => c._id === editId);
@@ -338,7 +349,68 @@
         App.ui.showModal(refs.diaModal);
     }
 
-    // --- Events ---
+    // --- LÓGICA DO WIZARD DE CALENDÁRIO ---
+    function updateWizardCalUI() {
+        if(!refs.btnCancelCal || !refs.stepsCal.length) return;
+
+        refs.stepIndicatorsCal.forEach((el, idx) => el.classList.toggle('active', idx <= STATE.currentStepCal));
+        refs.stepsCal.forEach((el, idx) => el.classList.toggle('active', idx === STATE.currentStepCal));
+
+        if (STATE.currentStepCal === 0) {
+            refs.btnCancelCal.style.display = 'inline-block';
+            refs.btnCancelCal.disabled = false;
+            refs.btnPrevCal.style.display = 'none';
+            
+            refs.btnNextCal.style.display = 'inline-block';
+            refs.btnSubmitCal.style.display = 'none';
+        } else if (STATE.currentStepCal > 0 && STATE.currentStepCal < refs.stepsCal.length - 1) {
+            refs.btnCancelCal.style.display = 'none';
+            refs.btnPrevCal.style.display = 'inline-block';
+            refs.btnPrevCal.disabled = false;
+            
+            refs.btnNextCal.style.display = 'inline-block';
+            refs.btnSubmitCal.style.display = 'none';
+        } else if (STATE.currentStepCal === refs.stepsCal.length - 1) {
+            refs.btnCancelCal.style.display = 'none';
+            refs.btnPrevCal.style.display = 'inline-block';
+            refs.btnPrevCal.disabled = false;
+            
+            refs.btnNextCal.style.display = 'none';
+            refs.btnSubmitCal.style.display = 'inline-block';
+        }
+    }
+
+    function validateCurrentStepCal() {
+        const currentStepEl = refs.stepsCal[STATE.currentStepCal];
+        const inputs = currentStepEl.querySelectorAll('input[required], select[required]');
+        let valid = true;
+        inputs.forEach(inp => { 
+            if (!inp.checkValidity()) { 
+                inp.classList.add('border-red-500'); // Feedback visual de erro
+                inp.reportValidity(); 
+                valid = false; 
+            } else {
+                inp.classList.remove('border-red-500');
+            }
+        });
+        return valid;
+    }
+
+    function nextStepCal() {
+        if (STATE.currentStepCal < refs.stepsCal.length - 1) {
+            if (validateCurrentStepCal()) {
+                STATE.currentStepCal++;
+                updateWizardCalUI();
+            }
+        }
+    }
+
+    function prevStepCal() {
+        if (STATE.currentStepCal > 0) {
+            STATE.currentStepCal--;
+            updateWizardCalUI();
+        }
+    }
 
    function setupEvents() {
         // --- Paginação ---
@@ -372,7 +444,7 @@
                 }
             }
 
-            // Botão VISUALIZAR
+           // Botão VISUALIZAR
             if (btn.classList.contains('btn-view')) {
                 const cal = STATE.calendarios.find(c => c._id === id);
                 if (cal) {
@@ -381,14 +453,91 @@
                     refs.viewInputs.inicio.value = fmtData(cal.inicio_calendario);
                     refs.viewInputs.fim.value = fmtData(cal.final_calendario);
                     
-                    // Tratamento seguro para status (caso não venha do backend)
                     const stInput = document.getElementById('viewStatus');
                     if(stInput) stInput.value = cal.status || '';
                     
                     App.ui.showModal(refs.viewModal);
                 }
             }
+        }); // <-- FECHAMENTO CORRETO DO EVENTO DA TABELA
+
+        // --- EVENTOS DO WIZARD DE CALENDÁRIO ---
+        refs.btnNextCal?.addEventListener('click', (e) => {
+            e.preventDefault();
+            nextStepCal();
         });
+
+        refs.btnPrevCal?.addEventListener('click', (e) => {
+            e.preventDefault();
+            prevStepCal();
+        });
+
+        refs.btnCancelCal?.addEventListener('click', () => {
+            App.ui.hideModal(refs.calModal);
+        });
+
+        // Configura Lógica de Limpar e Desabilitar via Switches (Steps 2 e 3)
+        const setupSwitch = (switchId, gridId) => {
+            const sw = $(switchId);
+            const grid = $(gridId);
+            if(sw && grid) {
+                sw.addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    const chks = grid.querySelectorAll('input[type="checkbox"]');
+                    chks.forEach(chk => {
+                        chk.checked = false;
+                        chk.disabled = isChecked;
+                        chk.readOnly = isChecked;
+                    });
+                });
+            }
+        };
+        setupSwitch('#switchPresencial', '#gridPresencial');
+        setupSwitch('#switchEad', '#gridEad');
+
+        // Configura Lógica de Exibição via Radios (Step 5)
+        const setupRadios = (name, containerId) => {
+            const radios = document.querySelectorAll(`input[name="${name}"]`);
+            const container = $(containerId);
+            if(radios.length && container) {
+                radios.forEach(r => {
+                    r.addEventListener('change', (e) => {
+                        if(e.target.value === 'sim') container.classList.remove('hidden');
+                        else container.classList.add('hidden');
+                    });
+                });
+            }
+        };
+        setupRadios('hasReposicao', '#containerReposicao');
+        setupRadios('hasPratica', '#containerPratica');
+
+        // Configura Lógica de Adicionar/Remover Linhas Nativas
+        const bindDynamicRows = (containerId, rowClass, btnAddClass, btnRemoveClass) => {
+            const container = $(containerId);
+            if(!container) return;
+            container.addEventListener('click', (e) => {
+                const btnAdd = e.target.closest(btnAddClass);
+                const btnRemove = e.target.closest(btnRemoveClass);
+                
+                if (btnAdd) {
+                    const row = btnAdd.closest(rowClass);
+                    const clone = row.cloneNode(true);
+                    if (clone.querySelector('input[type="date"]')) clone.querySelector('input[type="date"]').value = '';
+                    if (clone.querySelector('input[type="text"]')) clone.querySelector('input[type="text"]').value = '';
+                    
+                    clone.querySelector(btnAddClass).classList.add('hidden');
+                    clone.querySelector(btnRemoveClass).classList.remove('hidden');
+                    
+                    container.appendChild(clone);
+                }
+                if (btnRemove) {
+                    btnRemove.closest(rowClass).remove();
+                }
+            });
+        };
+        bindDynamicRows('#containerFeriadosMunicipais', '.feriado-row', '.btn-add-feriado', '.btn-remove-feriado');
+        bindDynamicRows('#containerReposicao', '.reposicao-row', '.btn-add-reposicao', '.btn-remove-reposicao');
+        bindDynamicRows('#containerPratica', '.pratica-row', '.btn-add-pratica', '.btn-remove-pratica');
 
         // --- Botões do Modal de Decisão ---
         const btnDecisaoDados = document.getElementById('btnDecisaoDados');
@@ -427,7 +576,6 @@
         if (btnCloseFooter) btnCloseFooter.onclick = () => App.ui.hideModal(refs.fullCalendarModal);
 
         // Cancelar forms
-        $('#cancelCalBtn').onclick = () => App.ui.hideModal(refs.calModal);
         $('#cancelDiaBtn').onclick = () => App.ui.hideModal(refs.diaModal);
         const closeViewBtn = $('#closeViewBtn');
         if(closeViewBtn) closeViewBtn.onclick = () => App.ui.hideModal(refs.viewModal);

@@ -2324,5 +2324,8 @@ h5 {
                 width: 200px;
             }
         }
-
+.btn .btn-danger .btn-remove-feriado{
+    color: white;
+    background-color: red;
+}
         

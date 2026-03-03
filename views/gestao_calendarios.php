@@ -22,6 +22,13 @@ require_once("../config/verifica_login.php");
     .fc {
         z-index: 1080;
     }
+    /* Estilos do Botão Switch */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    input:checked + .slider { background-color: #3b82f6; } /* Azul Primary Tailwind */
+    input:checked + .slider:before { transform: translateX(20px); }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js"></script>
@@ -113,37 +120,176 @@ require_once("../config/verifica_login.php");
         <div class="modal-content">
             <span class="close-button" id="closeCalModalBtn">&times;</span>
             <h2 id="modalTitleCal">Adicionar Novo Calendário</h2>
-            <form id="calForm" autocomplete="off">
+
+            <div class="stepper-wrapper">
+                <div class="step-item active" data-step="1">
+                    <div class="step-circle">1</div><small>Geral</small>
+                </div>
+                <div class="step-item" data-step="2">
+                    <div class="step-circle">2</div><small>Presencial</small>
+                </div>
+                <div class="step-item" data-step="3">
+                    <div class="step-circle">3</div><small>EAD</small>
+                </div>
+                <div class="step-item" data-step="4">
+                    <div class="step-circle">4</div><small>Feriados</small>
+                </div>
+                <div class="step-item" data-step="5">
+                    <div class="step-circle">5</div><small>Configurações</small>
+                </div>
+            </div>
+
+            <form id="calForm" autocomplete="off" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
                 <input type="hidden" id="calId">
-                <div class="form-group">
-                    <label for="tituloCal">Título:</label>
-                    <input type="text" id="tituloCal" class="form-control" required minlength="3" placeholder="Ex: Calendário 2026 - Técnico">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label for="inicioCal">Início:</label>
-                        <input type="date" id="inicioCal" class="form-control" required min="1990-01-01">
+                <div class="modal-body">
+                    
+                    <div class="form-step active" id="step-cal-1">
+                        <h5 class="mb-3 border-bottom pb-2"><b>Informações Gerais</b></h5>
+                        <div class="form-group">
+                            <label for="tituloCal">Título:</label>
+                            <input type="text" id="tituloCal" class="form-control" required minlength="3" placeholder="Ex: Calendário 2026 - Técnico">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-3">
+                            <div class="form-group">
+                                <label for="inicioCal">Início:</label>
+                                <input type="date" id="inicioCal" class="form-control" required min="1990-01-01">
+                            </div>
+                            <div class="form-group">
+                                <label for="finalCal">Fim:</label>
+                                <input type="date" id="finalCal" class="form-control" required disabled>
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="statusCal">Status:</label>
+                            <select id="statusCal" class="form-control bg-light" disabled readonly>
+                                <option value="Ativo">Ativo</option>
+                                <option value="Inativo">Inativo</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="finalCal">Fim:</label>
-                        <input type="date" id="finalCal" class="form-control" required disabled>
+
+                    <div class="form-step" id="step-cal-2">
+                        <h5 class="mb-3 border-bottom pb-2"><b>Aulas Presenciais</b></h5>
+                        <p class="mb-3 text-sm text-gray-700">Selecione os dias em que haverá aula presencial na unidade SENAI Betim ou em empresas/escolas externas.</p>
+                        <div class="mb-4">
+                            <label class="inline-flex items-center cursor-pointer">
+                              <span class="switch mr-2">
+                                <input type="checkbox" id="switchPresencial">
+                                <span class="slider"></span>
+                              </span>
+                              <span class="text-sm font-medium text-gray-700">Não há aulas presenciais neste calendário</span>
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="gridPresencial">
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Segunda"><span>Segunda</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Terça"><span>Terça</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Quarta"><span>Quarta</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Quinta"><span>Quinta</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Sexta"><span>Sexta</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Sábado"><span>Sábado</span></label>
+                        </div>
                     </div>
+
+                    <div class="form-step" id="step-cal-3">
+                        <h5 class="mb-3 border-bottom pb-2"><b>Aulas EAD</b></h5>
+                        <p class="mb-3 text-sm text-gray-700">Em quais dias da semana ocorrerão aulas EAD?</p>
+                        <div class="mb-4">
+                            <label class="inline-flex items-center cursor-pointer">
+                              <span class="switch mr-2">
+                                <input type="checkbox" id="switchEad">
+                                <span class="slider"></span>
+                              </span>
+                              <span class="text-sm font-medium text-gray-700">Não há aulas EAD neste calendário</span>
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="gridEad">
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Segunda"><span>Segunda</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Terça"><span>Terça</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Quarta"><span>Quarta</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Quinta"><span>Quinta</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Sexta"><span>Sexta</span></label>
+                            <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4" value="Sábado"><span>Sábado</span></label>
+                        </div>
+                    </div>
+
+                    <div class="form-step" id="step-cal-4">
+                        <h5 class="mb-3 border-bottom pb-2"><b>Feriados</b></h5>
+                        <p class="mb-2 text-sm text-gray-700 font-bold">Deseja considerar os feriados nacionais como dias/período letivo?</p>
+                        <div class="mb-4">
+                            <label class="flex items-center space-x-2 text-sm mb-1">
+                                <input type="radio" name="considerarFeriados" value="sim">
+                                <span>Sim, considerar automaticamente.</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-sm">
+                                <input type="radio" name="considerarFeriados" value="nao" checked>
+                                <span>Não, marcar automaticamente como não letivo.</span>
+                            </label>
+                        </div>
+                        <hr class="my-3">
+                        <p class="mb-2 text-sm text-gray-700">Selecione os feriados municipais que devem ser considerados como dias não letivos:</p>
+                        <div id="containerFeriadosMunicipais" class="space-y-2">
+                            <div class="flex items-center gap-2 feriado-row">
+                                <input type="date" class="form-control w-1/3">
+                                <input type="text" class="form-control w-full" placeholder="Descrição do feriado municipal">
+                                <button type="button" class="btn btn-primary btn-add-feriado"><i class="fas fa-plus"></i></button>
+                                <button type="button" class="btn btn-danger btn-remove-feriado hidden"><i class="fas fa-minus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-step" id="step-cal-5">
+                        <h5 class="mb-3 border-bottom pb-2"><b>Configurações Adicionais</b></h5>
+                        <div class="mb-4">
+                            <p class="mb-2 text-sm text-gray-700 font-bold">1. Reposição - Deseja adicionar datas específicas para reposição?</p>
+                            <div class="flex gap-4 mb-2">
+                                <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasReposicao" value="nao" checked><span>Não</span></label>
+                                <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasReposicao" value="sim"><span>Sim</span></label>
+                            </div>
+                            <div id="containerReposicao" class="space-y-2 hidden pl-4 border-l-2 border-gray-200">
+                                <div class="flex items-center gap-2 reposicao-row">
+                                    <input type="date" class="form-control w-1/3">
+                                    <input type="text" class="form-control w-full" placeholder="Descrição da reposição">
+                                    <button type="button" class="btn btn-primary btn-add-reposicao"><i class="fas fa-plus"></i></button>
+                                    <button type="button" class="btn btn-danger btn-remove-reposicao hidden"><i class="fas fa-minus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <p class="mb-2 text-sm text-gray-700 font-bold">2. Aula Prática na Unidade Betim - Deseja incluir dias de Aula Prática na Unidade Betim?</p>
+                            <div class="flex gap-4 mb-2">
+                                <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasPratica" value="nao" checked><span>Não</span></label>
+                                <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasPratica" value="sim"><span>Sim</span></label>
+                            </div>
+                            <div id="containerPratica" class="space-y-2 hidden pl-4 border-l-2 border-gray-200">
+                                <div class="flex items-center gap-2 pratica-row">
+                                    <input type="date" class="form-control w-1/3">
+                                    <input type="text" class="form-control w-full" placeholder="Descrição da aula prática">
+                                    <button type="button" class="btn btn-primary btn-add-pratica"><i class="fas fa-plus"></i></button>
+                                    <button type="button" class="btn btn-danger btn-remove-pratica hidden"><i class="fas fa-minus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 italic mt-4 border-t pt-2">Utilizado para turmas de empresas ou trilhas nas escolas.</p>
+                    </div>
+
                 </div>
-                <div class="form-group">
-                    <label for="statusCal">Status:</label>
-                    <select id="statusCal" class="form-control">
-                        <option value="Ativo">Ativo</option>
-                        <option value="Inativo">Inativo</option>
-                    </select>
-                </div>
-                <div class="modal-footer"
-                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
-                    <button type="button" class="btn btn-secondary" id="cancelCalBtn">
-                        <i class="fas fa-times-circle"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="salvarCalBtn">
-                        <i class="fas fa-save"></i> Salvar
-                    </button>
+                
+                <div class="modal-footer" style="background-color: #fff; z-index: 10; display: flex; justify-content: space-between; border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px;">
+                    <div class="step-actions" style="display: flex; justify-content: space-between; width: 100%;">
+                    <button type="button" class="btn btn-secondary" id="btnCancelCal" disabled>Cancelar
+                        </button>    
+                    <button type="button" class="btn btn-secondary" id="btnPrevCal" disabled>
+                            <i class="fas fa-arrow-left"></i> Anterior
+                        </button>
+                        <div>
+                            <button type="button" class="btn btn-secondary" id="btnNextCal">
+                                Próximo <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit" style="display: none;">
+                                <i class="fas fa-save"></i> Gerar Calendário
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
             </form>
