@@ -122,7 +122,7 @@
     // NOVA FUNÇÃO: Verifica se uma data está dentro de algum período já cadastrado
 
     // NOVA FUNÇÃO: Verifica se uma data está dentro de algum período já cadastrado
-    function isDateBusy(dateStr) {
+    function isDateBusy(dateStr, ignoreId) {
         if (!dateStr || !STATE.busyRanges.length) return false;
         
         return STATE.busyRanges.some(range => {
@@ -397,7 +397,52 @@
             
             refs.btnNextCal.style.display = 'none';
             refs.btnSubmitCal.style.display = 'inline-block';
+            gerarResumoFinalCal();
         }
+    }
+
+    // NOVA FUNÇÃO: Gera o resumo dinâmico no Step 5
+    function gerarResumoFinalCal() {
+        let resumoDiv = document.getElementById('boxResumoFinal');
+        if (!resumoDiv) {
+            resumoDiv = document.createElement('div');
+            resumoDiv.id = 'boxResumoFinal';
+            resumoDiv.className = 'bg-blue-50 border border-blue-200 p-4 rounded text-sm text-gray-700 mt-4 mb-4';
+            const step5 = document.getElementById('step-cal-5');
+            // Insere o resumo logo após o título do Step 5
+            step5.insertBefore(resumoDiv, step5.querySelector('h5').nextSibling);
+        }
+
+        const titulo = refs.tituloCal.value || '[Sem título]';
+        const inicio = refs.inicioCal.value ? refs.inicioCal.value.split('-').reverse().join('/') : '';
+        const fim = refs.finalCal.value ? refs.finalCal.value.split('-').reverse().join('/') : '';
+        
+        // Coleta dias Presenciais
+        const isPresencialOff = document.getElementById('switchPresencial').checked;
+        const diasP = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
+        const txtPresencial = isPresencialOff ? 'Nenhuma' : (diasP.length ? diasP.join(', ') : 'Não selecionado');
+
+        // Coleta dias EAD
+        const isEadOff = document.getElementById('switchEad').checked;
+        const diasE = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
+        const txtEad = isEadOff ? 'Nenhuma' : (diasE.length ? diasE.join(', ') : 'Não selecionado');
+
+        // Feriados e Práticas adicionadas na lista
+        const qtdFeriados = document.querySelectorAll('#listaFeriadosAdicionados li').length;
+        const qtdPraticas = document.querySelectorAll('#listaPraticasAdicionadas li').length;
+
+        resumoDiv.innerHTML = `
+            <h6 class="font-bold text-blue-800 mb-2"><i class="fas fa-clipboard-check"></i> Resumo do Calendário</h6>
+            <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Título:</strong> ${titulo}</li>
+                <li><strong>Período:</strong> ${inicio} a ${fim}</li>
+                <li><strong>Presencial:</strong> ${txtPresencial}</li>
+                <li><strong>EAD:</strong> ${txtEad}</li>
+                <li><strong>Feriados Customizados:</strong> ${qtdFeriados} adicionado(s)</li>
+                <li><strong>Aulas Práticas:</strong> ${qtdPraticas} adicionada(s)</li>
+            </ul>
+            <p class="mt-3 text-xs text-blue-600 font-bold">Verifique os dados acima. Ao clicar em "Gerar Calendário", o sistema processará essas regras.</p>
+        `;
     }
 
     function validateCurrentStepCal() {
@@ -586,7 +631,7 @@
                 });
             }
         };
-        setupRadios('hasReposicao', '#containerReposicao');
+
         setupRadios('hasPratica', '#containerPratica');
 
         // Configura Lógica de Adicionar/Remover Linhas Nativas
@@ -665,9 +710,43 @@
             });
         }
 
-        // Mantém a lógica de clonagem apenas para Reposição e Prática (Step 5)
-        bindDynamicRows('#containerReposicao', '.reposicao-row', '.btn-add-reposicao', '.btn-remove-reposicao');
-        bindDynamicRows('#containerPratica', '.pratica-row', '.btn-add-pratica', '.btn-remove-pratica');
+       // --- Lógica de Adicionar na Lista Visual (Aulas Práticas) ---
+        const containerPratica = $('#containerPratica');
+        if (containerPratica) {
+            const ulPraticas = document.createElement('ul');
+            ulPraticas.id = 'listaPraticasAdicionadas';
+            ulPraticas.className = 'mt-3 space-y-2 pl-1 text-sm text-gray-700';
+            containerPratica.parentNode.insertBefore(ulPraticas, containerPratica.nextSibling);
+
+            containerPratica.addEventListener('click', (e) => {
+                const btnAdd = e.target.closest('.btn-add-pratica');
+                
+                if (btnAdd) {
+                    const row = btnAdd.closest('.pratica-row');
+                    const dateInput = row.querySelector('input[type="date"]');
+                    const textInput = row.querySelector('input[type="text"]');
+                    
+                    if (!dateInput.value || !textInput.value.trim()) {
+                        alert('Por favor, preencha a data e a descrição da aula prática.');
+                        return;
+                    }
+
+                    const dataPartes = dateInput.value.split('-');
+                    const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
+
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-green-50 p-2 rounded border border-green-200';
+                    li.innerHTML = `
+                        <span><i class="fas fa-chalkboard-teacher text-green-600 mr-2"></i> <strong>${dataFormatada}</strong> - ${textInput.value}</span>
+                        <button type="button" class="text-red-500 hover:text-red-700 font-bold ml-3 text-xs" onclick="this.parentElement.remove()">[x] Remover</button>
+                    `;
+                    
+                    ulPraticas.appendChild(li);
+                    dateInput.value = '';
+                    textInput.value = '';
+                }
+            });
+        }
 
         // --- Botões do Modal de Decisão ---
         const btnDecisaoDados = document.getElementById('btnDecisaoDados');
@@ -753,6 +832,13 @@
 
         refs.calForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // FEEDBACK DO BOTÃO SALVAR
+            const btnSubmit = document.getElementById('btnSubmit');
+            const txtOriginal = btnSubmit.innerHTML;
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+
             const id = $('#calId').value;
             const payload = {
                 titulo: refs.tituloCal.value,
@@ -760,6 +846,7 @@
                 final_calendario: new Date(refs.finalCal.value + 'T00:00:00').toISOString(),
                 status: refs.statusCal.value
             };
+            
             try {
                 App.loader.show();
                 const action = id ? `update&id=${id}` : 'create';
@@ -769,7 +856,14 @@
                 App.ui.hideModal(refs.calModal);
                 await carregarDados();
                 alert('Salvo com sucesso!');
-            } catch(err) { alert(err.message); } finally { App.loader.hide(); }
+            } catch(err) { 
+                alert(err.message); 
+            } finally { 
+                App.loader.hide(); 
+                // RESTAURA O BOTÃO CASO DÊ ERRO OU DEPOIS DE SALVAR
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = txtOriginal;
+            }
         });
 
 
@@ -960,37 +1054,7 @@
         });
     }
     
-    async function loadDaysTable(calId) {
-        const tbody = $('#manageDaysBody');
-        tbody.innerHTML = '<tr><td colspan="3">Carregando...</td></tr>';
-        try {
-            const days = await safeFetch(`${API.base}?action=list_days&cal_id=${calId}`);
-            if (days.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3">Nenhum dia cadastrado.</td></tr>';
-                return;
-            }
-            tbody.innerHTML = days.map(d => `
-                <tr>
-                    <td>${fmtData(d.data_inicio)}${d.data_fim ? ' a ' + fmtData(d.data_fim) : ''}</td>
-                    <td>${d.tipo}</td>
-                    <td>
-                        <button class="btn btn-icon text-red-500" onclick="App.deleteDay('${d._id}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-            
-            window.App.deleteDay = async (id) => {
-                if(!confirm('Excluir este dia letivo?')) return;
-                try {
-                    await safeFetch(`${API.base}?action=delete_day&id=${id}`, { method: 'POST' });
-                    loadDaysTable(calId);
-                } catch(e) { alert(e.message); }
-            };
-
-        } catch(e) { console.error(e); }
-    }
-
-    function initFullCalendar(cal, isInteractive = false) {
+      function initFullCalendar(cal, isInteractive = false) {
         const el = document.getElementById('calendarEl');
         el.innerHTML = ''; 
         

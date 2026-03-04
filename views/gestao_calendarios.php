@@ -239,23 +239,9 @@ require_once("../config/verifica_login.php");
 
                     <div class="form-step" id="step-cal-5">
                         <h5 class="mb-3 border-bottom pb-2"><b>Configurações Adicionais</b></h5>
+                        
                         <div class="mb-4">
-                            <p class="mb-2 text-sm text-gray-700 font-bold">1. Reposição - Deseja adicionar datas específicas para reposição?</p>
-                            <div class="flex gap-4 mb-2">
-                                <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasReposicao" value="nao" checked><span>Não</span></label>
-                                <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasReposicao" value="sim"><span>Sim</span></label>
-                            </div>
-                            <div id="containerReposicao" class="space-y-2 hidden pl-4 border-l-2 border-gray-200">
-                                <div class="flex items-center gap-2 reposicao-row">
-                                    <input type="date" class="form-control w-1/3">
-                                    <input type="text" class="form-control w-full" placeholder="Descrição da reposição">
-                                    <button type="button" class="btn btn-primary btn-add-reposicao"><i class="fas fa-plus"></i></button>
-                                    <button type="button" class="btn btn-danger btn-remove-reposicao hidden"><i class="fas fa-minus"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <p class="mb-2 text-sm text-gray-700 font-bold">2. Aula Prática na Unidade Betim - Deseja incluir dias de Aula Prática na Unidade Betim?</p>
+                            <p class="mb-2 text-sm text-gray-700 font-bold">Aula Prática na Unidade Betim - Deseja incluir dias de Aula Prática na Unidade Betim?</p>
                             <div class="flex gap-4 mb-2">
                                 <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasPratica" value="nao" checked><span>Não</span></label>
                                 <label class="flex items-center space-x-2 text-sm"><input type="radio" name="hasPratica" value="sim"><span>Sim</span></label>
@@ -265,7 +251,6 @@ require_once("../config/verifica_login.php");
                                     <input type="date" class="form-control w-1/3">
                                     <input type="text" class="form-control w-full" placeholder="Descrição da aula prática">
                                     <button type="button" class="btn btn-primary btn-add-pratica"><i class="fas fa-plus"></i></button>
-                                    <button type="button" class="btn btn-danger btn-remove-pratica hidden"><i class="fas fa-minus"></i></button>
                                 </div>
                             </div>
                         </div>
