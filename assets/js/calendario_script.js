@@ -408,9 +408,9 @@
             resumoDiv = document.createElement('div');
             resumoDiv.id = 'boxResumoFinal';
             resumoDiv.className = 'bg-blue-50 border border-blue-200 p-4 rounded text-sm text-gray-700 mt-4 mb-4';
-            const step5 = document.getElementById('step-cal-5');
-            // Insere o resumo logo após o título do Step 5
-            step5.insertBefore(resumoDiv, step5.querySelector('h5').nextSibling);
+            const step6 = document.getElementById('step-cal-6'); 
+            step6.insertBefore(resumoDiv, step6.querySelector('h5').nextSibling);
+            
         }
 
         const titulo = refs.tituloCal.value || '[Sem título]';
@@ -662,10 +662,10 @@
         
         // 1. Clareza na Opção Padrão (Alterando o texto via JS)
         const radioNaoFeriado = document.querySelector('input[name="considerarFeriados"][value="nao"]');
-        if (radioNaoFeriado) radioNaoFeriado.nextElementSibling.innerText = "Feriados Nacionais não terão aulas (Dias não letivos)";
+        if (radioNaoFeriado) radioNaoFeriado.nextElementSibling.innerText = "Feriados Nacionais/Estaduais e Municipais não terão aulas (Dias não letivos)";
         
         const radioSimFeriado = document.querySelector('input[name="considerarFeriados"][value="sim"]');
-        if (radioSimFeriado) radioSimFeriado.nextElementSibling.innerText = "Feriados Nacionais terão aulas (Dias letivos normais)";
+        if (radioSimFeriado) radioSimFeriado.nextElementSibling.innerText = "Feriados Nacionais/Estaduais e Municipais terão aulas (Dias letivos normais)";
 
         // 2. Lógica de Adicionar na Lista Visual (Feriados Municipais/Escolares)
         const containerFeriados = $('#containerFeriadosMunicipais');

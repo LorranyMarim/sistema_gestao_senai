@@ -135,7 +135,10 @@ require_once("../config/verifica_login.php");
                     <div class="step-circle">4</div><small>Feriados</small>
                 </div>
                 <div class="step-item" data-step="5">
-                    <div class="step-circle">5</div><small>Configurações</small>
+                    <div class="step-circle">5</div><small>Prática</small>
+                </div>
+                <div class="step-item" data-step="6">
+                    <div class="step-circle">6</div><small>Confirmação</small>
                 </div>
             </div>
 
@@ -214,7 +217,7 @@ require_once("../config/verifica_login.php");
 
                     <div class="form-step" id="step-cal-4">
                         <h5 class="mb-3 border-bottom pb-2"><b>Feriados</b></h5>
-                        <p class="mb-2 text-sm text-gray-700 font-bold">Deseja considerar os feriados nacionais como dias/período letivo?</p>
+                        <p class="mb-2 text-sm text-gray-700 font-bold">Deseja considerar os feriados nacionais, estaduais e municipais  como dias/período letivo?</p>
                         <div class="mb-4">
                             <label class="flex items-center space-x-2 text-sm mb-1">
                                 <input type="radio" name="considerarFeriados" value="sim">
@@ -226,11 +229,11 @@ require_once("../config/verifica_login.php");
                             </label>
                         </div>
                         <hr class="my-3">
-                        <p class="mb-2 text-sm text-gray-700">Selecione os feriados municipais que devem ser considerados como dias não letivos:</p>
+                        <p class="mb-2 text-sm text-gray-700">Selecione datas de recesso escolar que devem ser considerados como dias não letivos:</p>
                         <div id="containerFeriadosMunicipais" class="space-y-2">
                             <div class="flex items-center gap-2 feriado-row">
                                 <input type="date" class="form-control w-1/3">
-                                <input type="text" class="form-control w-full" placeholder="Descrição do feriado municipal">
+                                <input type="text" class="form-control w-full" placeholder="Descrição do recesso escolar">
                                 <button type="button" class="btn btn-primary btn-add-feriado"><i class="fas fa-plus"></i></button>
                                 <button type="button" class="btn btn-danger btn-remove-feriado hidden"><i class="fas fa-minus"></i></button>
                             </div>
@@ -238,7 +241,7 @@ require_once("../config/verifica_login.php");
                     </div>
 
                     <div class="form-step" id="step-cal-5">
-                        <h5 class="mb-3 border-bottom pb-2"><b>Configurações Adicionais</b></h5>
+                        <h5 class="mb-3 border-bottom pb-2"><b>Aulas Práticas</b></h5>
                         
                         <div class="mb-4">
                             <p class="mb-2 text-sm text-gray-700 font-bold">Aula Prática na Unidade Betim - Deseja incluir dias de Aula Prática na Unidade Betim?</p>
@@ -256,6 +259,10 @@ require_once("../config/verifica_login.php");
                         </div>
                         <p class="text-xs text-gray-500 italic mt-4 border-t pt-2">Utilizado para turmas de empresas ou trilhas nas escolas.</p>
                     </div>
+
+                    <div class="form-step" id="step-cal-6">
+                        <h5 class="mb-3 border-bottom pb-2"><b>Revisão e Confirmação</b></h5>
+                        </div>
 
                 </div>
                 
