@@ -85,7 +85,6 @@ require_once("../config/verifica_login.php");
                 <h1>Gestão de Calendários Acadêmicos</h1>
                 <div class="flex gap-2">
                     <button class="btn btn-primary" id="addCalBtn"><i class="fas fa-plus-circle"></i> Adicionar Calendário</button>
-                    <button class="btn btn-info" id="addDiaBtn" style="background-color: #17a2b8; color: white;"><i class="fas fa-calendar-plus"></i> Criar Dia/Período Letivo</button>
                 </div>
             </header>
 
@@ -100,7 +99,7 @@ require_once("../config/verifica_login.php");
                                 <th>Início</th>
                                 <th>Fim</th>
                                 <th>Status</th>
-                                <th>Criado em</th>
+                                <th>Atualizado em</th>
                                 <th class="actions">Ações</th>
                             </tr>
                         </thead>
@@ -288,63 +287,6 @@ require_once("../config/verifica_login.php");
         </div>
     </div>
 
-    <div id="diaModal" class="modal modal-dialog-centered" style="z-index: 1100;">
-        <div class="modal-content">
-            <span class="close-button" id="cancelDiaBtnX" onclick="App.ui.hideModal(document.getElementById('diaModal'))">&times;</span>
-            <h2 id="modalTitleDia">Gerenciar Dia Letivo</h2>
-            
-            <form id="diaForm">
-                <input type="hidden" id="diaId" value="">
-
-                <div class="form-group">
-                    <label>Calendário:</label>
-                    <select id="selectCalDia" class="form-control" required disabled>
-                        </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Tipo de Evento:</label>
-                    <select id="tipoDia" class="form-control" required disabled>
-                        <option value="">Selecione...</option>
-                        <option value="Presencial">Presencial</option>
-                        <option value="EAD">EAD</option>
-                        <option value="Prática na Unidade">Prática na Unidade</option>
-                        <option value="Reposição">Reposição</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label>Data Início:</label>
-                        <input type="date" id="inicioDia" class="form-control" required disabled>
-                    </div>
-                    
-                    <div class="form-group" id="divFinalDia">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                            <label for="finalDia" style="margin:0;">Data Final:</label>
-                            <div style="display:flex; align-items:center; gap:5px;">
-                                <input type="checkbox" id="checkRange" disabled style="width:auto; margin:0;">
-                                <label for="checkRange" style="font-size:0.8em; margin:0; cursor:pointer;">Período?</label>
-                            </div>
-                        </div>
-                        <input type="date" id="finalDia" class="form-control" disabled>
-                    </div>
-                </div>
-
-                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #dee2e6; padding-top: 15px;">
-                    
-                    <button type="button" class="btn text-white bg-red-600 hover:bg-red-700 hidden" id="btnDeleteDia">
-                        <i class="fas fa-trash"></i> Excluir
-                    </button>
-
-                    <div style="display: flex; gap: 10px; margin-left: auto;">
-                        <button type="button" class="btn btn-secondary" id="cancelDiaBtn">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div id="manageDaysModal" class="modal modal-dialog-centered" style="z-index: 1060;">
         <div class="modal-content" style="max-width: 700px;">
