@@ -670,7 +670,6 @@
         // 2. Lógica de Adicionar na Lista Visual (Feriados Municipais/Escolares)
         const containerFeriados = $('#containerFeriadosMunicipais');
         if (containerFeriados) {
-            // Cria a <ul> visual dinamicamente e insere logo após os inputs
             const ulFeriados = document.createElement('ul');
             ulFeriados.id = 'listaFeriadosAdicionados';
             ulFeriados.className = 'mt-3 space-y-2 pl-1 text-sm text-gray-700';
@@ -685,7 +684,7 @@
                     const textInput = row.querySelector('input[type="text"]');
                     
                     if (!dateInput.value || !textInput.value.trim()) {
-                        alert('Por favor, preencha a data e a descrição da aula prática.');
+                        alert('Por favor, preencha a data e a descrição do recesso escolar.');
                         return;
                     }
 
@@ -700,12 +699,13 @@
                     const diasP = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
                     const diasE = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
 
-                    // Verifica se a data já foi adicionada como recesso manual
                     const mapRecessos = Array.from(document.querySelectorAll('#listaFeriadosAdicionados li')).map(li => li.dataset.date);
 
                     let tipoExistente = "";
+                    
                     if (mapRecessos.includes(dateInput.value)) {
-                        tipoExistente = "Recesso Escolar (Não Letivo)";
+                        alert('Esta data já foi adicionada como recesso escolar.');
+                        return;
                     } else if (!isPresencialOff && diasP.includes(dayName)) {
                         tipoExistente = "Dia Letivo Presencial";
                     } else if (!isEadOff && diasE.includes(dayName)) {
@@ -713,7 +713,7 @@
                     }
 
                     if (tipoExistente !== "") {
-                        if (!confirm(`A data especificada (${dateInput.value.split('-').reverse().join('/')}) já está marcada como ${tipoExistente}. Ela será substituída por um dia letivo do tipo Prática. Deseja mesmo realizar a alteração?`)) {
+                        if (!confirm(`A data especificada (${dateInput.value.split('-').reverse().join('/')}) já está marcada como ${tipoExistente} e agora será convertida em um recesso escolar (dia não letivo). Deseja mesmo realizar a alteração?`)) {
                             return; // Usuário cancelou
                         }
                     }
@@ -723,11 +723,11 @@
                     const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
 
                     const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-green-50 p-2 rounded border border-green-200';
+                    li.className = 'flex justify-between items-center bg-red-50 p-2 rounded border border-red-200';
                     li.dataset.date = dateInput.value;
                     li.dataset.desc = textInput.value;
                     li.innerHTML = `
-                        <span><i class="fas fa-chalkboard-teacher text-green-600 mr-2"></i> <strong>${dataFormatada}</strong> - ${textInput.value}</span>
+                        <span><i class="fas fa-ban text-red-600 mr-2"></i> <strong>${dataFormatada}</strong> - ${textInput.value}</span>
                         <button type="button" class="text-red-500 hover:text-red-700 font-bold ml-3 text-xs" onclick="this.parentElement.remove()">[x] Remover</button>
                     `;
                     
@@ -761,11 +761,47 @@
                         return;
                     }
 
+                    // --- VALIDAÇÃO E ALERTA PARA PRÁTICA ---
+                    const dateObj = new Date(dateInput.value + 'T00:00:00');
+                    const dayOfWeek = dateObj.getDay();
+                    const mapDays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                    const dayName = mapDays[dayOfWeek];
+
+                    const isPresencialOff = document.getElementById('switchPresencial').checked;
+                    const isEadOff = document.getElementById('switchEad').checked;
+                    const diasP = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
+                    const diasE = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
+
+                    const mapRecessos = Array.from(document.querySelectorAll('#listaFeriadosAdicionados li')).map(li => li.dataset.date);
+                    const mapPraticas = Array.from(document.querySelectorAll('#listaPraticasAdicionadas li')).map(li => li.dataset.date);
+
+                    let tipoExistente = "";
+                    
+                    if (mapPraticas.includes(dateInput.value)) {
+                         alert('Esta data já foi adicionada como aula prática.');
+                         return;
+                    } else if (mapRecessos.includes(dateInput.value)) {
+                        tipoExistente = "Recesso Escolar/Feriado (Não Letivo)";
+                    } else if (!isPresencialOff && diasP.includes(dayName)) {
+                        tipoExistente = "Dia Letivo Presencial";
+                    } else if (!isEadOff && diasE.includes(dayName)) {
+                        tipoExistente = "Dia Letivo EAD";
+                    }
+
+                    if (tipoExistente !== "") {
+                        if (!confirm(`A data especificada (${dateInput.value.split('-').reverse().join('/')}) já está marcada como ${tipoExistente}. Ela será substituída por um dia letivo do tipo Prática. Deseja mesmo realizar a alteração?`)) {
+                            return; // Usuário cancelou
+                        }
+                    }
+                    // -------------------------------------------
+
                     const dataPartes = dateInput.value.split('-');
                     const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
 
                     const li = document.createElement('li');
                     li.className = 'flex justify-between items-center bg-green-50 p-2 rounded border border-green-200';
+                    li.dataset.date = dateInput.value;
+                    li.dataset.desc = textInput.value;
                     li.innerHTML = `
                         <span><i class="fas fa-chalkboard-teacher text-green-600 mr-2"></i> <strong>${dataFormatada}</strong> - ${textInput.value}</span>
                         <button type="button" class="text-red-500 hover:text-red-700 font-bold ml-3 text-xs" onclick="this.parentElement.remove()">[x] Remover</button>
@@ -779,12 +815,60 @@
         }
 
         // --- Botões do Modal de Decisão ---
+        // --- Botões do Modal de Decisão ---
         const btnDecisaoDados = document.getElementById('btnDecisaoDados');
         if (btnDecisaoDados) {
             btnDecisaoDados.onclick = () => {
                 App.ui.hideModal(document.getElementById('decisionModal'));
-                openCalModal(STATE.tempEditId); // Abre edição normal
+                
+                // Abre a edição SIMPLES (Novo Modal)
+                const cal = STATE.calendarios.find(c => c._id === STATE.tempEditId);
+                if (cal) {
+                    $('#editBasicId').value = cal._id;
+                    $('#editBasicTitulo').value = cal.titulo;
+                    $('#editBasicInicio').value = App.format.fmtDateBR(cal.inicio_calendario);
+                    $('#editBasicFim').value = App.format.fmtDateBR(cal.final_calendario);
+                    $('#editBasicStatus').value = cal.status;
+                    
+                    App.ui.showModal(document.getElementById('editBasicModal'));
+                }
             };
+        }
+        // --- Submit da Edição Básica ---
+        const editBasicForm = document.getElementById('editBasicForm');
+        if (editBasicForm) {
+            editBasicForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btnSave = document.getElementById('btnSaveBasicEdit');
+                const id = $('#editBasicId').value;
+                const txtOriginal = btnSave.innerHTML;
+                
+                btnSave.disabled = true;
+                btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+                // Repare que NÃO enviamos a data inicial e final, apenas título e status.
+                // O seu backend (processa_calendarios.php) deve ignorar datas se não forem enviadas na atualização.
+                const payload = {
+                    titulo: $('#editBasicTitulo').value.toUpperCase(),
+                    status: $('#editBasicStatus').value
+                };
+
+                try {
+                    App.loader.show();
+                    await safeFetch(`${API.base}?action=update&id=${id}`, {
+                        method: 'POST', body: JSON.stringify(payload)
+                    });
+                    App.ui.hideModal(document.getElementById('editBasicModal'));
+                    await carregarDados();
+                    alert('Dados básicos atualizados com sucesso!');
+                } catch(err) { 
+                    alert(err.message); 
+                } finally { 
+                    App.loader.hide(); 
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = txtOriginal;
+                }
+            });
         }
 
         const btnDecisaoDias = document.getElementById('btnDecisaoDias');

@@ -450,6 +450,41 @@ require_once("../config/verifica_login.php");
         </div>
     </div>
 </div>
+<div id="editBasicModal" class="modal modal-dialog-centered">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-button" onclick="App.ui.hideModal(document.getElementById('editBasicModal'))">&times;</span>
+            <h2>Editar Dados do Calendário</h2>
+            
+            <form id="editBasicForm">
+                <input type="hidden" id="editBasicId">
+                <div class="form-group">
+                    <label>Título:</label>
+                    <input type="text" id="editBasicTitulo" required minlength="3" class="form-control uppercase">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label>Início (Não editável):</label>
+                        <input type="text" id="editBasicInicio" readonly disabled class="form-control bg-gray-100">
+                    </div>
+                    <div class="form-group">
+                        <label>Fim (Não editável):</label>
+                        <input type="text" id="editBasicFim" readonly disabled class="form-control bg-gray-100">
+                    </div>
+                </div>
+                <div class="form-group mt-3">
+                    <label>Status:</label>
+                    <select id="editBasicStatus" class="form-control" required>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inativo">Inativo</option>
+                    </select>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="App.ui.hideModal(document.getElementById('editBasicModal'))">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveBasicEdit">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
    
