@@ -102,6 +102,25 @@
         err.style.display = show ? 'block' : 'none';
     }
 
+    function toggleErrorCalFinal(show) {
+        const divFim = refs.finalCal.closest('.form-group');
+        let err = document.getElementById('msg-erro-cal-final');
+        if (!err) {
+            err = document.createElement('span');
+            err.id = 'msg-erro-cal-final';
+            err.className = 'text-red-500 text-xs mt-1 font-bold block';
+            err.innerText = 'A data final não pode ser anterior à data inicial.';
+            divFim.appendChild(err);
+        }
+        err.style.display = show ? 'block' : 'none';
+        
+        // Adiciona ou remove uma borda vermelha no input para chamar atenção
+        if (show) refs.finalCal.classList.add('border-red-500');
+        else refs.finalCal.classList.remove('border-red-500');
+    }
+
+    // NOVA FUNÇÃO: Verifica se uma data está dentro de algum período já cadastrado
+
     // NOVA FUNÇÃO: Verifica se uma data está dentro de algum período já cadastrado
     function isDateBusy(dateStr) {
         if (!dateStr || !STATE.busyRanges.length) return false;
@@ -306,6 +325,7 @@
         refs.calForm.reset();
         $('#calId').value = '';
         STATE.editingCal = null;
+        toggleErrorCalFinal(false); // Remove o erro caso o modal tenha sido fechado com erro antes
 
         if (editId) {
             const cal = STATE.calendarios.find(c => c._id === editId);
@@ -393,6 +413,27 @@
                 inp.classList.remove('border-red-500');
             }
         });
+
+        // NOVA VALIDAÇÃO: Step 2 (Presencial)
+        if (STATE.currentStepCal === 1) {
+            const switchPresencial = document.getElementById('switchPresencial');
+            const diasPresenciais = document.querySelectorAll('#gridPresencial input[type="checkbox"]:checked');
+            if (!switchPresencial.checked && diasPresenciais.length === 0) {
+                alert('Por favor, selecione ao menos um dia de aula presencial ou marque a opção "Não há aulas presenciais".');
+                valid = false;
+            }
+        }
+
+        // NOVA VALIDAÇÃO: Step 3 (EAD)
+        if (STATE.currentStepCal === 2) {
+            const switchEad = document.getElementById('switchEad');
+            const diasEad = document.querySelectorAll('#gridEad input[type="checkbox"]:checked');
+            if (!switchEad.checked && diasEad.length === 0) {
+                alert('Por favor, selecione ao menos um dia de aula EAD ou marque a opção "Não há aulas EAD".');
+                valid = false;
+            }
+        }
+
         return valid;
     }
 
@@ -495,7 +536,44 @@
         setupSwitch('#switchPresencial', '#gridPresencial');
         setupSwitch('#switchEad', '#gridEad');
 
-        // Configura Lógica de Exibição via Radios (Step 5)
+        // --- NOVA LÓGICA: Exclusividade Mútua (Presencial x EAD) ---
+        const syncPresencialEad = () => {
+            const chksPresencial = document.querySelectorAll('#gridPresencial input[type="checkbox"]');
+            const chksEad = document.querySelectorAll('#gridEad input[type="checkbox"]');
+            const isEadSwitchOff = document.getElementById('switchEad').checked;
+
+            chksPresencial.forEach((chkP) => {
+                // Encontra o checkbox EAD correspondente pelo valor (ex: "Segunda")
+                const chkE = Array.from(chksEad).find(c => c.value === chkP.value);
+                if (chkE) {
+                    if (chkP.checked) {
+                        // Se presencial está marcado, bloqueia EAD, desmarca e adiciona tooltip
+                        chkE.checked = false;
+                        chkE.disabled = true;
+                        chkE.parentElement.title = "Já selecionado como aula presencial";
+                        chkE.parentElement.classList.add('opacity-50', 'cursor-not-allowed'); // Estilo visual Tailwind
+                    } else {
+                        // Se presencial não está marcado, libera EAD (mas respeita o switch geral de "Não há EAD")
+                        chkE.disabled = isEadSwitchOff;
+                        chkE.parentElement.title = "";
+                        chkE.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            });
+        };
+
+        // Adiciona o evento de mudança em todos os checkboxes presenciais
+        document.querySelectorAll('#gridPresencial input[type="checkbox"]').forEach(chk => {
+            chk.addEventListener('change', syncPresencialEad);
+        });
+
+        // Garante que o sincronismo rode quando os switches principais forem clicados
+        // O setTimeout evita conflito de tempo com a função setupSwitch que roda na mesma hora
+        document.getElementById('switchPresencial').addEventListener('change', () => setTimeout(syncPresencialEad, 50));
+        document.getElementById('switchEad').addEventListener('change', () => setTimeout(syncPresencialEad, 50));
+        // -----------------------------------------------------------
+
+        
         const setupRadios = (name, containerId) => {
             const radios = document.querySelectorAll(`input[name="${name}"]`);
             const container = $(containerId);
@@ -535,7 +613,59 @@
                 }
             });
         };
-        bindDynamicRows('#containerFeriadosMunicipais', '.feriado-row', '.btn-add-feriado', '.btn-remove-feriado');
+        // --- MELHORIA STEP 4: Feriados ---
+        
+        // 1. Clareza na Opção Padrão (Alterando o texto via JS)
+        const radioNaoFeriado = document.querySelector('input[name="considerarFeriados"][value="nao"]');
+        if (radioNaoFeriado) radioNaoFeriado.nextElementSibling.innerText = "Feriados Nacionais não terão aulas (Dias não letivos)";
+        
+        const radioSimFeriado = document.querySelector('input[name="considerarFeriados"][value="sim"]');
+        if (radioSimFeriado) radioSimFeriado.nextElementSibling.innerText = "Feriados Nacionais terão aulas (Dias letivos normais)";
+
+        // 2. Lógica de Adicionar na Lista Visual (Feriados Municipais/Escolares)
+        const containerFeriados = $('#containerFeriadosMunicipais');
+        if (containerFeriados) {
+            // Cria a <ul> visual dinamicamente e insere logo após os inputs
+            const ulFeriados = document.createElement('ul');
+            ulFeriados.id = 'listaFeriadosAdicionados';
+            ulFeriados.className = 'mt-3 space-y-2 pl-1 text-sm text-gray-700';
+            containerFeriados.parentNode.insertBefore(ulFeriados, containerFeriados.nextSibling);
+
+            containerFeriados.addEventListener('click', (e) => {
+                const btnAdd = e.target.closest('.btn-add-feriado');
+                
+                if (btnAdd) {
+                    const row = btnAdd.closest('.feriado-row');
+                    const dateInput = row.querySelector('input[type="date"]');
+                    const textInput = row.querySelector('input[type="text"]');
+                    
+                    if (!dateInput.value || !textInput.value.trim()) {
+                        alert('Por favor, preencha a data e a descrição do feriado antes de adicionar.');
+                        return;
+                    }
+
+                    // Formatar data para exibição mais amigável (DD/MM/YYYY)
+                    const dataPartes = dateInput.value.split('-');
+                    const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
+
+                    // Criar o item da lista (<li>) com o botão de remover
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-200';
+                    li.innerHTML = `
+                        <span><i class="fas fa-calendar-day text-blue-500 mr-2"></i> <strong>${dataFormatada}</strong> - ${textInput.value}</span>
+                        <button type="button" class="text-red-500 hover:text-red-700 font-bold ml-3 text-xs" onclick="this.parentElement.remove()">[x] Remover</button>
+                    `;
+                    
+                    ulFeriados.appendChild(li);
+
+                    // Limpar os campos para permitir que o usuário adicione o próximo rapidamente
+                    dateInput.value = '';
+                    textInput.value = '';
+                }
+            });
+        }
+
+        // Mantém a lógica de clonagem apenas para Reposição e Prática (Step 5)
         bindDynamicRows('#containerReposicao', '.reposicao-row', '.btn-add-reposicao', '.btn-remove-reposicao');
         bindDynamicRows('#containerPratica', '.pratica-row', '.btn-add-pratica', '.btn-remove-pratica');
 
@@ -581,14 +711,43 @@
         if(closeViewBtn) closeViewBtn.onclick = () => App.ui.hideModal(refs.viewModal);
 
 
-        // --- Lógica do Formulário de Calendário ---
+       // --- Lógica do Formulário de Calendário ---
         $('#addCalBtn').addEventListener('click', () => openCalModal());
         
+        // 1. Título sempre em Maiúsculo
+        refs.tituloCal.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+
+        // 2. Validação Data Inicial
         refs.inicioCal.addEventListener('change', (e) => {
-            refs.finalCal.disabled = false;
-            refs.finalCal.min = e.target.value;
-            if (refs.finalCal.value && refs.finalCal.value < e.target.value) {
-                refs.finalCal.value = e.target.value;
+            const val = e.target.value;
+            if (val) {
+                refs.finalCal.disabled = false;
+                refs.finalCal.min = val;
+                
+                // Se já existir uma data final e ela for menor que a nova data inicial
+                if (refs.finalCal.value && refs.finalCal.value < val) {
+                    refs.finalCal.value = ''; // Limpa o campo
+                    toggleErrorCalFinal(true); // Mostra o erro
+                } else {
+                    toggleErrorCalFinal(false);
+                }
+            } else {
+                refs.finalCal.disabled = true;
+                refs.finalCal.value = '';
+                toggleErrorCalFinal(false);
+            }
+        });
+
+        // 3. Validação Data Final Imediata
+        refs.finalCal.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val && refs.inicioCal.value && val < refs.inicioCal.value) {
+                e.target.value = ''; // Limpa a data inválida
+                toggleErrorCalFinal(true); // Exibe o texto de erro
+            } else {
+                toggleErrorCalFinal(false); // Oculta o erro se estiver tudo certo
             }
         });
 
