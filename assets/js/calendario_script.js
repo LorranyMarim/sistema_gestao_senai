@@ -685,19 +685,49 @@
                     const textInput = row.querySelector('input[type="text"]');
                     
                     if (!dateInput.value || !textInput.value.trim()) {
-                        alert('Por favor, preencha a data e a descrição do feriado antes de adicionar.');
+                        alert('Por favor, preencha a data e a descrição da aula prática.');
                         return;
                     }
 
-                    // Formatar data para exibição mais amigável (DD/MM/YYYY)
+                    // --- NOVA LÓGICA DE ALERTA PARA PRÁTICA ---
+                    const dateObj = new Date(dateInput.value + 'T00:00:00');
+                    const dayOfWeek = dateObj.getDay();
+                    const mapDays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                    const dayName = mapDays[dayOfWeek];
+
+                    const isPresencialOff = document.getElementById('switchPresencial').checked;
+                    const isEadOff = document.getElementById('switchEad').checked;
+                    const diasP = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
+                    const diasE = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
+
+                    // Verifica se a data já foi adicionada como recesso manual
+                    const mapRecessos = Array.from(document.querySelectorAll('#listaFeriadosAdicionados li')).map(li => li.dataset.date);
+
+                    let tipoExistente = "";
+                    if (mapRecessos.includes(dateInput.value)) {
+                        tipoExistente = "Recesso Escolar (Não Letivo)";
+                    } else if (!isPresencialOff && diasP.includes(dayName)) {
+                        tipoExistente = "Dia Letivo Presencial";
+                    } else if (!isEadOff && diasE.includes(dayName)) {
+                        tipoExistente = "Dia Letivo EAD";
+                    }
+
+                    if (tipoExistente !== "") {
+                        if (!confirm(`A data especificada (${dateInput.value.split('-').reverse().join('/')}) já está marcada como ${tipoExistente}. Ela será substituída por um dia letivo do tipo Prática. Deseja mesmo realizar a alteração?`)) {
+                            return; // Usuário cancelou
+                        }
+                    }
+                    // -------------------------------------------
+
                     const dataPartes = dateInput.value.split('-');
                     const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
 
-                    // Criar o item da lista (<li>) com o botão de remover
                     const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-200';
+                    li.className = 'flex justify-between items-center bg-green-50 p-2 rounded border border-green-200';
+                    li.dataset.date = dateInput.value;
+                    li.dataset.desc = textInput.value;
                     li.innerHTML = `
-                        <span><i class="fas fa-calendar-day text-blue-500 mr-2"></i> <strong>${dataFormatada}</strong> - ${textInput.value}</span>
+                        <span><i class="fas fa-chalkboard-teacher text-green-600 mr-2"></i> <strong>${dataFormatada}</strong> - ${textInput.value}</span>
                         <button type="button" class="text-red-500 hover:text-red-700 font-bold ml-3 text-xs" onclick="this.parentElement.remove()">[x] Remover</button>
                     `;
                     
@@ -840,11 +870,46 @@
             btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
 
             const id = $('#calId').value;
+           const switchPresencial = document.getElementById('switchPresencial').checked;
+            const diasPresenciais = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
+
+            // Captura os dados do Step 3 (EAD)
+            const switchEad = document.getElementById('switchEad').checked;
+            const diasEad = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
+            const btnFeriados = document.querySelector('input[name="considerarFeriados"]:checked');
+            const considerarFeriadosLetivos = btnFeriados ? btnFeriados.value === 'sim' : false;
+            
+            const recessos = [];
+            document.querySelectorAll('#listaFeriadosAdicionados li').forEach(li => {
+                recessos.push({
+                    data: li.dataset.date,
+                    descricao: li.dataset.desc
+                });
+            });
+            // -----------------------------------------------
+
+            // --- CAPTURANDO PRÁTICAS (STEP 5) ---
+            const praticas = [];
+            document.querySelectorAll('#listaPraticasAdicionadas li').forEach(li => {
+                praticas.push({
+                    data: li.dataset.date,
+                    descricao: li.dataset.desc
+                });
+            });
+            // -----------------------------------------------
+
             const payload = {
                 titulo: refs.tituloCal.value,
                 inicio_calendario: new Date(refs.inicioCal.value + 'T00:00:00').toISOString(),
                 final_calendario: new Date(refs.finalCal.value + 'T00:00:00').toISOString(),
-                status: refs.statusCal.value
+                status: refs.statusCal.value,
+                is_presencial_off: switchPresencial,
+                dias_presenciais: diasPresenciais,
+                is_ead_off: switchEad,
+                dias_ead: diasEad,
+                considerar_feriados_letivos: considerarFeriadosLetivos,
+                recessos: recessos,
+                praticas: praticas
             };
             
             try {
