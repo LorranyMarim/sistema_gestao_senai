@@ -12,12 +12,15 @@ require_once("../config/verifica_login.php");
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+
     <style>
-        .hidden-col { display: none; }
+        .hidden-col {
+            display: none;
+        }
+
         #changePasswordModal {
-            background-color: rgba(0, 0, 0, 0.7); 
-            z-index: 1060; 
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1060;
         }
     </style>
 </head>
@@ -35,10 +38,12 @@ require_once("../config/verifica_login.php");
                     <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</a></li>
+                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
+                            Instrutores</a></li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i> Gestão de UCs</a></li>
-                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i> Gestão de Calendários</a></li>
+                    <li><a href="gestao_calendarios.php"><i class="fas fa-calendar-check"></i> Gestão de Calendários</a>
+                    </li>
 
                     <li id="nav-relatorios" class="has-submenu">
                         <a href="#" class="submenu-toggle">
@@ -49,9 +54,10 @@ require_once("../config/verifica_login.php");
                             <li><a href="ocupacao_instrutores.php">Ocupação de Intrutores</a></li>
                         </ul>
                     </li>
-                    
+
                     <li id="nav-config" class="has-submenu active open">
-                        <a href="#" class="submenu-toggle" aria-expanded="true" aria-controls="submenu-config" class="active">
+                        <a href="#" class="submenu-toggle" aria-expanded="true" aria-controls="submenu-config"
+                            class="active">
                             <span><i class="fas fa-tools"></i> Configuração</span>
                             <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
                         </a>
@@ -67,7 +73,8 @@ require_once("../config/verifica_login.php");
         <main class="main-content">
             <header class="main-header">
                 <h1>Configuração de Usuários</h1>
-                <button class="btn btn-primary" id="addUserBtn"><i class="fas fa-user-plus"></i> Cadastrar Usuário</button>
+                <button class="btn btn-primary" id="addUserBtn"><i class="fas fa-user-plus"></i> Cadastrar
+                    Usuário</button>
             </header>
 
             <section class="table-section">
@@ -90,7 +97,7 @@ require_once("../config/verifica_login.php");
                             </tr>
                         </thead>
                         <tbody id="userTableBody">
-                            </tbody>
+                        </tbody>
                     </table>
                     <div class="pagination-bar" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
                         <button class="btn btn-secondary" id="prevPage" type="button">Anterior</button>
@@ -106,10 +113,10 @@ require_once("../config/verifica_login.php");
         <div class="modal-content">
             <span class="close-button" id="closeModalBtn">&times;</span>
             <h2 id="modalTitleUser">Cadastrar Novo Usuário</h2>
-            
+
             <form id="userForm" autocomplete="off">
-                <input type="hidden" id="userId">
-                
+                <input type="hidden" id="userId" maxlength="50">
+
                 <div class="form-group" style="display:none;">
                     <label for="instituicaoUser">Instituição:</label>
                     <select id="instituicaoUser" class="form-control"></select>
@@ -122,7 +129,8 @@ require_once("../config/verifica_login.php");
 
                 <div class="form-group">
                     <label for="emailUser">E-mail FIEMG (Login):</label>
-                    <input type="email" id="emailUser" class="form-control" required placeholder="Ex: usuario@fiemg.com.br">
+                    <input type="email" id="emailUser" class="form-control" required
+                        placeholder="Ex: usuario@fiemg.com.br">
                 </div>
 
                 <div class="form-group">
@@ -139,12 +147,14 @@ require_once("../config/verifica_login.php");
                 <div id="divSenhaCadastro">
                     <div class="form-group">
                         <label for="senhaUser">Senha:</label>
-                        <input type="password" id="senhaUser" class="form-control" autocomplete="new-password" minlength="6">
+                        <input type="password" id="senhaUser" class="form-control" autocomplete="new-password"
+                            minlength="6">
                     </div>
 
                     <div class="form-group">
                         <label for="confirmaSenhaUser">Confirme a Senha:</label>
-                        <input type="password" id="confirmaSenhaUser" class="form-control" autocomplete="new-password" minlength="6">
+                        <input type="password" id="confirmaSenhaUser" class="form-control" autocomplete="new-password"
+                            minlength="6">
                     </div>
                 </div>
 
@@ -163,7 +173,8 @@ require_once("../config/verifica_login.php");
                     </select>
                 </div>
 
-                <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
+                <div class="modal-footer"
+                    style="border-top: 1px solid #dee2e6; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between;">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">
                         <i class="fas fa-times-circle"></i> Cancelar
                     </button>
@@ -181,13 +192,14 @@ require_once("../config/verifica_login.php");
             <form id="changePasswordForm" autocomplete="off">
                 <div class="form-group">
                     <label for="novaSenha">Nova Senha:</label>
-                    <input type="password" id="novaSenha" class="form-control" required minlength="6">
+                    <input type="password" id="novaSenha" class="form-control" required minlength="6" maxlength="50">
                 </div>
                 <div class="form-group">
                     <label for="confirmaNovaSenha">Confirmar Nova Senha:</label>
-                    <input type="password" id="confirmaNovaSenha" class="form-control" required minlength="6">
+                    <input type="password" id="confirmaNovaSenha" class="form-control" required minlength="6"
+                        maxlength="50">
                 </div>
-                
+
                 <div class="modal-footer" style="display: flex; justify-content: space-between; margin-top: 15px;">
                     <button type="button" class="btn btn-secondary" id="cancelChangePasswordBtn">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Salvar Senha</button>
@@ -200,7 +212,7 @@ require_once("../config/verifica_login.php");
         <div class="modal-content">
             <span class="close-button" id="closeVisualizarUserBtn">&times;</span>
             <h2>Detalhes do Usuário</h2>
-            
+
             <form>
                 <div class="form-group">
                     <label>Nome Completo:</label>
@@ -218,7 +230,8 @@ require_once("../config/verifica_login.php");
                     <label>Status:</label>
                     <input type="text" id="viewStatusUser" readonly disabled class="form-control">
                 </div>
-                <div id="auditInfoUser" style="color: #888; font-style: italic; font-size: 0.9rem; margin-top: 15px; display: none;">
+                <div id="auditInfoUser"
+                    style="color: #888; font-style: italic; font-size: 0.9rem; margin-top: 15px; display: none;">
                     Criado em: <span id="viewDataCriacao"></span><br>
                     Última atualização: <span id="viewDataAtualizacao"></span> por <span id="viewAlteradoPor"></span>
                 </div>
@@ -246,4 +259,5 @@ require_once("../config/verifica_login.php");
     <script src="../assets/js/geral_script.js"></script>
     <script src="../assets/js/usuarios_script.js" defer></script>
 </body>
+
 </html>

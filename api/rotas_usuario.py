@@ -18,7 +18,7 @@ LOCK_MINUTES = 5
 MAX_ATTEMPTS = 5
 
 class UsuarioBase(BaseModel):
-    nome: str = Field(..., min_length=3, description="Nome Completo")
+    nome: str = Field(..., min_length=3, max_length=100, description="Nome Completo")
     user_name: EmailStr = Field(..., pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", description="Email FIEMG (Login)")
     tipo_acesso: Literal['Administrador', 'Instrutor', 'Pedagogo',]
     status: Literal['Ativo', 'Inativo'] = 'Ativo'
@@ -34,13 +34,14 @@ class UsuarioCreate(UsuarioBase):
     senha: str = Field(..., min_length=6)
 
 class UsuarioUpdate(BaseModel):
-    nome: Optional[str] = Field(None, min_length=3)
+    nome: Optional[str] = Field(None, min_length=3, max_length=100)
     user_name: Optional[EmailStr] = None
     tipo_acesso: Optional[Literal['Administrador', 'Instrutor', 'Pedagogo',]] = None
     status: Optional[Literal['Ativo', 'Inativo']] = None
 
 class UsuarioSenhaUpdate(BaseModel):
-    nova_senha: str = Field(..., min_length=6)
+        nova_senha: str = Field(..., min_length=6, max_length=50)
+
 
 class UsuarioLogin(BaseModel):
     user_name: EmailStr

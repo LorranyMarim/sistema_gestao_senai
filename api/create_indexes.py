@@ -54,8 +54,18 @@ def criar_indices():
     db.empresa.create_index([("instituicao_id", ASCENDING), ("razao_social", ASCENDING)])
 
     print("Indexando Usuário...")
-    db.usuario.create_index([("instituicao_id", ASCENDING), ("user_name", ASCENDING)])
+    # Índice Único Essencial para Login (Já existia, mantido)
     db.usuario.create_index([("user_name_lc", ASCENDING)], unique=True)
+    
+    # Índice Hashed para otimizar queries por unidade (Multi-tenant)
+    from pymongo import HASHED, TEXT # Adicione TEXT e HASHED aos imports do topo do arquivo se necessário
+    db.usuario.create_index([("instituicao_id", HASHED)])
+    
+    # Índice Simples para performance na listagem de Ativos
+    db.usuario.create_index([("status", ASCENDING)])
+    
+    # Índice Textual para buscas globais pelo nome do usuário
+    db.usuario.create_index([("nome", TEXT)])
 
     print("\n✅ Sucesso! Todos os índices foram criados e o banco está otimizado.")
 

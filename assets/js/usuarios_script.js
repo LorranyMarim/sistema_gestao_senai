@@ -435,6 +435,7 @@
     refs.addUserBtn?.addEventListener('click', openModalCadastro);
 
     refs.cancelBtn?.addEventListener('click', tryCloseModal);
+    refs.closeModalBtn?.addEventListener('click', tryCloseModal); // NOVA LINHA ADICIONADA
 
     refs.userForm?.addEventListener('submit', handleSaveUser);
 

@@ -20,8 +20,8 @@
         filters: { q: '', status: ['Todos'], created_from: '', created_to: '' },
         editingCal: null,
         daysCache: [],
-        busyRanges: [], // NOVA PROPRIEDADE: Armazena as datas ocupadas do calendário selecionado
-        currentStepCal: 0 // NOVA PROPRIEDADE: Controle do Wizard
+        busyRanges: [], 
+        currentStepCal: 0 
     };
 
     const refs = {
@@ -61,7 +61,6 @@
             sizeSel: null
         },
         
-        // Controles do Wizard
         stepsCal: $$('#calForm .form-step'),
         stepIndicatorsCal: $$('#calModal .step-item'),
         btnCancelCal: $('#btnCancelCal'),
@@ -70,19 +69,16 @@
         btnSubmitCal: $('#btnSubmit')
     };
 
-
     let calendarInstance = null;
-
     
     function getLocalDateString(isoStr) {
         if (!isoStr) return '';
-        // Se tiver 'T' (ex: 2026-02-03T00:00:00), pega só a primeira parte
         if (isoStr.includes('T')) {
             return isoStr.split('T')[0];
         }
-        // Se já for apenas a data, retorna ela mesma
         return isoStr;
     }
+
     function addDays(dateStr, days) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
@@ -97,12 +93,13 @@
             err.id = 'msg-erro-final-dia';
             err.className = 'text-red-500 text-xs mt-1 font-bold';
             err.innerText = 'Não é possível selecionar nenhuma data final enquanto a data Início não for inserida.';
-            refs.divFinalDia.appendChild(err);
+            refs.divFinalDia?.appendChild(err);
         }
         err.style.display = show ? 'block' : 'none';
     }
 
     function toggleErrorCalFinal(show) {
+        if(!refs.finalCal) return;
         const divFim = refs.finalCal.closest('.form-group');
         let err = document.getElementById('msg-erro-cal-final');
         if (!err) {
@@ -114,27 +111,19 @@
         }
         err.style.display = show ? 'block' : 'none';
         
-        // Adiciona ou remove uma borda vermelha no input para chamar atenção
         if (show) refs.finalCal.classList.add('border-red-500');
         else refs.finalCal.classList.remove('border-red-500');
     }
 
-    // NOVA FUNÇÃO: Verifica se uma data está dentro de algum período já cadastrado
-
-    // NOVA FUNÇÃO: Verifica se uma data está dentro de algum período já cadastrado
     function isDateBusy(dateStr, ignoreId) {
         if (!dateStr || !STATE.busyRanges.length) return false;
-        
         return STATE.busyRanges.some(range => {
-            // Se for o mesmo ID que estamos editando, não conta como ocupado
             if (ignoreId && range.id === ignoreId) return false;
-            
             return dateStr >= range.start && dateStr <= range.end;
         });
     }
 
     // --- Inicialização ---
-
     async function carregarDados() {
         try {
             const data = await safeFetch(API.bootstrap);
@@ -145,7 +134,7 @@
             renderizarConteudo();
         } catch(e) {
             console.error(e);
-            refs.tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
+            if(refs.tableBody) refs.tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-600">Erro ao carregar dados.</td></tr>`;
         }
     }
 
@@ -161,7 +150,6 @@
     }
 
     // --- Renderização e Filtros ---
-
     function applyFiltersFromUI() {
         const elSearch = document.getElementById('gen_search');
         STATE.filters.q = (elSearch?.value || '').trim();
@@ -208,6 +196,7 @@
     }
 
     function renderTable(lista) {
+        if(!refs.tableBody) return;
         if (!lista || !lista.length) {
             refs.tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500">Nenhum registro encontrado.</td></tr>`;
             return;
@@ -249,24 +238,18 @@
     }
 
     // --- Modais ---
-    // Função para abrir o modal em modo de EDIÇÃO (chamada pelo clique no FullCalendar)
     function openDiaModalEdit(eventObj) {
         const props = eventObj.extendedProps;
         
-        // 1. Preenche o ID oculto para o submit saber que é edição
         $('#diaId').value = eventObj.id; 
         
-        // 2. Define o calendário pai e dispara change para carregar limites
         refs.selectCalDia.value = STATE.editingCal._id; 
-        refs.selectCalDia.dispatchEvent(new Event('change')); // Importante para carregar busyRanges
+        refs.selectCalDia.dispatchEvent(new Event('change')); 
         
-        // 3. Preenche Tipo e Data Início
         refs.tipoDia.value = props.tipo || eventObj.title; 
         const startStr = eventObj.startStr.split('T')[0];
         refs.inicioDia.value = startStr;
         
-        // 4. Lógica do Checkbox Range (Período)
-        // Verifica se é range ou se tem data fim diferente da início
         if (props.isRange || (props.data_fim && props.data_fim.split('T')[0] !== startStr)) {
             refs.checkRange.checked = true;
             refs.finalDia.disabled = false;
@@ -277,26 +260,23 @@
             refs.finalDia.value = '';
         }
 
-        // 5. Habilita os campos para edição
         refs.tipoDia.disabled = false;
         refs.inicioDia.disabled = false;
         refs.checkRange.disabled = false;
 
-        // 6. Ajustes Visuais: Título e Botão Excluir
-        $('#modalTitleDia').innerText = "Editar Dias/Período Letivo"; // Título exigido na regra
+        const titleEl = document.getElementById('modalTitleDia');
+        if(titleEl) titleEl.innerText = "Editar Dias/Período Letivo"; 
+        
         const btnDel = document.getElementById('btnDeleteDia');
-        if(btnDel) btnDel.classList.remove('hidden'); // Mostra botão excluir
+        if(btnDel) btnDel.classList.remove('hidden'); 
         
-        // Remove erro visual anterior se houver
         toggleErrorFinalDia(false);
-        
         App.ui.showModal(refs.diaModal);
     }
 
-    // Atualize a função openDiaModal existente para garantir o estado de "Criação"
     function openDiaModal() {
         refs.diaForm.reset();
-        $('#diaId').value = ''; // Limpa o ID -> Indica CRIAÇÃO
+        $('#diaId').value = ''; 
         
         refs.tipoDia.disabled = true;
         refs.inicioDia.disabled = true;
@@ -306,12 +286,11 @@
         refs.finalDia.value = '';
         refs.finalDia.required = false;
         
-        // Ajustes Visuais: Título e Esconder Excluir
         const titleEl = document.getElementById('modalTitleDia');
         if(titleEl) titleEl.innerText = "Criar Dia/Período Letivo";
         
         const btnDel = document.getElementById('btnDeleteDia');
-        if(btnDel) btnDel.classList.add('hidden'); // Esconde botão excluir
+        if(btnDel) btnDel.classList.add('hidden'); 
         
         toggleErrorFinalDia(false);
         STATE.busyRanges = []; 
@@ -325,7 +304,7 @@
         refs.calForm.reset();
         $('#calId').value = '';
         STATE.editingCal = null;
-        toggleErrorCalFinal(false); // Remove o erro caso o modal tenha sido fechado com erro antes
+        toggleErrorCalFinal(false); 
 
         if (editId) {
             const cal = STATE.calendarios.find(c => c._id === editId);
@@ -334,39 +313,24 @@
                 $('#calId').value = cal._id;
                 refs.tituloCal.value = cal.titulo;
                 
-                // --- ALTERAÇÃO AQUI ---
-                // Usa a string pura do banco para não alterar o dia por causa do fuso horário
                 refs.inicioCal.value = getLocalDateString(cal.inicio_calendario);
                 refs.finalCal.value = getLocalDateString(cal.final_calendario);
-                // ----------------------
 
                 refs.finalCal.disabled = false;
                 refs.finalCal.min = refs.inicioCal.value;
                 
                 refs.statusCal.value = cal.status;
                 refs.statusCal.disabled = false;
-                $('#modalTitleCal').innerText = "Editar Calendário";
+                
+                const titleEl = document.getElementById('modalTitleCal');
+                if(titleEl) titleEl.innerText = "Editar Calendário";
             }
         } else {
-            $('#modalTitleCal').innerText = "Adicionar Novo Calendário";
-            refs.statusCal.value = "Ativo";
+            const titleEl = document.getElementById('modalTitleCal');
+            if(titleEl) titleEl.innerText = "Adicionar Novo Calendário";
+            if(refs.statusCal) refs.statusCal.value = "Ativo";
         }
         App.ui.showModal(refs.calModal);
-    }
-
-    function openDiaModal() {
-        refs.diaForm.reset();
-        refs.tipoDia.disabled = true;
-        refs.inicioDia.disabled = true;
-        refs.checkRange.disabled = true;
-        refs.checkRange.checked = false;
-        refs.finalDia.disabled = true; 
-        refs.finalDia.value = '';
-        refs.finalDia.required = false;
-        toggleErrorFinalDia(false);
-        // Limpa cache de dias ocupados ao abrir para evitar lixo de memória
-        STATE.busyRanges = []; 
-        App.ui.showModal(refs.diaModal);
     }
 
     // --- LÓGICA DO WIZARD DE CALENDÁRIO ---
@@ -401,7 +365,6 @@
         }
     }
 
-    // NOVA FUNÇÃO: Gera o resumo dinâmico no Step 5
     function gerarResumoFinalCal() {
         let resumoDiv = document.getElementById('boxResumoFinal');
         if (!resumoDiv) {
@@ -409,25 +372,21 @@
             resumoDiv.id = 'boxResumoFinal';
             resumoDiv.className = 'bg-blue-50 border border-blue-200 p-4 rounded text-sm text-gray-700 mt-4 mb-4';
             const step6 = document.getElementById('step-cal-6'); 
-            step6.insertBefore(resumoDiv, step6.querySelector('h5').nextSibling);
-            
+            if(step6) step6.insertBefore(resumoDiv, step6.querySelector('h5').nextSibling);
         }
 
-        const titulo = refs.tituloCal.value || '[Sem título]';
-        const inicio = refs.inicioCal.value ? refs.inicioCal.value.split('-').reverse().join('/') : '';
-        const fim = refs.finalCal.value ? refs.finalCal.value.split('-').reverse().join('/') : '';
+        const titulo = refs.tituloCal?.value || '[Sem título]';
+        const inicio = refs.inicioCal?.value ? refs.inicioCal.value.split('-').reverse().join('/') : '';
+        const fim = refs.finalCal?.value ? refs.finalCal.value.split('-').reverse().join('/') : '';
         
-        // Coleta dias Presenciais
-        const isPresencialOff = document.getElementById('switchPresencial').checked;
+        const isPresencialOff = document.getElementById('switchPresencial')?.checked;
         const diasP = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
         const txtPresencial = isPresencialOff ? 'Nenhuma' : (diasP.length ? diasP.join(', ') : 'Não selecionado');
 
-        // Coleta dias EAD
-        const isEadOff = document.getElementById('switchEad').checked;
+        const isEadOff = document.getElementById('switchEad')?.checked;
         const diasE = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
         const txtEad = isEadOff ? 'Nenhuma' : (diasE.length ? diasE.join(', ') : 'Não selecionado');
 
-        // Feriados e Práticas adicionadas na lista
         const qtdFeriados = document.querySelectorAll('#listaFeriadosAdicionados li').length;
         const qtdPraticas = document.querySelectorAll('#listaPraticasAdicionadas li').length;
 
@@ -447,11 +406,13 @@
 
     function validateCurrentStepCal() {
         const currentStepEl = refs.stepsCal[STATE.currentStepCal];
+        if(!currentStepEl) return false;
+        
         const inputs = currentStepEl.querySelectorAll('input[required], select[required]');
         let valid = true;
         inputs.forEach(inp => { 
             if (!inp.checkValidity()) { 
-                inp.classList.add('border-red-500'); // Feedback visual de erro
+                inp.classList.add('border-red-500'); 
                 inp.reportValidity(); 
                 valid = false; 
             } else {
@@ -459,21 +420,19 @@
             }
         });
 
-        // NOVA VALIDAÇÃO: Step 2 (Presencial)
         if (STATE.currentStepCal === 1) {
             const switchPresencial = document.getElementById('switchPresencial');
             const diasPresenciais = document.querySelectorAll('#gridPresencial input[type="checkbox"]:checked');
-            if (!switchPresencial.checked && diasPresenciais.length === 0) {
+            if (switchPresencial && !switchPresencial.checked && diasPresenciais.length === 0) {
                 alert('Por favor, selecione ao menos um dia de aula presencial ou marque a opção "Não há aulas presenciais".');
                 valid = false;
             }
         }
 
-        // NOVA VALIDAÇÃO: Step 3 (EAD)
         if (STATE.currentStepCal === 2) {
             const switchEad = document.getElementById('switchEad');
             const diasEad = document.querySelectorAll('#gridEad input[type="checkbox"]:checked');
-            if (!switchEad.checked && diasEad.length === 0) {
+            if (switchEad && !switchEad.checked && diasEad.length === 0) {
                 alert('Por favor, selecione ao menos um dia de aula EAD ou marque a opção "Não há aulas EAD".');
                 valid = false;
             }
@@ -499,26 +458,22 @@
     }
 
    function setupEvents() {
-        // --- Paginação ---
         bindControls(refs.pagElements, (action) => {
             if (action === 'prev' && STATE.pagination.page > 1) STATE.pagination.page--;
             if (action === 'next' && STATE.pagination.page < STATE.pagination.totalPages) STATE.pagination.page++;
             renderizarConteudo();
         });
 
-        // --- Ações da Tabela (Delegation) ---
-        refs.tableBody.addEventListener('click', async (e) => {
+        refs.tableBody?.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
             const id = btn.dataset.id;
             
-            // Botão EDITAR (Abre Popup de Decisão)
             if (btn.classList.contains('btn-edit')) {
-                STATE.tempEditId = id; // Guarda o ID temporariamente
+                STATE.tempEditId = id; 
                 App.ui.showModal(document.getElementById('decisionModal'));
             }
             
-            // Botão EXCLUIR
             if (btn.classList.contains('btn-delete')) {
                 if(confirm('Deseja excluir? Se houver dias letivos, será bloqueado.')) {
                     try {
@@ -530,7 +485,6 @@
                 }
             }
 
-           // Botão VISUALIZAR
             if (btn.classList.contains('btn-view')) {
                 const cal = STATE.calendarios.find(c => c._id === id);
                 if (cal) {
@@ -545,9 +499,8 @@
                     App.ui.showModal(refs.viewModal);
                 }
             }
-        }); // <-- FECHAMENTO CORRETO DO EVENTO DA TABELA
+        }); 
 
-        // --- EVENTOS DO WIZARD DE CALENDÁRIO ---
         refs.btnNextCal?.addEventListener('click', (e) => {
             e.preventDefault();
             nextStepCal();
@@ -562,7 +515,6 @@
             App.ui.hideModal(refs.calModal);
         });
 
-        // Configura Lógica de Limpar e Desabilitar via Switches (Steps 2 e 3)
         const setupSwitch = (switchId, gridId) => {
             const sw = $(switchId);
             const grid = $(gridId);
@@ -581,24 +533,21 @@
         setupSwitch('#switchPresencial', '#gridPresencial');
         setupSwitch('#switchEad', '#gridEad');
 
-        // --- NOVA LÓGICA: Exclusividade Mútua (Presencial x EAD) ---
         const syncPresencialEad = () => {
             const chksPresencial = document.querySelectorAll('#gridPresencial input[type="checkbox"]');
             const chksEad = document.querySelectorAll('#gridEad input[type="checkbox"]');
-            const isEadSwitchOff = document.getElementById('switchEad').checked;
+            const eadSwitch = document.getElementById('switchEad');
+            const isEadSwitchOff = eadSwitch ? eadSwitch.checked : false;
 
             chksPresencial.forEach((chkP) => {
-                // Encontra o checkbox EAD correspondente pelo valor (ex: "Segunda")
                 const chkE = Array.from(chksEad).find(c => c.value === chkP.value);
                 if (chkE) {
                     if (chkP.checked) {
-                        // Se presencial está marcado, bloqueia EAD, desmarca e adiciona tooltip
                         chkE.checked = false;
                         chkE.disabled = true;
                         chkE.parentElement.title = "Já selecionado como aula presencial";
-                        chkE.parentElement.classList.add('opacity-50', 'cursor-not-allowed'); // Estilo visual Tailwind
+                        chkE.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
                     } else {
-                        // Se presencial não está marcado, libera EAD (mas respeita o switch geral de "Não há EAD")
                         chkE.disabled = isEadSwitchOff;
                         chkE.parentElement.title = "";
                         chkE.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -607,17 +556,12 @@
             });
         };
 
-        // Adiciona o evento de mudança em todos os checkboxes presenciais
         document.querySelectorAll('#gridPresencial input[type="checkbox"]').forEach(chk => {
             chk.addEventListener('change', syncPresencialEad);
         });
 
-        // Garante que o sincronismo rode quando os switches principais forem clicados
-        // O setTimeout evita conflito de tempo com a função setupSwitch que roda na mesma hora
-        document.getElementById('switchPresencial').addEventListener('change', () => setTimeout(syncPresencialEad, 50));
-        document.getElementById('switchEad').addEventListener('change', () => setTimeout(syncPresencialEad, 50));
-        // -----------------------------------------------------------
-
+        document.getElementById('switchPresencial')?.addEventListener('change', () => setTimeout(syncPresencialEad, 50));
+        document.getElementById('switchEad')?.addEventListener('change', () => setTimeout(syncPresencialEad, 50));
         
         const setupRadios = (name, containerId) => {
             const radios = document.querySelectorAll(`input[name="${name}"]`);
@@ -634,7 +578,6 @@
 
         setupRadios('hasPratica', '#containerPratica');
 
-        // Configura Lógica de Adicionar/Remover Linhas Nativas
         const bindDynamicRows = (containerId, rowClass, btnAddClass, btnRemoveClass) => {
             const container = $(containerId);
             if(!container) return;
@@ -648,8 +591,8 @@
                     if (clone.querySelector('input[type="date"]')) clone.querySelector('input[type="date"]').value = '';
                     if (clone.querySelector('input[type="text"]')) clone.querySelector('input[type="text"]').value = '';
                     
-                    clone.querySelector(btnAddClass).classList.add('hidden');
-                    clone.querySelector(btnRemoveClass).classList.remove('hidden');
+                    clone.querySelector(btnAddClass)?.classList.add('hidden');
+                    clone.querySelector(btnRemoveClass)?.classList.remove('hidden');
                     
                     container.appendChild(clone);
                 }
@@ -658,16 +601,17 @@
                 }
             });
         };
-        // --- MELHORIA STEP 4: Feriados ---
         
-        // 1. Clareza na Opção Padrão (Alterando o texto via JS)
         const radioNaoFeriado = document.querySelector('input[name="considerarFeriados"][value="nao"]');
-        if (radioNaoFeriado) radioNaoFeriado.nextElementSibling.innerText = "Feriados Nacionais/Estaduais e Municipais não terão aulas (Dias não letivos)";
+        if (radioNaoFeriado && radioNaoFeriado.nextElementSibling) {
+            radioNaoFeriado.nextElementSibling.innerText = "Feriados Nacionais/Estaduais e Municipais não terão aulas (Dias não letivos)";
+        }
         
         const radioSimFeriado = document.querySelector('input[name="considerarFeriados"][value="sim"]');
-        if (radioSimFeriado) radioSimFeriado.nextElementSibling.innerText = "Feriados Nacionais/Estaduais e Municipais terão aulas (Dias letivos normais)";
+        if (radioSimFeriado && radioSimFeriado.nextElementSibling) {
+            radioSimFeriado.nextElementSibling.innerText = "Feriados Nacionais/Estaduais e Municipais terão aulas (Dias letivos normais)";
+        }
 
-        // 2. Lógica de Adicionar na Lista Visual (Feriados Municipais/Escolares)
         const containerFeriados = $('#containerFeriadosMunicipais');
         if (containerFeriados) {
             const ulFeriados = document.createElement('ul');
@@ -688,14 +632,13 @@
                         return;
                     }
 
-                    // --- NOVA LÓGICA DE ALERTA PARA PRÁTICA ---
                     const dateObj = new Date(dateInput.value + 'T00:00:00');
                     const dayOfWeek = dateObj.getDay();
                     const mapDays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
                     const dayName = mapDays[dayOfWeek];
 
-                    const isPresencialOff = document.getElementById('switchPresencial').checked;
-                    const isEadOff = document.getElementById('switchEad').checked;
+                    const isPresencialOff = document.getElementById('switchPresencial')?.checked;
+                    const isEadOff = document.getElementById('switchEad')?.checked;
                     const diasP = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
                     const diasE = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
 
@@ -714,10 +657,9 @@
 
                     if (tipoExistente !== "") {
                         if (!confirm(`A data especificada (${dateInput.value.split('-').reverse().join('/')}) já está marcada como ${tipoExistente} e agora será convertida em um recesso escolar (dia não letivo). Deseja mesmo realizar a alteração?`)) {
-                            return; // Usuário cancelou
+                            return; 
                         }
                     }
-                    // -------------------------------------------
 
                     const dataPartes = dateInput.value.split('-');
                     const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
@@ -732,15 +674,12 @@
                     `;
                     
                     ulFeriados.appendChild(li);
-
-                    // Limpar os campos para permitir que o usuário adicione o próximo rapidamente
                     dateInput.value = '';
                     textInput.value = '';
                 }
             });
         }
 
-       // --- Lógica de Adicionar na Lista Visual (Aulas Práticas) ---
         const containerPratica = $('#containerPratica');
         if (containerPratica) {
             const ulPraticas = document.createElement('ul');
@@ -761,14 +700,13 @@
                         return;
                     }
 
-                    // --- VALIDAÇÃO E ALERTA PARA PRÁTICA ---
                     const dateObj = new Date(dateInput.value + 'T00:00:00');
                     const dayOfWeek = dateObj.getDay();
                     const mapDays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
                     const dayName = mapDays[dayOfWeek];
 
-                    const isPresencialOff = document.getElementById('switchPresencial').checked;
-                    const isEadOff = document.getElementById('switchEad').checked;
+                    const isPresencialOff = document.getElementById('switchPresencial')?.checked;
+                    const isEadOff = document.getElementById('switchEad')?.checked;
                     const diasP = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
                     const diasE = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
 
@@ -790,10 +728,9 @@
 
                     if (tipoExistente !== "") {
                         if (!confirm(`A data especificada (${dateInput.value.split('-').reverse().join('/')}) já está marcada como ${tipoExistente}. Ela será substituída por um dia letivo do tipo Prática. Deseja mesmo realizar a alteração?`)) {
-                            return; // Usuário cancelou
+                            return;
                         }
                     }
-                    // -------------------------------------------
 
                     const dataPartes = dateInput.value.split('-');
                     const dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
@@ -814,14 +751,11 @@
             });
         }
 
-        // --- Botões do Modal de Decisão ---
-        // --- Botões do Modal de Decisão ---
         const btnDecisaoDados = document.getElementById('btnDecisaoDados');
         if (btnDecisaoDados) {
             btnDecisaoDados.onclick = () => {
                 App.ui.hideModal(document.getElementById('decisionModal'));
                 
-                // Abre a edição SIMPLES (Novo Modal)
                 const cal = STATE.calendarios.find(c => c._id === STATE.tempEditId);
                 if (cal) {
                     $('#editBasicId').value = cal._id;
@@ -834,7 +768,7 @@
                 }
             };
         }
-        // --- Submit da Edição Básica ---
+
         const editBasicForm = document.getElementById('editBasicForm');
         if (editBasicForm) {
             editBasicForm.addEventListener('submit', async (e) => {
@@ -846,8 +780,6 @@
                 btnSave.disabled = true;
                 btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
-                // Repare que NÃO enviamos a data inicial e final, apenas título e status.
-                // O seu backend (processa_calendarios.php) deve ignorar datas se não forem enviadas na atualização.
                 const payload = {
                     titulo: $('#editBasicTitulo').value.toUpperCase(),
                     status: $('#editBasicStatus').value
@@ -878,51 +810,42 @@
                 const cal = STATE.calendarios.find(c => c._id === STATE.tempEditId);
                 if(cal) {
                     STATE.editingCal = cal;
-                    // Abre FullCalendar interativo (true)
                     initFullCalendar(cal, true); 
                     App.ui.showModal(refs.fullCalendarModal);
                 }
             };
         }
 
-        // --- Botões de Fechar Modais (Globais) ---
         $$('.close-button').forEach(btn => {
-            // Evita duplicar listeners se rodar setupEvents mais de uma vez (boa prática)
             btn.onclick = () => App.ui.hideModal(btn.closest('.modal'));
         });
         
-        // Específicos do FullCalendar
         const btnCloseTop = $('#closeFullCalendarBtn');
         if (btnCloseTop) btnCloseTop.onclick = () => App.ui.hideModal(refs.fullCalendarModal);
 
         const btnCloseFooter = $('#btnCloseFullCal');
         if (btnCloseFooter) btnCloseFooter.onclick = () => App.ui.hideModal(refs.fullCalendarModal);
 
-        // Cancelar forms
-        $('#cancelDiaBtn').onclick = () => App.ui.hideModal(refs.diaModal);
+        const cancelDiaBtn = $('#cancelDiaBtn');
+        if(cancelDiaBtn) cancelDiaBtn.onclick = () => App.ui.hideModal(refs.diaModal);
+        
         const closeViewBtn = $('#closeViewBtn');
         if(closeViewBtn) closeViewBtn.onclick = () => App.ui.hideModal(refs.viewModal);
 
-
-       // --- Lógica do Formulário de Calendário ---
-        $('#addCalBtn').addEventListener('click', () => openCalModal());
+        $('#addCalBtn')?.addEventListener('click', () => openCalModal());
         
-        // 1. Título sempre em Maiúsculo
-        refs.tituloCal.addEventListener('input', (e) => {
+        refs.tituloCal?.addEventListener('input', (e) => {
             e.target.value = e.target.value.toUpperCase();
         });
 
-        // 2. Validação Data Inicial
-        refs.inicioCal.addEventListener('change', (e) => {
+        refs.inicioCal?.addEventListener('change', (e) => {
             const val = e.target.value;
             if (val) {
                 refs.finalCal.disabled = false;
                 refs.finalCal.min = val;
-                
-                // Se já existir uma data final e ela for menor que a nova data inicial
                 if (refs.finalCal.value && refs.finalCal.value < val) {
-                    refs.finalCal.value = ''; // Limpa o campo
-                    toggleErrorCalFinal(true); // Mostra o erro
+                    refs.finalCal.value = ''; 
+                    toggleErrorCalFinal(true); 
                 } else {
                     toggleErrorCalFinal(false);
                 }
@@ -933,32 +856,29 @@
             }
         });
 
-        // 3. Validação Data Final Imediata
-        refs.finalCal.addEventListener('change', (e) => {
+        refs.finalCal?.addEventListener('change', (e) => {
             const val = e.target.value;
             if (val && refs.inicioCal.value && val < refs.inicioCal.value) {
-                e.target.value = ''; // Limpa a data inválida
-                toggleErrorCalFinal(true); // Exibe o texto de erro
+                e.target.value = ''; 
+                toggleErrorCalFinal(true); 
             } else {
-                toggleErrorCalFinal(false); // Oculta o erro se estiver tudo certo
+                toggleErrorCalFinal(false); 
             }
         });
 
-        refs.calForm.addEventListener('submit', async (e) => {
+        refs.calForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // FEEDBACK DO BOTÃO SALVAR
             const btnSubmit = document.getElementById('btnSubmit');
             const txtOriginal = btnSubmit.innerHTML;
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
 
             const id = $('#calId').value;
-           const switchPresencial = document.getElementById('switchPresencial').checked;
+            const switchPresencial = document.getElementById('switchPresencial')?.checked;
             const diasPresenciais = Array.from(document.querySelectorAll('#gridPresencial input:checked')).map(i => i.value);
 
-            // Captura os dados do Step 3 (EAD)
-            const switchEad = document.getElementById('switchEad').checked;
+            const switchEad = document.getElementById('switchEad')?.checked;
             const diasEad = Array.from(document.querySelectorAll('#gridEad input:checked')).map(i => i.value);
             const btnFeriados = document.querySelector('input[name="considerarFeriados"]:checked');
             const considerarFeriadosLetivos = btnFeriados ? btnFeriados.value === 'sim' : false;
@@ -970,9 +890,7 @@
                     descricao: li.dataset.desc
                 });
             });
-            // -----------------------------------------------
 
-            // --- CAPTURANDO PRÁTICAS (STEP 5) ---
             const praticas = [];
             document.querySelectorAll('#listaPraticasAdicionadas li').forEach(li => {
                 praticas.push({
@@ -980,7 +898,6 @@
                     descricao: li.dataset.desc
                 });
             });
-            // -----------------------------------------------
 
             const payload = {
                 titulo: refs.tituloCal.value,
@@ -1009,32 +926,22 @@
                 alert(err.message); 
             } finally { 
                 App.loader.hide(); 
-                // RESTAURA O BOTÃO CASO DÊ ERRO OU DEPOIS DE SALVAR
                 btnSubmit.disabled = false;
                 btnSubmit.innerHTML = txtOriginal;
             }
         });
 
+        $('#addDiaBtn')?.addEventListener('click', openDiaModal);
 
-        // --- Lógica de Dias Letivos (Criação/Edição) ---
-        
-        // Botão "Adicionar Dia" solto na tela
-        $('#addDiaBtn').addEventListener('click', openDiaModal);
-
-        // Select Calendário Pai
-        refs.selectCalDia.addEventListener('change', async (e) => {
+        refs.selectCalDia?.addEventListener('change', async (e) => {
             const valor = e.target.value;
             const opt = e.target.selectedOptions[0];
 
-            // Resetar UI
             STATE.busyRanges = [];
             refs.tipoDia.value = "";
             refs.inicioDia.value = "";
             refs.checkRange.checked = false;
             refs.finalDia.value = "";
-            
-            // Se estiver em modo edição e trocarem o calendário, pode ser perigoso,
-            // mas aqui só resetamos limites. O ideal é bloquear o select na edição.
             
             if (!valor) {
                 refs.tipoDia.disabled = true;
@@ -1056,19 +963,17 @@
             refs.finalDia.min = minDate;
             refs.finalDia.max = maxDate;
 
-            // Fetch dias ocupados
             try {
                 const days = await safeFetch(`${API.base}?action=list_days&cal_id=${valor}`);
                 STATE.busyRanges = days.map(d => ({
                     start: d.data_inicio.split('T')[0],
                     end: (d.data_fim || d.data_inicio).split('T')[0],
-                    id: d._id // Guardamos ID para saber ignorar na edição
+                    id: d._id 
                 }));
             } catch(e) { console.error("Erro ao buscar dias ocupados", e); }
         });
 
-        // Toggle Checkbox Range
-        refs.checkRange.addEventListener('change', (e) => {
+        refs.checkRange?.addEventListener('change', (e) => {
             if (e.target.checked) {
                 refs.finalDia.disabled = false; 
                 refs.finalDia.required = true;
@@ -1080,11 +985,9 @@
             }
         });
 
-        // Validação Início
-        refs.inicioDia.addEventListener('change', (e) => {
+        refs.inicioDia?.addEventListener('change', (e) => {
             const val = e.target.value;
             if (val) {
-                // Passa o ID atual para ignorar conflito consigo mesmo
                 const currentId = $('#diaId').value;
                 if (isDateBusy(val, currentId)) {
                     alert('Esta data já possui um evento cadastrado.');
@@ -1103,8 +1006,7 @@
             }
         });
 
-        // Validação Fim
-        refs.finalDia.addEventListener('change', (e) => {
+        refs.finalDia?.addEventListener('change', (e) => {
             const val = e.target.value;
             if (val) {
                  const currentId = $('#diaId').value;
@@ -1120,7 +1022,6 @@
             }
         });
 
-        // Bloqueio visual
         const checkFinalDiaAccess = (e) => {
             if (refs.checkRange.checked && !refs.inicioDia.value) {
                 e.preventDefault();
@@ -1128,11 +1029,10 @@
                 toggleErrorFinalDia(true);
             }
         };
-        refs.finalDia.addEventListener('click', checkFinalDiaAccess);
-        refs.finalDia.addEventListener('focus', checkFinalDiaAccess);
+        refs.finalDia?.addEventListener('click', checkFinalDiaAccess);
+        refs.finalDia?.addEventListener('focus', checkFinalDiaAccess);
 
-        // Submit Dia (Criar ou Editar)
-        refs.diaForm.addEventListener('submit', async (e) => {
+        refs.diaForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const diaId = $('#diaId').value;
             
@@ -1152,13 +1052,11 @@
             try {
                 App.loader.show();
                 if (diaId) {
-                    // EDIÇÃO
                     await safeFetch(`${API.base}?action=update_day&id=${diaId}`, { 
                         method: 'POST', body: JSON.stringify(payload) 
                     });
                     alert('Dia letivo atualizado!');
                 } else {
-                    // CRIAÇÃO
                     await safeFetch(`${API.base}?action=create_day`, { 
                         method: 'POST', body: JSON.stringify(payload) 
                     });
@@ -1167,14 +1065,12 @@
 
                 App.ui.hideModal(refs.diaModal);
                 
-                // Recarrega FullCalendar se estiver aberto (modo gerenciamento)
                 if(STATE.editingCal) {
                      initFullCalendar(STATE.editingCal, true); 
                 }
             } catch(err) { alert(err.message); } finally { App.loader.hide(); }
         });
 
-        // Botão EXCLUIR DIA (dentro do modal de edição)
         const btnDelDia = document.getElementById('btnDeleteDia');
         if(btnDelDia) {
             btnDelDia.onclick = async () => {
@@ -1193,25 +1089,24 @@
             };
         }
 
-        // Botão Visualizar Dias (FullCalendar Apenas Leitura vindo do ViewModal)
         $('#openFullCalendarBtn')?.addEventListener('click', () => {
              App.ui.hideModal(refs.viewModal);
              if (STATE.editingCal) {
-                 initFullCalendar(STATE.editingCal, false); // FALSE = não interativo
+                 initFullCalendar(STATE.editingCal, false);
                  App.ui.showModal(refs.fullCalendarModal);
              }
         });
-    }
-    
-      function initFullCalendar(cal, isInteractive = false) {
+    } 
+    // FINAL DA FUNÇÃO SETUPEVENTS ====================================
+
+    function initFullCalendar(cal, isInteractive = false) {
         const el = document.getElementById('calendarEl');
+        if (!el) return;
         el.innerHTML = ''; 
         
-        // 1. Determina a data inicial de visualização
         const hoje = new Date().toISOString().split('T')[0];
         let dataInicial = hoje;
 
-        // Se HOJE estiver fora do range do calendário, força o início na data de início das aulas
         if (hoje < cal.inicio_calendario.split('T')[0] || hoje > cal.final_calendario.split('T')[0]) {
              dataInicial = cal.inicio_calendario;
         }
@@ -1220,66 +1115,79 @@
             locale: 'pt-br',
             initialView: 'dayGridMonth',
             initialDate: dataInicial,
-            
-            // 2. Bloqueio de Navegação (Trava o usuário dentro do período do calendário)
             validRange: {
                 start: cal.inicio_calendario,
-                end: addDays(cal.final_calendario, 1) // +1 dia para incluir o último dia visualmente
+                end: addDays(cal.final_calendario, 1) 
             },
-
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth,listWeek'
             },
             height: '100%',
-
-            // 3. Interatividade (Só ativa se isInteractive for true)
-            // Isso diferencia o "Visualizar" (somente leitura) do "Gerenciar Dias" (edição)
             eventClick: function(info) {
-                if (isInteractive) {
-                    openDiaModalEdit(info.event); // Abre o modal de edição carregando os dados
-                }
+                if (isInteractive) openDiaModalEdit(info.event);
             },
             eventMouseEnter: isInteractive ? (info) => info.el.style.cursor = 'pointer' : null,
             
-            // 4. Carregamento de eventos
-            events: async (info, successCallback, failureCallback) => {
+            events: function(info, successCallback, failureCallback) {
                 try {
-                    const days = await safeFetch(`${API.base}?action=list_days&cal_id=${cal._id}`);
-                    const events = days.map(d => {
-                        let color = '#ccc';
-                        // Cores conforme legenda
-                        if (d.tipo === 'Presencial') color = '#bfdbfe'; 
-                        if (d.tipo === 'EAD') color = '#e9d5ff';        
-                        if (d.tipo === 'Prática na Unidade') color = '#bbf7d0'; 
-                        if (d.tipo === 'Reposição') color = '#fef08a';  
-                        
-                        return {
-                            id: d._id, // IMPORTANTE: Necessário para a edição saber qual ID atualizar
-                            title: d.tipo,
-                            start: d.data_inicio,
-                            end: d.data_fim ? addDays(d.data_fim, 1) : d.data_inicio,
-                            backgroundColor: color,
-                            textColor: '#333',
-                            borderColor: color,
-                            allDay: true,
+                    const eventsArray = [];
+                    
+                    if (cal.estrutura_dias && Array.isArray(cal.estrutura_dias)) {
+                        cal.estrutura_dias.forEach(d => {
+                            let color = '';
+                            let title = '';
+                            let textColor = '#1f2937'; 
                             
-                            // 5. Dados Extras: Necessários para preencher o formulário de edição corretamente
-                            extendedProps: { 
-                                tipo: d.tipo,
-                                data_fim: d.data_fim,
-                                // Define se é um intervalo ou dia único
-                                isRange: d.data_fim && d.data_fim !== d.data_inicio
+                            const dataFormatada = typeof d.data === 'string' && d.data.includes('T') 
+                                ? d.data.split('T')[0] 
+                                : d.data;
+
+                            if (d.status === 'LETIVO') {
+                                if (d.modalidade === 'Presencial') {
+                                    color = 'rgb(191, 219, 254)';
+                                    title = 'Presencial';
+                                } else if (d.modalidade === 'EAD') {
+                                    color = 'rgb(233, 213, 255)';
+                                    title = 'EAD';
+                                } else if (d.modalidade === 'Prática (Senai/Empresa)' || d.modalidade === 'Prática') {
+                                    color = 'rgb(187, 247, 208)';
+                                    title = 'Prática - Unidade/Empresa';
+                                } else {
+                                    color = '#fef08a'; 
+                                    title = d.modalidade || 'Letivo';
+                                }
+                            } else if (d.status === 'NÃO LETIVO' && d.descricao) {
+                                color = 'rgb(254, 202, 202)';
+                                title = d.descricao;
+                            } else {
+                                return;
                             }
-                        };
-                    });
-                    successCallback(events);
-                } catch(e) { failureCallback(e); }
+
+                            eventsArray.push({
+                                id: dataFormatada,
+                                title: title,
+                                start: dataFormatada,
+                                allDay: true,
+                                backgroundColor: color,
+                                borderColor: color,
+                                textColor: textColor,
+                                extendedProps: { 
+                                    tipo: d.modalidade || 'Feriado/Recesso',
+                                    descricao: d.descricao,
+                                    status: d.status
+                                }
+                            });
+                        });
+                    }
+                    successCallback(eventsArray);
+                } catch(e) { 
+                    failureCallback(e); 
+                }
             }
         });
         
-        // Renderiza após o modal estar visível para evitar bugs de layout
         setTimeout(() => {
             calendarInstance.render();
             calendarInstance.updateSize();
@@ -1299,4 +1207,5 @@
             App.loader.hide();
         }
     });
+
 })();

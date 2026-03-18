@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protótipo - Alocação de Instrutores</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body style="background-color: #f0f2f5;">
+
+    <div class="main-content" style="margin-left: 0;">
+        
+        <div class="main-header">
+            <h1>Alocação de Instrutores e UCs</h1>
+            <div class="action-buttons-group">
+                <button class="btn btn-primary"><i class="fas fa-save"></i> Salvar Alocações</button>
+            </div>
+        </div>
+
+        <div class="timeline-wrapper">
+            
+            <div class="timeline-toolbar">
+                <div class="month-year-controls">
+                    <button class="timeline-nav-btn"><i class="fas fa-chevron-left"></i> Anterior</button>
+                    <h3 style="margin:0; color: var(--cor-texto-principal); font-size: 1.2rem;">Semana 16 a 20 de Março, 2026</h3>
+                    <button class="timeline-nav-btn">Próxima <i class="fas fa-chevron-right"></i></button>
+                </div>
+                
+                <div class="shift-tabs">
+                    <button class="shift-tab active">Manhã</button>
+                    <button class="shift-tab">Tarde</button>
+                    <button class="shift-tab">Noite</button>
+                </div>
+            </div>
+
+            <div class="timeline-grid-container">
+                
+                <div class="instructor-column">
+                    <div class="instructor-header">Instrutores (Frontend)</div>
+                    
+                    <div class="instructor-card">
+                        <div class="instructor-avatar">CA</div>
+                        <div class="instructor-info">
+                            <h4>Carlos Almeida</h4>
+                            <span>Desenvolvimento Web</span>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-card">
+                        <div class="instructor-avatar">AS</div>
+                        <div class="instructor-info">
+                            <h4>Ana Silva</h4>
+                            <span>UI/UX Design</span>
+                        </div>
+                    </div>
+
+                    <div class="instructor-card">
+                        <div class="instructor-avatar" style="background-color: #f8d7da; color: #721c24;">MR</div>
+                        <div class="instructor-info">
+                            <h4>Marcos Rocha</h4>
+                            <span>Banco de Dados</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="days-column">
+                    <div style="display: flex; flex-direction: column;">
+                        
+                        <div class="day-header-row">
+                            <div class="day-header">Seg, 16 Mar</div>
+                            <div class="day-header">Ter, 17 Mar</div>
+                            <div class="day-header today">Qua, 18 Mar</div> <div class="day-header">Qui, 19 Mar</div>
+                            <div class="day-header disabled-day">Sex, 20 Mar<br><small>(Feriado)</small></div>
+                        </div>
+
+                        <div class="schedule-row">
+                            <div class="schedule-cell">
+                                <div class="event-bar event-occupied event-start">
+                                    <span class="tooltip-text">UCL Front-end</span>
+                                    <span class="tooltip-sub">Turma: 2026.1-A</span>
+                                </div>
+                            </div>
+                            <div class="schedule-cell">
+                                <div class="event-bar event-occupied event-middle">
+                                    <span class="tooltip-text">UCL Front-end</span>
+                                    <span class="tooltip-sub">Turma: 2026.1-A</span>
+                                </div>
+                            </div>
+                            <div class="schedule-cell">
+                                <div class="event-bar event-occupied event-end">
+                                    <span class="tooltip-text">UCL Front-end</span>
+                                    <span class="tooltip-sub">Turma: 2026.1-A</span>
+                                </div>
+                            </div>
+                            <div class="schedule-cell">
+                                <div class="event-free"></div>
+                            </div>
+                            <div class="schedule-cell disabled-cell"></div>
+                        </div>
+
+                        <div class="schedule-row">
+                            <div class="schedule-cell">
+                                <div class="event-free"></div>
+                            </div>
+                            <div class="schedule-cell">
+                                <div class="event-bar event-occupied event-start" style="background-color: #17a2b8; border-left-color: #117a8b;">
+                                    <span class="tooltip-text">UCL Design</span>
+                                    <span class="tooltip-sub">Turma: 2026.1-B</span>
+                                </div>
+                            </div>
+                            <div class="schedule-cell">
+                                <div class="event-bar event-occupied event-end" style="background-color: #17a2b8; border-left-color: #117a8b;">
+                                    <span class="tooltip-text">UCL Design</span>
+                                    <span class="tooltip-sub">Turma: 2026.1-B</span>
+                                </div>
+                            </div>
+                            <div class="schedule-cell">
+                                <div class="event-free"></div>
+                            </div>
+                            <div class="schedule-cell disabled-cell"></div>
+                        </div>
+
+                        <div class="schedule-row">
+                            <div class="schedule-cell disabled-cell"></div>
+                            <div class="schedule-cell disabled-cell"></div>
+                            <div class="schedule-cell disabled-cell"></div>
+                            <div class="schedule-cell disabled-cell"></div>
+                            <div class="schedule-cell disabled-cell"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
