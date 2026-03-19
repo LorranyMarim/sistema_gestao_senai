@@ -13,7 +13,6 @@ import os
 
 router = APIRouter()
 
-# --- Funções Helper da API de Feriados ---
 def get_feriados_api(ano: int, uf: str, ibge_cidade: str) -> dict:
     token = os.getenv("AUTHORIZATION_API_FERIADOS", "")
     headers = {"Authorization": f"Bearer {token}"} if token else {}
@@ -31,7 +30,6 @@ def get_feriados_api(ano: int, uf: str, ibge_cidade: str) -> dict:
         if resp.status_code == 200:
             data = resp.json()
             for f in data.get("feriados", []):
-                # API retorna 'data' no formato DD/MM/YYYY. Vamos converter para ISO (YYYY-MM-DD).
                 dia, mes, ano_f = f["data"].split("/")
                 iso_date = f"{ano_f}-{mes}-{dia}"
                 feriados_map[iso_date] = f["nome"]
@@ -40,7 +38,6 @@ def get_feriados_api(ano: int, uf: str, ibge_cidade: str) -> dict:
         
     return feriados_map
 
-# --- Models (Atualizados para Pydantic V2) ---
 
 class RecessoModel(BaseModel):
     data: str
@@ -51,7 +48,7 @@ class PraticaModel(BaseModel):
     descricao: str
 
 class CalendarioModel(BaseModel):
-    titulo: str = Field(..., min_length=3, max_length=100)
+    titulo: str = Field(..., min_length=3, max_length=150)
     inicio_calendario: datetime
     final_calendario: datetime
     status: Literal['Ativo', 'Inativo']
@@ -73,8 +70,8 @@ class CalendarioLetivoModel(BaseModel):
     calendario_id: str
     tipo: Literal['Presencial', 'EAD', 'Prática na Unidade', 'Reposição']
     data_inicio: datetime
-    data_final_check: bool = False # Cenário 6 e 7: Novo campo booleano
-    data_fim: Optional[datetime] = None # Cenário 6: Pode ser null
+    data_final_check: bool = False 
+    data_fim: Optional[datetime] = None 
     
     @field_validator('calendario_id')
     @classmethod
@@ -85,7 +82,6 @@ class CalendarioLetivoModel(BaseModel):
 
     @model_validator(mode='after')
     def check_dates_letivo(self):
-        # Validação apenas se o check estiver true (Cenário 7)
         if self.data_final_check and self.data_fim:
             if self.data_fim < self.data_inicio:
                 raise ValueError('A data final do período não pode ser anterior à data de início.')
@@ -97,15 +93,12 @@ def _try_objectid(s: str):
     except Exception:
         return None
 
-# --- Helpers ---
 
 def normalize_dates(start: datetime, end: Optional[datetime]):
-    # Garante UTC e define range efetivo para cálculos
     s = start.replace(tzinfo=timezone.utc) if start.tzinfo is None else start.astimezone(timezone.utc)
     e = end.replace(tzinfo=timezone.utc) if end and end.tzinfo is None else (end.astimezone(timezone.utc) if end else s)
     return s, e
 
-# --- Rotas Calendário (Pai) ---
 
 @router.get("/api/calendarios")
 def listar_calendarios(
@@ -145,13 +138,10 @@ def listar_calendarios(
     return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 @router.post("/api/calendarios")
-@router.post("/api/calendarios")
 def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     data = cal.model_dump() 
     
-    # Extrair os novos campos para não misturar com os metadados na raiz
-    # Extrair os novos campos para não misturar com os metadados na raiz
     is_presencial_off = data.pop('is_presencial_off', False)
     dias_presenciais = data.pop('dias_presenciais', [])
     is_ead_off = data.pop('is_ead_off', False)
@@ -160,20 +150,20 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
     recessos_front = data.pop('recessos', [])
     praticas_front = data.pop('praticas', [])
     
-    data['instituicao_id'] = ctx.inst_oid
-    data['data_criacao'] = datetime.now(timezone.utc)
+    agora = datetime.now(timezone.utc)
+    data['data_criacao'] = agora
+    data['alterado_em'] = agora
+    data['alterado_por'] = ctx.user_id 
     
     if data['inicio_calendario'].tzinfo is None: data['inicio_calendario'] = data['inicio_calendario'].replace(tzinfo=timezone.utc)
     if data['final_calendario'].tzinfo is None: data['final_calendario'] = data['final_calendario'].replace(tzinfo=timezone.utc)
     
-    # 1. Obter dados geográficos da Instituição
     inst = db["instituicao"].find_one({"_id": ctx.inst_oid})
     uf, ibge_cidade = None, None
     if inst and "endereco" in inst and isinstance(inst["endereco"], list) and len(inst["endereco"]) > 0:
         uf = inst["endereco"][0].get("uf")
-        ibge_cidade = inst["endereco"][0].get("cidade") # IBGE/Código exigido pela API
+        ibge_cidade = inst["endereco"][0].get("cidade") 
         
-    # 2. Resgatar feriados da API
     feriados_api = {}
     if not considerar_feriados_letivos:
         ano_inicio = data['inicio_calendario'].year
@@ -181,7 +171,6 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
         for ano in range(ano_inicio, ano_fim + 1):
             feriados_api.update(get_feriados_api(ano, uf, ibge_cidade))
 
-    # 3. Validar Recessos Manuais (Não pode cadastrar recesso num feriado já existente)
     mapa_recessos = {r["data"]: r["descricao"] for r in recessos_front}
     for rec_data in mapa_recessos.keys():
         if rec_data in feriados_api:
@@ -199,10 +188,9 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
     while data_atual <= data['final_calendario']:
         status_dia = "NÃO LETIVO"
         modalidade = None
-        descricao_evento = None # Onde vamos colocar as descrições
+        descricao_evento = None 
         dia_semana = data_atual.weekday()
         
-        # Estrutura base de aulas
         if not is_presencial_off and dia_semana in dias_presenciais_idx:
             status_dia = "LETIVO"
             modalidade = "Presencial"
@@ -210,10 +198,8 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
             status_dia = "LETIVO"
             modalidade = "EAD"
             
-        # --- REGRA DE SOBRESCRITA (Feriados, Recessos e Práticas) ---
         iso_str = data_atual.strftime("%Y-%m-%d")
         
-        # Prática tem prioridade máxima, sobrescreve tudo e vira letivo
         if iso_str in mapa_praticas:
             status_dia = "LETIVO"
             modalidade = "Prática (Senai/Empresa)"
@@ -235,9 +221,7 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
         })
         
         data_atual += timedelta(days=1)     
-    # Anexa o array completo de dias ao documento do calendário
     data['estrutura_dias'] = estrutura_dias
-    # ----------------------------------------------
 
     inserted = db["calendario"].insert_one(data)
     invalidate_cache(str(ctx.inst_oid))
@@ -272,8 +256,12 @@ def atualizar_calendario(id: str, cal: CalendarioModel, ctx: RequestCtx = Depend
     data = cal.model_dump()
     data['instituicao_id'] = ctx.inst_oid
     data.pop('data_criacao', None) 
-
+    
+    data['alterado_em'] = datetime.now(timezone.utc)
+    data['alterado_por'] = ctx.user_id
+    
     res = db["calendario"].update_one({"_id": oid}, {"$set": data})
+
     if res.matched_count:
         invalidate_cache(str(ctx.inst_oid))
         return {"msg": "Atualizado com sucesso"}
@@ -296,7 +284,6 @@ def deletar_calendario(id: str, ctx: RequestCtx = Depends(get_ctx)):
         return {"msg": "Removido com sucesso"}
     raise HTTPException(404, "Calendário não encontrado")
 
-# --- Rotas Dias Letivos (Filho) ---
 
 @router.get("/api/calendario_letivo")
 def listar_dias_letivos(calendario_id: str, ctx: RequestCtx = Depends(get_ctx)):
@@ -330,7 +317,6 @@ def criar_dia_letivo(dia: CalendarioLetivoModel, ctx: RequestCtx = Depends(get_c
     d_inicio, d_fim = normalize_dates(dia.data_inicio, dia.data_fim)
     p_inicio, p_fim = normalize_dates(pai['inicio_calendario'], pai['final_calendario'])
 
-    # Validação de range (Cenário 5 - Backend safety)
     if d_inicio < p_inicio:
         raise HTTPException(400, "Data de início fora do período do calendário acadêmico.")
     
@@ -353,11 +339,10 @@ def criar_dia_letivo(dia: CalendarioLetivoModel, ctx: RequestCtx = Depends(get_c
     data = dia.model_dump()
     data['calendario_id'] = cal_oid
     
-    # Cenário 6 e 7: Forçar persistência correta
-    data['data_criacao'] = datetime.now(timezone.utc) # Data de criação Timestamp
+    data['data_criacao'] = datetime.now(timezone.utc) 
     
     if not data['data_final_check']:
-        data['data_fim'] = None # Garante nulo se check for false
+        data['data_fim'] = None 
 
     inserted = db["calendario_letivo"].insert_one(data)
     
@@ -373,30 +358,24 @@ def atualizar_dia_letivo(id_dia: str, dados: CalendarioLetivoModel, ctx: Request
     except:
         raise HTTPException(status_code=400, detail="ID inválido.")
     
-    # 1. Verifica se o dia existe
     dia_atual = db["calendario_letivo"].find_one({"_id": oid})
     if not dia_atual:
         raise HTTPException(status_code=404, detail="Registro não encontrado.")
     
-    # 2. Segurança: Verifica se o calendário pai pertence à instituição do usuário
     cal_pai = db["calendario"].find_one({"_id": cal_oid, "instituicao_id": ctx.inst_oid})
     if not cal_pai:
         raise HTTPException(status_code=403, detail="Acesso negado ao calendário.")
 
-    # 3. Verifica conflito de duplicidade (excluindo o próprio registro)
-    # Procura se existe OUTRO dia no mesmo calendário com a mesma data de início
     conflito = db["calendario_letivo"].find_one({
         "calendario_id": dados.calendario_id,
         "data_inicio": dados.data_inicio,
-        "_id": {"$ne": oid} # $ne = Not Equal (Não igual ao ID atual)
+        "_id": {"$ne": oid} 
     })
     
     if conflito:
         raise HTTPException(status_code=409, detail="Já existe um dia letivo cadastrado nesta data.")
 
-    # 4. Atualiza os dados
     update_data = dados.model_dump()
-    # Garante que as datas estejam em formato datetime correto para o Mongo
     db["calendario_letivo"].update_one({"_id": oid}, {"$set": update_data})
     
     return {"msg": "Dia letivo atualizado com sucesso!"}
@@ -419,7 +398,6 @@ def deletar_dia_letivo(id: str, ctx: RequestCtx = Depends(get_ctx)):
 def bootstrap_calendarios(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     
-    # 1. Busca TODOS os calendários para a tabela (replicando padrão ucs)
     cursor = db["calendario"].find({"instituicao_id": ctx.inst_oid}).sort("data_criacao", -1)
     
     todos_calendarios = []
@@ -439,9 +417,7 @@ def bootstrap_calendarios(ctx: RequestCtx = Depends(get_ctx)):
              
         todos_calendarios.append(doc)
 
-    # 2. Busca apenas ATIVOS para o select do modal (replicando padrão ucs/instituicao)
     cals_ativos = []
-    # Filtramos na memória ou fazemos nova query. Como é bootstrap, nova query é leve.
     cursor_ativos = db["calendario"].find(
         {"instituicao_id": ctx.inst_oid, "status": "Ativo"}, 
         {"titulo": 1, "inicio_calendario": 1, "final_calendario": 1}
@@ -459,17 +435,4 @@ def bootstrap_calendarios(ctx: RequestCtx = Depends(get_ctx)):
         "calendarios": todos_calendarios,
         "calendarios_ativos": cals_ativos
     }
-    db = get_mongo_db()
-    cals = list(db["calendario"].find(
-        {"instituicao_id": ctx.inst_oid, "status": "Ativo"}, 
-        {"titulo": 1, "inicio_calendario": 1, "final_calendario": 1}
-    ).sort("titulo", 1))
-    
-    for c in cals:
-        c["_id"] = str(c["_id"])
-        if isinstance(c.get("inicio_calendario"), datetime):
-            c["inicio_calendario"] = c["inicio_calendario"].isoformat()
-        if isinstance(c.get("final_calendario"), datetime):
-            c["final_calendario"] = c["final_calendario"].isoformat()
-
-    return {"calendarios_ativos": cals}
+   

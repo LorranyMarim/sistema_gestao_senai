@@ -176,7 +176,6 @@ def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
         ]
     }
     
-    # RBAC: Se não for Administrador, visualiza apenas o próprio registro
     if caller.get("tipo_acesso") != "Administrador":
         filtro["_id"] = caller["_id"]
 
@@ -200,7 +199,6 @@ def criar_usuario(usuario: UsuarioCreate, ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
     caller = get_caller_user(db, ctx)
     
-    # RBAC: Apenas Administrador pode criar usuários
     if caller.get("tipo_acesso") != "Administrador":
         raise HTTPException(status_code=403, detail="Apenas administradores podem criar novos usuários.")
 
@@ -229,7 +227,6 @@ def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depe
     db = get_mongo_db()
     caller = get_caller_user(db, ctx)
     
-    # RBAC: Controle de edição de perfil
     if caller.get("tipo_acesso") != "Administrador":
         if str(caller["_id"]) != user_id:
             raise HTTPException(status_code=403, detail="Você só tem permissão para editar seu próprio perfil.")
@@ -276,7 +273,6 @@ def alterar_senha(user_id: str, dados: UsuarioSenhaUpdate, ctx: RequestCtx = Dep
     db = get_mongo_db()
     caller = get_caller_user(db, ctx)
     
-    # RBAC: Apenas Admin ou o próprio usuário podem alterar a senha
     if caller.get("tipo_acesso") != "Administrador" and str(caller["_id"]) != user_id:
         raise HTTPException(status_code=403, detail="Você só tem permissão para alterar sua própria senha.")
 

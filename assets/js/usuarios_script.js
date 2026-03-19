@@ -170,7 +170,6 @@
     refs.tableBody.innerHTML = lista.map(u => {
       const statusClass = (u.status === 'Inativo') ? 'text-red-500 font-bold' : 'text-green-600';
       
-      // Remove botões de exclusão (inativação) para perfis que não são Administradores
       const deleteBtnHtml = currentUserRole === 'Administrador' 
         ? `<button class="btn btn-icon btn-delete" data-id="${u._id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>`
         : '';
@@ -394,7 +393,6 @@
           if (refs.viewFields.auditInfo) {
             refs.viewFields.auditInfo.style.display = 'block';
             
-            // Função local para formatar Data e Hora (Ex: 20/09/2025 às 14:32)
             const formatarDataHora = (isoStr) => {
               if (!isoStr) return '--/--/---- às --:--';
               const d = new Date(isoStr);
@@ -406,7 +404,6 @@
               return `${dia}/${mes}/${ano} às ${horas}:${minutos}`;
             };
 
-            // Busca o nome do usuário que alterou diretamente dos dados já carregados no Client
             let nomeUsuario = 'Desconhecido';
             if (u.alterado_por) {
                const usuarioAlterador = STATE.usuarios.find(x => x._id === u.alterado_por);
@@ -435,11 +432,10 @@
     refs.addUserBtn?.addEventListener('click', openModalCadastro);
 
     refs.cancelBtn?.addEventListener('click', tryCloseModal);
-    refs.closeModalBtn?.addEventListener('click', tryCloseModal); // NOVA LINHA ADICIONADA
+    refs.closeModalBtn?.addEventListener('click', tryCloseModal); 
 
     refs.userForm?.addEventListener('submit', handleSaveUser);
 
-    // Novo código adicionado: Força o texto do nome a ficar em caixa alta
     refs.inpNome?.addEventListener('input', function(e) {
       e.target.value = e.target.value.toUpperCase();
     });

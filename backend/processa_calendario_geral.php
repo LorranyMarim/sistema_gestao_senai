@@ -15,7 +15,6 @@ $action = $_GET['action'] ?? '';
 
 if ($method === "OPTIONS") { http_response_code(200); exit; }
 
-// === Configuração do Cookie (Helper) ===
 function add_cookie($ch) {
     if (isset($_COOKIE['session_token'])) {
         curl_setopt($ch, CURLOPT_COOKIE, 'session_token=' . $_COOKIE['session_token']);

@@ -1,7 +1,6 @@
 <?php
 require_once("../config/verifica_login.php");
 
-// Configuração da API Python (Ajuste a porta conforme seu ambiente, ex: 8000)
 define('API_URL', 'http://localhost:8000/api');
 
 header('Content-Type: application/json');
@@ -10,7 +9,6 @@ $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
 $token = $_COOKIE['session_token'] ?? '';
 
-// Função auxiliar para fazer requisições cURL
 function callApi($endpoint, $method = 'GET', $data = null, $token = '')
 {
     $ch = curl_init(API_URL . $endpoint);
@@ -35,7 +33,6 @@ function callApi($endpoint, $method = 'GET', $data = null, $token = '')
     return $response;
 }
 
-// Roteamento de Ações
 try {
     switch ($action) {
         case 'list':
@@ -58,7 +55,6 @@ try {
             break;
 
         case 'delete':
-            // Frontend envia POST para simular delete, nós convertemos
             $id = $_GET['id'];
             echo callApi("/calendarios/$id", 'DELETE', null, $token);
             break;
@@ -79,7 +75,7 @@ try {
             break;
             
         case 'update_day':
-            $id = $_GET['id']; // ID do Dia Letivo
+            $id = $_GET['id']; 
             $input = json_decode(file_get_contents('php://input'), true);
             echo callApi("/calendario_letivo/$id", 'PUT', $input, $token);
             break;
