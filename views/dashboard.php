@@ -100,8 +100,18 @@ require_once("../config/verifica_login.php");
                     <li><a href="calendario_geral.php"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
+
+                    <li id="geral_instrutor" class="has-submenu">
+                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+                            <span><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</span>
+                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                        </a>
+                        <ul class="submenu" id="submenu-relatorios">
+                            <li><a href="gestao_instrutores.php">Cadastro e Edição</a></li>
+                            <li><a href="ocupacao_instrutores.php">Alocação em Turmas</a></li>
+                            <li><a href="ocupacao_instrutores.php">Disponbilidade por Período</a></li>
+                        </ul>
+                    </li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
                             Gestão de UCs</a></li>
@@ -114,7 +124,7 @@ require_once("../config/verifica_login.php");
                             <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
                         </a>
                         <ul class="submenu" id="submenu-relatorios">
-                            <li><a href="ocupacao_instrutores.php">Ocupação de Intrutores</a></li>
+                            <li><a href="dashboard.php">Relatório Um</a></li>
                         </ul>
                     </li>
                     <li id="nav-config" class="has-submenu">

@@ -31,14 +31,24 @@
         <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
         <h3>Menu Principal</h3>
       </div>
-      <nav class="sidebar-nav">
-        <ul>
-          <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      <nav class="sidebar-nav" id="sidebar-nav-wrapper">
+                <ul id="sidebar-ul-list">
+                    <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="calendario_geral.php" class="active"><i class="fas fa-calendar-alt"></i>Calendário Geral</a></li>
                     <li><a href="gestao_cursos.php"><i class="fas fa-book"></i> Gestão de Cursos</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
-                    <li><a href="gestao_instrutores.php"><i class="fas fa-chalkboard-teacher"></i> Gestão de
-                            Instrutores</a></li>
+
+                    <li id="geral_instrutor" class="has-submenu">
+                        <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-relatorios">
+                            <span><i class="fas fa-chalkboard-teacher"></i> Gestão de Instrutores</span>
+                            <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
+                        </a>
+                        <ul class="submenu" id="submenu-relatorios">
+                            <li><a href="gestao_instrutores.php">Cadastro e Edição</a></li>
+                            <li><a href="ocupacao_instrutores.php">Alocação em Turmas</a></li>
+                            <li><a href="ocupacao_instrutores.php">Disponbilidade por Período</a></li>
+                        </ul>
+                    </li>
                     <li><a href="gestao_empresas.php"><i class="fas fa-building"></i> Gestão de Empresas</a></li>
                     <li><a href="gestao_ucs.php"><i class="fas fa-graduation-cap"></i>
                             Gestão de UCs</a></li>
@@ -51,7 +61,7 @@
                             <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
                         </a>
                         <ul class="submenu" id="submenu-relatorios">
-                            <li><a href="ocupacao_instrutores.php">Ocupação de Intrutores</a></li>
+                            <li><a href="dashboard.php">Relatório Um</a></li>
                         </ul>
                     </li>
                     <li id="nav-config" class="has-submenu">
@@ -63,9 +73,9 @@
                             <li><a href="configuracao_usuarios.php"> Usuários</a></li>
                         </ul>
                     </li>
-                    <li><a href="../backend/logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-        </ul>
-      </nav>
+                    <li><a href="../backend/processa_logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </nav>
     </aside>
 
     <main class="main-content">
