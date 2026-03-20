@@ -1422,7 +1422,28 @@
       }
     }
   };
+  async function safeFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    
+    if (!res.ok) {
+        // --- NOVA REGRA DE REDIRECIONAMENTO 400 E 500 ---
+        if (res.status === 400) {
+            window.location.href = '../views/erro_400.php';
+            // Retorna uma promise rejeitada em silêncio para parar a execução do resto do código
+            return new Promise(() => {}); 
+        }
+        
+        if (res.status >= 500) { // Captura 500, 502, 503, etc (Erros do Uvicorn)
+            window.location.href = '../views/erro_500.php';
+            return new Promise(() => {});
+        }
+        // ------------------------------------------------
 
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || err.message || 'Erro na requisição');
+    }
+    return res.json();
+}
   App.loader.init();
 
 })();

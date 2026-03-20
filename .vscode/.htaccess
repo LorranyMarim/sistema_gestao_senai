@@ -1,0 +1,4 @@
+# Intercepta erros do Apache e do PHP e redireciona para as nossas views
+# ATENÇÃO: Substitua "sistema_gestao_senai" pelo nome exato da pasta que está no seu htdocs
+ErrorDocument 400 /sistema_gestao_senai/views/erro_400.php
+ErrorDocument 500 /sistema_gestao_senai/views/erro_500.php
