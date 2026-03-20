@@ -194,9 +194,12 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
         if not is_presencial_off and dia_semana in dias_presenciais_idx:
             status_dia = "LETIVO"
             modalidade = "Presencial"
+            descricao_evento = "Presencial"
+
         elif not is_ead_off and dia_semana in dias_ead_idx:
             status_dia = "LETIVO"
             modalidade = "EAD"
+            descricao_evento = "EAD"
             
         iso_str = data_atual.strftime("%Y-%m-%d")
         

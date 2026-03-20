@@ -983,12 +983,19 @@
       const triggerChange = () => { if (typeof onChange === 'function') onChange(); };
 
       if (config.search) {
-        const inp = document.createElement('input');
-        inp.type = 'text';
-        inp.id = 'gen_search';
-        inp.placeholder = 'Digite para buscar...';
-        inp.addEventListener('input', App.utils.debounce(triggerChange, 400));
-        container.appendChild(createGroup('Buscar:', inp, 'search'));
+        const wrap = document.createElement('div');
+        wrap.className = 'search-box';
+        
+        const input = document.createElement('input'); // Variável chama-se 'input'
+        input.type = 'text';
+        input.id = 'gen_search';
+        input.placeholder = config.searchPlaceholder || 'Buscar...';
+        
+        // Req 1: Usando debounce (Ótima prática!) para não sobrecarregar a tela a cada tecla
+        input.addEventListener('input', App.utils.debounce(triggerChange, 400));
+        
+        // Alterado 'inp' para 'input' para bater com a variável criada acima
+        container.appendChild(createGroup('Buscar:', input, 'search')); 
       }
 
       if (config.date) {
@@ -1001,14 +1008,26 @@
         const to = document.createElement('input');
         to.type = 'date';
         to.id = 'gen_created_to';
+        
+        // Req 2: Inicialmente desabilitado
+        to.disabled = true; 
 
         from.addEventListener('change', () => {
           const val = from.value;
           to.min = val; 
           if (to.value && to.value < val) to.value = val;
-          triggerChange();
+          
+          // Req 2: Habilita o "até" SOMENTE se houver valor no "de"
+          to.disabled = !val;
+          // Se o usuário limpar o "de", limpa também o "até"
+          if (!val) {
+              to.value = '';
+          }
+          
+          triggerChange(); // Req 3: Dispara filtragem automática
         });
-        to.addEventListener('change', triggerChange);
+        
+        to.addEventListener('change', triggerChange); // Req 3: Dispara filtragem automática
 
         container.appendChild(createGroup('Calendário de:', from, 'date-from'));
         container.appendChild(createGroup('até:', to, 'date-to'));

@@ -184,6 +184,7 @@
             if (f.created_from && c.inicio_calendario < f.created_from) return false;
             if (f.created_to && c.final_calendario > f.created_to) return false;
             return true;
+
         });
 
         const { pagedData, meta } = paginateData(filtered, STATE.pagination.page, STATE.pagination.pageSize);
