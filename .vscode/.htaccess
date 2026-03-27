@@ -1,4 +1,20 @@
 # Intercepta erros do Apache e do PHP e redireciona para as nossas views
 # ATENÇÃO: Substitua "sistema_gestao_senai" pelo nome exato da pasta que está no seu htdocs
-ErrorDocument 400 /sistema_gestao_senai/views/erro_400.php
-ErrorDocument 500 /sistema_gestao_senai/views/erro_500.php
+
+ErrorDocument 500 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 502 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 503 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 504 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 501 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 506 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 507 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 508 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+ErrorDocument 511 /sistema_gestao_senai/sistema_gestao_senai/views/erro_servidor.php
+
+
+ErrorDocument 400 /sistema_gestao_senai/sistema_gestao_senai/views/erro_requisicao.php
+ErrorDocument 401 /sistema_gestao_senai/sistema_gestao_senai/views/erro_requisicao.php
+ErrorDocument 403 /sistema_gestao_senai/sistema_gestao_senai/views/erro_requisicao.php
+ErrorDocument 410 /sistema_gestao_senai/sistema_gestao_senai/views/erro_requisicao.php
+ErrorDocument 429 /sistema_gestao_senai/sistema_gestao_senai/views/erro_requisicao.php
+ErrorDocument 451 /sistema_gestao_senai/sistema_gestao_senai/views/erro_requisicao.php

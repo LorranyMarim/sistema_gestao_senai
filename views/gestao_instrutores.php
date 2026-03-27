@@ -37,7 +37,7 @@ require_once("../config/verifica_login.php");
                         </a>
                         <ul class="submenu" id="submenu-relatorios">
                             <li><a href="gestao_instrutores.php" class="active">Cadastro e Edição</a></li>
-                            <li><a href="ocupacao_instrutores.php">Alocação em Turmas</a></li>
+                            <li><a href="alocacao_instrutor_turma.php">Alocação em Turmas</a></li>
                             <li><a href="ocupacao_instrutores.php">Disponbilidade por Período</a></li>
                         </ul>
                     </li>
