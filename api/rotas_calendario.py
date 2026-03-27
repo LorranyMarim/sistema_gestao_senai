@@ -201,20 +201,29 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
             modalidade = "EAD"
             descricao_evento = "EAD"
             
-        iso_str = data_atual.strftime("%Y-%m-%d")
-        
-        if iso_str in mapa_praticas:
-            status_dia = "LETIVO"
-            modalidade = "Prática (Senai/Empresa)"
-            descricao_evento = mapa_praticas[iso_str]
-        elif iso_str in feriados_api:
-            status_dia = "NÃO LETIVO"
-            modalidade = None
-            descricao_evento = feriados_api[iso_str]
-        elif iso_str in mapa_recessos:
-            status_dia = "NÃO LETIVO"
-            modalidade = None
-            descricao_evento = mapa_recessos[iso_str]
+        # --- REGRA DE SOBRESCRITA (Feriados, Recessos e Práticas) ---
+            iso_str = data_atual.strftime("%Y-%m-%d")
+            
+            # Prática tem prioridade máxima, sobrescreve tudo e vira letivo
+            if iso_str in mapa_praticas:
+                status_dia = "LETIVO"
+                modalidade = "Prática (Senai/Empresa)"
+                descricao_evento = mapa_praticas[iso_str]
+                
+            # Regra 1 (Cenários 1, 2 e 3): Feriados
+            elif iso_str in feriados_api:
+                # IMPORTANTE: O código só entra neste 'elif' se o usuário marcou "NÃO terão aulas"
+                # Se o usuário marcou "TERÃO aulas" (Regra 2), o 'feriados_api' estará vazio e este bloco é ignorado, não alterando nenhuma data.
+                
+                status_dia = "NÃO LETIVO" # Cenário 1: Converte LETIVO para NÃO LETIVO. Cenários 2 e 3: Mantém/Cria como NÃO LETIVO.
+                modalidade = "FERIADO"    # Define a modalidade exata solicitada.
+                descricao_evento = feriados_api[iso_str] # Salva o nome do feriado (Ex: "Independência do Brasil").
+                
+            # Regra 3: Status NÃO LETIVO, Modalidade RECESSO ESCOLAR e descrição via input
+            elif iso_str in mapa_recessos:
+                status_dia = "NÃO LETIVO"
+                modalidade = "RECESSO ESCOLAR" 
+                descricao_evento = mapa_recessos[iso_str]
             
         estrutura_dias.append({
             "data": data_atual,

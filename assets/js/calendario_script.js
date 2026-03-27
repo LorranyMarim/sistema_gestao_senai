@@ -632,7 +632,23 @@
                         return;
                     }
 
+                    // --- NOVA REGRA: Validação do Período (Step 4) ---
+                    const minDate = document.getElementById('inicioCal').value;
+                    const maxDate = document.getElementById('finalCal').value;
+                    
+                    if (!minDate || !maxDate) {
+                        alert('Por favor, preencha a data de Início e Fim do calendário (Step 1) antes de adicionar recessos.');
+                        return;
+                    }
+
+                    if (dateInput.value < minDate || dateInput.value > maxDate) {
+                        alert(`A data do recesso deve estar dentro do período do calendário (entre ${minDate.split('-').reverse().join('/')} e ${maxDate.split('-').reverse().join('/')}).`);
+                        return;
+                    }
+                    // -------------------------------------------------
+
                     const dateObj = new Date(dateInput.value + 'T00:00:00');
+                    // ... continua
                     const dayOfWeek = dateObj.getDay();
                     const mapDays = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
                     const dayName = mapDays[dayOfWeek];
@@ -840,6 +856,7 @@
 
         refs.inicioCal?.addEventListener('change', (e) => {
             const val = e.target.value;
+            
             if (val) {
                 refs.finalCal.disabled = false;
                 refs.finalCal.min = val;
@@ -854,16 +871,25 @@
                 refs.finalCal.value = '';
                 toggleErrorCalFinal(false);
             }
+            
+            // --- NOVA REGRA (Item 2.1): Aplica limite mínimo (min) no campo de recesso (Step 4) ---
+            const feriadoInput = document.querySelector('#containerFeriadosMunicipais input[type="date"]');
+            if (feriadoInput) feriadoInput.min = val || '';
         });
 
         refs.finalCal?.addEventListener('change', (e) => {
             const val = e.target.value;
+            
             if (val && refs.inicioCal.value && val < refs.inicioCal.value) {
                 e.target.value = '';
                 toggleErrorCalFinal(true);
             } else {
                 toggleErrorCalFinal(false);
             }
+            
+            // --- NOVA REGRA (Item 2.1): Aplica limite máximo (max) no campo de recesso (Step 4) ---
+            const feriadoInput = document.querySelector('#containerFeriadosMunicipais input[type="date"]');
+            if (feriadoInput) feriadoInput.max = val || '';
         });
 
         refs.calForm?.addEventListener('submit', async (e) => {
