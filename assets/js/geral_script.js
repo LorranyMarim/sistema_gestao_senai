@@ -591,6 +591,7 @@
 
     if (isConfigSection) {
       configLi.classList.add('open');
+      toggle.classList.add('active');
       toggle.setAttribute('aria-expanded', 'true');
       submenu.setAttribute('aria-hidden', 'false');
 
@@ -839,7 +840,7 @@
     dateMax, dateMin, dateClamp,
     sanitizeSpaces
   };
-  App.net = { fetchJSON, safeFetch: fetchJSON, fetchWithTimeout };
+  App.net = { fetchJSON, safeFetch, fetchWithTimeout };
   App.format = {
     fmtBR, fmtDateBR, fmtDateTimeBR,
     parseIsoAssumindoUtc,

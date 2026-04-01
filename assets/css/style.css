@@ -182,11 +182,13 @@ body.modal-open {
 .sidebar-nav ul>li:not(:last-child)>a {
     border-bottom: 1px solid rgba(255, 255, 255, 0.139);
     padding-bottom: 8px;
+    text-decoration: none;
 }
 
 .sidebar-nav ul>li.has-submenu .submenu>li:not(:last-child)>a {
     border-bottom: 1px solid rgba(255, 255, 255, 0.347);
     padding-bottom: 6px;
+    text-decoration: none;
 }
 
 .sidebar-nav li a {
@@ -742,7 +744,7 @@ select:focus,
 .modal-header h2 {
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--cor-texto-principal);
+    color: white;
     margin: 0;
 }
 
@@ -1256,8 +1258,8 @@ select:focus,
     margin: 0;
     padding: 16px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 }
 
 #ucModal #modalTitleUc {

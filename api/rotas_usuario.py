@@ -172,7 +172,7 @@ def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
     filtro = {
         "$or": [
             {"instituicao_id": ctx.inst_oid}, 
-            {"instituicoes_ids": str(ctx.inst_oid)}
+            {"instituicoes_ids": ctx.inst_oid}
         ]
     }
     
@@ -185,6 +185,10 @@ def listar_usuarios(ctx: RequestCtx = Depends(get_ctx)):
         u["_id"] = str(u["_id"])
         if "instituicao_id" in u:
             u["instituicao_id"] = str(u["instituicao_id"])
+        if "instituicoes_ids" in u and isinstance(u["instituicoes_ids"], list):
+            u["instituicoes_ids"] = [str(i) for i in u["instituicoes_ids"]]
+        if u.get("alterado_por"):
+            u["alterado_por"] = str(u["alterado_por"])
         if u.get("data_criacao"):
             if isinstance(u["data_criacao"], datetime):
                 u["data_criacao"] = u["data_criacao"].isoformat()
@@ -209,12 +213,12 @@ def criar_usuario(usuario: UsuarioCreate, ctx: RequestCtx = Depends(get_ctx)):
     novo_usuario["user_name_lc"] = usuario.user_name.lower()
     novo_usuario["senha"] = get_password_hash(usuario.senha)
     novo_usuario["instituicao_id"] = ctx.inst_oid
-    novo_usuario["instituicoes_ids"] = [str(ctx.inst_oid)]
+    novo_usuario["instituicoes_ids"] = [ctx.inst_oid]
     
     agora = datetime.now(timezone.utc)
     novo_usuario["data_criacao"] = agora
     novo_usuario["alterado_em"] = agora
-    novo_usuario["alterado_por"] = str(caller["_id"])
+    novo_usuario["alterado_por"] = caller["_id"]
     
     result = db["usuario"].insert_one(novo_usuario)
     invalidate_cache(str(ctx.inst_oid))
@@ -239,7 +243,7 @@ def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depe
         "_id": oid,
         "$or": [
             {"instituicao_id": ctx.inst_oid},
-            {"instituicoes_ids": str(ctx.inst_oid)}
+            {"instituicoes_ids": ctx.inst_oid}
         ]
     }
 
@@ -259,7 +263,7 @@ def atualizar_usuario(user_id: str, dados: UsuarioUpdate, ctx: RequestCtx = Depe
         campos_update["user_name_lc"] = novo_email.lower()
 
     campos_update["alterado_em"] = datetime.now(timezone.utc)
-    campos_update["alterado_por"] = str(caller["_id"])
+    campos_update["alterado_por"] = caller["_id"]
 
     if campos_update:
         db["usuario"].update_one({"_id": oid}, {"$set": campos_update})
@@ -280,7 +284,7 @@ def alterar_senha(user_id: str, dados: UsuarioSenhaUpdate, ctx: RequestCtx = Dep
         "_id": oid,
         "$or": [
             {"instituicao_id": ctx.inst_oid},
-            {"instituicoes_ids": str(ctx.inst_oid)}
+            {"instituicoes_ids": ctx.inst_oid}
         ]
     }
     
@@ -293,7 +297,7 @@ def alterar_senha(user_id: str, dados: UsuarioSenhaUpdate, ctx: RequestCtx = Dep
         {"$set": {
             "senha": nova_senha_hash,
             "alterado_em": datetime.now(timezone.utc),
-            "alterado_por": str(caller["_id"])
+            "alterado_por": caller["_id"]
         }}
     )
     

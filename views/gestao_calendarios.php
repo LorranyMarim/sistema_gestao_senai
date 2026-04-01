@@ -122,7 +122,7 @@ require_once("../config/verifica_login.php");
                     </li>
                     <li id="nav-config" class="has-submenu">
                         <a href="#" class="submenu-toggle" aria-expanded="false" aria-controls="submenu-config">
-                            <span><i class="fas fa-tools"></i> Configuração</span>
+                            <span><i class="fas fa-tools"></i> Configurações</span>
                             <i class="fas fa-chevron-right caret" aria-hidden="true"></i>
                         </a>
                         <ul class="submenu" id="submenu-config">
