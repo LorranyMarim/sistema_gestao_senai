@@ -109,7 +109,12 @@ def listar_calendarios(
     ctx: RequestCtx = Depends(get_ctx)
 ):
     db = get_mongo_db()
-    filtro = {"instituicao_id": ctx.inst_oid}
+    filtro = {
+        "$or": [
+            {"instituicao_id": ctx.inst_oid},
+            {"instituicoes_ids": ctx.inst_oid}
+        ]
+    }
 
     if q:
         filtro["titulo"] = {"$regex": q, "$options": "i"}
@@ -154,6 +159,7 @@ def criar_calendario(cal: CalendarioModel, ctx: RequestCtx = Depends(get_ctx)):
     data['data_criacao'] = agora
     data['alterado_em'] = agora
     data['alterado_por'] = ctx.user_id 
+    data['instituicao_id'] = ctx.inst_oid  # <-- ADICIONE ESTA LINHA AQUI
     
     if data['inicio_calendario'].tzinfo is None: data['inicio_calendario'] = data['inicio_calendario'].replace(tzinfo=timezone.utc)
     if data['final_calendario'].tzinfo is None: data['final_calendario'] = data['final_calendario'].replace(tzinfo=timezone.utc)
@@ -409,8 +415,17 @@ def deletar_dia_letivo(id: str, ctx: RequestCtx = Depends(get_ctx)):
 @router.get("/api/gestao_calendarios/bootstrap")
 def bootstrap_calendarios(ctx: RequestCtx = Depends(get_ctx)):
     db = get_mongo_db()
+
+    # 1. Filtro base usando a mesma lógica de usuários
+    filtro = {
+        "$or": [
+            {"instituicao_id": ctx.inst_oid},
+            {"instituicoes_ids": ctx.inst_oid}
+        ]
+    }
     
-    cursor = db["calendario"].find({"instituicao_id": ctx.inst_oid}).sort("data_criacao", -1)
+    # 2. Busca de TODOS os calendários (com o filtro novo)
+    cursor = db["calendario"].find(filtro).sort("data_criacao", -1)
     
     todos_calendarios = []
     for doc in cursor:
@@ -429,9 +444,13 @@ def bootstrap_calendarios(ctx: RequestCtx = Depends(get_ctx)):
              
         todos_calendarios.append(doc)
 
+    # 3. Busca apenas dos calendários ATIVOS (com o filtro novo)
     cals_ativos = []
+    filtro_ativos = filtro.copy()
+    filtro_ativos["status"] = "Ativo"
+    
     cursor_ativos = db["calendario"].find(
-        {"instituicao_id": ctx.inst_oid, "status": "Ativo"}, 
+        filtro_ativos, 
         {"titulo": 1, "inicio_calendario": 1, "final_calendario": 1}
     ).sort("titulo", 1)
 
@@ -446,5 +465,4 @@ def bootstrap_calendarios(ctx: RequestCtx = Depends(get_ctx)):
     return {
         "calendarios": todos_calendarios,
         "calendarios_ativos": cals_ativos
-    }
-   
+    }  
