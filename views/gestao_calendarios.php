@@ -82,7 +82,7 @@ require_once("../config/verifica_login.php");
                 <img src="../assets/logo.png" alt="Logo SENAI" class="sidebar-logo">
                 <h3>Menu Principal</h3>
             </div>
-            <nav class="sidebar-nav" id="sidebar-nav-wrapper">
+          <nav class="sidebar-nav" id="sidebar-nav-wrapper">
                 <ul id="sidebar-ul-list">
                     <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
                     <li><a href="gestao_turmas.php"><i class="fas fa-users"></i> Gestão de Turmas</a></li>
