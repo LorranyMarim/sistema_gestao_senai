@@ -102,6 +102,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           auth: "Usuário ou senha incorretos.",
           inst: "Você não tem acesso à instituição selecionada ou seu usuário foi desativado.",
           inst_invalida: "Instituição inválida."
+          api_offline: "Serviço de autenticação temporariamente indisponível. Tente novamente em instantes."
         };
         showError(map[code] || "Erro ao fazer login.");
       })();
@@ -131,7 +132,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           instSelect.innerHTML = '<option value="">(erro ao carregar)</option>';
           instSelect.disabled = true;
           submitBtn.disabled = true;
-          showError("Não foi possível carregar as instituições. Verifique a API.");
+          showError("Não foi possível conectar ao servidor. Verifique sua conexão ou tente novamente.");
         }
       })();
 
