@@ -29,8 +29,8 @@ curl_setopt_array($ch, [
 
 $response = curl_exec($ch);
 
-if ($response === false) {
-    header("Location: ../views/index.php?erro=1");
+if ($response === false || curl_errno($ch)) {
+    header("Location: ../views/index.php?erro=api_offline");
     exit();
 }
 

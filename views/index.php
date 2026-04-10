@@ -51,8 +51,8 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           id="password"
           name="password"
           required
-          minlength="4"
-          maxlength="50"
+          minlength="8"
+          maxlength="100"
           autocomplete="current-password"
         >
       </div>
@@ -175,9 +175,9 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         if (!pass) {
           e.preventDefault(); showError("Preencha o campo senha."); passInput.focus(); return;
         }
-        if (pass.length < minLen) {
-          e.preventDefault(); showError(`Senha deve ter no mínimo ${minLen} caracteres.`); passInput.focus(); return;
-        }
+        if (pass.length < 8) {
+  e.preventDefault(); showError(`A senha deve conter no mínimo 8 caracteres.`); passInput.focus(); return;
+}
         if (pass.length > maxLen) {
           e.preventDefault(); showError(`Senha deve ter no máximo ${maxLen} caracteres.`); passInput.focus(); return;
         }
