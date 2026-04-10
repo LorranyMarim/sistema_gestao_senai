@@ -76,11 +76,11 @@ if (!empty($user_data['token'])) {
         'session_token',
         $user_data['token'],
         [
-            'expires'  => time() + (2 * 60 * 60), 
+            'expires'  => time() + 3600, 
             'path'     => '/',                
-            'secure'   => false, 
+            'secure'   => true, 
             'httponly' => true,  
-            'samesite' => 'Lax',         
+            'samesite' => 'Strict',         
         ]
     );
 }
