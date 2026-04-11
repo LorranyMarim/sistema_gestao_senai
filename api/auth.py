@@ -1,10 +1,12 @@
-import bcrypt
+from passlib.context import CryptContext
+
+# Configurado exclusivamente para bcrypt
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(senha: str) -> str:
-    """Gera o hash da senha usando bcrypt."""
-    hashed = bcrypt.hashpw(senha.encode(), bcrypt.gensalt())
-    return hashed.decode()
+    """Gera o hash da senha usando passlib."""
+    return pwd_context.hash(senha)
 
 def verificar_senha(senha: str, senha_hashed: str) -> bool:
     """Verifica se a senha em texto plano corresponde ao hash."""
-    return bcrypt.checkpw(senha.encode(), senha_hashed.encode())
+    return pwd_context.verify(senha, senha_hashed)

@@ -5,3 +5,4 @@ pymongo
 bcrypt
 python-dotenv
 redis
+passlib bcrypt
