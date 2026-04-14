@@ -5,6 +5,7 @@ pymongo
 bcrypt
 python-dotenv
 redis
+passlib
 python-jose
 email-validator
 requests
