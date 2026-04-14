@@ -39,7 +39,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           required
           minlength="4"
           maxlength="50"
-          pattern="^[^<>'\"]+$"
+          pattern="^[^<>'&quot;]+$"
           autocomplete="username"
         >
       </div>
@@ -101,7 +101,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
           limite: "Muitas tentativas. Tente novamente em alguns minutos.",
           auth: "Usuário ou senha incorretos.",
           inst: "Você não tem acesso à instituição selecionada ou seu usuário foi desativado.",
-          inst_invalida: "Instituição inválida."
+          inst_invalida: "Instituição inválida.", // <--- VÍRGULA ADICIONADA AQUI
           api_offline: "Serviço de autenticação temporariamente indisponível. Tente novamente em instantes."
         };
         showError(map[code] || "Erro ao fazer login.");
