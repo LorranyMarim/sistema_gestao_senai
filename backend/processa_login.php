@@ -8,7 +8,7 @@ $user = trim($_POST['username']);
 $pass = $_POST['password'];       
 $inst = $_POST['instituicao_id'];
 
-if (strlen($user) < 4 || strlen($user) > 50 || strlen($pass) < 4 || strlen($pass) > 50) {
+if (strlen($user) < 4 || strlen($user) > 50 || strlen($pass) < 8 || strlen($pass) > 50) {
     header("Location: ../views/index.php?erro=1");
     exit();
 }
@@ -66,23 +66,13 @@ if ($http_code !== 200) {
 
 $user_data = json_decode($body, true);
 
-if (!is_array($user_data) || !isset($user_data['id'])) {
+if (!is_array($user_data) || !isset($user_data['token'])) {
     header("Location: ../views/index.php?erro=1");
     exit();
 }
 
 if (!empty($user_data['token'])) {
-    setcookie(
-        'session_token',
-        $user_data['token'],
-        [
-            'expires'  => time() + 3600, 
-            'path'     => '/',                
-            'secure'   => true, 
-            'httponly' => true,  
-            'samesite' => 'Strict',         
-        ]
-    );
+    setcookie('session_token', $user_data['token'], time() + 3600, '/', '', true, true);
 }
 
 header("Location: ../views/dashboard.php");
