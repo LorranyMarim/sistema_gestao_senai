@@ -792,12 +792,20 @@
                 const btnSave = document.getElementById('btnSaveBasicEdit');
                 const id = $('#editBasicId').value;
                 const txtOriginal = btnSave.innerHTML;
+                
+                // Validação de comprimento e limpeza
+                const tituloEdit = $('#editBasicTitulo').value.trim();
+                if (tituloEdit.length < 3) {
+                    alert("O título do calendário deve conter pelo menos 3 caracteres válidos.");
+                    $('#editBasicTitulo').focus();
+                    return;
+                }
 
                 btnSave.disabled = true;
                 btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
                 const payload = {
-                    titulo: $('#editBasicTitulo').value.toUpperCase(),
+                    titulo: tituloEdit.toUpperCase(),
                     status: $('#editBasicStatus').value
                 };
 
@@ -897,6 +905,15 @@
 
             const btnSubmit = document.getElementById('btnSubmit');
             const txtOriginal = btnSubmit.innerHTML;
+            
+            // Validação manual e limpeza de espaços para evitar o erro 422
+            const tituloFormatado = refs.tituloCal.value.trim();
+            if (tituloFormatado.length < 3) {
+                alert("O título do calendário deve conter pelo menos 3 caracteres válidos.");
+                refs.tituloCal.focus();
+                return;
+            }
+
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
 
@@ -926,7 +943,7 @@
             });
 
             const payload = {
-                titulo: refs.tituloCal.value,
+                titulo: tituloFormatado, // Usando a variável validada sem espaços inúteis
                 inicio_calendario: new Date(refs.inicioCal.value + 'T00:00:00').toISOString(),
                 final_calendario: new Date(refs.finalCal.value + 'T00:00:00').toISOString(),
                 status: refs.statusCal.value,

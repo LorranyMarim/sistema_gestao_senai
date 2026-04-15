@@ -1441,6 +1441,16 @@
         // ------------------------------------------------
 
         const err = await res.json().catch(() => ({}));
+        
+        // --- TRATAMENTO PARA ERROS DE VALIDAÇÃO (422) DO FASTAPI ---
+        if (res.status === 422 && Array.isArray(err.detail)) {
+            const mensagens = err.detail.map(d => {
+                const campo = d.loc[d.loc.length - 1];
+                return `Campo inválido (${campo}): ${d.msg}`;
+            });
+            throw new Error(mensagens.join('\n'));
+        }
+        
         throw new Error(err.detail || err.message || 'Erro na requisição');
     }
     return res.json();
