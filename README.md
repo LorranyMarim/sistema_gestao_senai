@@ -169,3 +169,8 @@ python setup_database.py
 
 Se tudo der certo, a instituição e o usuário administrador estarão no banco. Você poderá abrir a tela de login em PHP e acessar a plataforma usando o e-mail admin@admin.com e a senha original referente à criptografia salva.
 
+## ⚖️ Licença e Direitos
+Este projeto está sob a **Licença MIT**. Sinta-se livre para clonar, estudar, finalizar os módulos pendentes e utilizar em seu portfólio. 
+
+**Nota:** Algumas regras de negócio institucionais originais foram abstraídas ou removidas deste repositório público para proteger a propriedade intelectual. A implementação de uma nova lógica de alocação de instrutores faz parte dos 30% restantes e serve como um excelente desafio de desenvolvimento.
+
