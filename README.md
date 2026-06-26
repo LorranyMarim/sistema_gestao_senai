@@ -28,39 +28,42 @@ Antes de começar, certifique-se de ter os seguintes componentes instalados na s
 ### 2. Clonando o Repositório
 Abra o seu terminal e execute:
 ```bash
-git clone [https://github.com/seu-usuario/sistema_gestao.git](https://github.com/seu-usuario/sistema_gestao.git)
+git clone https://github.com/LorranyMarim/sistema_gestao_senai.git
+```
+```bash
 cd sistema_gestao
 ```
 ### 3. Configurando a API (Python)
 A API gerencia todas as regras de negócio e a comunicação com o MongoDB e Redis.
 
-# Navegue até a pasta da API
+Navegue até a pasta da API:
 ```bash
 cd api
 ```
 
-# Crie um ambiente virtual (recomendado)
+Crie um ambiente virtual (recomendado)
 ```bash
 python -m venv venv
 ```
 
-# Ative o ambiente virtual
-# No Windows:
+Ative o ambiente virtual
+
+No Windows:
 ```bash
 venv\Scripts\activate
 ```
 
-# No Linux/Mac:
+No Linux/Mac:
 ```bash
 source venv/bin/activate
 ```
 
-# Instale as dependências
+Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```
 
-# Execute a API (exemplo, caso use uvicorn/fastapi)
+Execute a API (exemplo, caso use uvicorn/fastapi):
 ```bash
 python main.py
 ```
@@ -68,16 +71,18 @@ python main.py
 ### 4. Configurando o Frontend (PHP)
 Para rodar a interface, você pode usar um servidor como o Apache (via XAMPP) colocando a pasta do projeto em htdocs, ou usar o servidor embutido do PHP:
 
-# Na raiz do projeto, inicie o servidor PHP
+Na raiz do projeto, inicie o servidor PHP
 ```bash
 php -S localhost:8000
 ```
+
 Acesse http://localhost:8000/views/index.php no seu navegador.
 
 ## 🗄️ Configuração Inicial do Banco de Dados (MongoDB)
 Para que o sistema funcione e você consiga fazer o login, é necessário ter uma Instituição Default e um Usuário Administrador previamente cadastrados no banco de dados.
 
 Crie um arquivo chamado setup_database.py na raiz do seu projeto e cole o script abaixo. Certifique-se de que o seu MongoDB esteja rodando localmente (porta 27017).
+
 Script setup_database.py
 ```bash
 import pymongo
@@ -116,7 +121,7 @@ def setup_db():
     # Insere a instituição e recupera o ID gerado ($oid)
     resultado_inst = db.instituicoes.insert_one(instituicao_data)
     inst_id = resultado_inst.inserted_id
-    print(f"✅ Instituição criada com sucesso! ID: {inst_id}")
+    print(f"Instituição criada com sucesso! ID: {inst_id}")
 
     # 2. Dados do Usuário Administrador
     # A senha abaixo corresponde ao hash bcrypt para a string padrão
@@ -139,15 +144,15 @@ def setup_db():
     # Insere o usuário e recupera o ID
     resultado_user = db.usuarios.insert_one(usuario_data)
     user_id = resultado_user.inserted_id
-    print(f"✅ Usuário criado com sucesso! ID: {user_id}")
+    print(f"Usuário criado com sucesso! ID: {user_id}")
 
     # 3. Atualiza o campo 'alterado_por' do próprio usuário para referenciar seu próprio ID
     db.usuarios.update_one(
         {"_id": user_id},
         {"$set": {"alterado_por": user_id}}
     )
-    print("✅ Vínculos de auditoria atualizados.")
-    print("\n🚀 Configuração concluída! Você já pode logar no sistema utilizando:")
+    print("Vínculos de auditoria atualizados.")
+    print("\nConfiguração concluída! Você já pode logar no sistema utilizando:")
     print("Email: admin@admin.com")
     # Nota: Quem clonar deve saber qual é a senha "limpa" (ex: "admin" ou "123456") 
     # que gerou este hash bcrypt.
